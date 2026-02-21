@@ -65,7 +65,7 @@ Rails.application.configure do
     port: 587,
     user_name: ENV["BREVO_SMTP_USERNAME"],
     password: ENV["BREVO_SMTP_KEY"],
-    authentication: :plain,
+    authentication: :login,
     enable_starttls_auto: true
   }
 
