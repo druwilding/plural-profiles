@@ -41,7 +41,7 @@ class My::ProfilesController < ApplicationController
   private
 
   def set_profile
-    @profile = Current.user.profiles.find(params[:id])
+    @profile = Current.user.profiles.find_by!(uuid: params[:id])
   end
 
   def profile_params

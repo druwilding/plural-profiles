@@ -59,7 +59,7 @@ class My::GroupsController < ApplicationController
   private
 
   def set_group
-    @group = Current.user.groups.find(params[:id])
+    @group = Current.user.groups.find_by!(uuid: params[:id])
   end
 
   def group_params
