@@ -28,8 +28,22 @@
 
   <div class="form-group">
     <%= form.label :description %>
-    <%= form.text_area :description, placeholder: "Tell people about this profile..." %>
+    <%= form.text_area :description, placeholder: "Share something about this profile..." %>
   </div>
+
+  <% if @groups.any? %>
+    <fieldset class="form-group">
+      <legend>Groups</legend>
+      <div class="checkbox-list">
+        <% @groups.each do |group| %>
+          <label class="checkbox-label">
+            <%= check_box_tag "profile[group_ids][]", group.id, profile.group_ids.include?(group.id), id: "profile_group_ids_#{group.id}" %>
+            <%= group.name %>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
 
   <div class="form-group">
     <%= form.submit profile.persisted? ? "Update profile" : "Create profile" %>

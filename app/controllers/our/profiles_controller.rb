@@ -1,5 +1,6 @@
 class Our::ProfilesController < ApplicationController
   before_action :set_profile, only: %i[ show edit update destroy ]
+  before_action :set_groups, only: %i[ new create edit update ]
 
   def index
     @profiles = Current.user.profiles.order(:name)
@@ -44,7 +45,11 @@ class Our::ProfilesController < ApplicationController
     @profile = Current.user.profiles.find_by!(uuid: params[:id])
   end
 
+  def set_groups
+    @groups = Current.user.groups.order(:name)
+  end
+
   def profile_params
-    params.require(:profile).permit(:name, :pronouns, :description, :avatar)
+    params.require(:profile).permit(:name, :pronouns, :description, :avatar, group_ids: [])
   end
 end
