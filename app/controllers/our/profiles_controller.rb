@@ -1,4 +1,6 @@
 class Our::ProfilesController < ApplicationController
+  allow_unauthenticated_access only: :show
+  before_action :resume_session, only: :show
   before_action :set_profile, only: %i[ show edit update destroy ]
   before_action :set_groups, only: %i[ new create edit update ]
 
@@ -42,7 +44,7 @@ class Our::ProfilesController < ApplicationController
   private
 
   def set_profile
-    @profile = Current.user.profiles.find_by(uuid: params[:id])
+    @profile = Current.user&.profiles&.find_by(uuid: params[:id])
     redirect_to profile_path(params[:id]) unless @profile
   end
 

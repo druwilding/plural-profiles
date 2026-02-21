@@ -1,4 +1,6 @@
 class Our::GroupsController < ApplicationController
+  allow_unauthenticated_access only: :show
+  before_action :resume_session, only: :show
   before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile ]
 
   def index
@@ -59,7 +61,7 @@ class Our::GroupsController < ApplicationController
   private
 
   def set_group
-    @group = Current.user.groups.find_by(uuid: params[:id])
+    @group = Current.user&.groups&.find_by(uuid: params[:id])
     redirect_to group_path(params[:id]) unless @group
   end
 
