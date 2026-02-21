@@ -9,19 +9,17 @@
 <div class="dashboard-grid">
   <div class="card">
     <h2>Our Profiles</h2>
-    <p class="text-muted"><%= pluralize(Current.user.profiles.count, "profile") %></p>
+    <p class="text-muted"><%= link_to pluralize(Current.user.profiles.count, "profile"), our_profiles_path %></p>
     <p>
-      <%= link_to "View profiles", our_profiles_path, class: "btn" %>
-      <%= link_to "New profile", new_our_profile_path, class: "btn btn--secondary" %>
+      <%= link_to "New profile", new_our_profile_path, class: "btn" %>
     </p>
   </div>
 
   <div class="card">
     <h2>Our Groups</h2>
-    <p class="text-muted"><%= pluralize(Current.user.groups.count, "group") %></p>
+    <p class="text-muted"><%= link_to pluralize(Current.user.groups.count, "group"), our_groups_path %></p>
     <p>
-      <%= link_to "View groups", our_groups_path, class: "btn" %>
-      <%= link_to "New group", new_our_group_path, class: "btn btn--secondary" %>
+      <%= link_to "New group", new_our_group_path, class: "btn" %>
     </p>
   </div>
 </div>
