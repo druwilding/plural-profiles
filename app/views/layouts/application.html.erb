@@ -24,8 +24,27 @@
   </head>
 
   <body>
-    <%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
-    <%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-    <%= yield %>
+    <header class="site-header">
+      <%= link_to "Plural Profiles", root_path, class: "logo" %>
+      <nav>
+        <% if authenticated? %>
+          <%= link_to "Sign out", session_path, data: { turbo_method: :delete } %>
+        <% else %>
+          <%= link_to "Sign in", new_session_path %>
+          <%= link_to "Sign up", new_registration_path %>
+        <% end %>
+      </nav>
+    </header>
+
+    <main class="container">
+      <% if flash[:notice] %>
+        <div class="flash flash--notice"><%= flash[:notice] %></div>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="flash flash--alert"><%= flash[:alert] %></div>
+      <% end %>
+
+      <%= yield %>
+    </main>
   </body>
 </html>

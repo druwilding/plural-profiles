@@ -1,23 +1,24 @@
-<h1>Sign in</h1>
+<div class="card">
+  <h1>Sign in</h1>
 
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-<%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
+  <%= form_with url: session_path do |form| %>
+    <div class="form-group">
+      <%= form.label :email_address, "Email address" %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address] %>
+    </div>
 
-<%= form_with url: session_path do |form| %>
-  <div>
-    <%= form.label :email_address, "Email address" %><br>
-    <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address] %>
+    <div class="form-group">
+      <%= form.label :password %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %>
+    </div>
+
+    <div class="form-group">
+      <%= form.submit "Sign in" %>
+    </div>
+  <% end %>
+
+  <div class="form-links">
+    <p><%= link_to "Forgot password?", new_password_path %></p>
+    <p>Don't have an account? <%= link_to "Sign up", new_registration_path %></p>
   </div>
-
-  <div>
-    <%= form.label :password %><br>
-    <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %>
-  </div>
-
-  <div>
-    <%= form.submit "Sign in" %>
-  </div>
-<% end %>
-
-<p><%= link_to "Forgot password?", new_password_path %></p>
-<p>Don't have an account? <%= link_to "Sign up", new_registration_path %></p>
+</div>

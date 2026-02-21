@@ -1,10 +1,207 @@
 /*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
+ * Plural Profiles — application styles
  */
+
+:root {
+  --bg: #1E2D25;
+  --text: #819d6c;
+  --link: #4e855f;
+  --heading: #ecd3a2;
+  --bg-contrast: #291c13;
+  --error: #d96459;
+  --success: #6dbf7b;
+  --warning: #e2a854;
+  --input-bg: #263a2e;
+  --input-border: #4e855f;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.site-header {
+  background-color: var(--bg-contrast);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--input-border);
+}
+
+.site-header .logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--heading);
+  text-decoration: none;
+}
+
+.site-header nav a {
+  color: var(--link);
+  text-decoration: none;
+  margin-left: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.site-header nav a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 540px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.container.wide {
+  max-width: 800px;
+}
+
+h1, h2, h3 {
+  color: var(--heading);
+  margin-top: 0;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.4rem; }
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Flash messages */
+.flash {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.flash--notice {
+  background-color: rgba(109, 191, 123, 0.15);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.flash--alert {
+  background-color: rgba(217, 100, 89, 0.15);
+  border: 1px solid var(--error);
+  color: var(--error);
+}
+
+.flash--warning {
+  background-color: rgba(226, 168, 84, 0.15);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--heading);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--heading);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+input[type="submit"],
+button,
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  background-color: var(--link);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+input[type="submit"]:hover,
+button:hover,
+.btn:hover {
+  background-color: #3d6d4c;
+}
+
+.btn--secondary {
+  background-color: transparent;
+  border: 1px solid var(--link);
+  color: var(--link);
+}
+
+.btn--secondary:hover {
+  background-color: var(--link);
+  color: #fff;
+}
+
+/* Card */
+.card {
+  background-color: var(--bg-contrast);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Error list */
+.error-messages p {
+  color: var(--error);
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+/* Helper links below forms */
+.form-links {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.form-links p {
+  margin: 0.35rem 0;
+}
+
