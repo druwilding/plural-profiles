@@ -28,8 +28,8 @@
       <%= link_to "Plural Profiles", root_path, class: "logo" %>
       <nav>
         <% if authenticated? %>
-          <%= link_to "Profiles", my_profiles_path %>
-          <%= link_to "Groups", my_groups_path %>
+          <%= link_to "Profiles", our_profiles_path %>
+          <%= link_to "Groups", our_groups_path %>
           <%= link_to "Sign out", session_path, data: { turbo_method: :delete } %>
         <% else %>
           <%= link_to "Sign in", new_session_path %>

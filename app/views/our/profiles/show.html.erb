@@ -21,8 +21,8 @@
   <% end %>
 
   <div class="profile-actions">
-    <%= link_to "Edit", edit_my_profile_path(@profile), class: "btn btn--secondary" %>
-    <%= link_to "Delete", my_profile_path(@profile), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn--danger" %>
+    <%= link_to "Edit", edit_our_profile_path(@profile), class: "btn btn--secondary" %>
+    <%= link_to "Delete", our_profile_path(@profile), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn--danger" %>
   </div>
 
   <div class="share-box">
@@ -37,10 +37,10 @@
     <h3>In groups</h3>
     <ul>
       <% @profile.groups.where(user: Current.user).each do |group| %>
-        <li><%= link_to group.name, my_group_path(group) %></li>
+        <li><%= link_to group.name, our_group_path(group) %></li>
       <% end %>
     </ul>
   <% end %>
 </div>
 
-<p><%= link_to "← Back to my profiles", my_profiles_path %></p>
+<p><%= link_to "← Back to our profiles", our_profiles_path %></p>

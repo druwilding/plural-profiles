@@ -5,12 +5,12 @@ Rails.application.routes.draw do
   resource :email_verification, only: :show
 
   # Authenticated user management of their own profiles and groups
-  resources :my_profiles, path: "my/profiles", controller: "my/profiles" do
+  resources :our_profiles, path: "our/profiles", controller: "our/profiles" do
     member do
       delete :remove_from_group
     end
   end
-  resources :my_groups, path: "my/groups", controller: "my/groups" do
+  resources :our_groups, path: "our/groups", controller: "our/groups" do
     member do
       get :manage_profiles
       post :add_profile

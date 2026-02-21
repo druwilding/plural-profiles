@@ -8,9 +8,9 @@
   <% end %>
 
   <div class="profile-actions">
-    <%= link_to "Edit", edit_my_group_path(@group), class: "btn btn--secondary" %>
-    <%= link_to "Manage profiles", manage_profiles_my_group_path(@group), class: "btn btn--secondary" %>
-    <%= link_to "Delete", my_group_path(@group), data: { turbo_method: :delete, turbo_confirm: "Are you sure? This won't delete the profiles themselves." }, class: "btn btn--danger" %>
+    <%= link_to "Edit", edit_our_group_path(@group), class: "btn btn--secondary" %>
+    <%= link_to "Manage profiles", manage_profiles_our_group_path(@group), class: "btn btn--secondary" %>
+    <%= link_to "Delete", our_group_path(@group), data: { turbo_method: :delete, turbo_confirm: "Are you sure? This won't delete the profiles themselves." }, class: "btn btn--danger" %>
   </div>
 
   <div class="share-box">
@@ -33,7 +33,7 @@
         <% else %>
           <div class="avatar avatar--placeholder"><%= profile.name.first.upcase %></div>
         <% end %>
-        <h3><%= link_to profile.name, my_profile_path(profile) %></h3>
+        <h3><%= link_to profile.name, our_profile_path(profile) %></h3>
         <% if profile.pronouns.present? %>
           <span class="pronouns"><%= profile.pronouns %></span>
         <% end %>
@@ -42,8 +42,8 @@
   </div>
 <% else %>
   <div class="card">
-    <p>No profiles in this group yet. <%= link_to "Add some!", manage_profiles_my_group_path(@group) %></p>
+    <p>No profiles in this group yet. <%= link_to "Add some!", manage_profiles_our_group_path(@group) %></p>
   </div>
 <% end %>
 
-<p><%= link_to "← Back to my groups", my_groups_path %></p>
+<p><%= link_to "← Back to our groups", our_groups_path %></p>

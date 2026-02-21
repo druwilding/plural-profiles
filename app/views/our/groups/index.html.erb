@@ -1,12 +1,12 @@
-<h1>My Groups</h1>
+<h1>Our Groups</h1>
 
-<p><%= link_to "Create a new group", new_my_group_path, class: "btn" %></p>
+<p><%= link_to "Create a new group", new_our_group_path, class: "btn" %></p>
 
 <% if @groups.any? %>
   <div class="card-list">
     <% @groups.each do |group| %>
       <div class="card">
-        <h2><%= link_to group.name, my_group_path(group) %></h2>
+        <h2><%= link_to group.name, our_group_path(group) %></h2>
         <p class="text-muted"><%= pluralize(group.profiles.count, "profile") %></p>
       </div>
     <% end %>

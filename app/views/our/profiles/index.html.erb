@@ -1,6 +1,6 @@
-<h1>My Profiles</h1>
+<h1>Our Profiles</h1>
 
-<p><%= link_to "Create a new profile", new_my_profile_path, class: "btn" %></p>
+<p><%= link_to "Create a new profile", new_our_profile_path, class: "btn" %></p>
 
 <% if @profiles.any? %>
   <div class="card-list">
@@ -13,7 +13,7 @@
             <div class="avatar avatar--small avatar--placeholder"><%= profile.name.first.upcase %></div>
           <% end %>
           <div>
-            <h2><%= link_to profile.name, my_profile_path(profile) %></h2>
+            <h2><%= link_to profile.name, our_profile_path(profile) %></h2>
             <% if profile.pronouns.present? %>
               <span class="pronouns"><%= profile.pronouns %></span>
             <% end %>

@@ -1,4 +1,4 @@
-class My::ProfilesController < ApplicationController
+class Our::ProfilesController < ApplicationController
   before_action :set_profile, only: %i[ show edit update destroy ]
 
   def index
@@ -16,7 +16,7 @@ class My::ProfilesController < ApplicationController
     @profile = Current.user.profiles.build(profile_params)
 
     if @profile.save
-      redirect_to my_profile_path(@profile), notice: "Profile created."
+      redirect_to our_profile_path(@profile), notice: "Profile created."
     else
       render :new, status: :unprocessable_entity
     end
@@ -27,7 +27,7 @@ class My::ProfilesController < ApplicationController
 
   def update
     if @profile.update(profile_params)
-      redirect_to my_profile_path(@profile), notice: "Profile updated."
+      redirect_to our_profile_path(@profile), notice: "Profile updated."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -35,7 +35,7 @@ class My::ProfilesController < ApplicationController
 
   def destroy
     @profile.destroy
-    redirect_to my_profiles_path, notice: "Profile deleted.", status: :see_other
+    redirect_to our_profiles_path, notice: "Profile deleted.", status: :see_other
   end
 
   private

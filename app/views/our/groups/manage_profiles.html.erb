@@ -14,7 +14,7 @@
           <% end %>
           <span><%= profile.name %></span>
         </div>
-        <%= link_to "Remove", remove_profile_my_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small" %>
+        <%= link_to "Remove", remove_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small" %>
       </div>
     <% end %>
   </div>
@@ -38,7 +38,7 @@
           <% end %>
           <span><%= profile.name %></span>
         </div>
-        <%= link_to "Add", add_profile_my_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small" %>
+        <%= link_to "Add", add_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small" %>
       </div>
     <% end %>
   </div>
@@ -48,10 +48,10 @@
       <% if Current.user.profiles.any? %>
         All your profiles are already in this group.
       <% else %>
-        You need to <%= link_to "create some profiles", new_my_profile_path %> first.
+        You need to <%= link_to "create some profiles", new_our_profile_path %> first.
       <% end %>
     </p>
   </div>
 <% end %>
 
-<p><%= link_to "← Back to group", my_group_path(@group) %></p>
+<p><%= link_to "← Back to group", our_group_path(@group) %></p>

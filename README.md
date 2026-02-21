@@ -84,8 +84,8 @@ bin/rails test
 | `/registration/new`            | Sign up                                |
 | `/email_verification?token=…`  | Verify email address                   |
 | `/passwords/…`                 | Password reset flow                    |
-| `/my/profiles`                 | Manage your profiles (auth required)   |
-| `/my/groups`                   | Manage your groups (auth required)     |
+| `/our/profiles`                | Manage your profiles (auth required)   |
+| `/our/groups`                  | Manage your groups (auth required)     |
 | `/profiles/:uuid`              | Public profile page                    |
 | `/groups/:uuid`                | Public group page (lists its profiles) |
 | `/groups/:uuid/profiles/:uuid` | Public profile viewed within a group   |
@@ -95,7 +95,7 @@ bin/rails test
 ```
 app/
 ├── controllers/
-│   ├── my/
+│   ├── our/
 │   │   ├── profiles_controller.rb   # CRUD for the signed-in user's profiles
 │   │   └── groups_controller.rb     # CRUD for the signed-in user's groups
 │   ├── profiles_controller.rb       # Public profile page
@@ -109,8 +109,8 @@ app/
 │   ├── group.rb
 │   └── group_profile.rb
 ├── views/
-│   ├── my/profiles/     # Profile management views
-│   ├── my/groups/       # Group management views
+│   ├── our/profiles/    # Profile management views
+│   ├── our/groups/      # Group management views
 │   ├── profiles/        # Public profile view
 │   ├── groups/          # Public group view
 │   └── group_profiles/  # Public profile-in-group view
