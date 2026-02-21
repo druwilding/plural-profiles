@@ -172,11 +172,11 @@ The `Procfile` runs `db:migrate` automatically after each deploy via the post-de
 
 ### Configuration files
 
-| File | Purpose |
-|------|---------|
-| `Procfile` | Defines the web process and post-deploy migration hook |
-| `.buildpacks` | Uses APT + Ruby buildpacks (APT installs libvips) |
-| `Aptfile` | Lists APT packages to install (`libvips-dev`) |
+| File          | Purpose                                                |
+| ------------- | ------------------------------------------------------ |
+| `Procfile`    | Defines the web process and post-deploy migration hook |
+| `.buildpacks` | Uses APT + Ruby buildpacks (APT installs libvips)      |
+| `Aptfile`     | Lists APT packages to install (`libvips-dev`)          |
 
 ## Licence
 
