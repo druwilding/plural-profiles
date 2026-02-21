@@ -356,9 +356,15 @@ button:hover,
   background-color: var(--link);
   color: #fff;
   font-weight: 700;
+  border-radius: 50%;
   width: 64px;
   height: 64px;
   font-size: 1.5rem;
+}
+
+.profile-card .avatar--placeholder {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .avatar--small.avatar--placeholder {

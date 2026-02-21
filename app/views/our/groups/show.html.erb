@@ -22,8 +22,6 @@
   </div>
 </div>
 
-<h2>Profiles in this group</h2>
-
 <% if @group.profiles.any? %>
   <div class="profile-grid">
     <% @group.profiles.order(:name).each do |profile| %>
