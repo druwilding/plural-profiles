@@ -36,7 +36,7 @@
       </nav>
     </header>
 
-    <main class="container">
+    <main class="container <%= content_for(:container_class) %>">
       <% if flash[:notice] %>
         <div class="flash flash--notice"><%= flash[:notice] %></div>
       <% end %>
