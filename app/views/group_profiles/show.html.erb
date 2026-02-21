@@ -1,7 +1,9 @@
 <div class="card profile-public">
   <div class="profile-header">
     <% if @profile.avatar.attached? %>
-      <%= image_tag @profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large" %>
+      <%= link_to rails_blob_path(@profile.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do %>
+        <%= image_tag @profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large" %>
+      <% end %>
     <% else %>
       <div class="avatar avatar--large avatar--placeholder"><%= @profile.name.first.upcase %></div>
     <% end %>
