@@ -12,7 +12,7 @@ A web app for plural people to create and share multiple profiles. Each account 
 
 ## Tech stack
 
-- **Ruby** 4.0.1
+- **Ruby** 3.3.10
 - **Rails** 8.1.2
 - **PostgreSQL** 16
 - **Puma** web server
@@ -50,10 +50,10 @@ Profile ←→ Group (many-to-many through GroupProfile)
 git clone git@github.com:druewilding/plural-profiles.git
 cd plural-profiles
 
-# Install Ruby 4.0.1 and use the project gemset
+# Install Ruby 3.3.10 and use the project gemset
 # (RVM picks up .ruby-version and .ruby-gemset automatically)
-rvm install ruby-4.0.1
-rvm use ruby-4.0.1@plural-profiles --create
+rvm install ruby-3.3.10
+rvm use ruby-3.3.10@plural-profiles --create
 
 # Install dependencies
 bundle install
