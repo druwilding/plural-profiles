@@ -86,7 +86,7 @@ class Our::AccountControllerTest < ActionDispatch::IntegrationTest
 
   test "update email stores unverified email and sends verification" do
     sign_in_as @user
-    assert_enqueued_emails 1 do
+    assert_enqueued_emails 2 do
       patch update_email_our_account_path, params: { unverified_email_address: "new@example.com" }
     end
     assert_redirected_to our_account_path

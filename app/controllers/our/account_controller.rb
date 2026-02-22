@@ -20,7 +20,8 @@ class Our::AccountController < ApplicationController
     if new_email == Current.user.email_address
       redirect_to our_account_path, alert: "That's already your current email address."
     elsif Current.user.update(unverified_email_address: params[:unverified_email_address])
-      UserMailer.email_change_verification(Current.user).deliver_later
+      UserMailer.verify_new_email(Current.user).deliver_later
+      UserMailer.notify_email_change(Current.user).deliver_later
       redirect_to our_account_path, notice: "Verification email sent to #{new_email}. Please check your inbox."
     else
       redirect_to our_account_path, alert: Current.user.errors.full_messages.to_sentence
