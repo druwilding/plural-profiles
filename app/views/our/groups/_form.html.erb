@@ -13,6 +13,10 @@
     <% if group.persisted? && group.avatar.attached? %>
       <p class="form-hint">Current avatar:</p>
       <%= image_tag group.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64 %>
+      <label class="checkbox-label">
+        <%= check_box_tag "group[remove_avatar]", "1", false %>
+        Remove avatar
+      </label>
     <% end %>
   </div>
 

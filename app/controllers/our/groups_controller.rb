@@ -28,6 +28,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def update
+    @group.avatar.purge if params[:group][:remove_avatar] == "1"
     if @group.update(group_params)
       redirect_to our_group_path(@group), notice: "Group updated."
     else

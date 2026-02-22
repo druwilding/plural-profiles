@@ -29,6 +29,7 @@ class Our::ProfilesController < ApplicationController
   end
 
   def update
+    @profile.avatar.purge if params[:profile][:remove_avatar] == "1"
     if @profile.update(profile_params)
       redirect_to our_profile_path(@profile), notice: "Profile updated."
     else
