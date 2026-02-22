@@ -32,3 +32,9 @@
           - else
             %span.sidebar__avatar.sidebar__avatar--placeholder= profile.name.first.upcase
           = link_to profile.name, our_profile_path(profile), class: "sidebar__link"
+
+  %hr
+
+  %ul.sidebar__list
+    %li{class: "sidebar__item #{('sidebar__item--active' if current_page?(our_account_path))}"}
+      = link_to "Account", our_account_path, class: "sidebar__link"

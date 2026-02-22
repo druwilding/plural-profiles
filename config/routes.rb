@@ -20,6 +20,10 @@ Rails.application.routes.draw do
       delete :remove_group
     end
   end
+  resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do
+    patch :update_password
+    patch :update_email
+  end
 
   # Public shareable URLs (no auth required)
   resources :profiles, only: :show, param: :uuid
