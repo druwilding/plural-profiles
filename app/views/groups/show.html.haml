@@ -24,21 +24,27 @@
     .group-description
       = simple_format(@group.description)
 
-- if @child_groups.any?
-  %h2 Groups
-  .profile-grid
-    - @child_groups.each do |child|
-      = link_to group_path(child.uuid), class: "profile-card card" do
-        - if child.avatar.attached?
-          = image_tag child.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: child.avatar_alt_text.presence || ""
-        - else
-          .avatar.avatar--placeholder= child.name.first.upcase
-        %h3= child.name
+- @child_groups.each do |child|
+  %h2= child.name
+  - if child.all_profiles.any?
+    .profile-grid
+      - child.all_profiles.order(:name).each do |profile|
+        = link_to group_profile_path(@group.uuid, profile.uuid), class: "profile-card card" do
+          - if profile.avatar.attached?
+            = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || ""
+          - else
+            .avatar.avatar--placeholder= profile.name.first.upcase
+          %h3= profile.name
+          - if profile.pronouns.present?
+            %span.pronouns= profile.pronouns
+  - else
+    .card
+      %p No profiles in this group yet.
 
-- if @profiles.any?
-  %h2 Profiles
+- if @direct_profiles.any?
+  %h2 Other profiles
   .profile-grid
-    - @profiles.each do |profile|
+    - @direct_profiles.each do |profile|
       = link_to group_profile_path(@group.uuid, profile.uuid), class: "profile-card card" do
         - if profile.avatar.attached?
           = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || ""
@@ -48,6 +54,6 @@
         - if profile.pronouns.present?
           %span.pronouns= profile.pronouns
 
-- unless @child_groups.any? || @profiles.any?
+- if @child_groups.empty? && @direct_profiles.empty?
   .card
     %p No profiles in this group yet.

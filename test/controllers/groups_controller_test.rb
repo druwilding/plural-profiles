@@ -27,14 +27,14 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "show displays sub-groups" do
+  test "show displays sub-group names as headings" do
     everyone = groups(:everyone)
     get group_path(uuid: everyone.uuid)
     assert_response :success
     assert_match "Friends", response.body
   end
 
-  test "show includes profiles from sub-groups" do
+  test "show includes profiles from sub-groups inline" do
     everyone = groups(:everyone)
     get group_path(uuid: everyone.uuid)
     assert_response :success
