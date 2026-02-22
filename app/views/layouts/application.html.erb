@@ -29,7 +29,9 @@
       <nav>
         <% if authenticated? %>
           <%= link_to "Groups", our_groups_path %>
+          <%= link_to "New group", new_our_group_path %>
           <%= link_to "Profiles", our_profiles_path %>
+          <%= link_to "New profile", new_our_profile_path %>
           <%= link_to "Sign out", session_path, data: { turbo_method: :delete } %>
         <% else %>
           <%= link_to "Sign in", new_session_path %>
