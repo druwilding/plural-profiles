@@ -25,10 +25,11 @@
       = simple_format(@group.description)
 
 - @child_groups.each do |child|
-  %h2= child.name
-  - if child.all_profiles.any?
+  %h2= link_to child.name, group_path(child.uuid)
+  - child_profiles = child.all_profiles.order(:name).load
+  - if child_profiles.any?
     .profile-grid
-      - child.all_profiles.order(:name).each do |profile|
+      - child_profiles.each do |profile|
         = render "groups/profile_card", group: @group, profile: profile
   - else
     .card

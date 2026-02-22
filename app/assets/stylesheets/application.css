@@ -207,6 +207,8 @@ h1, h2, h3 {
 
 h1 { font-size: 1.75rem; }
 h2 { font-size: 1.4rem; }
+h2 a { color: inherit; }
+h2 a:hover { text-decoration: none; opacity: 0.8; }
 
 a {
   color: var(--link);
