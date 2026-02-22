@@ -141,6 +141,73 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @group.reload.profiles, alice
   end
 
+  # -- Manage groups (sub-groups) --
+
+  test "manage_groups shows available groups" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    get manage_groups_our_group_path(everyone)
+    assert_response :success
+  end
+
+  test "manage_groups excludes self and already-added groups" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    get manage_groups_our_group_path(everyone)
+    # User one only has friends + everyone, and friends is already a child,
+    # everyone is self, so the available list should be empty
+    assert_match "All your other groups are already in this group", response.body
+  end
+
+  test "manage_groups excludes ancestor groups to prevent cycles" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    # everyone → friends already exists in fixtures
+    coworkers = @user.groups.create!(name: "Coworkers")
+
+    # From friends' perspective, everyone is an ancestor — must be excluded
+    get manage_groups_our_group_path(@group)
+    assert_response :success
+    assert_no_match "everyone", response.body
+    assert_match "Coworkers", response.body
+  end
+
+  test "add_group adds a sub-group" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    new_group = @user.groups.create!(name: "Coworkers")
+
+    assert_difference("GroupGroup.count", 1) do
+      post add_group_our_group_path(everyone), params: { group_id: new_group.id }
+    end
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    assert_includes everyone.reload.child_groups, new_group
+  end
+
+  test "add_group rejects circular reference" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    # friends → everyone would be circular (everyone → friends exists)
+    assert_no_difference("GroupGroup.count") do
+      post add_group_our_group_path(@group), params: { group_id: everyone.id }
+    end
+    assert_redirected_to manage_groups_our_group_path(@group)
+    follow_redirect!
+    assert_match "circular", response.body
+  end
+
+  test "remove_group removes a sub-group" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    assert_includes everyone.child_groups, @group
+
+    assert_difference("GroupGroup.count", -1) do
+      delete remove_group_our_group_path(everyone), params: { group_id: @group.id }
+    end
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    assert_not_includes everyone.reload.child_groups, @group
+  end
+
   # -- Edge case: logged out user gets redirected to public --
 
   test "show redirects logged-out user to public group" do
@@ -203,6 +270,26 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
+  test "manage_groups redirects logged-out user to sign in" do
+    get manage_groups_our_group_path(@group)
+    assert_redirected_to new_session_path
+  end
+
+  test "add_group redirects logged-out user to sign in" do
+    assert_no_difference("GroupGroup.count") do
+      post add_group_our_group_path(@group), params: { group_id: groups(:everyone).id }
+    end
+    assert_redirected_to new_session_path
+  end
+
+  test "remove_group redirects logged-out user to sign in" do
+    everyone = groups(:everyone)
+    assert_no_difference("GroupGroup.count") do
+      delete remove_group_our_group_path(everyone), params: { group_id: @group.id }
+    end
+    assert_redirected_to new_session_path
+  end
+
   # -- Edge case: wrong user gets redirected to public --
 
   test "show redirects wrong user to public group" do
@@ -258,5 +345,28 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
       delete remove_profile_our_group_path(@group), params: { profile_id: profiles(:alice).id }
     end
     assert_redirected_to group_path(@group.uuid)
+  end
+
+  test "manage_groups redirects wrong user to public group" do
+    sign_in_as @other_user
+    get manage_groups_our_group_path(@group)
+    assert_redirected_to group_path(@group.uuid)
+  end
+
+  test "add_group redirects wrong user to public group" do
+    sign_in_as @other_user
+    assert_no_difference("GroupGroup.count") do
+      post add_group_our_group_path(@group), params: { group_id: groups(:everyone).id }
+    end
+    assert_redirected_to group_path(@group.uuid)
+  end
+
+  test "remove_group redirects wrong user to public group" do
+    sign_in_as @other_user
+    everyone = groups(:everyone)
+    assert_no_difference("GroupGroup.count") do
+      delete remove_group_our_group_path(everyone), params: { group_id: @group.id }
+    end
+    assert_redirected_to group_path(everyone.uuid)
   end
 end

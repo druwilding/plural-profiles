@@ -3,6 +3,7 @@ class GroupsController < ApplicationController
 
   def show
     @group = Group.find_by!(uuid: params[:uuid])
-    @profiles = @group.profiles.order(:name)
+    @profiles = @group.all_profiles.order(:name)
+    @child_groups = @group.child_groups.order(:name)
   end
 end

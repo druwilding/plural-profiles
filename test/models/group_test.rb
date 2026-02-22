@@ -42,4 +42,44 @@ class GroupTest < ActiveSupport::TestCase
     )
     assert group.avatar.attached?
   end
+
+  test "has many child_groups" do
+    everyone = groups(:everyone)
+    assert_includes everyone.child_groups, groups(:friends)
+  end
+
+  test "has many parent_groups" do
+    friends = groups(:friends)
+    assert_includes friends.parent_groups, groups(:everyone)
+  end
+
+  test "all_profiles includes profiles from child groups" do
+    everyone = groups(:everyone)
+    # everyone has no direct profiles, but friends (its child) has alice
+    all = everyone.all_profiles
+    assert_includes all, profiles(:alice)
+  end
+
+  test "all_profiles de-duplicates profiles appearing in multiple sub-groups" do
+    everyone = groups(:everyone)
+    alice = profiles(:alice)
+
+    # Add alice directly to everyone too (she's already in friends, a child)
+    everyone.profiles << alice
+
+    all = everyone.all_profiles
+    assert_equal 1, all.where(id: alice.id).count
+  end
+
+  test "all_child_groups returns all descendants" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    coworkers = user.groups.create!(name: "Coworkers")
+    GroupGroup.create!(parent_group: friends, child_group: coworkers)
+
+    descendants = everyone.all_child_groups
+    assert_includes descendants, friends
+    assert_includes descendants, coworkers
+  end
 end

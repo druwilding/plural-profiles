@@ -24,7 +24,19 @@
     .group-description
       = simple_format(@group.description)
 
+- if @child_groups.any?
+  %h2 Groups
+  .profile-grid
+    - @child_groups.each do |child|
+      = link_to group_path(child.uuid), class: "profile-card card" do
+        - if child.avatar.attached?
+          = image_tag child.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: child.avatar_alt_text.presence || ""
+        - else
+          .avatar.avatar--placeholder= child.name.first.upcase
+        %h3= child.name
+
 - if @profiles.any?
+  %h2 Profiles
   .profile-grid
     - @profiles.each do |profile|
       = link_to group_profile_path(@group.uuid, profile.uuid), class: "profile-card card" do
@@ -35,6 +47,7 @@
         %h3= profile.name
         - if profile.pronouns.present?
           %span.pronouns= profile.pronouns
-- else
+
+- unless @child_groups.any? || @profiles.any?
   .card
     %p No profiles in this group yet.

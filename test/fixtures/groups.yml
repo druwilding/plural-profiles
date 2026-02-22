@@ -4,6 +4,12 @@ friends:
   name: Friends
   description: Our close friends group.
 
+everyone:
+  user: one
+  uuid: def33333-3333-3333-3333-333333333333
+  name: Everyone
+  description: A super-group containing all our groups.
+
 family:
   user: two
   uuid: def22222-2222-2222-2222-222222222222

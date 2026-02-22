@@ -26,4 +26,19 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     get group_path(uuid: "nonexistent-uuid")
     assert_response :not_found
   end
+
+  test "show displays sub-groups" do
+    everyone = groups(:everyone)
+    get group_path(uuid: everyone.uuid)
+    assert_response :success
+    assert_match "Friends", response.body
+  end
+
+  test "show includes profiles from sub-groups" do
+    everyone = groups(:everyone)
+    get group_path(uuid: everyone.uuid)
+    assert_response :success
+    # Alice is in friends, which is a child of everyone
+    assert_match "Alice", response.body
+  end
 end

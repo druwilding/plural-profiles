@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -58,6 +58,33 @@ class Our::GroupsController < ApplicationController
     profile = @group.profiles.find(params[:profile_id])
     @group.profiles.delete(profile)
     redirect_to manage_profiles_our_group_path(@group), notice: "Profile removed from group."
+  end
+
+  def manage_groups
+    excluded_ids = @group.descendant_group_ids | @group.ancestor_group_ids
+    @available_groups = Current.user.groups
+      .where.not(id: excluded_ids)
+      .order(:name)
+  end
+
+  def add_group
+    child = Current.user.groups.find(params[:group_id])
+    group_group = @group.child_links.build(child_group: child)
+    if group_group.save
+      redirect_to manage_groups_our_group_path(@group), notice: "Group added."
+    else
+      redirect_to manage_groups_our_group_path(@group), alert: group_group.errors.full_messages.to_sentence
+    end
+  rescue ActiveRecord::RecordNotFound
+    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
+  end
+
+  def remove_group
+    child = @group.child_groups.find(params[:group_id])
+    @group.child_groups.delete(child)
+    redirect_to manage_groups_our_group_path(@group), notice: "Group removed."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
   end
 
   private

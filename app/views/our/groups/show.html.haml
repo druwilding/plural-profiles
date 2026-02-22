@@ -16,7 +16,8 @@
   .profile-actions
     = link_to "Edit", edit_our_group_path(@group), class: "btn btn--secondary"
     = link_to "Manage profiles", manage_profiles_our_group_path(@group), class: "btn btn--secondary"
-    = link_to "Delete", our_group_path(@group), data: { turbo_method: :delete, turbo_confirm: "Are you sure? This won't delete the profiles themselves." }, class: "btn btn--danger"
+    = link_to "Manage groups", manage_groups_our_group_path(@group), class: "btn btn--secondary"
+    = link_to "Delete", our_group_path(@group), data: { turbo_method: :delete, turbo_confirm: "Are you sure? This will only delete the group and its relationships, not the profiles or child groups themselves." }, class: "btn btn--danger"
 
   .share-box
     %h3 Share this group
@@ -24,6 +25,18 @@
       %input{type: "text", value: group_url(@group.uuid), readonly: true, id: "group-share-url"}
       %button.btn{onclick: "navigator.clipboard.writeText(document.getElementById('group-share-url').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"} Copy
 
+- if @group.child_groups.any?
+  %h2 Groups
+  .profile-grid
+    - @group.child_groups.order(:name).each do |child|
+      .card.profile-card
+        - if child.avatar.attached?
+          = image_tag child.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: child.avatar_alt_text.presence || ""
+        - else
+          .avatar.avatar--placeholder= child.name.first.upcase
+        %h3= link_to child.name, our_group_path(child)
+
+%h2 Profiles
 - if @group.profiles.any?
   .profile-grid
     - @group.profiles.order(:name).each do |profile|

@@ -1,0 +1,3 @@
+friends_in_everyone:
+  parent_group: everyone
+  child_group: friends
