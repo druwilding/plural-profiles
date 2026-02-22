@@ -17,6 +17,7 @@ class EmailVerificationsController < ApplicationController
     return false unless user.unverified_email_address.present?
 
     user.update!(email_address: user.unverified_email_address, unverified_email_address: nil, email_verified_at: Time.current)
+    user.sessions.destroy_all
     redirect_to new_session_path, notice: "Email address updated and verified! Please sign in with your new email."
     true
   end
