@@ -74,6 +74,20 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 bin/rails test
 ```
 
+### Linting
+
+This project uses [RuboCop](https://rubocop.org/) with the [Rails Omakase](https://github.com/rails/rubocop-rails-omakase/) style guide:
+
+```sh
+bin/rubocop
+```
+
+Auto-fix issues:
+
+```sh
+bin/rubocop -a
+```
+
 ## Routes overview
 
 | Path                           | Description                            |
