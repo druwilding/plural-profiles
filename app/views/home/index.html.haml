@@ -1,0 +1,30 @@
+- content_for(:title) { "Home — Plural Profiles" }
+
+%h1 Welcome!
+
+- unless Current.user.email_verified?
+  .flash.flash--warning
+    ⚠️ Your email is not yet verified. Please check your inbox.
+
+- profile_count = Current.user.profiles.count
+- group_count = Current.user.groups.count
+
+.card
+  %h2 At a glance
+
+  - if profile_count.zero? && group_count.zero?
+    %p You haven't created anything yet, and that's okay!
+  - else
+    %p
+      You currently have
+      %strong= link_to pluralize(group_count, "group"), our_groups_path
+      and
+      %strong= link_to pluralize(profile_count, "profile"), our_profiles_path
+      \.
+  %p
+    You can
+    %ul
+      %li= link_to "Create a group", new_our_group_path
+      %li= link_to "Create a profile", new_our_profile_path
+
+= render "shared/about"

@@ -1,0 +1,36 @@
+- content_for(:title) { @profile.name + " — Plural Profiles" }
+
+%h1= @profile.name
+
+.card
+  .profile-header
+    - if @profile.avatar.attached?
+      = link_to rails_blob_path(@profile.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
+        = image_tag @profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @profile.avatar_alt_text.presence || ""
+    - else
+      .avatar.avatar--large.avatar--placeholder= @profile.name.first.upcase
+    %div
+      - if @profile.pronouns.present?
+        %p.pronouns= @profile.pronouns
+
+  - if @profile.description.present?
+    .profile-description
+      = simple_format(@profile.description)
+
+  .profile-actions
+    = link_to "Edit", edit_our_profile_path(@profile), class: "btn btn--secondary"
+    = link_to "Delete", our_profile_path(@profile), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn--danger"
+
+  .share-box
+    %h3 Share this profile
+    .share-url
+      %input{type: "text", value: profile_url(@profile.uuid), readonly: true, id: "profile-share-url"}
+      %button.btn{onclick: "navigator.clipboard.writeText(document.getElementById('profile-share-url').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"} Copy
+
+  - if @profile.groups.any?
+    %h3 In groups
+    %ul
+      - @profile.groups.where(user: Current.user).each do |group|
+        %li= link_to group.name, our_group_path(group)
+
+%p= link_to "← Back to our profiles", our_profiles_path

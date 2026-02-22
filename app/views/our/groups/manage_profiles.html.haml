@@ -1,0 +1,47 @@
+- content_for(:title) { "Manage profiles in #{@group.name} — Plural Profiles" }
+
+%h1
+  Manage profiles in
+  = @group.name
+
+%h2 Current profiles
+
+- if @group.profiles.any?
+  .card-list
+    - @group.profiles.order(:name).each do |profile|
+      .card.card--row
+        .card__header
+          - if profile.avatar.attached?
+            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || ""
+          - else
+            .avatar.avatar--small.avatar--placeholder= profile.name.first.upcase
+          %span= profile.name
+        = link_to "Remove", remove_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
+- else
+  .card
+    %p No profiles in this group yet.
+
+%h2 Add a profile
+
+- if @available_profiles.any?
+  .card-list
+    - @available_profiles.each do |profile|
+      .card.card--row
+        .card__header
+          - if profile.avatar.attached?
+            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || ""
+          - else
+            .avatar.avatar--small.avatar--placeholder= profile.name.first.upcase
+          %span= profile.name
+        = link_to "Add", add_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small"
+- else
+  .card
+    %p
+      - if Current.user.profiles.any?
+        All your profiles are already in this group.
+      - else
+        You need to
+        = link_to "create some profiles", new_our_profile_path
+        first.
+
+%p= link_to "← Back to group", our_group_path(@group)

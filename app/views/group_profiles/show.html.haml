@@ -1,0 +1,30 @@
+- content_for(:title) { @profile.name + " — " + @group.name + " — Plural Profiles" }
+- content_for(:head) do
+  %meta{property: "og:title", content: @profile.name}
+  %meta{property: "og:site_name", content: "Plural Profiles"}
+  %meta{property: "og:type", content: "profile"}
+  %meta{property: "og:url", content: group_profile_url(@group.uuid, @profile.uuid)}
+  - if @profile.pronouns.present?
+    %meta{property: "og:description", content: @profile.pronouns}
+  - if @profile.avatar.attached?
+    %meta{property: "og:image", content: rails_representation_url(@profile.avatar.variant(resize_to_fill: [512, 512]))}
+    %meta{property: "og:image:width", content: "512"}
+    %meta{property: "og:image:height", content: "512"}
+
+.card.profile-public
+  .profile-header
+    - if @profile.avatar.attached?
+      = link_to rails_blob_path(@profile.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
+        = image_tag @profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @profile.avatar_alt_text.presence || ""
+    - else
+      .avatar.avatar--large.avatar--placeholder= @profile.name.first.upcase
+    %div
+      %h1= @profile.name
+      - if @profile.pronouns.present?
+        %p.pronouns= @profile.pronouns
+
+  - if @profile.description.present?
+    .profile-description
+      = simple_format(@profile.description)
+
+%p= link_to "← Back to #{@group.name}", group_path(@group.uuid)

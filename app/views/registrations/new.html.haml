@@ -1,0 +1,33 @@
+- content_for(:container_class) { "narrow" }
+- content_for(:title) { "Sign up — Plural Profiles" }
+
+.card
+  %h1 Sign up
+
+  - if @user.errors.any?
+    .error-messages
+      - @user.errors.full_messages.each do |message|
+        %p= message
+
+  = form_with model: @user, url: registration_path do |form|
+    .form-group
+      = form.label :email_address, "Email address"
+      = form.email_field :email_address, required: true, autocomplete: "email"
+
+    .form-group
+      = form.label :password
+      = form.password_field :password, required: true, autocomplete: "new-password"
+
+    .form-group
+      = form.label :password_confirmation, "Confirm password"
+      = form.password_field :password_confirmation, required: true, autocomplete: "new-password"
+
+    .form-group
+      = form.submit "Sign up"
+
+  .form-links
+    %p
+      Already have an account?
+      = link_to "Sign in", new_session_path
+
+= render "shared/about"

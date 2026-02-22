@@ -1,0 +1,9 @@
+- content_for(:container_class)
+- content_for(:title) { "New profile — Plural Profiles" }
+
+%h1 New profile
+
+.card
+  = render "our/profiles/form", profile: @profile
+
+%p= link_to "← Back to our profiles", our_profiles_path

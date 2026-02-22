@@ -1,0 +1,17 @@
+- content_for(:title) { "Our groups — Plural Profiles" }
+
+%h1 Our groups
+
+- if @groups.any?
+  .card-list
+    - @groups.each do |group|
+      .card.card--row
+        .card__header
+          - if group.avatar.attached?
+            = image_tag group.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48, alt: group.avatar_alt_text.presence || ""
+          %div
+            %h2= link_to group.name, our_group_path(group)
+            %p.text-muted= pluralize(group.profiles.count, "profile")
+- else
+  .card
+    %p You haven't created any groups yet.
