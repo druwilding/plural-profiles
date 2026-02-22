@@ -422,21 +422,11 @@ button:hover,
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
-button.profile-card {
-  background: var(--bg-contrast);
-  border: none;
-  font: inherit;
-  cursor: pointer;
-}
-
 .profile-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   text-decoration: none;
-}
-
-button.profile-card:hover {
-  background: var(--bg-contrast);
+  color: var(--text);
 }
 
 .profile-card h3 {

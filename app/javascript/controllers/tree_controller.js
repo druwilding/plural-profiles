@@ -49,8 +49,9 @@ export default class extends Controller {
   }
 
   selectProfileCard(event) {
-    const button = event.currentTarget
-    this.#selectProfileButton(button)
+    event.preventDefault()
+    const link = event.currentTarget
+    this.#selectProfileButton(link)
   }
 
   // --- private ---

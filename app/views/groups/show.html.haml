@@ -58,7 +58,7 @@
             - if node[:profiles].any?
               .profile-grid
                 - node[:profiles].each do |profile|
-                  = render "groups/profile_card_link", group: node[:group], profile: profile
+                  = render "groups/profile_card", group: node[:group], profile: profile
             - render_flat.call(node[:children])
       - render_flat.call(@descendant_tree)
 
