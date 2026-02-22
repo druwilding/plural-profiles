@@ -20,7 +20,7 @@
         -# Root group node
         %li.tree__folder{"data-tree-target": "folder"}
           %button.tree__toggle.tree__toggle--active{"data-action": "click->tree#selectRoot", type: "button"}
-            %span.tree__arrow ▸
+            %span.tree__arrow.tree__arrow--open ▸
             - if @group.avatar.attached?
               = image_tag @group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
             %span.tree__label= @group.name

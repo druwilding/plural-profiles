@@ -13,9 +13,9 @@ export default class extends Controller {
     // Toggle children visibility
     const children = button.nextElementSibling
     if (children) {
-      const isOpen = children.style.display !== "none"
-      children.style.display = isOpen ? "none" : ""
-      this.#rotateArrow(button, !isOpen)
+      const isHidden = children.style.display === "none"
+      children.style.display = isHidden ? "" : "none"
+      this.#rotateArrow(button, isHidden)
     }
 
     // Show root group content
@@ -34,9 +34,9 @@ export default class extends Controller {
     const children = button.nextElementSibling
     if (!children) return
 
-    const isOpen = children.style.display !== "none"
-    children.style.display = isOpen ? "none" : ""
-    this.#rotateArrow(button, !isOpen)
+    const isHidden = children.style.display === "none"
+    children.style.display = isHidden ? "" : "none"
+    this.#rotateArrow(button, isHidden)
   }
 
   selectProfile(event) {

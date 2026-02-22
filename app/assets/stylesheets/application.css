@@ -600,6 +600,10 @@ button:hover,
   display: inline-block;
 }
 
+.tree__arrow--open {
+  transform: rotate(90deg);
+}
+
 .tree__avatar {
   width: 20px;
   height: 20px;

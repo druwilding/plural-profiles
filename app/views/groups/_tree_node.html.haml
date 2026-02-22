@@ -8,11 +8,11 @@
 - if has_children
   %li.tree__folder{"data-tree-target": "folder"}
     %button.tree__toggle{"data-action": "click->tree#toggleFolder", type: "button"}
-      %span.tree__arrow ▸
+      %span.tree__arrow.tree__arrow--open ▸
       - if group.avatar.attached?
         = image_tag group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
       %span.tree__label= group.name
-    %ul.tree__children{style: "display: none"}
+    %ul.tree__children
       - children.each do |child_node|
         = render "groups/tree_node", node: child_node, root_group: root_group
       - profiles.each do |profile|
