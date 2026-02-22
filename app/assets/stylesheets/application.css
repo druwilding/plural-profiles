@@ -61,6 +61,10 @@ body {
   padding: 0 1.5rem;
 }
 
+.container:has(.layout) {
+  max-width: 1200px;
+}
+
 .container.narrow {
   max-width: 540px;
 }
