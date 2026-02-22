@@ -1,11 +1,21 @@
 <h1><%= @group.name %></h1>
 
 <div class="card">
-  <% if @group.description.present? %>
-    <div class="group-description">
-      <%= simple_format(@group.description) %>
-    </div>
-  <% end %>
+  <div class="profile-header">
+    <% if @group.avatar.attached? %>
+      <%= link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do %>
+        <%= image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96 %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div>
+    <% if @group.description.present? %>
+      <div class="group-description">
+        <%= simple_format(@group.description) %>
+      </div>
+    <% end %>
+  </div>
 
   <div class="profile-actions">
     <%= link_to "Edit", edit_our_group_path(@group), class: "btn btn--secondary" %>

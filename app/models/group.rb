@@ -3,6 +3,8 @@ class Group < ApplicationRecord
   has_many :group_profiles, dependent: :destroy
   has_many :profiles, through: :group_profiles
 
+  has_one_attached :avatar
+
   before_create :generate_uuid
 
   validates :name, presence: true
