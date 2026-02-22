@@ -24,7 +24,14 @@ Rails.application.routes.draw do
   # Public shareable URLs (no auth required)
   resources :profiles, only: :show, param: :uuid
   resources :groups, only: :show, param: :uuid do
-    resources :profiles, only: :show, param: :uuid, controller: "group_profiles"
+    member do
+      get :panel
+    end
+    resources :profiles, only: :show, param: :uuid, controller: "group_profiles" do
+      member do
+        get :panel
+      end
+    end
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

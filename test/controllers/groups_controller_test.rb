@@ -86,4 +86,19 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     # Alice is a direct profile — should appear in tree and content
     assert_match "Alice", response.body
   end
+
+  test "panel returns group content fragment" do
+    group = groups(:friends)
+    get panel_group_path(uuid: group.uuid)
+    assert_response :success
+    assert_match "Friends", response.body
+    assert_match "Alice", response.body
+    # Should be a fragment, not a full page
+    assert_no_match "<!DOCTYPE", response.body
+  end
+
+  test "panel returns 404 for unknown group" do
+    get panel_group_path(uuid: "nonexistent-uuid")
+    assert_response :not_found
+  end
 end

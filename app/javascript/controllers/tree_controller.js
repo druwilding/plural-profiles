@@ -1,9 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Tree explorer controller for navigating nested groups and profiles.
-// Handles expand/collapse of folders and swapping the content panel.
+// Handles expand/collapse of folders and lazy-loads content panels via fetch.
 export default class extends Controller {
-  static targets = ["content", "folder", "groupTemplate", "profileTemplate", "fallback"]
+  static targets = ["content", "folder", "fallback"]
 
   connect() {
     // Progressive enhancement: show the interactive explorer, hide the flat fallback
@@ -18,27 +18,14 @@ export default class extends Controller {
     const button = event.currentTarget
     this.#clearActive()
     button.classList.add("tree__item--active")
-
-    // Show root group content
-    const template = this.groupTemplateTargets[this.groupTemplateTargets.length - 1]
-    if (template) {
-      this.contentTarget.innerHTML = template.innerHTML
-    }
+    this.#loadPanel(button.dataset.panelUrl)
   }
 
   selectGroup(event) {
     const button = event.currentTarget
-    const { groupUuid } = button.dataset
-
     this.#clearActive()
     button.classList.add("tree__item--active")
-
-    const template = this.groupTemplateTargets.find(
-      t => t.dataset.groupUuid === groupUuid
-    )
-    if (template) {
-      this.contentTarget.innerHTML = template.innerHTML
-    }
+    this.#loadPanel(button.dataset.panelUrl)
   }
 
   toggleFolder(event) {
@@ -58,19 +45,19 @@ export default class extends Controller {
 
   selectProfile(event) {
     const button = event.currentTarget
-    const { groupUuid, profileUuid } = button.dataset
-    this.#showProfile(groupUuid, profileUuid)
+    this.#selectProfileButton(button)
   }
 
   selectProfileCard(event) {
     const button = event.currentTarget
-    const { groupUuid, profileUuid } = button.dataset
-    this.#showProfile(groupUuid, profileUuid)
+    this.#selectProfileButton(button)
   }
 
   // --- private ---
 
-  #showProfile(groupUuid, profileUuid) {
+  #selectProfileButton(button) {
+    const { panelUrl, groupUuid, profileUuid } = button.dataset
+
     this.#clearActive()
 
     // Highlight the matching leaf in the tree
@@ -91,11 +78,21 @@ export default class extends Controller {
       }
     }
 
-    const template = this.profileTemplateTargets.find(
-      t => t.dataset.groupUuid === groupUuid && t.dataset.profileUuid === profileUuid
-    )
-    if (template) {
-      this.contentTarget.innerHTML = template.innerHTML
+    this.#loadPanel(panelUrl)
+  }
+
+  async #loadPanel(url) {
+    if (!url) return
+
+    try {
+      const response = await fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+      if (response.ok) {
+        this.contentTarget.innerHTML = await response.text()
+      }
+    } catch (error) {
+      // Silently fail — content panel stays as-is
     }
   }
 

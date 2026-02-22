@@ -23,7 +23,7 @@
             .tree__row
               %button.tree__arrow-btn{"data-action": "click->tree#toggleFolder", type: "button", "aria-label": "Toggle #{@group.name}"}
                 %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▸
-              %button.tree__item.tree__item--active{"data-action": "click->tree#selectRoot", type: "button"}
+              %button.tree__item.tree__item--active{"data-action": "click->tree#selectRoot", "data-panel-url": panel_group_path(@group.uuid), type: "button"}
                 - if @group.avatar.attached?
                   = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
                 %span.tree__label= @group.name
@@ -34,7 +34,7 @@
               -# Direct profiles at root level
               - @direct_profiles.each do |profile|
                 %li.tree__leaf{role: "treeitem"}
-                  %button.tree__item{"data-action": "click->tree#selectProfile", "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
+                  %button.tree__item{"data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(@group.uuid, profile.uuid), "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
                     - if profile.avatar.attached?
                       = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
                     - else
@@ -43,26 +43,6 @@
 
       .explorer__content{"data-tree-target": "content", "aria-live": "polite"}
         -# Default: show root group content
-        = render "groups/group_content", group: @group, profiles: @direct_profiles
-
-      -# Hidden content panels for each descendant group
-      - cache_tree = lambda do |nodes|
-        - nodes.each do |node|
-          %template{"data-tree-target": "groupTemplate", "data-group-uuid": node[:group].uuid}
-            = render "groups/group_content", group: node[:group], profiles: node[:profiles]
-          - node[:profiles].each do |profile|
-            %template{"data-tree-target": "profileTemplate", "data-group-uuid": node[:group].uuid, "data-profile-uuid": profile.uuid}
-              = render "groups/profile_content", group: node[:group], profile: profile
-          - cache_tree.call(node[:children])
-      - cache_tree.call(@descendant_tree)
-
-      -# Templates for direct profiles
-      - @direct_profiles.each do |profile|
-        %template{"data-tree-target": "profileTemplate", "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid}
-          = render "groups/profile_content", group: @group, profile: profile
-
-      -# Template for root group
-      %template{"data-tree-target": "groupTemplate", "data-group-uuid": @group.uuid}
         = render "groups/group_content", group: @group, profiles: @direct_profiles
 
     -# No-JS fallback: all content rendered flat with linked profile cards

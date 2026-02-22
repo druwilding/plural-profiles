@@ -1,4 +1,4 @@
-%button.profile-card.card{"data-action": "click->tree#selectProfileCard", "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
+%button.profile-card.card{"data-action": "click->tree#selectProfileCard", "data-panel-url": panel_group_profile_path(group.uuid, profile.uuid), "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
   - if profile.avatar.attached?
     = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || ""
   - else
