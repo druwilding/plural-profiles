@@ -1,3 +1,19 @@
+<% content_for(:title) { @profile.name + " — Plural Profiles" } %>
+<% content_for(:head) do %>
+  <meta property="og:title" content="<%= @profile.name %>">
+  <meta property="og:site_name" content="Plural Profiles">
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="<%= profile_url(@profile.uuid) %>">
+  <% if @profile.pronouns.present? %>
+    <meta property="og:description" content="<%= @profile.pronouns %>">
+  <% end %>
+  <% if @profile.avatar.attached? %>
+    <meta property="og:image" content="<%= rails_representation_url(@profile.avatar.variant(resize_to_fill: [512, 512])) %>">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+  <% end %>
+<% end %>
+
 <div class="card profile-public">
   <div class="profile-header">
     <% if @profile.avatar.attached? %>
