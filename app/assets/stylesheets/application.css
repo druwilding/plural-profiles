@@ -606,7 +606,7 @@ button.profile-card:hover {
   border-radius: 4px;
   background: none;
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
@@ -624,7 +624,7 @@ button.profile-card:hover {
 }
 
 .tree__arrow {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   flex-shrink: 0;
   transition: transform 0.15s ease;
   width: 0.75rem;
@@ -637,8 +637,8 @@ button.profile-card:hover {
 }
 
 .tree__avatar {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   flex-shrink: 0;
   object-fit: cover;
@@ -651,7 +651,7 @@ button.profile-card:hover {
   background-color: var(--link);
   color: #fff;
   font-weight: 700;
-  font-size: 0.55rem;
+  font-size: 0.65rem;
 }
 
 .tree__label {

@@ -12,7 +12,7 @@
         %span.tree__arrow.tree__arrow--open ▸
       %button.tree__item{"data-action": "click->tree#selectGroup", "data-group-uuid": group.uuid, type: "button"}
         - if group.avatar.attached?
-          = image_tag group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+          = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
         %span.tree__label= group.name
     %ul.tree__children
       - children.each do |child_node|
@@ -21,7 +21,7 @@
         %li.tree__leaf
           %button.tree__item{"data-action": "click->tree#selectProfile", "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
             - if profile.avatar.attached?
-              = image_tag profile.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+              = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
             - else
               %span.tree__avatar.tree__avatar--placeholder= profile.name.first.upcase
             %span.tree__label= profile.name
@@ -32,5 +32,5 @@
         %span.tree__arrow
       %button.tree__item{"data-action": "click->tree#selectGroup", "data-group-uuid": group.uuid, type: "button"}
         - if group.avatar.attached?
-          = image_tag group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+          = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
         %span.tree__label= group.name
