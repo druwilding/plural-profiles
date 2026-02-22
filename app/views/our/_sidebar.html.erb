@@ -1,10 +1,20 @@
 <nav class="sidebar" aria-label="Your content">
+  <ul class="sidebar__list">
+    <li class="sidebar__item sidebar__item--action">
+      <%= link_to "Home", root_path, class: "sidebar__link sidebar__link--action" %>
+    </li>
+  </ul>
+
+  <hr>
+
+  <ul class="sidebar__list">
+    <li class="sidebar__item sidebar__item--action">
+      <%= link_to "New group", new_our_group_path, class: "sidebar__link sidebar__link--action" %>
+    </li>
+  </ul>
   <details open>
     <summary>Groups</summary>
     <ul class="sidebar__list">
-      <li class="sidebar__item sidebar__item--action">
-        <%= link_to "+ New group", new_our_group_path, class: "sidebar__link sidebar__link--action" %>
-      </li>
       <% @sidebar_groups.each do |group| %>
         <li class="sidebar__item <%= 'sidebar__item--active' if @group && @group.id == group.id %>">
           <% if group.avatar.attached? %>
@@ -16,12 +26,16 @@
     </ul>
   </details>
 
+  <hr>
+
+  <ul class="sidebar__list">
+    <li class="sidebar__item sidebar__item--action">
+      <%= link_to "New profile", new_our_profile_path, class: "sidebar__link sidebar__link--action" %>
+    </li>
+  </ul>
   <details open>
     <summary>Profiles</summary>
     <ul class="sidebar__list">
-      <li class="sidebar__item sidebar__item--action">
-        <%= link_to "+ New profile", new_our_profile_path, class: "sidebar__link sidebar__link--action" %>
-      </li>
       <% @sidebar_profiles.each do |profile| %>
         <li class="sidebar__item <%= 'sidebar__item--active' if @profile && @profile.id == profile.id %>">
           <% if profile.avatar.attached? %>
