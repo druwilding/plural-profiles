@@ -27,7 +27,11 @@
 - @descendant_sections.each do |section|
   - section_profiles = section.profiles.sort_by(&:name)
   - if section_profiles.any?
-    %h2= link_to section.name, group_path(section.uuid)
+    %h2
+      - if section.avatar.attached?
+        = link_to group_path(section.uuid) do
+          = image_tag section.avatar.variant(resize_to_fill: [32, 32]), class: "avatar avatar--inline", width: 32, height: 32, alt: section.avatar_alt_text.presence || ""
+      = link_to section.name, group_path(section.uuid)
     .profile-grid
       - section_profiles.each do |profile|
         = render "groups/profile_card", group: section, profile: profile

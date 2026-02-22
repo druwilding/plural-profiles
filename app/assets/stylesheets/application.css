@@ -469,6 +469,11 @@ button:hover,
   font-size: 2.5rem;
 }
 
+.avatar--inline {
+  vertical-align: middle;
+  margin-right: 0.35em;
+}
+
 .avatar--placeholder {
   display: flex;
   align-items: center;
