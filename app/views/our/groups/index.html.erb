@@ -1,7 +1,5 @@
 <h1>Our Groups</h1>
 
-<p><%= link_to "Create a new group", new_our_group_path, class: "btn" %></p>
-
 <% if @groups.any? %>
   <div class="card-list">
     <% @groups.each do |group| %>

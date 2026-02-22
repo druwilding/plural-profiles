@@ -1,7 +1,5 @@
 <h1>Our Profiles</h1>
 
-<p><%= link_to "Create a new profile", new_our_profile_path, class: "btn" %></p>
-
 <% if @profiles.any? %>
   <div class="card-list">
     <% @profiles.each do |profile| %>
