@@ -23,7 +23,7 @@
             .tree__row
               %button.tree__arrow-btn{"data-action": "click->tree#toggleFolder", type: "button", "aria-label": "Toggle #{@group.name}"}
                 %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▸
-              %button.tree__item.tree__item--active{"data-action": "click->tree#selectRoot", "data-panel-url": panel_group_path(@group.uuid), type: "button"}
+              %button.tree__item.tree__item--active{"data-action": "click->tree#selectRoot", "data-panel-url": panel_group_path(@group.uuid), "data-group-uuid": @group.uuid, type: "button"}
                 - if @group.avatar.attached?
                   = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
                 %span.tree__label= @group.name
