@@ -7,5 +7,19 @@
   %p= Current.user.email_address
 
 .card
-  %h2 Password
-  %p ••••••••
+  %h2 Change password
+  = form_with url: update_password_our_account_path, method: :patch do |form|
+    .form-group
+      = form.label :current_password, "Current password"
+      = form.password_field :current_password, required: true, autocomplete: "current-password"
+
+    .form-group
+      = form.label :password, "New password"
+      = form.password_field :password, required: true, minlength: 8, autocomplete: "new-password"
+
+    .form-group
+      = form.label :password_confirmation, "Confirm new password"
+      = form.password_field :password_confirmation, required: true, minlength: 8, autocomplete: "new-password"
+
+    .form-group
+      = form.submit "Update password"

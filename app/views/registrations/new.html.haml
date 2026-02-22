@@ -16,12 +16,11 @@
 
     .form-group
       = form.label :password
-      = form.password_field :password, required: true, autocomplete: "new-password"
+      = form.password_field :password, required: true, minlength: 8, autocomplete: "new-password"
 
     .form-group
       = form.label :password_confirmation, "Confirm password"
-      = form.password_field :password_confirmation, required: true, autocomplete: "new-password"
-
+      = form.password_field :password_confirmation, required: true, minlength: 8, autocomplete: "new-password"
     .form-group
       = form.submit "Sign up"
 
