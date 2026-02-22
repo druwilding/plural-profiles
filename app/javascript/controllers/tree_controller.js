@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Tree explorer controller for navigating nested groups and profiles.
 // Handles expand/collapse of folders and lazy-loads content panels via fetch.
 export default class extends Controller {
-  static targets = ["content", "folder", "fallback"]
+  static targets = ["content", "fallback"]
 
   connect() {
     // Progressive enhancement: show the interactive explorer, hide the flat fallback

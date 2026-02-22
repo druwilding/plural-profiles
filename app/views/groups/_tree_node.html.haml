@@ -6,7 +6,7 @@
 - has_children = children.any? || profiles.any?
 
 - if has_children
-  %li.tree__folder{"data-tree-target": "folder", role: "treeitem", "aria-expanded": "true"}
+  %li.tree__folder{role: "treeitem", "aria-expanded": "true"}
     .tree__row
       %button.tree__arrow-btn{"data-action": "click->tree#toggleFolder", type: "button", "aria-label": "Toggle #{group.name}"}
         %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▸
