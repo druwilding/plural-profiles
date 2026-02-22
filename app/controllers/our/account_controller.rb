@@ -15,7 +15,7 @@ class Our::AccountController < ApplicationController
   end
 
   def update_email
-    new_email = params[:unverified_email_address].to_s
+    new_email = params[:unverified_email_address].to_s.strip.downcase
 
     if new_email == Current.user.email_address
       redirect_to our_account_path, alert: "That's already your current email address."
