@@ -12,7 +12,7 @@
       <%= link_to "New group", new_our_group_path, class: "sidebar__link sidebar__link--action" %>
     </li>
   </ul>
-  <details open>
+  <details open data-controller="details-persist" data-details-persist-key-value="sidebar-groups">
     <summary>Groups</summary>
     <ul class="sidebar__list">
       <% @sidebar_groups.each do |group| %>
@@ -33,7 +33,7 @@
       <%= link_to "New profile", new_our_profile_path, class: "sidebar__link sidebar__link--action" %>
     </li>
   </ul>
-  <details open>
+  <details open data-controller="details-persist" data-details-persist-key-value="sidebar-profiles">
     <summary>Profiles</summary>
     <ul class="sidebar__list">
       <% @sidebar_profiles.each do |profile| %>
