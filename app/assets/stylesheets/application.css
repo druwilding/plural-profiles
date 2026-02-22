@@ -61,7 +61,8 @@ body {
   padding: 0 1.5rem;
 }
 
-.container:has(.layout) {
+.container:has(.layout),
+.container:has(.explorer) {
   max-width: 1200px;
 }
 
@@ -484,6 +485,9 @@ button:hover,
   border-radius: 50%;
   width: 64px;
   height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  flex-shrink: 0;
   font-size: 1.5rem;
 }
 
@@ -554,14 +558,38 @@ button:hover,
 
 .tree__leaf {
   margin: 0;
+  padding-left: 1.4rem;
 }
 
-.tree__toggle,
+.tree__row {
+  display: flex;
+  align-items: center;
+}
+
+.tree__arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  flex-shrink: 0;
+  padding: 0.3rem 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tree__arrow-btn:hover {
+  background-color: rgba(78, 133, 95, 0.15);
+}
+
 .tree__item {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.3rem 0.5rem;
   border: none;
   border-radius: 4px;
@@ -574,21 +602,14 @@ button:hover,
   overflow: hidden;
 }
 
-.tree__toggle:hover,
 .tree__item:hover {
   background-color: rgba(78, 133, 95, 0.1);
 }
 
-.tree__toggle--active,
 .tree__item--active {
   background-color: rgba(78, 133, 95, 0.2);
   color: var(--heading);
   font-weight: 600;
-}
-
-.tree__toggle--empty {
-  cursor: default;
-  opacity: 0.7;
 }
 
 .tree__arrow {

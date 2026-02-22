@@ -8,22 +8,25 @@ export default class extends Controller {
   selectRoot(event) {
     const button = event.currentTarget
     this.#clearActive()
-    button.classList.add("tree__toggle--active")
-
-    // Toggle children visibility
-    const children = button.nextElementSibling
-    if (children) {
-      const isHidden = children.style.display === "none"
-      children.style.display = isHidden ? "" : "none"
-      this.#rotateArrow(button, isHidden)
-    }
+    button.classList.add("tree__item--active")
 
     // Show root group content
-    const rootTemplate = this.groupTemplateTargets.find(
-      t => t.dataset.groupUuid === this.element.querySelector("[data-group-uuid]")?.dataset.groupUuid
+    const template = this.groupTemplateTargets[this.groupTemplateTargets.length - 1]
+    if (template) {
+      this.contentTarget.innerHTML = template.innerHTML
+    }
+  }
+
+  selectGroup(event) {
+    const button = event.currentTarget
+    const { groupUuid } = button.dataset
+
+    this.#clearActive()
+    button.classList.add("tree__item--active")
+
+    const template = this.groupTemplateTargets.find(
+      t => t.dataset.groupUuid === groupUuid
     )
-    // Use the last groupTemplate (root) as fallback
-    const template = rootTemplate || this.groupTemplateTargets[this.groupTemplateTargets.length - 1]
     if (template) {
       this.contentTarget.innerHTML = template.innerHTML
     }
@@ -31,12 +34,16 @@ export default class extends Controller {
 
   toggleFolder(event) {
     const button = event.currentTarget
-    const children = button.nextElementSibling
+    const folder = button.closest(".tree__folder")
+    const children = folder?.querySelector(".tree__children")
     if (!children) return
 
     const isHidden = children.style.display === "none"
     children.style.display = isHidden ? "" : "none"
-    this.#rotateArrow(button, isHidden)
+    const arrow = button.querySelector(".tree__arrow")
+    if (arrow) {
+      arrow.classList.toggle("tree__arrow--open", isHidden)
+    }
   }
 
   selectProfile(event) {
@@ -57,15 +64,8 @@ export default class extends Controller {
   // --- private ---
 
   #clearActive() {
-    this.element.querySelectorAll(".tree__toggle--active, .tree__item--active").forEach(el => {
-      el.classList.remove("tree__toggle--active", "tree__item--active")
+    this.element.querySelectorAll(".tree__item--active").forEach(el => {
+      el.classList.remove("tree__item--active")
     })
-  }
-
-  #rotateArrow(button, open) {
-    const arrow = button.querySelector(".tree__arrow")
-    if (arrow) {
-      arrow.style.transform = open ? "rotate(90deg)" : ""
-    }
   }
 }

@@ -15,6 +15,3 @@
   - if profile.description.present?
     .profile-description
       = simple_format(profile.description)
-
-%p
-  = link_to "Open full profile →", group_profile_path(group.uuid, profile.uuid)

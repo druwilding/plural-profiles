@@ -62,15 +62,13 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Alice", response.body
   end
 
-  test "show links sub-group profiles through their own group" do
+  test "show displays sub-group profiles under their own group" do
     everyone = groups(:everyone)
-    friends = groups(:friends)
-    alice = profiles(:alice)
 
     get group_path(uuid: everyone.uuid)
     assert_response :success
-    # Profile card should link through friends (the group Alice belongs to), not everyone
-    assert_match group_profile_path(friends.uuid, alice.uuid), response.body
+    # Alice appears in the tree under Friends, with Friends' group UUID
+    assert_select "button[data-group-uuid='#{groups(:friends).uuid}'][data-profile-uuid='#{profiles(:alice).uuid}']"
   end
 
   test "show renders empty state when no profiles or sub-groups" do
