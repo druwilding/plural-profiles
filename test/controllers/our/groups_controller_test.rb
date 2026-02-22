@@ -159,6 +159,19 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "All your other groups are already in this group", response.body
   end
 
+  test "manage_groups excludes ancestor groups to prevent cycles" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    # everyone → friends already exists in fixtures
+    coworkers = @user.groups.create!(name: "Coworkers")
+
+    # From friends' perspective, everyone is an ancestor — must be excluded
+    get manage_groups_our_group_path(@group)
+    assert_response :success
+    assert_no_match "everyone", response.body
+    assert_match "Coworkers", response.body
+  end
+
   test "add_group adds a sub-group" do
     sign_in_as @user
     everyone = groups(:everyone)
