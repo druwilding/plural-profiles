@@ -71,9 +71,25 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ### Running tests
 
+Unit and integration tests:
+
 ```sh
 bin/rails test
 ```
+
+System tests (requires Chrome):
+
+```sh
+bin/rails test:system
+```
+
+Both suites together:
+
+```sh
+bin/rails test && bin/rails test:system
+```
+
+Both are run automatically on pull requests via GitHub Actions CI (the `test` and `system-test` jobs).
 
 ### Linting
 

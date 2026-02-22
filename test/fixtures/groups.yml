@@ -1,13 +1,11 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-one:
+friends:
   user: one
-  uuid: MyString
-  name: MyString
-  description: MyText
+  uuid: def11111-1111-1111-1111-111111111111
+  name: Friends
+  description: Our close friends group.
 
-two:
+family:
   user: two
-  uuid: MyString
-  name: MyString
-  description: MyText
+  uuid: def22222-2222-2222-2222-222222222222
+  name: Family
+  description: Family members.
