@@ -1,0 +1,44 @@
+- if profile.errors.any?
+  .error-messages
+    - profile.errors.full_messages.each do |message|
+      %p= message
+
+= form_with model: profile, url: profile.persisted? ? our_profile_path(profile) : our_profiles_path do |form|
+  .form-group
+    = form.label :name
+    = form.text_field :name, required: true
+
+  .form-group
+    = form.label :pronouns
+    = form.text_field :pronouns, placeholder: "e.g. they/them, she/her, he/him"
+
+  .form-group
+    = form.label :avatar, "Avatar/Icon"
+    = form.file_field :avatar, accept: "image/*"
+    - if profile.persisted? && profile.avatar.attached?
+      %p.form-hint Current avatar:
+      = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || ""
+      %label.checkbox-label
+        = check_box_tag "profile[remove_avatar]", "1", false
+        Remove avatar
+
+  .form-group
+    = form.label :avatar_alt_text, "Avatar description"
+    = form.text_field :avatar_alt_text, placeholder: "Describe the image for screen readers"
+
+  .form-group
+    = form.label :description
+    = form.text_area :description, placeholder: "Share something about this profile...", rows: 18
+
+  - if @groups.any?
+    %fieldset.form-group
+      %legend Groups
+      .checkbox-list
+        = hidden_field_tag "profile[group_ids][]", ""
+        - @groups.each do |group|
+          %label.checkbox-label
+            = check_box_tag "profile[group_ids][]", group.id, profile.group_ids.include?(group.id), id: "profile_group_ids_#{group.id}"
+            = group.name
+
+  .form-group
+    = form.submit profile.persisted? ? "Update profile" : "Create profile"

@@ -1,0 +1,20 @@
+- content_for(:title) { "Our profiles — Plural Profiles" }
+
+%h1 Our profiles
+
+- if @profiles.any?
+  .card-list
+    - @profiles.each do |profile|
+      .card
+        .card__header
+          - if profile.avatar.attached?
+            = image_tag profile.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48, alt: profile.avatar_alt_text.presence || ""
+          - else
+            .avatar.avatar--small.avatar--placeholder= profile.name.first.upcase
+          %div
+            %h2= link_to profile.name, our_profile_path(profile)
+            - if profile.pronouns.present?
+              %span.pronouns= profile.pronouns
+- else
+  .card
+    %p You haven't created any profiles yet.

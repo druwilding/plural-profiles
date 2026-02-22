@@ -1,0 +1,25 @@
+- content_for(:container_class) { "narrow" }
+- content_for(:title) { "Sign in — Plural Profiles" }
+
+.card
+  %h1 Sign in
+
+  = form_with url: session_path do |form|
+    .form-group
+      = form.label :email_address, "Email address"
+      = form.email_field :email_address, required: true, autocomplete: "username", value: params[:email_address]
+
+    .form-group
+      = form.label :password
+      = form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72
+
+    .form-group
+      = form.submit "Sign in"
+
+  .form-links
+    %p= link_to "Forgot password?", new_password_path
+    %p
+      Don't have an account?
+      = link_to "Sign up", new_registration_path
+
+= render "shared/about"

@@ -1,0 +1,54 @@
+!!!
+%html
+  %head
+    %title= content_for(:title) || "Plural Profiles"
+    %meta{name: "viewport", content: "width=device-width,initial-scale=1"}
+    %meta{name: "apple-mobile-web-app-capable", content: "yes"}
+    %meta{name: "application-name", content: "Plural Profiles"}
+    %meta{name: "mobile-web-app-capable", content: "yes"}
+    = csrf_meta_tags
+    = csp_meta_tag
+
+    = yield :head
+
+    -# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!)
+    -#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json)
+
+    %link{rel: "icon", href: "/icon.png", type: "image/png"}
+    %link{rel: "icon", href: "/icon.svg", type: "image/svg+xml"}
+    %link{rel: "apple-touch-icon", href: "/icon.png"}
+
+    -# Includes all stylesheet files in app/assets/stylesheets
+    = stylesheet_link_tag :app, "data-turbo-track": "reload"
+    = javascript_importmap_tags
+
+  %body
+    %header.site-header
+      = link_to "Plural Profiles", root_path, class: "logo"
+      %nav
+        - if authenticated?
+          = link_to "Groups", our_groups_path
+          = link_to "New group", new_our_group_path
+          = link_to "Profiles", our_profiles_path
+          = link_to "New profile", new_our_profile_path
+          = link_to "Sign out", session_path, data: { turbo_method: :delete }
+        - else
+          = link_to "Sign in", new_session_path
+          = link_to "Sign up", new_registration_path
+
+    %main{class: "container #{content_for(:container_class)}"}
+      - if @sidebar_profiles
+        .layout
+          = render "our/sidebar"
+          .main-content
+            - if flash[:notice]
+              .flash.flash--notice= flash[:notice]
+            - if flash[:alert]
+              .flash.flash--alert= flash[:alert]
+            = yield
+      - else
+        - if flash[:notice]
+          .flash.flash--notice= flash[:notice]
+        - if flash[:alert]
+          .flash.flash--alert= flash[:alert]
+        = yield

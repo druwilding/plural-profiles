@@ -1,0 +1,9 @@
+- content_for(:container_class)
+- content_for(:title) { "Edit #{@group.name} — Plural Profiles" }
+
+%h1 Edit group
+
+.card
+  = render "our/groups/form", group: @group
+
+%p= link_to "← Back to group", our_group_path(@group)

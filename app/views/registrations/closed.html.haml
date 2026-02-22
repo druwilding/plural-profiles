@@ -1,0 +1,16 @@
+- content_for(:container_class) { "narrow" }
+- content_for(:title) { "Sign-ups closed — Plural Profiles" }
+
+.card
+  %h1 Sign up is currently closed
+
+  %p
+    We're limiting new sign ups for now to keep things running smoothly for everyone.
+    Sorry about that! Please check back soon — we'd love to have you 💚
+
+  .form-links
+    %p
+      Already have an account?
+      = link_to "Sign in", new_session_path
+
+= render "shared/about"

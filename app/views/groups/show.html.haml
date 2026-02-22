@@ -1,0 +1,40 @@
+- content_for(:title) { @group.name + " — Plural Profiles" }
+- content_for(:head) do
+  %meta{property: "og:title", content: @group.name}
+  %meta{property: "og:site_name", content: "Plural Profiles"}
+  %meta{property: "og:type", content: "website"}
+  %meta{property: "og:url", content: group_url(@group.uuid)}
+  - if @group.description.present?
+    %meta{property: "og:description", content: truncate(strip_tags(@group.description), length: 200)}
+  - if @group.avatar.attached?
+    %meta{property: "og:image", content: rails_representation_url(@group.avatar.variant(resize_to_fill: [512, 512]))}
+    %meta{property: "og:image:width", content: "512"}
+    %meta{property: "og:image:height", content: "512"}
+
+.card.profile-public
+  .profile-header
+    - if @group.avatar.attached?
+      = link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
+        = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || ""
+
+  %div
+    %h1= @group.name
+
+  - if @group.description.present?
+    .group-description
+      = simple_format(@group.description)
+
+- if @profiles.any?
+  .profile-grid
+    - @profiles.each do |profile|
+      = link_to group_profile_path(@group.uuid, profile.uuid), class: "profile-card card" do
+        - if profile.avatar.attached?
+          = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || ""
+        - else
+          .avatar.avatar--placeholder= profile.name.first.upcase
+        %h3= profile.name
+        - if profile.pronouns.present?
+          %span.pronouns= profile.pronouns
+- else
+  .card
+    %p No profiles in this group yet.

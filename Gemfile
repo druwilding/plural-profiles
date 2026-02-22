@@ -34,6 +34,9 @@ gem "image_processing", "~> 1.2"
 # S3-compatible storage for Active Storage in production
 gem "aws-sdk-s3", require: false
 
+# HAML templating
+gem "haml-rails", "~> 2.1"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
