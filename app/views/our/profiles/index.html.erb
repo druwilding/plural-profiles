@@ -8,7 +8,7 @@
       <div class="card">
         <div class="card__header">
           <% if profile.avatar.attached? %>
-            <%= image_tag profile.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48 %>
+            <%= image_tag profile.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48, alt: profile.avatar_alt_text.presence || "" %>
           <% else %>
             <div class="avatar avatar--small avatar--placeholder"><%= profile.name.first.upcase %></div>
           <% end %>

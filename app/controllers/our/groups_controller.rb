@@ -67,6 +67,6 @@ class Our::GroupsController < ApplicationController
   end
 
   def group_params
-    params.require(:group).permit(:name, :description, :avatar)
+    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text)
   end
 end

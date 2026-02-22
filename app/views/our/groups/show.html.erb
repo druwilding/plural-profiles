@@ -4,7 +4,7 @@
   <div class="profile-header">
     <% if @group.avatar.attached? %>
       <%= link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do %>
-        <%= image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96 %>
+        <%= image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || "" %>
       <% end %>
     <% end %>
   </div>
@@ -37,7 +37,7 @@
     <% @group.profiles.order(:name).each do |profile| %>
       <div class="card profile-card">
         <% if profile.avatar.attached? %>
-          <%= image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64 %>
+          <%= image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || "" %>
         <% else %>
           <div class="avatar avatar--placeholder"><%= profile.name.first.upcase %></div>
         <% end %>

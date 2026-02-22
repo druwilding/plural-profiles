@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_200432) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_22_080313) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,6 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_200432) do
   end
 
   create_table "groups", force: :cascade do |t|
+    t.string "avatar_alt_text"
     t.datetime "created_at", null: false
     t.text "description"
     t.string "name", null: false
@@ -64,6 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_200432) do
   end
 
   create_table "profiles", force: :cascade do |t|
+    t.string "avatar_alt_text"
     t.datetime "created_at", null: false
     t.text "description"
     t.string "name", null: false

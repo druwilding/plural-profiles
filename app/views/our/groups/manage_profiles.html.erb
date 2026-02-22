@@ -8,7 +8,7 @@
       <div class="card card--row">
         <div class="card__header">
           <% if profile.avatar.attached? %>
-            <%= image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40 %>
+            <%= image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || "" %>
           <% else %>
             <div class="avatar avatar--small avatar--placeholder"><%= profile.name.first.upcase %></div>
           <% end %>
@@ -32,7 +32,7 @@
       <div class="card card--row">
         <div class="card__header">
           <% if profile.avatar.attached? %>
-            <%= image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40 %>
+            <%= image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || "" %>
           <% else %>
             <div class="avatar avatar--small avatar--placeholder"><%= profile.name.first.upcase %></div>
           <% end %>

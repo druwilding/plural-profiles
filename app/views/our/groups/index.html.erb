@@ -8,7 +8,7 @@
       <div class="card card--row">
         <div class="card__header">
           <% if group.avatar.attached? %>
-            <%= image_tag group.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48 %>
+            <%= image_tag group.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48, alt: group.avatar_alt_text.presence || "" %>
           <% end %>
           <div>
             <h2><%= link_to group.name, our_group_path(group) %></h2>
