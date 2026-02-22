@@ -1,5 +1,6 @@
 class RegistrationsController < ApplicationController
   allow_unauthenticated_access only: %i[ new create ]
+  before_action :check_signups_enabled
 
   def new
     @user = User.new
@@ -17,6 +18,12 @@ class RegistrationsController < ApplicationController
   end
 
   private
+
+  def check_signups_enabled
+    return if ENV.fetch("SIGNUPS_ENABLED", "true") == "true"
+
+    render :closed, status: :ok
+  end
 
   def registration_params
     params.require(:user).permit(:email_address, :password, :password_confirmation)
