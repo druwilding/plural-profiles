@@ -1,6 +1,6 @@
 # Plural Profiles
 
-A web app for plural people to create and share multiple profiles. Each account can have any number of profiles (with a name, pronouns, description, and avatar) and organise them into groups. Profiles and groups get unique shareable URLs, so you can give someone a link to a specific profile or a group of profiles without exposing anything else about your account.
+A web app for pluralfolk to create and share multiple profiles. Each account can have any number of profiles (with a name, pronouns, description, and avatar) and organise them into groups. Profiles and groups get unique shareable URLs, so you can give someone a link to a specific profile or a group of profiles without exposing anything else about your account.
 
 ## Features
 
@@ -16,6 +16,7 @@ A web app for plural people to create and share multiple profiles. Each account 
 - **Rails** 8.1.2
 - **PostgreSQL** 16
 - **Puma** web server
+- **HAML** templates (via `haml-rails`)
 - **Propshaft** asset pipeline
 - **Importmap** + **Hotwire** (Turbo & Stimulus)
 - **Active Storage** for file uploads
