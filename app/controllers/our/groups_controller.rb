@@ -33,6 +33,7 @@ class Our::GroupsController < ApplicationController
     if @group.update(group_params)
       redirect_to our_group_path(@group), notice: "Group updated."
     else
+      @group.avatar.purge if @group.errors[:avatar].any?
       render :edit, status: :unprocessable_entity
     end
   end

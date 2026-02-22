@@ -34,6 +34,7 @@ class Our::ProfilesController < ApplicationController
     if @profile.update(profile_params)
       redirect_to our_profile_path(@profile), notice: "Profile updated."
     else
+      @profile.avatar.purge if @profile.errors[:avatar].any?
       render :edit, status: :unprocessable_entity
     end
   end

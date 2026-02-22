@@ -43,6 +43,17 @@ class GroupTest < ActiveSupport::TestCase
     assert group.avatar.attached?
   end
 
+  test "rejects non-image avatar" do
+    group = groups(:friends)
+    group.avatar.attach(
+      io: StringIO.new("<script>alert('xss')</script>"),
+      filename: "evil.html",
+      content_type: "text/html"
+    )
+    assert_not group.valid?
+    assert_includes group.errors[:avatar], "must be a PNG, JPEG, GIF, or WebP image"
+  end
+
   test "has many child_groups" do
     everyone = groups(:everyone)
     assert_includes everyone.child_groups, groups(:friends)

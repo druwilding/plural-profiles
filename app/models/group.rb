@@ -14,6 +14,7 @@ class Group < ApplicationRecord
 
   validates :name, presence: true
   validates :uuid, uniqueness: true
+  validate :avatar_content_type_allowed
 
   def to_param
     uuid
@@ -128,6 +129,13 @@ class Group < ApplicationRecord
           children: build_tree(g.id, children_map, groups_by_id)
         }
       end
+  end
+
+  def avatar_content_type_allowed
+    return unless avatar.attached?
+    unless avatar.blob.content_type.in?(%w[image/png image/jpeg image/gif image/webp])
+      errors.add(:avatar, "must be a PNG, JPEG, GIF, or WebP image")
+    end
   end
 
   def generate_uuid

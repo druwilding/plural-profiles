@@ -100,6 +100,18 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_not @profile.reload.avatar.attached?
   end
 
+  test "update rejects non-image avatar" do
+    sign_in_as @user
+    patch our_profile_path(@profile), params: {
+      profile: {
+        name: @profile.name,
+        avatar: Rack::Test::UploadedFile.new(StringIO.new("<script>alert('xss')</script>"), "text/html", false, original_filename: "evil.html")
+      }
+    }
+    assert_response :unprocessable_entity
+    assert_not @profile.reload.avatar.attached?
+  end
+
   test "destroy deletes profile" do
     sign_in_as @user
     assert_difference("Profile.count", -1) do
