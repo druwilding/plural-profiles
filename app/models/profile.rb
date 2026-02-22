@@ -1,9 +1,9 @@
 class Profile < ApplicationRecord
+  include HasAvatar
+
   belongs_to :user
   has_many :group_profiles, dependent: :destroy
   has_many :groups, through: :group_profiles
-
-  has_one_attached :avatar
 
   before_create :generate_uuid
 

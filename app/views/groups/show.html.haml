@@ -11,38 +11,70 @@
     %meta{property: "og:image:width", content: "512"}
     %meta{property: "og:image:height", content: "512"}
 
-.card.profile-public
-  .profile-header
-    - if @group.avatar.attached?
-      = link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
-        = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || ""
+- has_tree = @descendant_tree.any? || @direct_profiles.any?
 
-  %div
-    %h1= @group.name
+- if has_tree
+  %div{"data-controller": "tree"}
+    .explorer
+      .explorer__sidebar{role: "tree", "aria-label": "#{@group.name} navigation"}
+        %ul.tree
+          -# Root group node
+          %li.tree__folder{role: "treeitem", "aria-expanded": "true"}
+            .tree__row
+              %button.tree__arrow-btn{"data-action": "click->tree#toggleFolder", type: "button", "aria-label": "Toggle #{@group.name}"}
+                %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▸
+              %button.tree__item.tree__item--active{"data-action": "click->tree#selectRoot", "data-panel-url": panel_group_path(@group.uuid), type: "button"}
+                - if @group.avatar.attached?
+                  = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+                %span.tree__label= @group.name
+            %ul.tree__children{role: "group"}
+              -# Child groups (recursive)
+              - @descendant_tree.each do |node|
+                = render "groups/tree_node", node: node
+              -# Direct profiles at root level
+              - @direct_profiles.each do |profile|
+                %li.tree__leaf{role: "treeitem"}
+                  %button.tree__item{"data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(@group.uuid, profile.uuid), "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
+                    - if profile.avatar.attached?
+                      = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+                    - else
+                      %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}= profile.name.first.upcase
+                    %span.tree__label= profile.name
 
-  - if @group.description.present?
-    .group-description
-      = simple_format(@group.description)
+      .explorer__content{"data-tree-target": "content", "aria-live": "polite"}
+        -# Default: show root group content
+        = render "groups/group_content", group: @group, profiles: @direct_profiles
 
-- @descendant_sections.each do |section|
-  - section_profiles = section.profiles.sort_by(&:name)
-  - if section_profiles.any?
-    %h2
-      - if section.avatar.attached?
-        = link_to group_path(section.uuid) do
-          = image_tag section.avatar.variant(resize_to_fill: [32, 32]), class: "avatar avatar--inline", width: 32, height: 32, alt: section.avatar_alt_text.presence || ""
-      = link_to section.name, group_path(section.uuid)
-    .profile-grid
-      - section_profiles.each do |profile|
-        = render "groups/profile_card", group: section, profile: profile
+    -# No-JS fallback: all content rendered flat with linked profile cards
+    .explorer__fallback{"data-tree-target": "fallback"}
+      = render "groups/group_content_fallback", group: @group, profiles: @direct_profiles
+      - render_flat = lambda do |nodes|
+        - nodes.each do |node|
+          - if node[:profiles].any? || node[:children].any?
+            %h2
+              - if node[:group].avatar.attached?
+                = image_tag node[:group].avatar.variant(resize_to_fill: [32, 32]), class: "avatar avatar--inline", width: 32, height: 32, alt: ""
+              = link_to node[:group].name, group_path(node[:group].uuid)
+            - if node[:profiles].any?
+              .profile-grid
+                - node[:profiles].each do |profile|
+                  = render "groups/profile_card", group: node[:group], profile: profile
+            - render_flat.call(node[:children])
+      - render_flat.call(@descendant_tree)
 
-- if @direct_profiles.any?
-  - if @descendant_sections.any? { |s| s.profiles.any? }
-    %h2 Other profiles
-  .profile-grid
-    - @direct_profiles.each do |profile|
-      = render "groups/profile_card", group: @group, profile: profile
+- else
+  .card.profile-public
+    .profile-header
+      - if @group.avatar.attached?
+        = link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
+          = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || ""
 
-- if @descendant_sections.none? { |s| s.profiles.any? } && @direct_profiles.empty?
+    %div
+      %h1= @group.name
+
+    - if @group.description.present?
+      .group-description
+        = simple_format(@group.description)
+
   .card
     %p No profiles in this group yet.

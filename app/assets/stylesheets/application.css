@@ -61,7 +61,8 @@ body {
   padding: 0 1.5rem;
 }
 
-.container:has(.layout) {
+.container:has(.layout),
+.container:has(.explorer) {
   max-width: 1200px;
 }
 
@@ -425,6 +426,7 @@ button:hover,
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   text-decoration: none;
+  color: var(--text);
 }
 
 .profile-card h3 {
@@ -484,6 +486,9 @@ button:hover,
   border-radius: 50%;
   width: 64px;
   height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  flex-shrink: 0;
   font-size: 1.5rem;
 }
 
@@ -510,6 +515,150 @@ button:hover,
   color: var(--text);
   opacity: 0.8;
   font-size: 0.9rem;
+}
+
+/* Explorer layout (public group tree view) */
+.explorer {
+  display: none;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  min-height: 400px;
+}
+
+.explorer--active {
+  display: grid;
+}
+
+.explorer__fallback[hidden] {
+  display: none;
+}
+
+.js .explorer__fallback {
+  display: none;
+}
+
+.explorer__sidebar {
+  background-color: var(--bg-contrast);
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  padding: 0.5rem;
+  overflow-y: auto;
+  max-height: 80vh;
+  position: sticky;
+  top: 2rem;
+  align-self: start;
+}
+
+.explorer__content {
+  min-width: 0;
+}
+
+/* Tree */
+.tree,
+.tree__children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree__children {
+  padding-left: 1rem;
+}
+
+.tree__folder {
+  margin: 0;
+}
+
+.tree__leaf {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.tree__row {
+  display: flex;
+  align-items: center;
+}
+
+.tree__arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  flex-shrink: 0;
+  padding: 0.3rem 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tree__arrow-btn:hover {
+  background-color: rgba(78, 133, 95, 0.15);
+}
+
+.tree__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tree__item:hover {
+  background-color: rgba(78, 133, 95, 0.1);
+}
+
+.tree__item--active {
+  background-color: rgba(78, 133, 95, 0.2);
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.tree__arrow {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  width: 0.75rem;
+  text-align: center;
+  display: inline-block;
+}
+
+.tree__arrow--open {
+  transform: rotate(90deg);
+}
+
+.tree__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.tree__avatar--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--link);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.65rem;
+}
+
+.tree__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Share box */
@@ -591,6 +740,15 @@ button:hover,
 
   .sidebar {
     position: static;
+  }
+
+  .explorer--active {
+    grid-template-columns: 1fr;
+  }
+
+  .explorer__sidebar {
+    position: static;
+    max-height: none;
   }
 
   .container {

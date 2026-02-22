@@ -1,14 +1,14 @@
 class Group < ApplicationRecord
+  include HasAvatar
+
   belongs_to :user
   has_many :group_profiles, dependent: :destroy
-  has_many :profiles, through: :group_profiles
+  has_many :profiles, -> { order(:name) }, through: :group_profiles
 
   has_many :parent_links, class_name: "GroupGroup", foreign_key: :child_group_id, dependent: :destroy
   has_many :child_links, class_name: "GroupGroup", foreign_key: :parent_group_id, dependent: :destroy
   has_many :parent_groups, through: :parent_links, source: :parent_group
   has_many :child_groups, through: :child_links, source: :child_group
-
-  has_one_attached :avatar
 
   before_create :generate_uuid
 
@@ -34,7 +34,7 @@ class Group < ApplicationRecord
     SQL
     Group.connection.select_values(
       Group.sanitize_sql([ sql, root_id: id ])
-    )
+    ).map(&:to_i)
   end
 
   # All group IDs in the ancestor tree (this group + all parents, recursive).
@@ -52,7 +52,7 @@ class Group < ApplicationRecord
     SQL
     Group.connection.select_values(
       Group.sanitize_sql([ sql, root_id: id ])
-    )
+    ).map(&:to_i)
   end
 
   # Collect all profiles from this group and all descendant groups.
@@ -71,14 +71,14 @@ class Group < ApplicationRecord
   end
 
   # Build a depth-first ordered list of all descendant groups.
-  # Each group has its profiles eager-loaded.
-  # Uses 3 queries total: CTE for IDs, groups with profiles, group_groups for tree structure.
+  # Each group has its profiles and avatars eager-loaded.
+  # Uses 3 queries total: CTE for IDs, groups with profiles/avatars, group_groups for tree structure.
   def descendant_sections
     desc_ids = descendant_group_ids - [ id ]
     return [] if desc_ids.empty?
 
     groups_by_id = Group.where(id: desc_ids)
-                        .includes(:profiles)
+                        .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
                         .index_by(&:id)
 
     children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
@@ -89,6 +89,25 @@ class Group < ApplicationRecord
     walk_descendants(id, children_map, groups_by_id)
   end
 
+  # Build a nested tree of all descendant groups for tree-view navigation.
+  # Returns an array of nodes: { group:, profiles:, children: [...] }
+  # Each group has its profiles and avatars eager-loaded.
+  def descendant_tree
+    desc_ids = descendant_group_ids - [ id ]
+    return [] if desc_ids.empty?
+
+    groups_by_id = Group.where(id: desc_ids)
+                        .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
+                        .index_by(&:id)
+
+    children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
+                             .pluck(:parent_group_id, :child_group_id)
+                             .group_by(&:first)
+                             .transform_values { |pairs| pairs.map(&:last) }
+
+    build_tree(id, children_map, groups_by_id)
+  end
+
   private
 
   def walk_descendants(parent_id, children_map, groups_by_id)
@@ -96,6 +115,19 @@ class Group < ApplicationRecord
       .filter_map { |cid| groups_by_id[cid] }
       .sort_by(&:name)
       .flat_map { |g| [ g, *walk_descendants(g.id, children_map, groups_by_id) ] }
+  end
+
+  def build_tree(parent_id, children_map, groups_by_id)
+    (children_map[parent_id] || [])
+      .filter_map { |cid| groups_by_id[cid] }
+      .sort_by(&:name)
+      .map do |g|
+        {
+          group: g,
+          profiles: g.profiles.to_a,
+          children: build_tree(g.id, children_map, groups_by_id)
+        }
+      end
   end
 
   def generate_uuid

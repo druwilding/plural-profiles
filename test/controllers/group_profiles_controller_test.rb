@@ -28,4 +28,21 @@ class GroupProfilesControllerTest < ActionDispatch::IntegrationTest
     get group_profile_path(group_uuid: group.uuid, uuid: profile.uuid)
     assert_response :success
   end
+
+  test "panel returns profile content fragment" do
+    group = groups(:friends)
+    profile = profiles(:alice)
+    get panel_group_profile_path(group_uuid: group.uuid, uuid: profile.uuid)
+    assert_response :success
+    assert_match "Alice", response.body
+    # Should be a fragment, not a full page
+    assert_no_match "<!DOCTYPE", response.body
+  end
+
+  test "panel returns 404 for profile not in group" do
+    group = groups(:friends)
+    carol = profiles(:carol)
+    get panel_group_profile_path(group_uuid: group.uuid, uuid: carol.uuid)
+    assert_response :not_found
+  end
 end

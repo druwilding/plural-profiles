@@ -99,6 +99,18 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_not @group.reload.avatar.attached?
   end
 
+  test "update rejects non-image avatar" do
+    sign_in_as @user
+    patch our_group_path(@group), params: {
+      group: {
+        name: @group.name,
+        avatar: Rack::Test::UploadedFile.new(StringIO.new("<script>alert('xss')</script>"), "text/html", false, original_filename: "evil.html")
+      }
+    }
+    assert_response :unprocessable_entity
+    assert_not @group.reload.avatar.attached?
+  end
+
   test "destroy deletes group" do
     sign_in_as @user
     assert_difference("Group.count", -1) do

@@ -43,6 +43,17 @@ class GroupTest < ActiveSupport::TestCase
     assert group.avatar.attached?
   end
 
+  test "rejects non-image avatar" do
+    group = groups(:friends)
+    group.avatar.attach(
+      io: StringIO.new("<script>alert('xss')</script>"),
+      filename: "evil.html",
+      content_type: "text/html"
+    )
+    assert_not group.valid?
+    assert_includes group.errors[:avatar], "must be a PNG, JPEG, GIF, or WebP image"
+  end
+
   test "has many child_groups" do
     everyone = groups(:everyone)
     assert_includes everyone.child_groups, groups(:friends)
@@ -104,5 +115,25 @@ class GroupTest < ActiveSupport::TestCase
     sections = everyone.descendant_sections
     # profiles should be pre-loaded — no additional query
     assert sections.first.profiles.loaded?
+  end
+
+  test "descendant_tree returns nested structure with children" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    # Build: everyone → friends → close
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+    close.profiles << profiles(:alice)
+
+    tree = everyone.descendant_tree
+    assert_equal 1, tree.length
+    # Top level: Friends
+    assert_equal "Friends", tree.first[:group].name
+    # Friends has child: Close Friends
+    assert_equal 1, tree.first[:children].length
+    assert_equal "Close Friends", tree.first[:children].first[:group].name
+    # Close Friends has Alice
+    assert_equal [ "Alice" ], tree.first[:children].first[:profiles].map(&:name)
   end
 end

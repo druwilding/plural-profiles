@@ -1,6 +1,8 @@
 !!!
 %html
   %head
+    :javascript
+      document.documentElement.classList.add('js')
     %title= content_for(:title) || "Plural Profiles"
     %meta{name: "viewport", content: "width=device-width,initial-scale=1"}
     %meta{name: "apple-mobile-web-app-capable", content: "yes"}

@@ -33,6 +33,9 @@ class Our::GroupsController < ApplicationController
     if @group.update(group_params)
       redirect_to our_group_path(@group), notice: "Group updated."
     else
+      if params.dig(:group, :avatar).present?
+        @group.avatar.blob&.persisted? ? @group.avatar.purge_later : @group.avatar.detach
+      end
       render :edit, status: :unprocessable_entity
     end
   end

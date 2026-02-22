@@ -34,6 +34,9 @@ class Our::ProfilesController < ApplicationController
     if @profile.update(profile_params)
       redirect_to our_profile_path(@profile), notice: "Profile updated."
     else
+      if params.dig(:profile, :avatar).present?
+        @profile.avatar.blob&.persisted? ? @profile.avatar.purge_later : @profile.avatar.detach
+      end
       render :edit, status: :unprocessable_entity
     end
   end

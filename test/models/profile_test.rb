@@ -42,4 +42,15 @@ class ProfileTest < ActiveSupport::TestCase
     )
     assert profile.avatar.attached?
   end
+
+  test "rejects non-image avatar" do
+    profile = profiles(:alice)
+    profile.avatar.attach(
+      io: StringIO.new("<script>alert('xss')</script>"),
+      filename: "evil.html",
+      content_type: "text/html"
+    )
+    assert_not profile.valid?
+    assert_includes profile.errors[:avatar], "must be a PNG, JPEG, GIF, or WebP image"
+  end
 end
