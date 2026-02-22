@@ -27,7 +27,7 @@ export default class extends Controller {
     this.#clearActive()
     button.classList.add("tree__item--active")
     history.replaceState(null, "", window.location.pathname + window.location.search)
-    this.#loadPanel(button.dataset.panelUrl)
+    this.#loadPanelAndScroll(button.dataset.panelUrl)
   }
 
   selectGroup(event) {
@@ -35,7 +35,7 @@ export default class extends Controller {
     this.#clearActive()
     button.classList.add("tree__item--active")
     this.#setHash("group", button.dataset.groupUuid)
-    this.#loadPanel(button.dataset.panelUrl)
+    this.#loadPanelAndScroll(button.dataset.panelUrl)
   }
 
   toggleFolder(event) {
@@ -90,7 +90,7 @@ export default class extends Controller {
     }
 
     this.#setHash("profile", groupUuid, profileUuid)
-    this.#loadPanel(panelUrl)
+    this.#loadPanelAndScroll(panelUrl)
   }
 
   #restoreFromHash() {
@@ -107,7 +107,7 @@ export default class extends Controller {
       if (button) {
         this.#clearActive()
         button.classList.add("tree__item--active")
-        this.#loadPanel(button.dataset.panelUrl)
+        this.#loadPanelAndScroll(button.dataset.panelUrl)
       }
     } else if (parts[0] === "profile" && parts[1] && parts[2]) {
       const button = this.element.querySelector(
@@ -121,6 +121,11 @@ export default class extends Controller {
 
   #setHash(type, ...uuids) {
     history.replaceState(null, "", `#${type}/${uuids.join("/")}`)
+  }
+
+  async #loadPanelAndScroll(url) {
+    await this.#loadPanel(url)
+    this.contentTarget.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
   async #loadPanel(url) {
