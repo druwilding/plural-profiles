@@ -512,6 +512,117 @@ button:hover,
   font-size: 0.9rem;
 }
 
+/* Explorer layout (public group tree view) */
+.explorer {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  min-height: 400px;
+}
+
+.explorer__sidebar {
+  background-color: var(--bg-contrast);
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  padding: 0.5rem;
+  overflow-y: auto;
+  max-height: 80vh;
+  position: sticky;
+  top: 2rem;
+  align-self: start;
+}
+
+.explorer__content {
+  min-width: 0;
+}
+
+/* Tree */
+.tree,
+.tree__children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree__children {
+  padding-left: 1rem;
+}
+
+.tree__folder {
+  margin: 0;
+}
+
+.tree__leaf {
+  margin: 0;
+}
+
+.tree__toggle,
+.tree__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tree__toggle:hover,
+.tree__item:hover {
+  background-color: rgba(78, 133, 95, 0.1);
+}
+
+.tree__toggle--active,
+.tree__item--active {
+  background-color: rgba(78, 133, 95, 0.2);
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.tree__toggle--empty {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.tree__arrow {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  width: 0.75rem;
+  text-align: center;
+  display: inline-block;
+}
+
+.tree__avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.tree__avatar--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--link);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.55rem;
+}
+
+.tree__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Share box */
 .share-box {
   background-color: var(--bg);
@@ -591,6 +702,15 @@ button:hover,
 
   .sidebar {
     position: static;
+  }
+
+  .explorer {
+    grid-template-columns: 1fr;
+  }
+
+  .explorer__sidebar {
+    position: static;
+    max-height: none;
   }
 
   .container {

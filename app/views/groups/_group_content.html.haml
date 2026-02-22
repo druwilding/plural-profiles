@@ -1,0 +1,21 @@
+-# Group content panel for the explorer view.
+-# Locals: group, profiles
+.card.profile-public
+  .profile-header
+    - if group.avatar.attached?
+      = link_to rails_blob_path(group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
+        = image_tag group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: group.avatar_alt_text.presence || ""
+  %div
+    %h1= group.name
+
+  - if group.description.present?
+    .group-description
+      = simple_format(group.description)
+
+- if profiles.any?
+  .profile-grid
+    - profiles.each do |profile|
+      = render "groups/profile_card", group: group, profile: profile
+- else
+  .card
+    %p No profiles in this group yet.

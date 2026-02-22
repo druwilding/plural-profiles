@@ -89,6 +89,25 @@ class Group < ApplicationRecord
     walk_descendants(id, children_map, groups_by_id)
   end
 
+  # Build a nested tree of all descendant groups for tree-view navigation.
+  # Returns an array of nodes: { group:, profiles:, children: [...] }
+  # Each group has its profiles eager-loaded.
+  def descendant_tree
+    desc_ids = descendant_group_ids - [ id ]
+    return [] if desc_ids.empty?
+
+    groups_by_id = Group.where(id: desc_ids)
+                        .includes(:profiles)
+                        .index_by(&:id)
+
+    children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
+                             .pluck(:parent_group_id, :child_group_id)
+                             .group_by(&:first)
+                             .transform_values { |pairs| pairs.map(&:last) }
+
+    build_tree(id, children_map, groups_by_id)
+  end
+
   private
 
   def walk_descendants(parent_id, children_map, groups_by_id)
@@ -96,6 +115,19 @@ class Group < ApplicationRecord
       .filter_map { |cid| groups_by_id[cid] }
       .sort_by(&:name)
       .flat_map { |g| [ g, *walk_descendants(g.id, children_map, groups_by_id) ] }
+  end
+
+  def build_tree(parent_id, children_map, groups_by_id)
+    (children_map[parent_id] || [])
+      .filter_map { |cid| groups_by_id[cid] }
+      .sort_by(&:name)
+      .map do |g|
+        {
+          group: g,
+          profiles: g.profiles.sort_by(&:name),
+          children: build_tree(g.id, children_map, groups_by_id)
+        }
+      end
   end
 
   def generate_uuid

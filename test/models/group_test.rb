@@ -105,4 +105,24 @@ class GroupTest < ActiveSupport::TestCase
     # profiles should be pre-loaded — no additional query
     assert sections.first.profiles.loaded?
   end
+
+  test "descendant_tree returns nested structure with children" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    # Build: everyone → friends → close
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+    close.profiles << profiles(:alice)
+
+    tree = everyone.descendant_tree
+    assert_equal 1, tree.length
+    # Top level: Friends
+    assert_equal "Friends", tree.first[:group].name
+    # Friends has child: Close Friends
+    assert_equal 1, tree.first[:children].length
+    assert_equal "Close Friends", tree.first[:children].first[:group].name
+    # Close Friends has Alice
+    assert_equal [ "Alice" ], tree.first[:children].first[:profiles].map(&:name)
+  end
 end

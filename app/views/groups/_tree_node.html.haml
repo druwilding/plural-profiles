@@ -1,0 +1,31 @@
+-# Recursive tree node for the explorer sidebar.
+-# Locals: node (hash with :group, :profiles, :children), root_group
+- group = node[:group]
+- profiles = node[:profiles]
+- children = node[:children]
+- has_children = children.any? || profiles.any?
+
+- if has_children
+  %li.tree__folder{"data-tree-target": "folder"}
+    %button.tree__toggle{"data-action": "click->tree#toggleFolder", type: "button"}
+      %span.tree__arrow ▸
+      - if group.avatar.attached?
+        = image_tag group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+      %span.tree__label= group.name
+    %ul.tree__children{style: "display: none"}
+      - children.each do |child_node|
+        = render "groups/tree_node", node: child_node, root_group: root_group
+      - profiles.each do |profile|
+        %li.tree__leaf
+          %button.tree__item{"data-action": "click->tree#selectProfile", "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
+            - if profile.avatar.attached?
+              = image_tag profile.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+            - else
+              %span.tree__avatar.tree__avatar--placeholder= profile.name.first.upcase
+            %span.tree__label= profile.name
+- else
+  %li.tree__folder
+    %span.tree__toggle.tree__toggle--empty
+      - if group.avatar.attached?
+        = image_tag group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+      %span.tree__label= group.name

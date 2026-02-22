@@ -11,38 +11,71 @@
     %meta{property: "og:image:width", content: "512"}
     %meta{property: "og:image:height", content: "512"}
 
-.card.profile-public
-  .profile-header
-    - if @group.avatar.attached?
-      = link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
-        = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || ""
+- has_tree = @descendant_tree.any? || @direct_profiles.any?
 
-  %div
-    %h1= @group.name
+- if has_tree
+  .explorer{"data-controller": "tree"}
+    .explorer__sidebar
+      %ul.tree
+        -# Root group node
+        %li.tree__folder{"data-tree-target": "folder"}
+          %button.tree__toggle.tree__toggle--active{"data-action": "click->tree#selectRoot", type: "button"}
+            %span.tree__arrow ▸
+            - if @group.avatar.attached?
+              = image_tag @group.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+            %span.tree__label= @group.name
+          %ul.tree__children
+            -# Child groups (recursive)
+            - @descendant_tree.each do |node|
+              = render "groups/tree_node", node: node, root_group: @group
+            -# Direct profiles at root level
+            - @direct_profiles.each do |profile|
+              %li.tree__leaf
+                %button.tree__item{"data-action": "click->tree#selectProfile", "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
+                  - if profile.avatar.attached?
+                    = image_tag profile.avatar.variant(resize_to_fill: [20, 20]), class: "tree__avatar", width: 20, height: 20, alt: ""
+                  - else
+                    %span.tree__avatar.tree__avatar--placeholder= profile.name.first.upcase
+                  %span.tree__label= profile.name
 
-  - if @group.description.present?
-    .group-description
-      = simple_format(@group.description)
+    .explorer__content{"data-tree-target": "content"}
+      -# Default: show root group content
+      = render "groups/group_content", group: @group, profiles: @direct_profiles
 
-- @descendant_sections.each do |section|
-  - section_profiles = section.profiles.sort_by(&:name)
-  - if section_profiles.any?
-    %h2
-      - if section.avatar.attached?
-        = link_to group_path(section.uuid) do
-          = image_tag section.avatar.variant(resize_to_fill: [32, 32]), class: "avatar avatar--inline", width: 32, height: 32, alt: section.avatar_alt_text.presence || ""
-      = link_to section.name, group_path(section.uuid)
-    .profile-grid
-      - section_profiles.each do |profile|
-        = render "groups/profile_card", group: section, profile: profile
+    -# Hidden content panels for each descendant group
+    - @descendant_tree.flatten(1) rescue nil
+    - cache_tree = lambda do |nodes|
+      - nodes.each do |node|
+        %template{"data-tree-target": "groupTemplate", "data-group-uuid": node[:group].uuid}
+          = render "groups/group_content", group: node[:group], profiles: node[:profiles]
+        - node[:profiles].each do |profile|
+          %template{"data-tree-target": "profileTemplate", "data-group-uuid": node[:group].uuid, "data-profile-uuid": profile.uuid}
+            = render "groups/profile_content", group: node[:group], profile: profile
+        - cache_tree.call(node[:children])
+    - cache_tree.call(@descendant_tree)
 
-- if @direct_profiles.any?
-  - if @descendant_sections.any? { |s| s.profiles.any? }
-    %h2 Other profiles
-  .profile-grid
+    -# Templates for direct profiles
     - @direct_profiles.each do |profile|
-      = render "groups/profile_card", group: @group, profile: profile
+      %template{"data-tree-target": "profileTemplate", "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid}
+        = render "groups/profile_content", group: @group, profile: profile
 
-- if @descendant_sections.none? { |s| s.profiles.any? } && @direct_profiles.empty?
+    -# Template for root group
+    %template{"data-tree-target": "groupTemplate", "data-group-uuid": @group.uuid}
+      = render "groups/group_content", group: @group, profiles: @direct_profiles
+
+- else
+  .card.profile-public
+    .profile-header
+      - if @group.avatar.attached?
+        = link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
+          = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || ""
+
+    %div
+      %h1= @group.name
+
+    - if @group.description.present?
+      .group-description
+        = simple_format(@group.description)
+
   .card
     %p No profiles in this group yet.
