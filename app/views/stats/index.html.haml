@@ -1,0 +1,14 @@
+- content_for(:title) { "Stats — Plural Profiles" }
+
+%h1 Stats
+
+.stats-grid
+  .card.stats-card
+    .stats-card__number= @user_count
+    .stats-card__label Users
+  .card.stats-card
+    .stats-card__number= @profile_count
+    .stats-card__label Profiles
+  .card.stats-card
+    .stats-card__number= @group_count
+    .stats-card__label Groups

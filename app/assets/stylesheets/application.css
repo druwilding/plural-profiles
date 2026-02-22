@@ -407,6 +407,31 @@ button:hover,
   margin: 0;
 }
 
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.stats-card {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.stats-card__number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--link);
+}
+
+.stats-card__label {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
 /* Profile grid (public group view) */
 .profile-grid {
   display: grid;
