@@ -121,7 +121,7 @@ body {
 
 .sidebar summary::before {
   content: "▸";
-  font-size: 0.7rem;
+  font-size: 1rem;
   transition: transform 0.15s ease;
 }
 
@@ -652,10 +652,10 @@ button:hover,
 }
 
 .tree__arrow {
-  font-size: 0.75rem;
+  font-size: 1rem;
   flex-shrink: 0;
   transition: transform 0.15s ease;
-  width: 0.75rem;
+  width: 1rem;
   text-align: center;
   display: inline-block;
 }
