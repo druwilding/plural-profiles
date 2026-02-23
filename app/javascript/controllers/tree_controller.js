@@ -41,6 +41,10 @@ export default class extends Controller {
   }
 
   toggleFolder(event) {
+    if (event.type === "keydown") {
+      if (event.key !== "Enter" && event.key !== " ") return
+      event.preventDefault()
+    }
     const button = event.currentTarget
     const folder = button.closest(".tree__folder")
     const children = folder?.querySelector(".tree__children")

@@ -651,6 +651,7 @@ button:hover,
   color: var(--text);
   cursor: pointer;
   border-radius: 4px;
+  user-select: none;
 }
 
 .tree__arrow-btn:hover {

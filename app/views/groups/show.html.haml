@@ -21,7 +21,7 @@
           -# Root group node
           %li.tree__folder{role: "treeitem", "aria-expanded": "true"}
             .tree__row
-              %button.tree__arrow-btn{"data-action": "click->tree#toggleFolder", type: "button", "aria-label": "Toggle #{@group.name}"}
+              %span.tree__arrow-btn{role: "button", tabindex: "0", "data-action": "click->tree#toggleFolder keydown->tree#toggleFolder", "aria-label": "Toggle #{@group.name}"}
                 %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▸
               = link_to group_path(@group.uuid), class: "tree__item tree__item--active", "data-action": "click->tree#selectRoot", "data-panel-url": panel_group_path(@group.uuid), "data-group-uuid": @group.uuid do
                 - if @group.avatar.attached?
