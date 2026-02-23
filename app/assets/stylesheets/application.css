@@ -13,7 +13,7 @@
   --warning: #e2a854;
   --input-bg: #263a2e;
   --input-border: #4e855f;
-  --tree-guide: rgba(129, 157, 108, 0.3);
+  --tree-guide: color-mix(in srgb, var(--text) 30%, transparent);
 }
 
 *, *::before, *::after {
@@ -586,13 +586,19 @@ button:hover,
 /* Tree */
 .tree,
 .tree__children {
+  --tree-indent: 1rem;
+  --tree-arrow-width: 1.4rem;
+  --tree-row-center: 0.95rem;        /* vertical midpoint of a row */
+  --tree-guide-inset: -0.35rem;      /* guide line offset within indent */
+  --tree-leaf-connector: 1.8rem;     /* horizontal line reaching into leaf */
+
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .tree__children {
-  padding-left: 1rem;
+  padding-left: var(--tree-indent);
 }
 
 /* Tree guide lines */
@@ -603,7 +609,7 @@ button:hover,
 .tree__children > li::before {
   content: "";
   position: absolute;
-  left: -0.35rem;
+  left: var(--tree-guide-inset);
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--tree-guide);
@@ -613,16 +619,16 @@ button:hover,
 .tree__children > .tree__leaf::after {
   content: "";
   position: absolute;
-  left: -0.35rem;
-  top: 0.95rem;
-  width: 1.8rem;
+  left: var(--tree-guide-inset);
+  top: var(--tree-row-center);
+  width: var(--tree-leaf-connector);
   border-top: 1px solid var(--tree-guide);
   pointer-events: none;
 }
 
 .tree__children > li:last-child::before {
   bottom: auto;
-  height: 0.95rem;
+  height: var(--tree-row-center);
 }
 
 .tree__folder {
@@ -631,7 +637,7 @@ button:hover,
 
 .tree__leaf {
   margin: 0;
-  padding-left: 1.4rem;
+  padding-left: var(--tree-arrow-width);
 }
 
 .tree__row {
@@ -643,7 +649,7 @@ button:hover,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.4rem;
+  width: var(--tree-arrow-width);
   flex-shrink: 0;
   padding: 0.3rem 0;
   border: none;
