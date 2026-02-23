@@ -13,6 +13,7 @@
   --warning: #e2a854;
   --input-bg: #263a2e;
   --input-border: #4e855f;
+  --tree-guide: rgba(129, 157, 108, 0.3);
 }
 
 *, *::before, *::after {
@@ -601,7 +602,7 @@ button:hover,
   left: -0.55rem;
   top: 0;
   bottom: 0;
-  border-left: 1px solid rgba(129, 157, 108, 0.2);
+  border-left: 1px solid var(--tree-guide);
   pointer-events: none;
 }
 
@@ -611,7 +612,7 @@ button:hover,
   left: -0.55rem;
   top: 0.95rem;
   width: 0.7rem;
-  border-top: 1px solid rgba(129, 157, 108, 0.2);
+  border-top: 1px solid var(--tree-guide);
   pointer-events: none;
 }
 
