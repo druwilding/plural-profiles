@@ -122,7 +122,7 @@ body {
 
 .sidebar summary::before {
   content: "▶";
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   display: inline-block;
   width: 1rem;
   text-align: center;
@@ -691,7 +691,7 @@ button:hover,
 }
 
 .tree__arrow {
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   flex-shrink: 0;
   width: 1rem;
   text-align: center;
