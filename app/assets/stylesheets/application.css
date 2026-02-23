@@ -603,25 +603,21 @@ button:hover,
 .tree__children > li::before {
   content: "";
   position: absolute;
-  left: -0.55rem;
+  left: -0.35rem;
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--tree-guide);
   pointer-events: none;
 }
 
-.tree__children > li::after {
+.tree__children > .tree__leaf::after {
   content: "";
   position: absolute;
-  left: -0.55rem;
+  left: -0.35rem;
   top: 0.95rem;
-  width: 0.7rem;
+  width: 1.8rem;
   border-top: 1px solid var(--tree-guide);
   pointer-events: none;
-}
-
-.tree__children > .tree__leaf::after {
-  width: 1.8rem;
 }
 
 .tree__children > li:last-child::before {
