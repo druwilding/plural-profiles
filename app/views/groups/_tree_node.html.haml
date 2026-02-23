@@ -10,7 +10,7 @@
     .tree__row
       %button.tree__arrow-btn{"data-action": "click->tree#toggleFolder", type: "button", "aria-label": "Toggle #{group.name}"}
         %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▸
-      %button.tree__item{"data-action": "click->tree#selectGroup", "data-panel-url": panel_group_path(group.uuid), "data-group-uuid": group.uuid, type: "button"}
+      = link_to group_path(group.uuid), class: "tree__item", "data-action": "click->tree#selectGroup", "data-panel-url": panel_group_path(group.uuid), "data-group-uuid": group.uuid do
         - if group.avatar.attached?
           = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
         %span.tree__label= group.name
@@ -19,7 +19,7 @@
         = render "groups/tree_node", node: child_node
       - profiles.each do |profile|
         %li.tree__leaf{role: "treeitem"}
-          %button.tree__item{"data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(group.uuid, profile.uuid), "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid, type: "button"}
+          = link_to group_profile_path(group.uuid, profile.uuid), class: "tree__item", "data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(group.uuid, profile.uuid), "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid do
             - if profile.avatar.attached?
               = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
             - else
@@ -30,7 +30,7 @@
     .tree__row
       %span.tree__arrow-btn{"aria-hidden": "true"}
         %span.tree__arrow
-      %button.tree__item{"data-action": "click->tree#selectGroup", "data-panel-url": panel_group_path(group.uuid), "data-group-uuid": group.uuid, type: "button"}
+      = link_to group_path(group.uuid), class: "tree__item", "data-action": "click->tree#selectGroup", "data-panel-url": panel_group_path(group.uuid), "data-group-uuid": group.uuid do
         - if group.avatar.attached?
           = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
         %span.tree__label= group.name

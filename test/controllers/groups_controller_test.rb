@@ -68,7 +68,7 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     get group_path(uuid: everyone.uuid)
     assert_response :success
     # Alice appears in the tree under Friends, with Friends' group UUID
-    assert_select "button[data-group-uuid='#{groups(:friends).uuid}'][data-profile-uuid='#{profiles(:alice).uuid}']"
+    assert_select "a[data-group-uuid='#{groups(:friends).uuid}'][data-profile-uuid='#{profiles(:alice).uuid}']"
   end
 
   test "show renders empty state when no profiles or sub-groups" do

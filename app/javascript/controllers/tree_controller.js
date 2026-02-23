@@ -23,19 +23,21 @@ export default class extends Controller {
   }
 
   selectRoot(event) {
-    const button = event.currentTarget
+    event.preventDefault()
+    const link = event.currentTarget
     this.#clearActive()
-    button.classList.add("tree__item--active")
+    link.classList.add("tree__item--active")
     history.replaceState(null, "", window.location.pathname + window.location.search)
-    this.#loadPanelAndScroll(button.dataset.panelUrl)
+    this.#loadPanelAndScroll(link.dataset.panelUrl)
   }
 
   selectGroup(event) {
-    const button = event.currentTarget
+    event.preventDefault()
+    const link = event.currentTarget
     this.#clearActive()
-    button.classList.add("tree__item--active")
-    this.#setHash("group", button.dataset.groupUuid)
-    this.#loadPanelAndScroll(button.dataset.panelUrl)
+    link.classList.add("tree__item--active")
+    this.#setHash("group", link.dataset.groupUuid)
+    this.#loadPanelAndScroll(link.dataset.panelUrl)
   }
 
   toggleFolder(event) {
@@ -54,8 +56,9 @@ export default class extends Controller {
   }
 
   selectProfile(event) {
-    const button = event.currentTarget
-    this.#selectProfileButton(button)
+    event.preventDefault()
+    const link = event.currentTarget
+    this.#selectProfileButton(link)
   }
 
   selectProfileCard(event) {
@@ -73,7 +76,7 @@ export default class extends Controller {
 
     // Highlight the matching leaf in the tree
     const treeLeaf = this.element.querySelector(
-      `.tree button[data-group-uuid="${groupUuid}"][data-profile-uuid="${profileUuid}"]`
+      `.tree .tree__item[data-group-uuid="${groupUuid}"][data-profile-uuid="${profileUuid}"]`
     )
     if (treeLeaf) {
       treeLeaf.classList.add("tree__item--active")
@@ -101,8 +104,8 @@ export default class extends Controller {
 
     if (parts[0] === "group" && parts[1]) {
       const button = this.element.querySelector(
-        `.tree button[data-action*="selectGroup"][data-group-uuid="${parts[1]}"],
-         .tree button[data-action*="selectRoot"][data-group-uuid="${parts[1]}"]`
+        `.tree .tree__item[data-action*="selectGroup"][data-group-uuid="${parts[1]}"],
+         .tree .tree__item[data-action*="selectRoot"][data-group-uuid="${parts[1]}"]`
       )
       if (button) {
         this.#clearActive()
@@ -111,7 +114,7 @@ export default class extends Controller {
       }
     } else if (parts[0] === "profile" && parts[1] && parts[2]) {
       const button = this.element.querySelector(
-        `.tree button[data-group-uuid="${parts[1]}"][data-profile-uuid="${parts[2]}"]`
+        `.tree .tree__item[data-group-uuid="${parts[1]}"][data-profile-uuid="${parts[2]}"]`
       )
       if (button) {
         this.#selectProfileButton(button)
