@@ -5,6 +5,6 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
     get stats_path
     assert_response :success
     assert_select "h1", "Stats"
-    assert_select ".stats-card", 3
+    assert_select ".stats-card", 4
   end
 end
