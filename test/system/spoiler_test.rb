@@ -22,7 +22,7 @@ class SpoilerTest < ApplicationSystemTestCase
     assert_selector ".spoiler.spoiler--revealed"
     assert_text "super secret"
     assert_equal "true", spoiler[:"aria-expanded"]
-    assert_equal "Content revealed, click to hide", spoiler[:"aria-label"]
+    assert_nil spoiler[:"aria-label"]
   end
 
   test "clicking a revealed spoiler hides it again and restores ARIA" do
@@ -36,6 +36,7 @@ class SpoilerTest < ApplicationSystemTestCase
     spoiler.click
     assert_selector ".spoiler.spoiler--revealed"
     assert_equal "true", spoiler[:"aria-expanded"]
+    assert_nil spoiler[:"aria-label"]
 
     spoiler.click
     assert_no_selector ".spoiler.spoiler--revealed"

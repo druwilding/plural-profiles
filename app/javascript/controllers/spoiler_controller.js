@@ -9,7 +9,12 @@ export default class extends Controller {
 
     const revealed = span.classList.toggle("spoiler--revealed")
     span.setAttribute("aria-expanded", String(revealed))
-    span.setAttribute("aria-label", revealed ? "Content revealed, click to hide" : "Hidden content, click to reveal")
+
+    if (revealed) {
+      span.removeAttribute("aria-label")
+    } else {
+      span.setAttribute("aria-label", "Hidden content, click to reveal")
+    }
   }
 
   keydown(event) {
