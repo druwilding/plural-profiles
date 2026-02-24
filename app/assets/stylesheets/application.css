@@ -483,6 +483,23 @@ button:hover,
   font-weight: bold;
 }
 
+/* Spoiler text (Discord-style ||hidden||) */
+.spoiler {
+  background-color: var(--text);
+  color: transparent;
+  border-radius: 3px;
+  padding: 0 0.2em;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+
+.spoiler--revealed {
+  background-color: color-mix(in srgb, var(--text) 10%, transparent);
+  color: inherit;
+  user-select: auto;
+}
+
 .profile-actions {
   display: flex;
   gap: 0.75rem;

@@ -9,7 +9,7 @@
     %h1= group.name
 
   - if group.description.present?
-    .group-description
+    .group-description{data: {controller: "spoiler", action: "click->spoiler#toggle"}}
       = formatted_description(group.description)
 
 - if profiles.any?

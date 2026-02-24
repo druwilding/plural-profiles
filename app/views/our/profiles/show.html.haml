@@ -15,7 +15,7 @@
         %p.pronouns= @profile.pronouns
 
   - if @profile.description.present?
-    .profile-description
+    .profile-description{data: {controller: "spoiler", action: "click->spoiler#toggle"}}
       = formatted_description(@profile.description)
 
   .profile-actions

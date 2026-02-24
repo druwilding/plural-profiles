@@ -57,4 +57,39 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "Hidden content"
     assert_includes result, "<p>Closing paragraph</p>"
   end
+
+  # -- Spoiler syntax (||text||) --
+
+  test "converts double-pipe syntax to spoiler span" do
+    text = "the secret is ||hidden content|| here"
+    result = formatted_description(text)
+    assert_includes result, '<span class="spoiler">hidden content</span>'
+  end
+
+  test "converts multiple spoilers in one text" do
+    text = "||first|| and ||second||"
+    result = formatted_description(text)
+    assert_includes result, '<span class="spoiler">first</span>'
+    assert_includes result, '<span class="spoiler">second</span>'
+  end
+
+  test "does not convert single pipes" do
+    text = "a | b | c"
+    result = formatted_description(text)
+    assert_not_includes result, "spoiler"
+    assert_includes result, "a | b | c"
+  end
+
+  test "does not convert empty double pipes" do
+    text = "nothing |||| here"
+    result = formatted_description(text)
+    assert_not_includes result, '<span class="spoiler"></span>'
+  end
+
+  test "spoiler works alongside details tags" do
+    text = "<details><summary>Info</summary>||secret||</details>"
+    result = formatted_description(text)
+    assert_includes result, "<details>"
+    assert_includes result, '<span class="spoiler">secret</span>'
+  end
 end
