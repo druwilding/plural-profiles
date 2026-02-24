@@ -13,6 +13,7 @@
   --warning: #e2a854;
   --input-bg: #263a2e;
   --input-border: #4e855f;
+  --spoiler: #3A3A3A;
   --tree-guide: color-mix(in srgb, var(--text) 30%, transparent);
   --placeholder-border: color-mix(in srgb, var(--text) 50%, transparent);
 }
@@ -485,8 +486,9 @@ button:hover,
 
 /* Spoiler text (Discord-style ||hidden||) */
 .spoiler {
-  background-color: var(--text);
+  background-color: var(--spoiler);
   color: transparent;
+  border: 1px solid var(--spoiler);
   border-radius: 3px;
   padding: 0 0.2em;
   cursor: pointer;
@@ -497,12 +499,12 @@ button:hover,
 }
 
 .spoiler:focus-visible {
-  outline: 2px solid var(--text);
+  outline: 2px solid var(--spoiler);
   outline-offset: 1px;
 }
 
 .spoiler--revealed {
-  background-color: color-mix(in srgb, var(--text) 10%, transparent);
+  background-color: color-mix(in srgb, var(--spoiler) 10%, transparent);
   color: inherit;
   user-select: auto;
 }
@@ -510,8 +512,8 @@ button:hover,
 @media (forced-colors: active) {
   .spoiler {
     forced-color-adjust: none;
-    background-color: CanvasText;
-    color: CanvasText;
+    background-color: var(--spoiler);
+    color: var(--spoiler);
     border: 1px solid CanvasText;
   }
 
