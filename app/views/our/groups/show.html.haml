@@ -33,7 +33,7 @@
         - if child.avatar.attached?
           = image_tag child.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: child.avatar_alt_text.presence || ""
         - else
-          .avatar.avatar--placeholder= child.name.first.upcase
+          .avatar.avatar--placeholder= child.name.first
         %h3= link_to child.name, our_group_path(child)
 
 %h2 Profiles
@@ -44,7 +44,7 @@
         - if profile.avatar.attached?
           = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || ""
         - else
-          .avatar.avatar--placeholder= profile.name.first.upcase
+          .avatar.avatar--placeholder= profile.name.first
         %h3= link_to profile.name, our_profile_path(profile)
         - if profile.pronouns.present?
           %span.pronouns= profile.pronouns

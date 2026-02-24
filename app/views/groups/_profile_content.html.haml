@@ -6,7 +6,7 @@
       = link_to rails_blob_path(profile.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
         = image_tag profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: profile.avatar_alt_text.presence || ""
     - else
-      .avatar.avatar--large.avatar--placeholder= profile.name.first.upcase
+      .avatar.avatar--large.avatar--placeholder= profile.name.first
     %div
       %h1= profile.name
       - if profile.pronouns.present?
