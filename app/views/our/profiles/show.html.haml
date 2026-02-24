@@ -18,6 +18,16 @@
     .profile-description{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       = formatted_description(@profile.description)
 
+  .timestamps
+    %p
+      %strong Created:
+      %time{datetime: @profile.created_at.iso8601}= @profile.created_at.strftime("%d %B %Y")
+      = "(#{time_ago_in_words(@profile.created_at)} ago)"
+    %p
+      %strong Updated:
+      %time{datetime: @profile.updated_at.iso8601}= @profile.updated_at.strftime("%d %B %Y")
+      = "(#{time_ago_in_words(@profile.updated_at)} ago)"
+
   .profile-actions
     = link_to "Edit", edit_our_profile_path(@profile), class: "btn btn--secondary"
     = link_to "Delete", our_profile_path(@profile), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn--danger"
