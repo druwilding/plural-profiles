@@ -10,7 +10,7 @@
 
   - if group.description.present?
     .group-description
-      = simple_format(group.description)
+      = formatted_description(group.description)
 
 - if profiles.any?
   .profile-grid

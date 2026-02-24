@@ -11,7 +11,7 @@
   %div
     - if @group.description.present?
       .group-description
-        = simple_format(@group.description)
+        = formatted_description(@group.description)
 
   .profile-actions
     = link_to "Edit", edit_our_group_path(@group), class: "btn btn--secondary"
