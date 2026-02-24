@@ -507,6 +507,25 @@ button:hover,
   user-select: auto;
 }
 
+@media (forced-colors: active) {
+  .spoiler {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+
+  .spoiler:focus-visible {
+    outline-color: CanvasText;
+  }
+
+  .spoiler--revealed {
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}
+
 .profile-actions {
   display: flex;
   gap: 0.75rem;
