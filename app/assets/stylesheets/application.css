@@ -478,6 +478,10 @@ button:hover,
   margin-bottom: 1.5rem;
 }
 
+details summary {
+  font-weight: bold;
+}
+
 .profile-actions {
   display: flex;
   gap: 0.75rem;
