@@ -123,7 +123,7 @@ class SpoilerTest < ApplicationSystemTestCase
     assert_no_selector "code .spoiler"
   end
 
-  test "details summary can be toggled with keyboard" do
+  test "spoiler controller does not interfere with details keyboard navigation" do
     within(".site-header") { click_link "New profile" }
     fill_in "Name", with: "Details Keyboard Tester"
     fill_in "Description", with: "<details><summary>More info</summary>Hidden detail</details>"
