@@ -14,7 +14,7 @@
   --input-bg: #263a2e;
   --input-border: #4e855f;
   --tree-guide: color-mix(in srgb, var(--text) 30%, transparent);
-  --placeholder-border: color-mix(in srgb, var(--link) 15%, transparent);
+  --placeholder-border: color-mix(in srgb, var(--text) 50%, transparent);
 }
 
 *, *::before, *::after {
@@ -186,7 +186,7 @@ body {
 }
 
 .sidebar__link {
-  color: var(--text);
+  color: var(--link);
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -511,7 +511,7 @@ button:hover,
 .avatar--placeholder,
 .sidebar__avatar--placeholder,
 .tree__avatar--placeholder {
-  color: var(--link);
+  color: var(--text);
   border: 1px solid var(--placeholder-border);
 }
 
