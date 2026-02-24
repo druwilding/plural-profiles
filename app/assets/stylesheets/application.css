@@ -629,7 +629,7 @@ button:hover,
   --tree-arrow-width: 1.4rem;
   --tree-row-center: 0.95rem;        /* vertical midpoint of a row */
   --tree-guide-inset: -0.35rem;      /* guide line offset within indent */
-  --tree-leaf-connector: 1.8rem;     /* horizontal line reaching into leaf */
+  --tree-leaf-connector: 1.6rem;     /* horizontal line reaching into leaf */
 
   list-style: none;
   margin: 0;
