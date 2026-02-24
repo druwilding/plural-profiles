@@ -23,7 +23,7 @@
             - if profile.avatar.attached?
               = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
             - else
-              %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}= profile.name.first.upcase
+              %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}= profile.name.first
             %span.tree__label= profile.name
 - else
   %li.tree__folder{role: "treeitem"}

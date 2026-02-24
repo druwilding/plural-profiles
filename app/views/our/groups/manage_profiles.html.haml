@@ -14,7 +14,7 @@
           - if profile.avatar.attached?
             = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || ""
           - else
-            .avatar.avatar--small.avatar--placeholder= profile.name.first.upcase
+            .avatar.avatar--small.avatar--placeholder= profile.name.first
           %span= profile.name
         = link_to "Remove", remove_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
 - else
@@ -31,7 +31,7 @@
           - if profile.avatar.attached?
             = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || ""
           - else
-            .avatar.avatar--small.avatar--placeholder= profile.name.first.upcase
+            .avatar.avatar--small.avatar--placeholder= profile.name.first
           %span= profile.name
         = link_to "Add", add_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small"
 - else

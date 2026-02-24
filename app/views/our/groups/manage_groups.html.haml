@@ -14,7 +14,7 @@
           - if child.avatar.attached?
             = image_tag child.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: child.avatar_alt_text.presence || ""
           - else
-            .avatar.avatar--small.avatar--placeholder= child.name.first.upcase
+            .avatar.avatar--small.avatar--placeholder= child.name.first
           %span= child.name
         = link_to "Remove", remove_group_our_group_path(@group, group_id: child.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
 - else
@@ -31,7 +31,7 @@
           - if group.avatar.attached?
             = image_tag group.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: group.avatar_alt_text.presence || ""
           - else
-            .avatar.avatar--small.avatar--placeholder= group.name.first.upcase
+            .avatar.avatar--small.avatar--placeholder= group.name.first
           %span= group.name
         = link_to "Add", add_group_our_group_path(@group, group_id: group.id), data: { turbo_method: :post }, class: "btn btn--small"
 - else

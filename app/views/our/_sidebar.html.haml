@@ -30,7 +30,7 @@
           - if profile.avatar.attached?
             = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar__avatar", width: 24, height: 24, alt: profile.avatar_alt_text.presence || ""
           - else
-            %span.sidebar__avatar.sidebar__avatar--placeholder= profile.name.first.upcase
+            %span.sidebar__avatar.sidebar__avatar--placeholder= profile.name.first
           = link_to profile.name, our_profile_path(profile), class: "sidebar__link"
 
   %hr
