@@ -13,9 +13,10 @@ export default class extends Controller {
   }
 
   keydown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault()
-      this.toggle(event)
-    }
+    if (event.key !== "Enter" && event.key !== " ") return
+    if (!event.target.closest(".spoiler")) return
+
+    event.preventDefault()
+    this.toggle(event)
   }
 }

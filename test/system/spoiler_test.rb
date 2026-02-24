@@ -122,6 +122,26 @@ class SpoilerTest < ApplicationSystemTestCase
     assert_no_selector "code .spoiler"
   end
 
+  test "details summary can be toggled with keyboard" do
+    within(".site-header") { click_link "New profile" }
+    fill_in "Name", with: "Details Keyboard Tester"
+    fill_in "Description", with: "<details><summary>More info</summary>Hidden detail</details>"
+    click_button "Create profile"
+    assert_text "Profile created."
+
+    within(".profile-description") do
+      summary = find("summary", text: "More info")
+      assert_no_selector "details[open]"
+
+      summary.send_keys(:enter)
+      assert_selector "details[open]"
+      assert_text "Hidden detail"
+
+      summary.send_keys(:enter)
+      assert_no_selector "details[open]"
+    end
+  end
+
   private
 
   def sign_in_via_browser
