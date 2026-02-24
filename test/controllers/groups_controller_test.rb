@@ -76,7 +76,7 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     empty_group = user.groups.create!(name: "Empty")
     get group_path(uuid: empty_group.uuid)
     assert_response :success
-    assert_match "No profiles in this group yet", response.body
+    assert_no_match "No profiles in this group yet", response.body
   end
 
   test "show renders tree with direct profiles at root level" do
