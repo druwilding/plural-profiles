@@ -114,4 +114,11 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, '<span class="spoiler">line one'
     assert_includes result, "line two</span>"
   end
+
+  test "disallows dangerous content inside spoilers" do
+    text = "||<script>alert('xss')</script>||"
+    result = formatted_description(text)
+    assert_includes result, '<span class="spoiler">'
+    assert_not_includes result, "<script"
+  end
 end
