@@ -323,6 +323,7 @@ fieldset.form-group legend {
   width: 2rem;
   height: 1.15rem;
   background-color: #888;
+  border: 1px solid var(--link);
   border-radius: 0.6rem;
   flex-shrink: 0;
   transition: background-color 0.2s;
@@ -331,8 +332,8 @@ fieldset.form-group legend {
 .toggle-track::after {
   content: "";
   position: absolute;
-  top: 0.15rem;
-  left: 0.15rem;
+  top: 0.1rem;
+  left: 0.1rem;
   width: 0.85rem;
   height: 0.85rem;
   background-color: #fff;
@@ -346,6 +347,23 @@ input:checked + .toggle-track {
 
 input:checked + .toggle-track::after {
   transform: translateX(0.85rem);
+}
+
+@media (forced-colors: active) {
+  .toggle-track {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    border-color: CanvasText;
+  }
+
+  .toggle-track::after {
+    background-color: CanvasText;
+    border-color: CanvasText;
+  }
+
+  input:not(:checked) ~ .toggle-text {
+    opacity: 1;
+  }
 }
 
 input:not(:checked) ~ .toggle-text {
