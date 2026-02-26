@@ -21,16 +21,20 @@ class Group < ApplicationRecord
 
   # All group IDs in the descendant tree (this group + all children, recursive).
   # Uses a single recursive CTE query instead of N+1 queries per nesting level.
+  # Overlapping children are included but recursion stops at them — their own
+  # children are not pulled into this group's descendants.
   def descendant_group_ids
     sql = <<~SQL.squish
       WITH RECURSIVE tree AS (
-        SELECT CAST(:root_id AS bigint) AS id
+        SELECT CAST(:root_id AS bigint) AS id, true AS recurse_further
         UNION
-        SELECT gg.child_group_id AS id
+        SELECT gg.child_group_id AS id,
+               (gg.relationship_type = 'nested') AS recurse_further
         FROM group_groups gg
         INNER JOIN tree ON tree.id = gg.parent_group_id
+        WHERE tree.recurse_further = true
       )
-      SELECT id FROM tree
+      SELECT DISTINCT id FROM tree
     SQL
     Group.connection.select_values(
       Group.sanitize_sql([ sql, root_id: id ])
@@ -72,7 +76,7 @@ class Group < ApplicationRecord
 
   # Build a depth-first ordered list of all descendant groups.
   # Each group has its profiles and avatars eager-loaded.
-  # Uses 3 queries total: CTE for IDs, groups with profiles/avatars, group_groups for tree structure.
+  # Overlapping groups appear but their own children do not.
   def descendant_sections
     desc_ids = descendant_group_ids - [ id ]
     return [] if desc_ids.empty?
@@ -82,16 +86,16 @@ class Group < ApplicationRecord
                         .index_by(&:id)
 
     children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
-                             .pluck(:parent_group_id, :child_group_id)
+                             .pluck(:parent_group_id, :child_group_id, :relationship_type)
                              .group_by(&:first)
-                             .transform_values { |pairs| pairs.map(&:last) }
+                             .transform_values { |rows| rows.map { |r| { id: r[1], relationship_type: r[2] } } }
 
     walk_descendants(id, children_map, groups_by_id)
   end
 
   # Build a nested tree of all descendant groups for tree-view navigation.
-  # Returns an array of nodes: { group:, profiles:, children: [...] }
-  # Each group has its profiles and avatars eager-loaded.
+  # Returns an array of nodes: { group:, profiles:, children:, overlapping: }
+  # Overlapping groups appear in the tree but their own children are omitted.
   def descendant_tree
     desc_ids = descendant_group_ids - [ id ]
     return [] if desc_ids.empty?
@@ -101,9 +105,9 @@ class Group < ApplicationRecord
                         .index_by(&:id)
 
     children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
-                             .pluck(:parent_group_id, :child_group_id)
+                             .pluck(:parent_group_id, :child_group_id, :relationship_type)
                              .group_by(&:first)
-                             .transform_values { |pairs| pairs.map(&:last) }
+                             .transform_values { |rows| rows.map { |r| { id: r[1], relationship_type: r[2] } } }
 
     build_tree(id, children_map, groups_by_id)
   end
@@ -112,20 +116,28 @@ class Group < ApplicationRecord
 
   def walk_descendants(parent_id, children_map, groups_by_id)
     (children_map[parent_id] || [])
-      .filter_map { |cid| groups_by_id[cid] }
-      .sort_by(&:name)
-      .flat_map { |g| [ g, *walk_descendants(g.id, children_map, groups_by_id) ] }
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:relationship_type] ] : nil }
+      .sort_by { |g, _| g.name }
+      .flat_map do |g, rel_type|
+        if rel_type == "nested"
+          [ g, *walk_descendants(g.id, children_map, groups_by_id) ]
+        else
+          [ g ]
+        end
+      end
   end
 
   def build_tree(parent_id, children_map, groups_by_id)
     (children_map[parent_id] || [])
-      .filter_map { |cid| groups_by_id[cid] }
-      .sort_by(&:name)
-      .map do |g|
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:relationship_type] ] : nil }
+      .sort_by { |g, _| g.name }
+      .map do |g, rel_type|
+        overlapping = rel_type == "overlapping"
         {
           group: g,
           profiles: g.profiles.to_a,
-          children: build_tree(g.id, children_map, groups_by_id)
+          children: overlapping ? [] : build_tree(g.id, children_map, groups_by_id),
+          overlapping: overlapping
         }
       end
   end

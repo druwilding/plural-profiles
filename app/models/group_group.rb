@@ -1,11 +1,25 @@
 class GroupGroup < ApplicationRecord
+  RELATIONSHIP_TYPES = %w[nested overlapping].freeze
+
   belongs_to :parent_group, class_name: "Group"
   belongs_to :child_group, class_name: "Group"
 
   validates :child_group_id, uniqueness: { scope: :parent_group_id }
+  validates :relationship_type, inclusion: { in: RELATIONSHIP_TYPES }
   validate :same_user
   validate :not_self_referencing
   validate :no_circular_reference
+
+  scope :nested, -> { where(relationship_type: "nested") }
+  scope :overlapping, -> { where(relationship_type: "overlapping") }
+
+  def nested?
+    relationship_type == "nested"
+  end
+
+  def overlapping?
+    relationship_type == "overlapping"
+  end
 
   private
 

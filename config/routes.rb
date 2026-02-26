@@ -18,6 +18,7 @@ Rails.application.routes.draw do
       get :manage_groups
       post :add_group
       delete :remove_group
+      patch :toggle_relationship
     end
   end
   resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do

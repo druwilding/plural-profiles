@@ -6,9 +6,10 @@
 
 %h2 Current groups
 
-- if @group.child_groups.any?
+- if @child_links.any?
   .card-list
-    - @group.child_groups.order(:name).each do |child|
+    - @child_links.each do |link|
+      - child = link.child_group
       .card.card--row
         .card__header
           - if child.avatar.attached?
@@ -16,7 +17,12 @@
           - else
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"
-          %span= child.name
+          %div
+            %span= child.name
+            = link_to toggle_relationship_our_group_path(@group, group_id: child.id), data: { turbo_method: :patch }, class: "toggle-label" do
+              %input{type: "checkbox", id: "toggle_#{link.id}", checked: link.nested?, disabled: true, tabindex: "-1", "aria-hidden": "true"}
+              %span.toggle-track
+              %span.toggle-text Include all sub-groups
         = link_to "Remove", remove_group_our_group_path(@group, group_id: child.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
 - else
   .card
