@@ -294,6 +294,87 @@ fieldset.form-group legend {
   accent-color: var(--link);
 }
 
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0.75;
+  text-decoration: none;
+  margin-top: 0.2rem;
+}
+
+.toggle-label:hover {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.toggle-track {
+  position: relative;
+  width: 2rem;
+  height: 1.15rem;
+  background-color: #888;
+  border: 1px solid color-mix(in srgb, var(--link) 10%, transparent);
+  border-radius: 0.6rem;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 0.1rem;
+  left: 0.1rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+input:checked + .toggle-track {
+  background-color: var(--link);
+}
+
+input:checked + .toggle-track::after {
+  transform: translateX(0.85rem);
+}
+
+@media (forced-colors: active) {
+  .toggle-track {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    border-color: CanvasText;
+  }
+
+  .toggle-track::after {
+    background-color: CanvasText;
+    border-color: CanvasText;
+  }
+
+  input:not(:checked) ~ .toggle-text {
+    opacity: 1;
+  }
+}
+
+input:not(:checked) ~ .toggle-text {
+  opacity: 0.5;
+}
+
+.toggle-text {
+  white-space: nowrap;
+}
+
 label {
   display: block;
   margin-bottom: 0.35rem;
@@ -416,6 +497,24 @@ button:hover,
 .card__header h2,
 .card__header h3 {
   margin: 0;
+}
+
+.card__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn--outline {
+  background-color: transparent;
+  border: 1px solid var(--link);
+  color: var(--link);
+}
+
+.btn--outline:hover {
+  background-color: var(--link);
+  color: #fff;
 }
 
 /* Stats grid */
@@ -592,6 +691,8 @@ button:hover,
 .avatar--small.avatar--placeholder {
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .avatar--large.avatar--placeholder {
@@ -784,6 +885,15 @@ button:hover,
 .tree__label {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.tree__overlapping-hint {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.25rem;
+  cursor: help;
 }
 
 /* Timestamps */

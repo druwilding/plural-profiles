@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group toggle_relationship ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -68,6 +68,7 @@ class Our::GroupsController < ApplicationController
     @available_groups = Current.user.groups
       .where.not(id: excluded_ids)
       .order(:name)
+    @child_links = @group.child_links.includes(child_group: { avatar_attachment: :blob }).order("groups.name")
   end
 
   def add_group
@@ -86,6 +87,15 @@ class Our::GroupsController < ApplicationController
     child = @group.child_groups.find(params[:group_id])
     @group.child_groups.delete(child)
     redirect_to manage_groups_our_group_path(@group), notice: "Group removed."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
+  end
+
+  def toggle_relationship
+    link = @group.child_links.find_by!(child_group_id: params[:group_id])
+    new_type = link.nested? ? "overlapping" : "nested"
+    link.update!(relationship_type: new_type)
+    redirect_to manage_groups_our_group_path(@group), notice: "Relationship updated."
   rescue ActiveRecord::RecordNotFound
     redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
   end

@@ -74,4 +74,43 @@ class GroupGroupTest < ActiveSupport::TestCase
       @friends.destroy
     end
   end
+
+  # -- Relationship type --
+
+  test "defaults to nested relationship type" do
+    new_group = @user.groups.create!(name: "Coworkers")
+    link = GroupGroup.create!(parent_group: @everyone, child_group: new_group)
+    assert_equal "nested", link.relationship_type
+    assert link.nested?
+    assert_not link.overlapping?
+  end
+
+  test "can be set to overlapping" do
+    new_group = @user.groups.create!(name: "Coworkers")
+    link = GroupGroup.create!(parent_group: @everyone, child_group: new_group, relationship_type: "overlapping")
+    assert_equal "overlapping", link.relationship_type
+    assert link.overlapping?
+    assert_not link.nested?
+  end
+
+  test "rejects invalid relationship type" do
+    new_group = @user.groups.create!(name: "Coworkers")
+    link = GroupGroup.new(parent_group: @everyone, child_group: new_group, relationship_type: "invalid")
+    assert_not link.valid?
+    assert_includes link.errors[:relationship_type], "is not included in the list"
+  end
+
+  test "nested scope returns only nested links" do
+    new_group = @user.groups.create!(name: "Coworkers")
+    GroupGroup.create!(parent_group: @everyone, child_group: new_group, relationship_type: "overlapping")
+    nested = @everyone.child_links.nested
+    assert nested.all?(&:nested?)
+  end
+
+  test "overlapping scope returns only overlapping links" do
+    new_group = @user.groups.create!(name: "Coworkers")
+    GroupGroup.create!(parent_group: @everyone, child_group: new_group, relationship_type: "overlapping")
+    overlapping = @everyone.child_links.overlapping
+    assert overlapping.all?(&:overlapping?)
+  end
 end

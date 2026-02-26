@@ -136,4 +136,107 @@ class GroupTest < ActiveSupport::TestCase
     # Close Friends has Alice
     assert_equal [ "Alice" ], tree.first[:children].first[:profiles].map(&:name)
   end
+
+  # -- Overlapping relationship type --
+
+  test "descendant_group_ids includes overlapping child but not its children" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    # Build: everyone →(nested) friends →(nested) close
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+
+    # With nested, everyone sees all three
+    assert_includes everyone.descendant_group_ids, friends.id
+    assert_includes everyone.descendant_group_ids, close.id
+
+    # Now change friends to overlapping inside everyone
+    link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
+    link.update!(relationship_type: "overlapping")
+
+    ids = everyone.descendant_group_ids
+    # Friends is still included (it's a direct child)
+    assert_includes ids, friends.id
+    # But Close Friends is NOT included (recursion stops at overlapping)
+    assert_not_includes ids, close.id
+  end
+
+  test "all_profiles excludes profiles from groups behind overlapping boundary" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+    close.profiles << profiles(:bob)
+
+    # With nested, everyone sees Bob (through friends → close)
+    assert_includes everyone.all_profiles, profiles(:bob)
+
+    # Change friends to overlapping
+    link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
+    link.update!(relationship_type: "overlapping")
+
+    # Now Bob (in Close Friends) is not visible from everyone
+    assert_not_includes everyone.all_profiles, profiles(:bob)
+    # But Alice (directly in friends) is still visible
+    assert_includes everyone.all_profiles, profiles(:alice)
+  end
+
+  test "descendant_tree marks overlapping nodes and omits their children" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+
+    # With nested, tree includes close under friends
+    tree = everyone.descendant_tree
+    assert_equal 1, tree.first[:children].length
+    assert_not tree.first[:overlapping]
+
+    # Change friends to overlapping
+    link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
+    link.update!(relationship_type: "overlapping")
+
+    tree = everyone.descendant_tree
+    friends_node = tree.first
+    # Friends is marked as overlapping
+    assert friends_node[:overlapping]
+    # Its children are empty (recursion stopped)
+    assert_empty friends_node[:children]
+  end
+
+  test "descendant_sections stops recursion at overlapping groups" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+
+    # With nested, sections include both friends and close
+    sections = everyone.descendant_sections
+    assert_equal [ "Friends", "Close Friends" ], sections.map(&:name)
+
+    # Change friends to overlapping
+    link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
+    link.update!(relationship_type: "overlapping")
+
+    # Now only friends appears (close is behind the overlapping boundary)
+    sections = everyone.descendant_sections
+    assert_equal [ "Friends" ], sections.map(&:name)
+  end
+
+  test "overlapping group is still fully visible when viewed directly" do
+    user = users(:one)
+    friends = groups(:friends)
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+    close.profiles << profiles(:bob)
+
+    # Viewing friends directly still shows close and its profiles
+    assert_includes friends.descendant_group_ids, close.id
+    assert_includes friends.all_profiles, profiles(:bob)
+    assert_equal [ "Close Friends" ], friends.descendant_tree.map { |n| n[:group].name }
+  end
 end
