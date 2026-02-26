@@ -45,6 +45,46 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert_text "Bob"   # available to add
   end
 
+  test "toggle relationship type from nested to overlapping" do
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    checkbox_id = "toggle_#{link.id}"
+
+    visit manage_groups_our_group_path(everyone)
+
+    # Starts as nested — checkbox should be checked
+    assert_text "Include sub-groups"
+    assert find("##{checkbox_id}", visible: :all).checked?
+
+    # Click the toggle to switch to overlapping
+    find(".toggle-label").click
+    assert_text "Relationship updated."
+
+    # Page has reloaded — checkbox should now be unchecked
+    assert_not find("##{checkbox_id}", visible: :all).checked?
+    assert link.reload.overlapping?
+  end
+
+  test "toggle relationship type from overlapping to nested" do
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    link.update!(relationship_type: "overlapping")
+    checkbox_id = "toggle_#{link.id}"
+
+    visit manage_groups_our_group_path(everyone)
+
+    # Starts as overlapping — checkbox should be unchecked
+    assert_not find("##{checkbox_id}", visible: :all).checked?
+
+    # Click the toggle to switch to nested
+    find(".toggle-label").click
+    assert_text "Relationship updated."
+
+    # Page has reloaded — checkbox should now be checked
+    assert find("##{checkbox_id}", visible: :all).checked?
+    assert link.reload.nested?
+  end
+
   private
 
   def sign_in_via_browser

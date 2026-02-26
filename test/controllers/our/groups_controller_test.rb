@@ -381,4 +381,50 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to group_path(everyone.uuid)
   end
+
+  # -- Toggle relationship type --
+
+  test "toggle_relationship switches nested to overlapping" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    assert link.nested?
+
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    assert link.reload.overlapping?
+  end
+
+  test "toggle_relationship switches overlapping back to nested" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    link.update!(relationship_type: "overlapping")
+
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    assert link.reload.nested?
+  end
+
+  test "toggle_relationship with invalid group_id shows alert" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: 999999 }
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    follow_redirect!
+    assert_match "Group not found", response.body
+  end
+
+  test "toggle_relationship redirects logged-out user to sign in" do
+    everyone = groups(:everyone)
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    assert_redirected_to new_session_path
+  end
+
+  test "toggle_relationship redirects wrong user to public group" do
+    sign_in_as @other_user
+    everyone = groups(:everyone)
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    assert_redirected_to group_path(everyone.uuid)
+  end
 end
