@@ -12,6 +12,10 @@ class User < ApplicationRecord
   validate :unverified_email_not_taken, if: -> { unverified_email_address.present? }
   validates :password, length: { minimum: 8 }, if: -> { new_record? || password.present? }
 
+  generates_token_for :password_reset, expires_in: 1.hour do
+    password_salt&.last(10)
+  end
+
   generates_token_for :email_change, expires_in: 24.hours do
     unverified_email_address
   end
