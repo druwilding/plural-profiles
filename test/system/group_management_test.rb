@@ -85,6 +85,53 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert link.reload.nested?
   end
 
+  test "public page shows nested sub-group's profiles but hides overlapping sub-group's profiles" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+
+    # Build a deeper structure: everyone → friends → inner
+    inner = user.groups.create!(name: "Inner Circle")
+    GroupGroup.create!(parent_group: friends, child_group: inner)
+    inner.profiles << profiles(:bob)
+
+    # --- Nested: inner group and Bob should be visible ---
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      assert_text "Everyone"
+      assert_text "Friends"
+      assert_text "Inner Circle"
+      assert_text "Bob"
+      assert_text "Alice"
+    end
+
+    # --- Switch to overlapping: inner group and Bob should disappear ---
+    link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
+    link.update!(relationship_type: "overlapping")
+
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      assert_text "Everyone"
+      assert_text "Friends"
+      assert_no_text "Inner Circle"
+      assert_no_text "Bob"
+      # Alice is directly in friends, so she still appears
+      assert_text "Alice"
+    end
+
+    # --- Visiting friends directly still shows everything ---
+    visit group_path(friends.uuid)
+
+    within(".explorer__sidebar") do
+      assert_text "Friends"
+      assert_text "Inner Circle"
+      assert_text "Bob"
+      assert_text "Alice"
+    end
+  end
+
   private
 
   def sign_in_via_browser
