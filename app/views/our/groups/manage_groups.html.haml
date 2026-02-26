@@ -19,7 +19,7 @@
               = render "shared/plural_pride_logo"
           %div
             %span= child.name
-            = link_to toggle_relationship_our_group_path(@group, group_id: child.id), data: { turbo_method: :patch }, class: "toggle-label" do
+            = link_to toggle_relationship_our_group_path(@group, group_id: child.id), data: { turbo_method: :patch }, class: "toggle-label", role: "switch", aria: { checked: link.nested?, label: "Include sub-groups for #{child.name}" } do
               %input{type: "checkbox", id: "toggle_#{link.id}", checked: link.nested?, disabled: true, tabindex: "-1", "aria-hidden": "true"}
               %span.toggle-track
               %span.toggle-text Include sub-groups
