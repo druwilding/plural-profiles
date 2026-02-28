@@ -399,6 +399,49 @@ select {
   transition: border-color 0.2s;
 }
 
+/* Inclusion fieldsets (manage groups) */
+.inclusion-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+fieldset.inclusion-radios,
+fieldset.inclusion-checkboxes {
+  border: 1px solid rgba(255,255,255,0.04);
+  background-color: rgba(255,255,255,0.02);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  min-width: 0;
+}
+
+fieldset.inclusion-radios {
+  flex: 0 0 220px;
+  min-width: 180px;
+}
+
+fieldset.inclusion-checkboxes {
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+fieldset.inclusion-radios legend,
+fieldset.inclusion-checkboxes legend {
+  color: var(--heading);
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 1024px) {
+  .inclusion-row { flex-direction: column !important; }
+  fieldset.inclusion-radios { flex: none !important; }
+  fieldset.inclusion-radios,
+  fieldset.inclusion-checkboxes {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+}
+
 input:focus,
 textarea:focus,
 select:focus {
@@ -423,6 +466,12 @@ button,
   cursor: pointer;
   text-decoration: none;
   transition: background-color 0.2s;
+}
+
+/* Space around Save button inside inclusion forms */
+.inclusion-form input[type="submit"],
+.inclusion-form .btn {
+  margin-top: 0.5rem;
 }
 
 input[type="submit"]:hover,

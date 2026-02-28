@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_180811) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,8 +45,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_180811) do
   create_table "group_groups", force: :cascade do |t|
     t.bigint "child_group_id", null: false
     t.datetime "created_at", null: false
+    t.jsonb "included_subgroup_ids", default: [], null: false
+    t.string "inclusion_mode", default: "all", null: false
     t.bigint "parent_group_id", null: false
-    t.string "relationship_type", default: "nested", null: false
     t.datetime "updated_at", null: false
     t.index ["child_group_id"], name: "index_group_groups_on_child_group_id"
     t.index ["parent_group_id", "child_group_id"], name: "index_group_groups_on_parent_group_id_and_child_group_id", unique: true

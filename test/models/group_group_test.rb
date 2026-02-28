@@ -47,6 +47,21 @@ class GroupGroupTest < ActiveSupport::TestCase
     assert_includes link.errors[:child_group], "would create a circular reference"
   end
 
+  test "prevents partial circular relationship" do
+    # A->B (none)
+    # B->C (all)
+    # C->A is not allowed (would create a circular reference)
+    a = @user.groups.create!(name: "A")
+    b = @user.groups.create!(name: "B")
+    c = @user.groups.create!(name: "C")
+    GroupGroup.create!(parent_group: a, child_group: b, inclusion_mode: "none")
+    GroupGroup.create!(parent_group: b, child_group: c, inclusion_mode: "all")
+
+    link = GroupGroup.new(parent_group: c, child_group: a)
+    assert_not link.valid?
+    assert_includes link.errors[:child_group], "would create a circular reference"
+  end
+
   test "allows non-circular chains" do
     new_group = @user.groups.create!(name: "Coworkers")
     link = GroupGroup.new(parent_group: @friends, child_group: new_group)
@@ -77,40 +92,40 @@ class GroupGroupTest < ActiveSupport::TestCase
 
   # -- Relationship type --
 
-  test "defaults to nested relationship type" do
+  test "defaults to all inclusion mode" do
     new_group = @user.groups.create!(name: "Coworkers")
     link = GroupGroup.create!(parent_group: @everyone, child_group: new_group)
-    assert_equal "nested", link.relationship_type
-    assert link.nested?
-    assert_not link.overlapping?
+    assert_equal "all", link.inclusion_mode
+    assert link.all?
+    assert_not link.none?
   end
 
-  test "can be set to overlapping" do
+  test "can be set to none" do
     new_group = @user.groups.create!(name: "Coworkers")
-    link = GroupGroup.create!(parent_group: @everyone, child_group: new_group, relationship_type: "overlapping")
-    assert_equal "overlapping", link.relationship_type
-    assert link.overlapping?
-    assert_not link.nested?
+    link = GroupGroup.create!(parent_group: @everyone, child_group: new_group, inclusion_mode: "none")
+    assert_equal "none", link.inclusion_mode
+    assert link.none?
+    assert_not link.all?
   end
 
-  test "rejects invalid relationship type" do
+  test "rejects invalid inclusion mode" do
     new_group = @user.groups.create!(name: "Coworkers")
-    link = GroupGroup.new(parent_group: @everyone, child_group: new_group, relationship_type: "invalid")
+    link = GroupGroup.new(parent_group: @everyone, child_group: new_group, inclusion_mode: "invalid")
     assert_not link.valid?
-    assert_includes link.errors[:relationship_type], "is not included in the list"
+    assert_includes link.errors[:inclusion_mode], "is not included in the list"
   end
 
-  test "nested scope returns only nested links" do
+  test "all_mode scope returns only all-mode links" do
     new_group = @user.groups.create!(name: "Coworkers")
-    GroupGroup.create!(parent_group: @everyone, child_group: new_group, relationship_type: "overlapping")
-    nested = @everyone.child_links.nested
-    assert nested.all?(&:nested?)
+    GroupGroup.create!(parent_group: @everyone, child_group: new_group, inclusion_mode: "none")
+    all = @everyone.child_links.all_mode
+    assert all.all?(&:all?)
   end
 
-  test "overlapping scope returns only overlapping links" do
+  test "none_mode scope returns only none-mode links" do
     new_group = @user.groups.create!(name: "Coworkers")
-    GroupGroup.create!(parent_group: @everyone, child_group: new_group, relationship_type: "overlapping")
-    overlapping = @everyone.child_links.overlapping
-    assert overlapping.all?(&:overlapping?)
+    GroupGroup.create!(parent_group: @everyone, child_group: new_group, inclusion_mode: "none")
+    none = @everyone.child_links.none_mode
+    assert none.all?(&:none?)
   end
 end

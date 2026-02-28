@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group toggle_relationship ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -68,7 +68,12 @@ class Our::GroupsController < ApplicationController
     @available_groups = Current.user.groups
       .where.not(id: excluded_ids)
       .order(:name)
-    @child_links = @group.child_links.includes(child_group: { avatar_attachment: :blob }).order("groups.name")
+    @child_links = @group.child_links.includes(
+      child_group: [
+        { avatar_attachment: :blob },
+        { child_links: :child_group }
+      ]
+    ).order("groups.name")
   end
 
   def add_group
@@ -91,10 +96,26 @@ class Our::GroupsController < ApplicationController
     redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
   end
 
-  def toggle_relationship
+  def update_relationship
     link = @group.child_links.find_by!(child_group_id: params[:group_id])
-    new_type = link.nested? ? "overlapping" : "nested"
-    link.update!(relationship_type: new_type)
+    allowed_modes = %w[all selected none]
+
+    if params[:inclusion_mode].present?
+      mode = params[:inclusion_mode].to_s
+      mode = "none" unless allowed_modes.include?(mode)
+
+      if mode == "selected"
+        included = Array(params[:included_subgroup_ids]).map(&:to_i)
+        # Only allow immediate sub-groups of the child to be included
+        valid_included = included & link.child_group.child_group_ids
+      else
+        # For 'all' or 'none' we clear the explicit list to keep data consistent
+        valid_included = []
+      end
+
+      link.update!(inclusion_mode: mode, included_subgroup_ids: valid_included)
+    end
+
     redirect_to manage_groups_our_group_path(@group), notice: "Relationship updated."
   rescue ActiveRecord::RecordNotFound
     redirect_to manage_groups_our_group_path(@group), alert: "Group not found."

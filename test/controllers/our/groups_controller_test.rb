@@ -382,49 +382,87 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to group_path(everyone.uuid)
   end
 
-  # -- Toggle relationship type --
+  # -- Update relationship type --
 
-  test "toggle_relationship switches nested to overlapping" do
+  test "update_relationship switches all to none" do
     sign_in_as @user
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
-    assert link.nested?
+    link.update!(inclusion_mode: "all")
+    assert link.all?
 
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "none" }
     assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.overlapping?
+    assert link.reload.none?
   end
 
-  test "toggle_relationship switches overlapping back to nested" do
+  test "update_relationship switches none back to all" do
     sign_in_as @user
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "all" }
     assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.nested?
+    assert link.reload.all?
   end
 
-  test "toggle_relationship with invalid group_id shows alert" do
+  test "update_relationship with invalid group_id shows alert" do
     sign_in_as @user
     everyone = groups(:everyone)
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: 999999 }
+    patch update_relationship_our_group_path(everyone), params: { group_id: 999999 }
     assert_redirected_to manage_groups_our_group_path(everyone)
     follow_redirect!
     assert_match "Group not found", response.body
   end
 
-  test "toggle_relationship redirects logged-out user to sign in" do
+  test "update_relationship redirects logged-out user to sign in" do
     everyone = groups(:everyone)
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id }
     assert_redirected_to new_session_path
   end
 
-  test "toggle_relationship redirects wrong user to public group" do
+  test "update_relationship redirects wrong user to public group" do
     sign_in_as @other_user
     everyone = groups(:everyone)
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id }
     assert_redirected_to group_path(everyone.uuid)
+  end
+
+  test "update_relationship accepts inclusion_mode selected and persisted ids" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+
+    # create a child sub-group under friends so it can be selected
+    sub = @user.groups.create!(name: "Subgroup")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+
+    assert_not link.selected?
+
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "selected", included_subgroup_ids: [ sub.id ] }
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    link.reload
+    assert link.selected?
+    assert_equal [ sub.id ], link.included_subgroup_ids.map(&:to_i)
+  end
+
+  test "update_relationship clears included_subgroup_ids for all or none" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+
+    # prepare existing included ids
+    sub = @user.groups.create!(name: "Subgroup2")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "selected", included_subgroup_ids: [ sub.id ] }
+    link.reload
+    assert link.selected?
+    assert_equal [ sub.id ], link.included_subgroup_ids.map(&:to_i)
+
+    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "all" }
+    link.reload
+    assert link.all?
+    assert_equal [], link.included_subgroup_ids
   end
 end

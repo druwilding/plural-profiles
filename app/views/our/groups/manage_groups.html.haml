@@ -19,10 +19,32 @@
               = render "shared/plural_pride_logo"
           %div
             %span= child.name
-            = link_to toggle_relationship_our_group_path(@group, group_id: child.id), data: { turbo_method: :patch }, class: "toggle-label", role: "switch", aria: { checked: link.nested?, label: "Include sub-groups for #{child.name}" } do
-              %input{type: "checkbox", id: "toggle_#{link.id}", checked: link.nested?, disabled: true, tabindex: "-1", "aria-hidden": "true"}
-              %span.toggle-track
-              %span.toggle-text Include sub-groups
+            - if child.child_links.any?
+              -# Inline form to choose inclusion_mode and optional selected sub-groups
+              = form_with url: update_relationship_our_group_path(@group, group_id: child.id), method: :patch, local: false, class: "inclusion-form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
+                .inclusion-row
+                  %fieldset.inclusion-radios
+                    %legend Include sub-groups?
+                    %label
+                      = radio_button_tag "inclusion_mode", "all", link.all?, id: "inclusion_#{link.id}_all"
+                      All
+                    %label
+                      = radio_button_tag "inclusion_mode", "none", link.none?, id: "inclusion_#{link.id}_none"
+                      None
+                    %label
+                      = radio_button_tag "inclusion_mode", "selected", link.selected?, id: "inclusion_#{link.id}_selected"
+                      Selected
+
+                  %fieldset.inclusion-checkboxes
+                    %legend Select sub-groups
+                    .checkbox-list
+                      - child.child_groups.order(:name).each do |sub|
+                        - checked = if link.all? then true elsif link.none? then false else Array(link.included_subgroup_ids).map(&:to_i).include?(sub.id) end
+                        %label.checkbox{for: "included_#{link.id}_#{sub.id}"}
+                          = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }
+                          %span= sub.name
+
+                = f.submit "Save", class: "btn btn--small"
         = link_to "Remove", remove_group_our_group_path(@group, group_id: child.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
 - else
   .card
