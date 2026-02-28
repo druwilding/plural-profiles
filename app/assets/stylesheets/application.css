@@ -1500,7 +1500,7 @@ button:hover,
 
 @media (forced-colors: active) {
   .invite-code {
-    border: 1px solid ButtonText;
+    border: 1px solid CanvasText;
     background-color: Canvas;
     color: CanvasText;
   }
