@@ -59,7 +59,10 @@ class Our::ProfilesController < ApplicationController
 
   def profile_params
     params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, group_ids: []).tap do |p|
-      p.delete(:created_at) if p[:created_at].blank?
+      if p[:created_at].blank? ||
+          (@profile&.created_at && Time.parse(p[:created_at]).utc.strftime("%Y-%m-%dT%H:%M") == @profile.created_at.utc.strftime("%Y-%m-%dT%H:%M"))
+        p.delete(:created_at)
+      end
     end
   end
 end

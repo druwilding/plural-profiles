@@ -130,7 +130,10 @@ class Our::GroupsController < ApplicationController
 
   def group_params
     params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at).tap do |p|
-      p.delete(:created_at) if p[:created_at].blank?
+      if p[:created_at].blank? ||
+          (@group&.created_at && Time.parse(p[:created_at]).utc.strftime("%Y-%m-%dT%H:%M") == @group.created_at.utc.strftime("%Y-%m-%dT%H:%M"))
+        p.delete(:created_at)
+      end
     end
   end
 end

@@ -26,9 +26,10 @@
     = form.label :description
     = form.text_area :description, placeholder: "Describe this group...", rows: 18
 
-  .form-group
-    = form.label :created_at, "Created at (UTC)"
-    = form.datetime_local_field :created_at, value: (group.created_at || Time.now.utc).strftime("%Y-%m-%dT%H:%M"), max: Time.now.utc.strftime("%Y-%m-%dT%H:%M")
+  - if group.persisted?
+    .form-group
+      = form.label :created_at, "Created at (UTC)"
+      = form.datetime_local_field :created_at, value: group.created_at.utc.strftime("%Y-%m-%dT%H:%M"), max: Time.now.utc.strftime("%Y-%m-%dT%H:%M")
 
   .form-group
     = form.submit group.persisted? ? "Update group" : "Create group"
