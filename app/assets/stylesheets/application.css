@@ -1225,20 +1225,24 @@ button:hover,
   input:disabled,
   textarea:disabled,
   select:disabled {
-    opacity: 0.4;
+    color: GrayText;
+    border-color: GrayText;
     cursor: not-allowed;
   }
 
   input[type="checkbox"]:disabled,
   input[type="radio"]:disabled {
-    opacity: 0.4;
+    border-color: GrayText;
+    background-color: GrayText;
     cursor: not-allowed;
   }
 
   input[type="submit"]:disabled,
   button:disabled,
   .btn:disabled {
-    opacity: 0.4;
+    background-color: GrayText;
+    border-color: GrayText;
+    color: Canvas;
     cursor: not-allowed;
   }
 
