@@ -65,7 +65,7 @@ class GroupTest < ActiveSupport::TestCase
       content_type: "text/html"
     )
     assert_not group.valid?
-    assert_includes group.errors[:avatar], "must be a JPG, PNG, or WebP image"
+    assert_includes group.errors[:avatar], "must be a JPG/JPEG, PNG, or WebP image"
   end
 
   test "has many child_groups" do

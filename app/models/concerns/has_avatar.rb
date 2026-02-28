@@ -15,14 +15,14 @@ module HasAvatar
   def avatar_content_type_allowed
     return unless avatar.attached?
     unless avatar.blob.content_type.in?(AVATAR_CONTENT_TYPES)
-      errors.add(:avatar, "must be a JPG, PNG, or WebP image")
+      errors.add(:avatar, "must be a JPG/JPEG, PNG, or WebP image")
     end
   end
 
   def avatar_size_allowed
     return unless avatar.attached?
     if avatar.blob.byte_size > AVATAR_MAX_SIZE
-      errors.add(:avatar, "must be smaller than 2 MB")
+      errors.add(:avatar, "must be 2 MB or less")
     end
   end
 end

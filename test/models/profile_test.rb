@@ -51,7 +51,7 @@ class ProfileTest < ActiveSupport::TestCase
       content_type: "text/html"
     )
     assert_not profile.valid?
-    assert_includes profile.errors[:avatar], "must be a JPG, PNG, or WebP image"
+    assert_includes profile.errors[:avatar], "must be a JPG/JPEG, PNG, or WebP image"
   end
 
   # Timestamp validations
