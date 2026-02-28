@@ -67,5 +67,4 @@ class ProfileTest < ActiveSupport::TestCase
     assert_not profile.valid?
     assert_includes profile.errors[:created_at], "can't be in the future"
   end
-
 end
