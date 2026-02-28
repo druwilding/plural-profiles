@@ -1077,12 +1077,15 @@ button:hover,
   }
 
   /* Checkboxes — replace native control, manual system-color styling */
-  input[type="checkbox"] {
+  input[type="checkbox"],
+  .checkbox-label input[type="checkbox"] {
     forced-color-adjust: none;
     -webkit-appearance: none;
     appearance: none;
     width: 1.15em;
     height: 1.15em;
+    min-width: 1.15em;
+    min-height: 1.15em;
     margin: 0;
     flex-shrink: 0;
     background-color: Canvas;
