@@ -10,6 +10,7 @@ class Profile < ApplicationRecord
   validates :name, presence: true
   validates :uuid, uniqueness: true
   validates :created_at, comparison: { less_than_or_equal_to: -> { Time.current + 1.minute }, message: "can't be in the future" }, allow_nil: true
+  validates :updated_at, comparison: { less_than_or_equal_to: -> { Time.current + 1.minute }, message: "can't be in the future" }, allow_nil: true
 
   def to_param
     uuid
