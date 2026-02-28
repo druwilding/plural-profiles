@@ -1467,7 +1467,8 @@ button:hover,
   padding: 0;
   margin: 0 0 1rem 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
