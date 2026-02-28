@@ -106,7 +106,7 @@ body {
 
 .form-divider {
   border: none;
-  border-top: 1px solid var(--input-border);
+  border-top: 1px solid color-mix(in srgb, var(--input-border) 40%, transparent);
   margin: 2rem 0;
 }
 
@@ -1530,6 +1530,10 @@ button:hover,
 
   .invite-code-delete {
     border-left-color: CanvasText;
+  }
+
+  .form-divider {
+    border-top-color: GrayText;
   }
 }
 
