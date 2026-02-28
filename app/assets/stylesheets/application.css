@@ -1168,6 +1168,7 @@ button:hover,
   input[type="datetime-local"]:focus,
   textarea:focus,
   select:focus {
+    border: 1px solid CanvasText;
     outline: 2px solid CanvasText;
   }
 
