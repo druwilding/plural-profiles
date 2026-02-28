@@ -14,7 +14,7 @@ class Group < ApplicationRecord
 
   validates :name, presence: true
   validates :uuid, uniqueness: true
-  validates :created_at, comparison: { less_than_or_equal_to: -> { Time.current + 1.minute }, message: "can't be in the future" }, allow_nil: true
+  validates :created_at, comparison: { less_than_or_equal_to: -> { Time.current + 1.minute }, message: "can't be in the future" }, allow_nil: true, if: :created_at_changed?
 
   def updated_at_not_before_created_at
     return if created_at.blank? || updated_at.blank?
