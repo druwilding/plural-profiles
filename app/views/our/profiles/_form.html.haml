@@ -43,7 +43,7 @@
   - if profile.persisted?
     .form-group
       = form.label :created_at, "Created at (UTC)"
-      = form.datetime_local_field :created_at, value: profile.created_at.utc.strftime("%Y-%m-%dT%H:%M"), max: Time.now.utc.strftime("%Y-%m-%dT%H:%M")
+      = form.datetime_local_field :created_at, value: profile.created_at.utc.strftime("%Y-%m-%dT%H:%M"), max: Time.current.utc.strftime("%Y-%m-%dT%H:%M")
 
   .form-group
     = form.submit profile.persisted? ? "Update profile" : "Create profile"
