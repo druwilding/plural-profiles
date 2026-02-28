@@ -7,9 +7,10 @@ A web app for pluralfolk to create and share multiple profiles. Each account can
 - **Email & password authentication** — sign up, sign in, sign out, password reset, and email verification (built on Rails 8's built-in authentication generator)
 - **Multiple profiles per account** — each with a name, pronouns, description, and avatar image (via Active Storage)
 - **Groups** — organise profiles into named groups with a description
-- **Group nesting** — groups can contain other groups, with two relationship types:
-  - **Nested** — the child group is fully contained; all of its profiles and sub-groups appear in the parent's tree
-  - **Overlapping** — the child group partially overlaps (like a Venn diagram); only its direct profiles appear in the parent, while its own sub-groups remain private to it. Visiting the child group directly still shows everything
+- **Group nesting** — groups can contain other groups. When adding a child group, you choose an inclusion mode that controls how much of the child's sub-tree appears in the parent:
+  - **All** — the child group is fully included; all of its profiles and sub-groups appear in the parent's tree
+  - **Selected** — only specific sub-groups of the child (chosen by ID) are included in the parent, along with the child's direct profiles
+  - **None** — the child group partially overlaps (like a Venn diagram); only its direct profiles appear in the parent, while its own sub-groups remain private to it. Visiting the child group directly still shows everything
 - **Shareable UUID URLs** — every profile and group gets a unique public URL (e.g. `/profiles/:uuid`, `/groups/:uuid`) that anyone can view without signing in
 - **Privacy-conscious sharing** — visitors can only see what you link them to; there's no way to browse from one profile to discover other profiles or groups
 
@@ -34,13 +35,14 @@ User
  └── has_many Sessions
 
 Profile ←→ Group (many-to-many through GroupProfile)
-Group   ←→ Group (many-to-many through GroupGroup, with relationship_type: nested | overlapping)
+Group   ←→ Group (many-to-many through GroupGroup, with inclusion_mode: all | selected | none)
 ```
 
-The `GroupGroup` join table connects parent and child groups. Each link has a `relationship_type`:
+The `GroupGroup` join table connects parent and child groups. Each link has an `inclusion_mode` that controls how much of the child group's sub-tree is pulled into the parent:
 
-- `nested` (default) — the child group is fully contained within the parent. When viewing the parent, the child's entire sub-tree (groups and profiles) is included.
-- `overlapping` — the child group only partially overlaps with the parent. When viewing the parent, the child group and its direct profiles appear, but recursion stops there — the child's own sub-groups are not pulled in. Visiting the child group directly still shows its full tree.
+- `all` (default) — the child group is fully included within the parent. When viewing the parent, the child's entire sub-tree (groups and profiles) is included.
+- `selected` — only specific sub-groups of the child (stored as `included_subgroup_ids` on the join record) are included in the parent, along with the child's direct profiles. Sub-groups not in the list are not pulled in.
+- `none` — the child group only partially overlaps with the parent. When viewing the parent, the child group and its direct profiles appear, but recursion stops there — the child's own sub-groups are not pulled in. Visiting the child group directly still shows its full tree.
 
 This allows plural folk to model complex, Venn-diagram-style group arrangements where not every part of one group belongs inside another.
 
