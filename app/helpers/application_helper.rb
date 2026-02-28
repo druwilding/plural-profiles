@@ -16,6 +16,15 @@ module ApplicationHelper
     simple_format(text, {}, sanitize_options: { tags: tags, attributes: attrs })
   end
 
+  def relative_time(time)
+    return "unknown" unless time
+    if time.future?
+      "#{distance_of_time_in_words(Time.current, time)} from now"
+    else
+      "#{time_ago_in_words(time)} ago"
+    end
+  end
+
   private
 
   def convert_spoilers_outside_code(text)

@@ -29,6 +29,20 @@ class GroupTest < ActiveSupport::TestCase
     assert_equal users(:one), groups(:friends).user
   end
 
+  # Timestamp validations
+
+  test "created_at in the past is valid" do
+    group = Group.new(user: users(:one), name: "Test", created_at: 1.day.ago)
+    group.valid?
+    assert_empty group.errors[:created_at]
+  end
+
+  test "created_at in the future is invalid" do
+    group = Group.new(user: users(:one), name: "Test", created_at: 2.minutes.from_now)
+    assert_not group.valid?
+    assert_includes group.errors[:created_at], "can't be in the future"
+  end
+
   test "has many profiles through group_profiles" do
     assert_includes groups(:friends).profiles, profiles(:alice)
   end

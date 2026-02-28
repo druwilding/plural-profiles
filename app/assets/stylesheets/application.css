@@ -406,6 +406,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="url"],
+input[type="datetime-local"],
 textarea,
 select {
   width: 100%;
@@ -417,6 +418,15 @@ select {
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s;
+}
+
+input[type="datetime-local"] {
+  width: auto;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  margin-left: 0.5rem;
+  cursor: pointer;
 }
 
 /* Inclusion fieldsets (manage groups) */
@@ -537,6 +547,8 @@ button,
   border: none;
   border-radius: 6px;
   font-size: 0.95rem;
+  font-family: inherit;
+  line-height: 1.6;
   cursor: pointer;
   text-decoration: none;
   transition: background-color 0.2s;
@@ -546,6 +558,12 @@ button,
 .inclusion-form input[type="submit"],
 .inclusion-form .btn {
   margin-top: 0.5rem;
+}
+
+.form-group input[type="submit"] + .btn,
+.form-group .btn + .btn,
+.form-group .btn + input[type="submit"] {
+  margin-left: 0.75rem;
 }
 
 input[type="submit"]:hover,
@@ -1108,6 +1126,7 @@ button:hover,
   input[type="email"],
   input[type="password"],
   input[type="url"],
+  input[type="datetime-local"],
   textarea,
   select {
     forced-color-adjust: none;
@@ -1146,6 +1165,7 @@ button:hover,
   input[type="email"]:focus,
   input[type="password"]:focus,
   input[type="url"]:focus,
+  input[type="datetime-local"]:focus,
   textarea:focus,
   select:focus {
     outline: 2px solid CanvasText;

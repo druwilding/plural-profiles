@@ -120,6 +120,38 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to our_profiles_path
   end
 
+  test "update sets created_at to a past timestamp" do
+    sign_in_as @user
+    past = 1.year.ago.utc
+    patch our_profile_path(@profile), params: {
+      profile: { created_at: past.strftime("%Y-%m-%dT%H:%M") }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_in_delta past.to_i, @profile.reload.created_at.to_i, 60
+  end
+
+  test "update rejects a created_at value in the future" do
+    sign_in_as @user
+    future = 1.day.from_now.utc
+    patch our_profile_path(@profile), params: {
+      profile: { created_at: future.strftime("%Y-%m-%dT%H:%M") }
+    }
+    assert_response :unprocessable_entity
+    assert_match "can&#39;t be in the future", response.body
+  end
+
+  test "update with malformed created_at does not raise" do
+    sign_in_as @user
+    original_created_at = @profile.created_at
+    patch our_profile_path(@profile), params: {
+      profile: { name: @profile.name, created_at: "not-a-date" }
+    }
+    # Malformed value is stripped in profile_params — update succeeds and
+    # created_at is left unchanged.
+    assert_redirected_to our_profile_path(@profile)
+    assert_in_delta original_created_at.to_i, @profile.reload.created_at.to_i, 1
+  end
+
   # -- Edge case: logged out user gets redirected to public --
 
   test "show redirects logged-out user to public profile" do

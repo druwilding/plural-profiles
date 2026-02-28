@@ -129,6 +129,12 @@ class Our::GroupsController < ApplicationController
   end
 
   def group_params
-    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text)
+    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at).tap do |p|
+      if p[:created_at].blank? ||
+          !p[:created_at].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/) ||
+          (@group&.created_at && p[:created_at] == @group.created_at.utc.strftime("%Y-%m-%dT%H:%M"))
+        p.delete(:created_at)
+      end
+    end
   end
 end

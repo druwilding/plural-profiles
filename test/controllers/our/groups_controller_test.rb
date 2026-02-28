@@ -119,6 +119,38 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to our_groups_path
   end
 
+  test "update sets created_at to a past timestamp" do
+    sign_in_as @user
+    past = 1.year.ago.utc
+    patch our_group_path(@group), params: {
+      group: { created_at: past.strftime("%Y-%m-%dT%H:%M") }
+    }
+    assert_redirected_to our_group_path(@group)
+    assert_in_delta past.to_i, @group.reload.created_at.to_i, 60
+  end
+
+  test "update rejects a created_at value in the future" do
+    sign_in_as @user
+    future = 1.day.from_now.utc
+    patch our_group_path(@group), params: {
+      group: { created_at: future.strftime("%Y-%m-%dT%H:%M") }
+    }
+    assert_response :unprocessable_entity
+    assert_match "can&#39;t be in the future", response.body
+  end
+
+  test "update with malformed created_at does not raise" do
+    sign_in_as @user
+    original_created_at = @group.created_at
+    patch our_group_path(@group), params: {
+      group: { name: @group.name, created_at: "not-a-date" }
+    }
+    # Malformed value is stripped in group_params — update succeeds and
+    # created_at is left unchanged.
+    assert_redirected_to our_group_path(@group)
+    assert_in_delta original_created_at.to_i, @group.reload.created_at.to_i, 1
+  end
+
   # -- Manage profiles --
 
   test "manage_profiles shows available profiles" do

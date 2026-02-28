@@ -22,11 +22,11 @@
     %p
       %strong Created:
       %time{datetime: @profile.created_at.iso8601}= @profile.created_at.strftime("%d %B %Y")
-      %span.time-ago= "(#{time_ago_in_words(@profile.created_at)} ago)"
+      %span.time-ago= "(#{relative_time(@profile.created_at)})"
     %p
       %strong Updated:
       %time{datetime: @profile.updated_at.iso8601}= @profile.updated_at.strftime("%d %B %Y")
-      %span.time-ago= "(#{time_ago_in_words(@profile.updated_at)} ago)"
+      %span.time-ago= "(#{relative_time(@profile.updated_at)})"
 
   .profile-actions
     = link_to "Edit", edit_our_profile_path(@profile), class: "btn btn--secondary"

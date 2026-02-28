@@ -26,5 +26,11 @@
     = form.label :description
     = form.text_area :description, placeholder: "Describe this group...", rows: 18
 
+  - if group.persisted?
+    .form-group
+      = form.label :created_at, "Created at (UTC)"
+      = form.datetime_local_field :created_at, value: group.created_at.utc.strftime("%Y-%m-%dT%H:%M"), max: Time.current.utc.strftime("%Y-%m-%dT%H:%M")
+
   .form-group
     = form.submit group.persisted? ? "Update group" : "Create group"
+    = link_to "Cancel", group.persisted? ? our_group_path(group) : our_groups_path, class: "btn btn--secondary"

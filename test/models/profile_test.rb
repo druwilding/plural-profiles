@@ -53,4 +53,18 @@ class ProfileTest < ActiveSupport::TestCase
     assert_not profile.valid?
     assert_includes profile.errors[:avatar], "must be a PNG, JPEG, GIF, or WebP image"
   end
+
+  # Timestamp validations
+
+  test "created_at in the past is valid" do
+    profile = Profile.new(user: users(:one), name: "Test", created_at: 1.day.ago)
+    profile.valid?
+    assert_empty profile.errors[:created_at]
+  end
+
+  test "created_at in the future is invalid" do
+    profile = Profile.new(user: users(:one), name: "Test", created_at: 2.minutes.from_now)
+    assert_not profile.valid?
+    assert_includes profile.errors[:created_at], "can't be in the future"
+  end
 end
