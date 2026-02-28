@@ -370,12 +370,12 @@ input:checked + .toggle-track::after {
   }
 
   input:checked + .toggle-track {
-    background-color: Highlight;
-    border-color: Highlight;
+    background-color: CanvasText;
+    border-color: CanvasText;
   }
 
   input:checked + .toggle-track::after {
-    background-color: HighlightText;
+    background-color: Canvas;
   }
 
   input:not(:checked) ~ .toggle-text {
@@ -1093,20 +1093,17 @@ button:hover,
   }
 
   input[type="checkbox"]:checked {
-    background-color: Highlight;
-    border-color: Highlight;
-    /*
-     * Checkmark SVG — uses HighlightText keyword directly.
-     * Firefox resolves system color keywords inside data: URI SVGs.
-     */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='HighlightText' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+    background-color: CanvasText;
+    border-color: CanvasText;
+    /* Checkmark SVG using Canvas for the stroke */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='Canvas' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
     background-size: 100% 100%;
     background-position: center;
     background-repeat: no-repeat;
   }
 
   input[type="checkbox"]:focus-visible {
-    outline: 2px solid Highlight;
+    outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
 
@@ -1127,14 +1124,14 @@ button:hover,
   }
 
   input[type="radio"]:checked {
-    border: 0.34em solid Highlight;
-    /* Inset Canvas ring creates the gap, Highlight bg is the centre dot */
-    background-color: Highlight;
+    border: 2px solid CanvasText;
+    background-color: CanvasText;
+    /* Inset Canvas ring creates the gap around the CanvasText dot */
     box-shadow: inset 0 0 0 0.13em Canvas;
   }
 
   input[type="radio"]:focus-visible {
-    outline: 2px solid Highlight;
+    outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
 
@@ -1143,23 +1140,21 @@ button:hover,
   button,
   .btn {
     forced-color-adjust: none;
-    background-color: ButtonFace;
-    color: ButtonText;
-    border: 1px solid ButtonText;
+    background-color: CanvasText;
+    color: Canvas;
+    border: 1px solid CanvasText;
   }
 
   input[type="submit"]:hover,
   button:hover,
   .btn:hover {
-    background-color: Highlight;
-    color: HighlightText;
-    border-color: Highlight;
+    opacity: 0.8;
   }
 
   input[type="submit"]:focus-visible,
   button:focus-visible,
   .btn:focus-visible {
-    outline: 2px solid Highlight;
+    outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
 
@@ -1173,22 +1168,18 @@ button:hover,
 
   .btn--secondary:hover,
   .btn--outline:hover {
-    background-color: Highlight;
-    color: HighlightText;
-    border-color: Highlight;
+    opacity: 0.8;
   }
 
-  /* Danger button — forced-colors can't convey "danger", keep chrome consistent */
+  /* Danger button */
   .btn--danger {
-    background-color: ButtonFace;
-    color: ButtonText;
-    border-color: ButtonText;
+    background-color: CanvasText;
+    color: Canvas;
+    border-color: CanvasText;
   }
 
   .btn--danger:hover {
-    background-color: Highlight;
-    color: HighlightText;
-    border-color: Highlight;
+    opacity: 0.8;
   }
 
   /* Fieldset borders */
@@ -1208,13 +1199,12 @@ button:hover,
 
   .tree__arrow-btn:hover,
   .tree__item:hover {
-    background-color: Highlight;
-    color: HighlightText;
+    opacity: 0.7;
   }
 
   .tree__item--active {
-    outline: 2px solid Highlight;
-    color: HighlightText;
+    outline: 2px solid CanvasText;
+    font-weight: 700;
   }
 }
 
