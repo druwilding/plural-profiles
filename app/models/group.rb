@@ -27,14 +27,19 @@ class Group < ApplicationRecord
     sql = <<~SQL.squish
       WITH RECURSIVE tree AS (
         SELECT CAST(:root_id AS bigint) AS id, true AS recurse_further
-        UNION
+        UNION ALL
          SELECT gg.child_group_id AS id,
            (gg.inclusion_mode = 'all') AS recurse_further
         FROM group_groups gg
-        INNER JOIN tree ON tree.id = gg.parent_group_id
-        WHERE tree.recurse_further = true
+        INNER JOIN tree t ON t.id = gg.parent_group_id
+        WHERE t.recurse_further = true
       )
       SELECT DISTINCT id FROM tree
+      UNION
+      SELECT DISTINCT (jsonb_array_elements_text(gg.included_subgroup_ids))::bigint AS id
+      FROM group_groups gg
+      INNER JOIN tree t ON t.id = gg.parent_group_id
+      WHERE gg.inclusion_mode = 'selected'
     SQL
     Group.connection.select_values(
       Group.sanitize_sql([ sql, root_id: id ])
@@ -104,10 +109,10 @@ class Group < ApplicationRecord
                         .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
                         .index_by(&:id)
 
-    children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
-           .pluck(:parent_group_id, :child_group_id, :inclusion_mode)
-           .group_by(&:first)
-           .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2] } } }
+        children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
+          .pluck(:parent_group_id, :child_group_id, :inclusion_mode, :included_subgroup_ids)
+          .group_by(&:first)
+          .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2], included_subgroup_ids: Array(r[3]).map(&:to_i) } } }
 
     walk_descendants(id, children_map, groups_by_id)
   end
@@ -123,10 +128,10 @@ class Group < ApplicationRecord
                         .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
                         .index_by(&:id)
 
-    children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
-           .pluck(:parent_group_id, :child_group_id, :inclusion_mode)
-           .group_by(&:first)
-           .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2] } } }
+        children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
+          .pluck(:parent_group_id, :child_group_id, :inclusion_mode, :included_subgroup_ids)
+          .group_by(&:first)
+          .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2], included_subgroup_ids: Array(r[3]).map(&:to_i) } } }
 
     build_tree(id, children_map, groups_by_id)
   end
@@ -135,11 +140,19 @@ class Group < ApplicationRecord
 
   def walk_descendants(parent_id, children_map, groups_by_id)
     (children_map[parent_id] || [])
-      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:inclusion_mode] ] : nil }
-      .sort_by { |g, _| g.name }
-      .flat_map do |g, rel_type|
-        if rel_type == "all"
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
+      .sort_by { |g, entry| g.name }
+      .flat_map do |g, entry|
+        rel_type = entry[:inclusion_mode]
+        case rel_type
+        when "all"
           [ g, *walk_descendants(g.id, children_map, groups_by_id) ]
+        when "selected"
+          selected = (children_map[g.id] || [])
+                     .select { |e| Array(entry[:included_subgroup_ids]).include?(e[:id]) }
+                     .map { |e| groups_by_id[e[:id]] }
+                     .compact
+          [ g, *selected ]
         else
           [ g ]
         end
@@ -148,14 +161,35 @@ class Group < ApplicationRecord
 
   def build_tree(parent_id, children_map, groups_by_id)
     (children_map[parent_id] || [])
-      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:inclusion_mode] ] : nil }
-      .sort_by { |g, _| g.name }
-      .map do |g, rel_type|
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
+      .sort_by { |g, entry| g.name }
+      .map do |g, entry|
+        rel_type = entry[:inclusion_mode]
         overlapping = rel_type == "none"
+        children = if rel_type == "all"
+          build_tree(g.id, children_map, groups_by_id)
+        elsif rel_type == "selected"
+          (children_map[g.id] || [])
+            .select { |e| Array(entry[:included_subgroup_ids]).include?(e[:id]) }
+            .map do |e|
+              child_group = groups_by_id[e[:id]]
+              next unless child_group
+              {
+                group: child_group,
+                profiles: child_group.profiles.to_a,
+                children: build_tree(child_group.id, children_map, groups_by_id),
+                overlapping: e[:inclusion_mode] == "none"
+              }
+            end
+            .compact
+        else
+          []
+        end
+
         {
           group: g,
           profiles: g.profiles.to_a,
-          children: overlapping ? [] : build_tree(g.id, children_map, groups_by_id),
+          children: children,
           overlapping: overlapping
         }
       end

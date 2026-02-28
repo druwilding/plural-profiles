@@ -1,8 +1,8 @@
 -# Recursive tree node for the explorer sidebar.
 -# Locals: node (hash with :group, :profiles, :children)
 - group = node[:group]
-- profiles = node[:profiles]
-- children = node[:children]
+- profiles = Array(node[:profiles])
+- children = Array(node[:children])
 - has_children = children.any? || profiles.any?
 
 - if has_children

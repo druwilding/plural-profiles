@@ -161,6 +161,31 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
+  test "public page shows only selected immediate sub-groups" do
+    user = users(:one)
+    everyone = groups(:everyone)
+
+    # Create a fresh friends branch with two immediate sub-groups
+    friends = user.groups.create!(name: "Friends Selected", description: "Test friends", user: user)
+    close = user.groups.create!(name: "Close Friends", description: "Close pals", user: user)
+    acquaintances = user.groups.create!(name: "Acquaintances", description: "Not close", user: user)
+
+    GroupGroup.create!(parent_group: friends, child_group: close)
+    GroupGroup.create!(parent_group: friends, child_group: acquaintances)
+
+    # everyone -> friends but only include 'close' as selected
+    GroupGroup.create!(parent_group: everyone, child_group: friends, inclusion_mode: "selected", included_subgroup_ids: [close.id])
+
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      assert_text "Everyone"
+      assert_text "Friends Selected"
+      assert_text "Close Friends"
+      assert_no_text "Acquaintances"
+    end
+  end
+
   private
 
   def sign_in_via_browser
