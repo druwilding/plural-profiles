@@ -16,7 +16,7 @@
       = label_tag :invite_code, "Invite code"
       = text_field_tag :invite_code, params[:invite_code], required: true, autocomplete: "off", class: "invite-code-input", minlength: InviteCode::CODE_LENGTH, maxlength: InviteCode::CODE_LENGTH, placeholder: "XXXXXXXX"
 
-    %br
+    %hr.form-divider
 
     .form-group
       = form.label :email_address, "Email address"

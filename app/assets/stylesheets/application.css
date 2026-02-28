@@ -104,6 +104,12 @@ body {
   margin: 0.5rem 0.5rem;
 }
 
+.form-divider {
+  border: none;
+  border-top: 1px solid var(--input-border);
+  margin: 2rem 0;
+}
+
 .sidebar details {
   margin-bottom: 0.5rem;
 }
