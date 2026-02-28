@@ -8,9 +8,9 @@ export default class extends Controller {
     if (!el || el.name !== 'inclusion_mode') return
     const mode = el.value
     this.checkboxTargets.forEach(cb => {
-      if (mode === 'all') cb.checked = true
-      else if (mode === 'none') cb.checked = false
-      // if 'selected' do nothing
+      if (mode === 'all') { cb.checked = true; cb.disabled = true }
+      else if (mode === 'none') { cb.checked = false; cb.disabled = true }
+      else if (mode === 'selected') { cb.disabled = false }
     })
   }
 }

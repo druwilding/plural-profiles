@@ -41,7 +41,7 @@
                       - child.child_groups.order(:name).each do |sub|
                         - checked = if link.all? then true elsif link.none? then false else Array(link.included_subgroup_ids).map(&:to_i).include?(sub.id) end
                         %label.checkbox{for: "included_#{link.id}_#{sub.id}"}
-                          = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }
+                          = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }, disabled: (!link.selected?)
                           %span= sub.name
 
                 = f.submit "Save", class: "btn btn--small"
