@@ -4,6 +4,8 @@
 .card
   %h1 Sign up
 
+  %p Plural Profiles is invite-only. You'll need an invite code from an existing member to create an account.
+
   - if @user.errors.any?
     .error-messages
       - @user.errors.full_messages.each do |message|
@@ -12,7 +14,9 @@
   = form_with model: @user, url: registration_path do |form|
     .form-group
       = label_tag :invite_code, "Invite code"
-      = text_field_tag :invite_code, params[:invite_code], required: true, autocomplete: "off", class: "invite-code-input"
+      = text_field_tag :invite_code, params[:invite_code], required: true, autocomplete: "off", class: "invite-code-input", minlength: 8, maxlength: 8
+
+    %br
 
     .form-group
       = form.label :email_address, "Email address"
@@ -25,6 +29,7 @@
     .form-group
       = form.label :password_confirmation, "Confirm password"
       = form.password_field :password_confirmation, required: true, minlength: 8, autocomplete: "new-password"
+
     .form-group
       = form.submit "Sign up"
 
