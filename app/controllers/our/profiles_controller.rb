@@ -58,6 +58,8 @@ class Our::ProfilesController < ApplicationController
   end
 
   def profile_params
-    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, group_ids: [])
+    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, group_ids: []).tap do |p|
+      p.delete(:created_at) if p[:created_at].blank?
+    end
   end
 end

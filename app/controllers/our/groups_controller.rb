@@ -129,6 +129,8 @@ class Our::GroupsController < ApplicationController
   end
 
   def group_params
-    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at)
+    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at).tap do |p|
+      p.delete(:created_at) if p[:created_at].blank?
+    end
   end
 end
