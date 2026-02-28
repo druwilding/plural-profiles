@@ -48,6 +48,10 @@ class GroupManagementTest < ApplicationSystemTestCase
   test "toggle relationship type from nested to overlapping" do
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
+    # Ensure child group has a sub-group
+    child_group = link.child_group
+    sub_group = Group.create!(name: "Subgroup", description: "A sub-group", user: @user)
+    GroupGroup.create!(parent_group: child_group, child_group: sub_group)
     checkbox_id = "toggle_#{link.id}"
 
     visit manage_groups_our_group_path(everyone)
@@ -69,6 +73,10 @@ class GroupManagementTest < ApplicationSystemTestCase
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
     link.update!(relationship_type: "overlapping")
+    # Ensure child group has a sub-group
+    child_group = link.child_group
+    sub_group = Group.create!(name: "Subgroup", description: "A sub-group", user: @user)
+    GroupGroup.create!(parent_group: child_group, child_group: sub_group)
     checkbox_id = "toggle_#{link.id}"
 
     visit manage_groups_our_group_path(everyone)
@@ -83,6 +91,23 @@ class GroupManagementTest < ApplicationSystemTestCase
     # Page has reloaded — checkbox should now be checked
     assert find("##{checkbox_id}", visible: :all).checked?
     assert link.reload.nested?
+  end
+
+  test "toggle does not appear if child group has no sub-groups" do
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    child_group = link.child_group
+    # Ensure child group has no sub-groups
+    child_group.child_links.destroy_all
+    checkbox_id = "toggle_#{link.id}"
+
+    visit manage_groups_our_group_path(everyone)
+
+    # Toggle should not be present
+    assert_no_text "Include sub-groups"
+    assert_raises(Capybara::ElementNotFound) do
+      find("##{checkbox_id}", visible: :all)
+    end
   end
 
   test "public page shows nested sub-group's profiles but hides overlapping sub-group's profiles" do
