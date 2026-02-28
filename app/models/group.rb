@@ -18,6 +18,13 @@ class Group < ApplicationRecord
   validates :updated_at, comparison: { less_than_or_equal_to: -> { Time.current + 1.minute }, message: "can't be in the future" }, allow_nil: true
   validate :updated_at_not_before_created_at
 
+  def updated_at_not_before_created_at
+    return if created_at.blank? || updated_at.blank?
+
+    if updated_at < created_at
+      errors.add(:updated_at, "can't be before created_at")
+    end
+  end
   def to_param
     uuid
   end
