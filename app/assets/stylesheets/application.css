@@ -424,6 +424,11 @@ input[type="datetime-local"] {
   width: auto;
 }
 
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
 /* Inclusion fieldsets (manage groups) */
 .inclusion-row {
   display: flex;
