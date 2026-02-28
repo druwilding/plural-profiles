@@ -124,10 +124,6 @@ body {
   margin: 0 0 0.4rem;
 }
 
-.terms p:last-child {
-  margin-bottom: 0;
-}
-
 .terms .checkbox-label {
   margin-top: 1rem;
 }
