@@ -745,13 +745,8 @@ button:hover,
 
 .profile-description details summary,
 .group-description details summary {
-  font-weight: 600;
   cursor: pointer;
-}
-
-.profile-description details summary b,
-.group-description details summary b {
-  font-weight: 900;
+  text-decoration: underline;
 }
 
 /* "Click to close" hint shown at the bottom of open <details> blocks */
