@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group toggle_relationship ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -91,7 +91,7 @@ class Our::GroupsController < ApplicationController
     redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
   end
 
-  def toggle_relationship
+  def update_relationship
     link = @group.child_links.find_by!(child_group_id: params[:group_id])
     allowed_modes = %w[all selected none]
 

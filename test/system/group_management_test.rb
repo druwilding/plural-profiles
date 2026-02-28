@@ -45,7 +45,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert_text "Bob"   # available to add
   end
 
-  test "toggle relationship type from nested to overlapping" do
+  test "update relationship type from all to none" do
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
     # Ensure child group has a sub-group
@@ -71,7 +71,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert link.reload.none?
   end
 
-  test "toggle relationship type from overlapping to nested" do
+  test "toggle relationship type from none to all" do
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
     link.update!(inclusion_mode: "none")
@@ -97,7 +97,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert link.reload.all?
   end
 
-  test "toggle does not appear if child group has no sub-groups" do
+  test "checkbox does not appear if child group has no sub-groups" do
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
     child_group = link.child_group
@@ -114,7 +114,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
-  test "public page shows nested sub-group's profiles but hides overlapping sub-group's profiles" do
+  test "public page shows all sub-group's profiles but hides none sub-group's profiles" do
     user = users(:one)
     everyone = groups(:everyone)
     friends = groups(:friends)
@@ -124,7 +124,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     GroupGroup.create!(parent_group: friends, child_group: inner)
     inner.profiles << profiles(:bob)
 
-    # --- Nested: inner group and Bob should be visible ---
+    # --- all: inner group and Bob should be visible ---
     visit group_path(everyone.uuid)
 
     within(".explorer__sidebar") do
@@ -135,7 +135,7 @@ class GroupManagementTest < ApplicationSystemTestCase
       assert_text "Alice"
     end
 
-    # --- Switch to overlapping: inner group and Bob should disappear ---
+    # --- Switch to none: inner group and Bob should disappear ---
     link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
     link.update!(inclusion_mode: "none")
 
