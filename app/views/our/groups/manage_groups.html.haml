@@ -24,7 +24,7 @@
               = form_with url: update_relationship_our_group_path(@group, group_id: child.id), method: :patch, local: false, class: "inclusion-form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
                 .inclusion-row
                   %fieldset.inclusion-radios
-                    %legend Include sub-groups
+                    %legend Include sub-groups?
                     %label
                       = radio_button_tag "inclusion_mode", "all", link.all?, id: "inclusion_#{link.id}_all"
                       All
