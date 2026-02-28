@@ -3,6 +3,21 @@
 %h1 Account
 
 .card
+  %h2 Invite codes
+  %p Generate codes to invite others to Plural Profiles. You can have up to #{InviteCode::MAX_UNUSED_PER_USER} unused codes at a time.
+
+  - unused_codes = Current.user.invite_codes.unused.order(created_at: :asc)
+  - if unused_codes.any?
+    %ul.invite-code-list
+      - unused_codes.each do |invite|
+        %li.invite-code-item
+          %code.invite-code= invite.code
+  - else
+    %p.muted No unused invite codes yet.
+
+  = button_to "Generate invite code", our_invite_codes_path, method: :post, class: "btn"
+
+.card
   %h2 Change email
   %p
     Current email:
@@ -21,21 +36,6 @@
 
     .form-group
       = form.submit "Send verification email"
-
-.card
-  %h2 Invite codes
-  %p Generate codes to invite others to Plural Profiles. You can have up to #{InviteCode::MAX_UNUSED_PER_USER} unused codes at a time.
-
-  - unused_codes = Current.user.invite_codes.unused.order(created_at: :desc)
-  - if unused_codes.any?
-    %ul.invite-code-list
-      - unused_codes.each do |invite|
-        %li.invite-code-item
-          %code.invite-code= invite.code
-  - else
-    %p.muted No unused invite codes yet.
-
-  = button_to "Generate invite code", our_invite_codes_path, method: :post, class: "btn"
 
 .card
   %h2 Change password
