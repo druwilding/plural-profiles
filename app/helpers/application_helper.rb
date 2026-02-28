@@ -14,7 +14,7 @@ module ApplicationHelper
     attrs = safe_list_class.allowed_attributes + DESCRIPTION_EXTRA_ATTRIBUTES
     text = convert_spoilers_outside_code(text)
     html = simple_format(text, {}, sanitize_options: { tags: tags, attributes: attrs })
-    html.gsub("</details>", '<p class="details-close">(click to close)</p></details>').html_safe
+    html.gsub("</details>", '<button type="button" class="details-close" aria-label="Close details">(click to close)</button></details>').html_safe
   end
 
   def relative_time(time)

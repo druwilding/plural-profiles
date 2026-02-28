@@ -177,6 +177,42 @@ class SpoilerTest < ApplicationSystemTestCase
     end
   end
 
+  test "details close hint can be activated via keyboard and returns focus to summary" do
+    within(".site-header") { click_link "New profile" }
+    fill_in "Name", with: "Details Close Keyboard Tester"
+    fill_in "Description", with: "<details><summary>Keyboard open</summary>Keyboard content</details>"
+    click_button "Create profile"
+    assert_text "Profile created."
+
+    within(".profile-description") do
+      find("summary", text: "Keyboard open").click
+      assert_selector "details[open]"
+
+      close_btn = find(".details-close")
+      close_btn.send_keys(:enter)
+      assert_no_selector "details[open]"
+
+      summary = find("summary", text: "Keyboard open")
+      assert_equal summary.native, page.driver.browser.switch_to.active_element
+    end
+  end
+
+  test "details close hint can be activated via Space key" do
+    within(".site-header") { click_link "New profile" }
+    fill_in "Name", with: "Details Close Space Tester"
+    fill_in "Description", with: "<details><summary>Space open</summary>Space content</details>"
+    click_button "Create profile"
+    assert_text "Profile created."
+
+    within(".profile-description") do
+      find("summary", text: "Space open").click
+      assert_selector "details[open]"
+
+      find(".details-close").send_keys(:space)
+      assert_no_selector "details[open]"
+    end
+  end
+
   private
 
   def sign_in_via_browser

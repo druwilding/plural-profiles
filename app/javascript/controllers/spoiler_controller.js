@@ -5,7 +5,11 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   toggle(event) {
     if (event.target.closest(".details-close")) {
-      event.target.closest("details")?.removeAttribute("open")
+      const details = event.target.closest("details")
+      if (details) {
+        details.removeAttribute("open")
+        details.querySelector(":scope > summary")?.focus()
+      }
       return
     }
 
