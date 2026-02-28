@@ -19,7 +19,7 @@ module ApplicationHelper
   def relative_time(time)
     return "unknown" unless time
     if time.future?
-      "#{distance_of_time_in_words(Time.now, time)} from now"
+      "#{distance_of_time_in_words(Time.current, time)} from now"
     else
       "#{time_ago_in_words(time)} ago"
     end
