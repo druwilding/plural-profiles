@@ -41,4 +41,8 @@
             = group.name
 
   .form-group
+    = form.label :created_at, "Created at"
+    = form.datetime_local_field :created_at, value: (profile.created_at || Time.now).strftime("%Y-%m-%dT%H:%M")
+
+  .form-group
     = form.submit profile.persisted? ? "Update profile" : "Create profile"

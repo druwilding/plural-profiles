@@ -27,4 +27,8 @@
     = form.text_area :description, placeholder: "Describe this group...", rows: 18
 
   .form-group
+    = form.label :created_at, "Created at"
+    = form.datetime_local_field :created_at, value: (group.created_at || Time.now).strftime("%Y-%m-%dT%H:%M")
+
+  .form-group
     = form.submit group.persisted? ? "Update group" : "Create group"

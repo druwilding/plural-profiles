@@ -58,6 +58,6 @@ class Our::ProfilesController < ApplicationController
   end
 
   def profile_params
-    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, group_ids: [])
+    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, group_ids: [])
   end
 end
