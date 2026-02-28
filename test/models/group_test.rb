@@ -153,7 +153,7 @@ class GroupTest < ActiveSupport::TestCase
 
     # Now change friends to overlapping inside everyone
     link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
     ids = everyone.descendant_group_ids
     # Friends is still included (it's a direct child)
@@ -175,7 +175,7 @@ class GroupTest < ActiveSupport::TestCase
 
     # Change friends to overlapping
     link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
     # Now Bob (in Close Friends) is not visible from everyone
     assert_not_includes everyone.all_profiles, profiles(:bob)
@@ -197,7 +197,7 @@ class GroupTest < ActiveSupport::TestCase
 
     # Change friends to overlapping
     link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
     tree = everyone.descendant_tree
     friends_node = tree.first
@@ -220,7 +220,7 @@ class GroupTest < ActiveSupport::TestCase
 
     # Change friends to overlapping
     link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
     # Now only friends appears (close is behind the overlapping boundary)
     sections = everyone.descendant_sections

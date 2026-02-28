@@ -105,9 +105,9 @@ class Group < ApplicationRecord
                         .index_by(&:id)
 
     children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
-                 .pluck(:parent_group_id, :child_group_id, :inclusion_mode)
-                 .group_by(&:first)
-                 .transform_values { |rows| rows.map { |r| { id: r[1], relationship_type: r[2] } } }
+           .pluck(:parent_group_id, :child_group_id, :inclusion_mode)
+           .group_by(&:first)
+           .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2] } } }
 
     walk_descendants(id, children_map, groups_by_id)
   end
@@ -124,9 +124,9 @@ class Group < ApplicationRecord
                         .index_by(&:id)
 
     children_map = GroupGroup.where(parent_group_id: [ id ] + desc_ids)
-                 .pluck(:parent_group_id, :child_group_id, :inclusion_mode)
-                 .group_by(&:first)
-                 .transform_values { |rows| rows.map { |r| { id: r[1], relationship_type: r[2] } } }
+           .pluck(:parent_group_id, :child_group_id, :inclusion_mode)
+           .group_by(&:first)
+           .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2] } } }
 
     build_tree(id, children_map, groups_by_id)
   end
@@ -135,7 +135,7 @@ class Group < ApplicationRecord
 
   def walk_descendants(parent_id, children_map, groups_by_id)
     (children_map[parent_id] || [])
-      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:relationship_type] ] : nil }
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:inclusion_mode] ] : nil }
       .sort_by { |g, _| g.name }
       .flat_map do |g, rel_type|
         if rel_type == "all"
@@ -148,7 +148,7 @@ class Group < ApplicationRecord
 
   def build_tree(parent_id, children_map, groups_by_id)
     (children_map[parent_id] || [])
-      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:relationship_type] ] : nil }
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry[:inclusion_mode] ] : nil }
       .sort_by { |g, _| g.name }
       .map do |g, rel_type|
         overlapping = rel_type == "none"

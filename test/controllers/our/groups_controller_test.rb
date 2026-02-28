@@ -388,22 +388,23 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @user
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
-    assert link.nested?
+    link.update!(inclusion_mode: 'all')
+    assert link.all?
 
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "none" }
     assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.overlapping?
+    assert link.reload.none?
   end
 
   test "toggle_relationship switches overlapping back to nested" do
     sign_in_as @user
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
-    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id }
+    patch toggle_relationship_our_group_path(everyone), params: { group_id: @group.id, inclusion_mode: "all" }
     assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.nested?
+    assert link.reload.all?
   end
 
   test "toggle_relationship with invalid group_id shows alert" do

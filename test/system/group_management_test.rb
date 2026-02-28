@@ -52,45 +52,49 @@ class GroupManagementTest < ApplicationSystemTestCase
     child_group = link.child_group
     sub_group = Group.create!(name: "Subgroup", description: "A sub-group", user: @user)
     GroupGroup.create!(parent_group: child_group, child_group: sub_group)
-    checkbox_id = "toggle_#{link.id}"
-
+    # Determine an example sub-group checkbox id
     visit manage_groups_our_group_path(everyone)
 
-    # Starts as nested — checkbox should be checked
+    # Starts as all — checkboxes for immediate sub-groups should be checked
     assert_text "Include sub-groups"
+    sub = child_group.child_groups.order(:name).first
+    checkbox_id = "included_#{link.id}_#{sub.id}"
     assert find("##{checkbox_id}", visible: :all).checked?
 
-    # Click the toggle to switch to overlapping
-    find(".toggle-label").click
+    # Switch to 'none' mode via radio and submit
+    find("#inclusion_#{link.id}_none").click
+    click_button "Save"
     assert_text "Relationship updated."
 
     # Page has reloaded — checkbox should now be unchecked
     assert_not find("##{checkbox_id}", visible: :all).checked?
-    assert link.reload.overlapping?
+    assert link.reload.none?
   end
 
   test "toggle relationship type from overlapping to nested" do
     everyone = groups(:everyone)
     link = group_groups(:friends_in_everyone)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
     # Ensure child group has a sub-group
     child_group = link.child_group
     sub_group = Group.create!(name: "Subgroup", description: "A sub-group", user: @user)
     GroupGroup.create!(parent_group: child_group, child_group: sub_group)
-    checkbox_id = "toggle_#{link.id}"
-
     visit manage_groups_our_group_path(everyone)
 
-    # Starts as overlapping — checkbox should be unchecked
+    # Starts as none — immediate sub-group checkboxes should be unchecked
+    child_group = link.child_group
+    sub = child_group.child_groups.order(:name).first
+    checkbox_id = "included_#{link.id}_#{sub.id}"
     assert_not find("##{checkbox_id}", visible: :all).checked?
 
-    # Click the toggle to switch to nested
-    find(".toggle-label").click
+    # Switch to 'all' mode via radio and submit
+    find("#inclusion_#{link.id}_all").click
+    click_button "Save"
     assert_text "Relationship updated."
 
     # Page has reloaded — checkbox should now be checked
     assert find("##{checkbox_id}", visible: :all).checked?
-    assert link.reload.nested?
+    assert link.reload.all?
   end
 
   test "toggle does not appear if child group has no sub-groups" do
@@ -133,7 +137,7 @@ class GroupManagementTest < ApplicationSystemTestCase
 
     # --- Switch to overlapping: inner group and Bob should disappear ---
     link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
-    link.update!(relationship_type: "overlapping")
+    link.update!(inclusion_mode: "none")
 
     visit group_path(everyone.uuid)
 

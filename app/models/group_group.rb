@@ -10,18 +10,9 @@ class GroupGroup < ApplicationRecord
   validate :not_self_referencing
   validate :no_circular_reference
 
-  # Backwards-compatible scopes: tests and callers may still use `nested` / `overlapping`
-  scope :nested, -> { where(inclusion_mode: "all") }
-  scope :overlapping, -> { where(inclusion_mode: "none") }
+  scope :all_mode, -> { where(inclusion_mode: "all") }
+  scope :none_mode, -> { where(inclusion_mode: "none") }
   scope :selected, -> { where(inclusion_mode: "selected") }
-
-  def nested?
-    inclusion_mode == "all"
-  end
-
-  def overlapping?
-    inclusion_mode == "none"
-  end
 
   def all?
     inclusion_mode == "all"
@@ -54,7 +45,11 @@ class GroupGroup < ApplicationRecord
     return unless parent_group && child_group
     return if parent_group_id == child_group_id # already caught above
 
-    if child_group.descendant_group_ids.include?(parent_group_id)
+    # Use full reachability (ignoring inclusion_mode) to detect any path
+    # from the prospective child back to the parent that would create a
+    # cycle. descendant_group_ids considers inclusion_mode and may miss
+    # paths that are relevant for circularity checks.
+    if child_group.reachable_group_ids.include?(parent_group_id)
       errors.add(:child_group, "would create a circular reference")
     end
   end
