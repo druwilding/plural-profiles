@@ -406,6 +406,7 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="url"],
+input[type="datetime-local"],
 textarea,
 select {
   width: 100%;
@@ -417,6 +418,10 @@ select {
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s;
+}
+
+input[type="datetime-local"] {
+  width: auto;
 }
 
 /* Inclusion fieldsets (manage groups) */
@@ -1108,6 +1113,7 @@ button:hover,
   input[type="email"],
   input[type="password"],
   input[type="url"],
+  input[type="datetime-local"],
   textarea,
   select {
     forced-color-adjust: none;
@@ -1146,6 +1152,7 @@ button:hover,
   input[type="email"]:focus,
   input[type="password"]:focus,
   input[type="url"]:focus,
+  input[type="datetime-local"]:focus,
   textarea:focus,
   select:focus {
     outline: 2px solid CanvasText;
