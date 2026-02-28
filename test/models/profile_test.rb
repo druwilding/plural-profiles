@@ -54,6 +54,17 @@ class ProfileTest < ActiveSupport::TestCase
     assert_includes profile.errors[:avatar], "must be a JPG/JPEG, PNG, or WebP image"
   end
 
+  test "rejects avatar over 2 MB" do
+    profile = profiles(:alice)
+    profile.avatar.attach(
+      io: StringIO.new("a" * (HasAvatar::AVATAR_MAX_SIZE + 1)),
+      filename: "toobig.png",
+      content_type: "image/png"
+    )
+    assert_not profile.valid?
+    assert_includes profile.errors[:avatar], "must be 2 MB or less"
+  end
+
   # Timestamp validations
 
   test "created_at in the past is valid" do

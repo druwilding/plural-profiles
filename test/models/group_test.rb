@@ -68,6 +68,17 @@ class GroupTest < ActiveSupport::TestCase
     assert_includes group.errors[:avatar], "must be a JPG/JPEG, PNG, or WebP image"
   end
 
+  test "rejects avatar over 2 MB" do
+    group = groups(:friends)
+    group.avatar.attach(
+      io: StringIO.new("a" * (HasAvatar::AVATAR_MAX_SIZE + 1)),
+      filename: "toobig.png",
+      content_type: "image/png"
+    )
+    assert_not group.valid?
+    assert_includes group.errors[:avatar], "must be 2 MB or less"
+  end
+
   test "has many child_groups" do
     everyone = groups(:everyone)
     assert_includes everyone.child_groups, groups(:friends)
