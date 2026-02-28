@@ -3,6 +3,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :profiles, dependent: :destroy
   has_many :groups, dependent: :destroy
+  has_many :invite_codes, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   normalizes :unverified_email_address, with: ->(e) { e.strip.downcase }

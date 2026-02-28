@@ -81,6 +81,25 @@ class AccountSettingsTest < ApplicationSystemTestCase
     end
   end
 
+  # -- invite codes --
+
+  test "generate invite code and see it on account page" do
+    within(".card", text: "Invite codes") do
+      click_button "Generate invite code"
+    end
+
+    assert_text "Invite code created"
+    within(".card", text: "Invite codes") do
+      assert_selector ".invite-code", minimum: 1
+    end
+  end
+
+  test "invite codes from fixtures are visible" do
+    within(".card", text: "Invite codes") do
+      assert_text invite_codes(:available).code
+    end
+  end
+
   private
 
   def sign_in_via_browser

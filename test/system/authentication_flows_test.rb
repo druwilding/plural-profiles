@@ -23,11 +23,23 @@ class AuthenticationFlowsTest < ApplicationSystemTestCase
 
   test "register a new account" do
     visit new_registration_path
+    fill_in "Invite code", with: invite_codes(:available).code
     fill_in "Email address", with: "newuser@example.com"
     fill_in "Password", with: "N3wUs3r!S1gnup#2026"
     fill_in "Confirm password", with: "N3wUs3r!S1gnup#2026"
     click_button "Sign up"
 
     assert_text "Account created"
+  end
+
+  test "register with invalid invite code shows error" do
+    visit new_registration_path
+    fill_in "Invite code", with: "BADCODE1"
+    fill_in "Email address", with: "newuser@example.com"
+    fill_in "Password", with: "N3wUs3r!S1gnup#2026"
+    fill_in "Confirm password", with: "N3wUs3r!S1gnup#2026"
+    click_button "Sign up"
+
+    assert_text "Invalid or already used invite code"
   end
 end

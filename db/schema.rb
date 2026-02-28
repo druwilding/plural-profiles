@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_163521) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -76,6 +76,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_123000) do
     t.index ["uuid"], name: "index_groups_on_uuid", unique: true
   end
 
+  create_table "invite_codes", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.datetime "redeemed_at"
+    t.bigint "redeemed_by_id"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["code"], name: "index_invite_codes_on_code", unique: true
+    t.index ["user_id"], name: "index_invite_codes_on_user_id"
+  end
+
   create_table "profiles", force: :cascade do |t|
     t.string "avatar_alt_text"
     t.datetime "created_at", null: false
@@ -115,6 +126,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_123000) do
   add_foreign_key "group_profiles", "groups"
   add_foreign_key "group_profiles", "profiles"
   add_foreign_key "groups", "users"
+  add_foreign_key "invite_codes", "users"
+  add_foreign_key "invite_codes", "users", column: "redeemed_by_id"
   add_foreign_key "profiles", "users"
   add_foreign_key "sessions", "users"
 end

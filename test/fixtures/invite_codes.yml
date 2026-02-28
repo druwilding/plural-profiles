@@ -1,0 +1,9 @@
+available:
+  code: ABCD1234
+  user: one
+
+used:
+  code: USED5678
+  user: one
+  redeemed_by_id: <%= ActiveRecord::FixtureSet.identify(:two) %>
+  redeemed_at: <%= 1.day.ago.to_fs(:db) %>

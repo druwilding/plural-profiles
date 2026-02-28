@@ -13,6 +13,7 @@ A web app for pluralfolk to create and share multiple profiles. Each account can
   - **None** — only the child's direct profiles appear in the parent; its own sub-groups remain private to it. Visiting the child group directly still shows everything
 - **Shareable UUID URLs** — every profile and group gets a unique public URL (e.g. `/profiles/:uuid`, `/groups/:uuid`) that anyone can view without signing in
 - **Privacy-conscious sharing** — visitors can only see what you link them to; there's no way to browse from one profile to discover other profiles or groups
+- **Invite-only registration** — new accounts require an invite code. Signed-in users can generate up to 10 unused invite codes from their account page to share with people they trust. Each code is single-use and is marked as redeemed when the new account is created
 
 ## Tech stack
 
@@ -32,10 +33,12 @@ A web app for pluralfolk to create and share multiple profiles. Each account can
 User
  ├── has_many Profiles (name, pronouns, description, avatar, uuid)
  ├── has_many Groups (name, description, avatar, uuid)
+ ├── has_many InviteCodes (codes this user generated)
  └── has_many Sessions
 
 Profile ←→ Group (many-to-many through GroupProfile)
 Group   ←→ Group (many-to-many through GroupGroup, with inclusion_mode: all | selected | none)
+InviteCode — belongs to the generating User; records redeemed_by (User) and redeemed_at once used
 ```
 
 The `GroupGroup` join table connects parent and child groups. Each link has an `inclusion_mode` that controls how much of the child group's sub-tree is pulled into the parent:
@@ -120,19 +123,20 @@ bin/rubocop -a
 
 ## Routes overview
 
-| Path                           | Description                            |
-| ------------------------------ | -------------------------------------- |
-| `/`                            | Home page                              |
-| `POST /session`                | Sign in                                |
-| `DELETE /session`              | Sign out                               |
-| `/registration/new`            | Sign up                                |
-| `/email_verification?token=…`  | Verify email address                   |
-| `/passwords/…`                 | Password reset flow                    |
-| `/our/profiles`                | Manage your profiles (auth required)   |
-| `/our/groups`                  | Manage your groups (auth required)     |
-| `/profiles/:uuid`              | Public profile page                    |
-| `/groups/:uuid`                | Public group page (lists its profiles) |
-| `/groups/:uuid/profiles/:uuid` | Public profile viewed within a group   |
+| Path                           | Description                                |
+| ------------------------------ | ------------------------------------------ |
+| `/`                            | Home page                                  |
+| `POST /session`                | Sign in                                    |
+| `DELETE /session`              | Sign out                                   |
+| `/registration/new`            | Sign up (invite code required)             |
+| `/email_verification?token=…`  | Verify email address                       |
+| `POST /our/invite-codes`       | Generate a new invite code (auth required) |
+| `/passwords/…`                 | Password reset flow                        |
+| `/our/profiles`                | Manage your profiles (auth required)       |
+| `/our/groups`                  | Manage your groups (auth required)         |
+| `/profiles/:uuid`              | Public profile page                        |
+| `/groups/:uuid`                | Public group page (lists its profiles)     |
+| `/groups/:uuid/profiles/:uuid` | Public profile viewed within a group       |
 
 ## Project structure
 
@@ -140,19 +144,21 @@ bin/rubocop -a
 app/
 ├── controllers/
 │   ├── our/
-│   │   ├── profiles_controller.rb   # CRUD for the signed-in user's profiles
-│   │   └── groups_controller.rb     # CRUD for the signed-in user's groups
-│   ├── profiles_controller.rb       # Public profile page
-│   ├── groups_controller.rb         # Public group page
-│   ├── group_profiles_controller.rb # Public profile-within-group page
-│   ├── registrations_controller.rb  # Sign up
+│   │   ├── profiles_controller.rb      # CRUD for the signed-in user's profiles
+│   │   ├── groups_controller.rb        # CRUD for the signed-in user's groups
+│   │   └── invite_codes_controller.rb  # Invite code generation
+│   ├── profiles_controller.rb          # Public profile page
+│   ├── groups_controller.rb            # Public group page
+│   ├── group_profiles_controller.rb    # Public profile-within-group page
+│   ├── registrations_controller.rb     # Sign up (validates invite code)
 │   └── email_verifications_controller.rb
 ├── models/
 │   ├── user.rb
 │   ├── profile.rb
 │   ├── group.rb
 │   ├── group_group.rb
-│   └── group_profile.rb
+│   ├── group_profile.rb
+│   └── invite_code.rb
 ├── views/
 │   ├── our/profiles/    # Profile management views
 │   ├── our/groups/      # Group management views

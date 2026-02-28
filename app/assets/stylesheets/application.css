@@ -1461,3 +1461,48 @@ button:hover,
   }
 }
 
+/* Invite codes */
+.invite-code-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.invite-code-item {
+  display: flex;
+  align-items: center;
+}
+
+.invite-code {
+  font-family: monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.75rem;
+  user-select: all;
+}
+
+.invite-code-input {
+  font-family: monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.muted {
+  opacity: 0.65;
+  font-style: italic;
+}
+
+@media (forced-colors: active) {
+  .invite-code {
+    border: 1px solid ButtonText;
+    background-color: Canvas;
+    color: CanvasText;
+  }
+}
+
