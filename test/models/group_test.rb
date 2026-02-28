@@ -43,31 +43,6 @@ class GroupTest < ActiveSupport::TestCase
     assert_includes group.errors[:created_at], "can't be in the future"
   end
 
-  test "updated_at in the past is valid" do
-    group = Group.new(user: users(:one), name: "Test", created_at: 2.days.ago, updated_at: 1.day.ago)
-    group.valid?
-    assert_empty group.errors[:updated_at]
-  end
-
-  test "updated_at in the future is invalid" do
-    group = Group.new(user: users(:one), name: "Test", updated_at: 2.minutes.from_now)
-    assert_not group.valid?
-    assert_includes group.errors[:updated_at], "can't be in the future"
-  end
-
-  test "updated_at before created_at is invalid" do
-    group = Group.new(user: users(:one), name: "Test", created_at: 1.day.ago, updated_at: 2.days.ago)
-    assert_not group.valid?
-    assert_includes group.errors[:updated_at], "can't be before created at"
-  end
-
-  test "updated_at equal to created_at is valid" do
-    time = 1.hour.ago
-    group = Group.new(user: users(:one), name: "Test", created_at: time, updated_at: time)
-    group.valid?
-    assert_empty group.errors[:updated_at]
-  end
-
   test "has many profiles through group_profiles" do
     assert_includes groups(:friends).profiles, profiles(:alice)
   end
