@@ -21,7 +21,7 @@
             %span= child.name
             - if child.child_links.any?
               -# Inline form to choose inclusion_mode and optional selected sub-groups
-              = form_with url: update_relationship_our_group_path(@group, group_id: child.id), method: :patch, local: false, class: "inclusion-form" do |f|
+              = form_with url: update_relationship_our_group_path(@group, group_id: child.id), method: :patch, local: false, class: "inclusion-form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
                 .inclusion-row
                   %fieldset.inclusion-radios
                     %legend Include sub-groups
@@ -41,7 +41,7 @@
                       - child.child_groups.order(:name).each do |sub|
                         - checked = if link.all? then true elsif link.none? then false else Array(link.included_subgroup_ids).map(&:to_i).include?(sub.id) end
                         %label.checkbox{for: "included_#{link.id}_#{sub.id}"}
-                          = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}"
+                          = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }
                           %span= sub.name
 
                 = f.submit "Save", class: "btn btn--small"
@@ -75,20 +75,3 @@
         first.
 
 %p= link_to "← Back to group", our_group_path(@group)
-
-:javascript
-  document.addEventListener('change', function(e) {
-    var el = e.target;
-    if (!el.closest) return;
-    var form = el.closest('.inclusion-form');
-    if (!form) return;
-    if (el.name === 'inclusion_mode') {
-      var mode = el.value;
-      var checkboxes = form.querySelectorAll('input[name="included_subgroup_ids[]"]');
-      if (mode === 'all') {
-        checkboxes.forEach(function(cb){ cb.checked = true; });
-      } else if (mode === 'none') {
-        checkboxes.forEach(function(cb){ cb.checked = false; });
-      }
-    }
-  });
