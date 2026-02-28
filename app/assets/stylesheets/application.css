@@ -493,6 +493,27 @@ input[type="file"]::file-selector-button:hover {
   background-color: #3d6d4c;
 }
 
+/* Disabled form controls */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+input[type="submit"]:disabled,
+button:disabled,
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 input[type="submit"],
 button,
 .btn {
@@ -1158,6 +1179,27 @@ button:hover,
   input[type="radio"]:focus-visible {
     outline: 2px solid CanvasText;
     outline-offset: 2px;
+  }
+
+  /* Disabled controls in forced-colors */
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  input[type="checkbox"]:disabled,
+  input[type="radio"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  input[type="submit"]:disabled,
+  button:disabled,
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   /* Primary buttons */
