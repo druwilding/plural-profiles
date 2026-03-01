@@ -261,4 +261,60 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to profile_path(@profile.uuid)
     assert_equal old_uuid, @profile.reload.uuid
   end
+
+  # -- Heart emojis --
+
+  test "create with heart emojis saves them" do
+    sign_in_as @user
+    post our_profiles_path, params: {
+      profile: { name: "Hearty", heart_emojis: %w[01_dewdrop_heart 36_red_heart] }
+    }
+    assert_redirected_to our_profile_path(Profile.last)
+    assert_equal %w[01_dewdrop_heart 36_red_heart], Profile.last.heart_emojis
+  end
+
+  test "update sets heart emojis" do
+    sign_in_as @user
+    patch our_profile_path(@profile), params: {
+      profile: { heart_emojis: %w[22_violet_heart] }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_equal %w[22_violet_heart], @profile.reload.heart_emojis
+  end
+
+  test "update clears heart emojis with empty array" do
+    sign_in_as @user
+    @profile.update!(heart_emojis: %w[01_dewdrop_heart])
+    patch our_profile_path(@profile), params: {
+      profile: { heart_emojis: [ "" ] }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_equal [], @profile.reload.heart_emojis
+  end
+
+  test "update rejects invalid heart emojis" do
+    sign_in_as @user
+    patch our_profile_path(@profile), params: {
+      profile: { heart_emojis: %w[totally_fake_heart] }
+    }
+    assert_response :unprocessable_entity
+  end
+
+  test "show displays heart emojis" do
+    sign_in_as @user
+    @profile.update!(heart_emojis: %w[01_dewdrop_heart 22_violet_heart])
+    get our_profile_path(@profile)
+    assert_response :success
+    assert_match "Heart emojis", response.body
+    assert_match "01_dewdrop_heart.webp", response.body
+    assert_match "22_violet_heart.webp", response.body
+  end
+
+  test "show does not display heart section when none selected" do
+    sign_in_as @user
+    @profile.update!(heart_emojis: [])
+    get our_profile_path(@profile)
+    assert_response :success
+    assert_no_match "Heart emojis", response.body
+  end
 end

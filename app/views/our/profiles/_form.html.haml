@@ -40,6 +40,15 @@
             = check_box_tag "profile[group_ids][]", group.id, profile.group_ids.include?(group.id), id: "profile_group_ids_#{group.id}"
             = group.name
 
+  %fieldset.form-group
+    %legend Heart emojis
+    .heart-picker{data: {controller: "heart-picker"}}
+      = hidden_field_tag "profile[heart_emojis][]", "", data: {heart_picker_target: "input"}
+      .heart-picker__grid
+        - Profile::HEART_EMOJIS.each do |heart|
+          %button.heart-picker__heart{type: "button", data: {heart: heart, heart_picker_target: "button", action: "heart-picker#toggle"}, "aria-pressed": profile.heart_emojis.include?(heart).to_s, "aria-label": profile.heart_emoji_display_name(heart)}
+            = image_tag "/images/hearts/#{heart}.webp", width: 48, height: 48, alt: "", loading: "lazy"
+
   - if profile.persisted?
     .form-group
       = form.label :created_at, "Created at (UTC)"

@@ -1606,6 +1606,73 @@ details[open] .details-close {
   font-style: italic;
 }
 
+/* ── Heart emoji picker ────────────────────────────────── */
+
+.heart-picker__grid,
+.heart-display__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.heart-picker__heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 4px;
+  border: 2px solid var(--input-border);
+  border-radius: 0.5rem;
+  background: var(--input-bg);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.heart-picker__heart:hover {
+  opacity: 0.8;
+  transform: scale(1.08);
+}
+
+.heart-picker__heart[aria-pressed="true"] {
+  opacity: 1;
+  border-color: var(--link);
+  box-shadow: 0 0 0 2px var(--link);
+}
+
+.heart-picker__heart img {
+  pointer-events: none;
+}
+
+.heart-display__heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heart-display {
+  margin: 1rem 0;
+}
+
+.heart-display h3 {
+  margin-bottom: 0.5rem;
+}
+
+@media (forced-colors: active) {
+  .heart-picker__heart {
+    border: 2px solid ButtonText;
+    opacity: 1;
+    background: Canvas;
+  }
+
+  .heart-picker__heart[aria-pressed="true"] {
+    border-color: Highlight;
+    box-shadow: 0 0 0 2px Highlight;
+    background: Canvas;
+  }
+}
+
 @media (forced-colors: active) {
   .invite-code-item {
     border: 1px solid CanvasText;

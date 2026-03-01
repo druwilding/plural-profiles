@@ -78,4 +78,36 @@ class ProfileTest < ActiveSupport::TestCase
     assert_not profile.valid?
     assert_includes profile.errors[:created_at], "can't be in the future"
   end
+
+  # Heart emojis
+
+  test "heart_emojis defaults to empty array" do
+    profile = users(:one).profiles.create!(name: "Heartless")
+    assert_equal [], profile.heart_emojis
+  end
+
+  test "valid heart emojis are accepted" do
+    profile = profiles(:alice)
+    profile.heart_emojis = %w[01_dewdrop_heart 36_red_heart]
+    assert profile.valid?
+  end
+
+  test "invalid heart emoji names are rejected" do
+    profile = profiles(:alice)
+    profile.heart_emojis = %w[01_dewdrop_heart fake_heart]
+    assert_not profile.valid?
+    assert profile.errors[:heart_emojis].any? { |e| e.include?("fake_heart") }
+  end
+
+  test "heart_emoji_display_name formats name" do
+    profile = profiles(:alice)
+    assert_equal "Dewdrop heart", profile.heart_emoji_display_name("01_dewdrop_heart")
+    assert_equal "Cadbury heart", profile.heart_emoji_display_name("50cadbury_heart")
+  end
+
+  test "HEART_EMOJIS constant contains expected hearts" do
+    assert_includes Profile::HEART_EMOJIS, "01_dewdrop_heart"
+    assert_includes Profile::HEART_EMOJIS, "36_red_heart"
+    assert_equal 42, Profile::HEART_EMOJIS.size
+  end
 end
