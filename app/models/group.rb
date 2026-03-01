@@ -85,15 +85,6 @@ class Group < ApplicationRecord
     ).map(&:to_i)
   end
 
-  # Collect all profiles from this group and all descendant groups.
-  # Profiles may appear in multiple sub-groups; the result is de-duplicated.
-  # Two queries total: one recursive CTE for group IDs, one for profiles.
-  def all_profiles
-    Profile.where(
-      id: GroupProfile.where(group_id: descendant_group_ids).select(:profile_id)
-    )
-  end
-
   # Collect all descendant groups (not including self).
   # Single recursive CTE query.
   def all_child_groups
