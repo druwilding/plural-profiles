@@ -317,4 +317,148 @@ class GroupTest < ActiveSupport::TestCase
 
     assert_not alice_entry[:repeated], "Profile appearing once should not be marked as repeated"
   end
+
+  # -- selected inclusion mode --
+  #
+  # The "selected" edge type means: show this child group, but only recurse into
+  # the sub-groups explicitly listed in `included_subgroup_ids` on that edge.
+  # Each of those sub-groups then follows its own edge's inclusion_mode for
+  # further recursion.
+
+  test "descendant_sections: groups not in included_subgroup_ids are omitted entirely" do
+    user = users(:one)
+    root = user.groups.create!(name: "Root")
+    a    = user.groups.create!(name: "Alpha")
+    x    = user.groups.create!(name: "Excluded")
+
+    # root →(selected, included=[])→ a  means: show a, but none of a's sub-groups
+    GroupGroup.create!(parent_group: root, child_group: a,
+                       inclusion_mode: "selected", included_subgroup_ids: [])
+    # a →(all)→ x  but x is not in root→a's included list
+    GroupGroup.create!(parent_group: a, child_group: x, inclusion_mode: "all")
+
+    names = root.descendant_sections.map(&:name)
+    assert_includes     names, "Alpha",    "Alpha (the selected child) should appear"
+    assert_not_includes names, "Excluded", "Excluded is not in included_subgroup_ids so must not appear"
+  end
+
+  test "descendant_sections: selected sub-group with none sub-edge appears but its children do not" do
+    user = users(:one)
+    root     = user.groups.create!(name: "Root")
+    a        = user.groups.create!(name: "Alpha")
+    b        = user.groups.create!(name: "Beta")
+    b_child  = user.groups.create!(name: "BetaChild")
+
+    # root →(selected, included=[b])→ a
+    GroupGroup.create!(parent_group: root, child_group: a,
+                       inclusion_mode: "selected", included_subgroup_ids: [ b.id ])
+    # a →(none)→ b  — b is in the selected list, but its own edge is "none"
+    GroupGroup.create!(parent_group: a, child_group: b, inclusion_mode: "none")
+    # b →(all)→ b_child  — would normally recurse, but the "none" edge stops it
+    GroupGroup.create!(parent_group: b, child_group: b_child, inclusion_mode: "all")
+
+    names = root.descendant_sections.map(&:name)
+    assert_includes     names, "Alpha",     "Alpha should appear"
+    assert_includes     names, "Beta",      "Beta (none-edge, in selected list) should appear"
+    assert_not_includes names, "BetaChild", "BetaChild must be hidden — none edge stops recursion"
+  end
+
+  test "descendant_tree: selected sub-group with none sub-edge is marked overlapping with no children" do
+    user = users(:one)
+    root    = user.groups.create!(name: "Root")
+    a       = user.groups.create!(name: "Alpha")
+    b       = user.groups.create!(name: "Beta")
+    b_child = user.groups.create!(name: "BetaChild")
+
+    GroupGroup.create!(parent_group: root, child_group: a,
+                       inclusion_mode: "selected", included_subgroup_ids: [ b.id ])
+    GroupGroup.create!(parent_group: a, child_group: b, inclusion_mode: "none")
+    GroupGroup.create!(parent_group: b, child_group: b_child, inclusion_mode: "all")
+
+    tree = root.descendant_tree
+    alpha_node = tree.find { |n| n[:group].name == "Alpha" }
+    assert alpha_node, "Alpha should appear in tree"
+
+    beta_node = alpha_node[:children].find { |n| n[:group].name == "Beta" }
+    assert beta_node, "Beta should appear as a child of Alpha"
+    assert beta_node[:overlapping],      "Beta with none-edge should be marked as overlapping"
+    assert_empty beta_node[:children],   "Beta with none-edge should have no children rendered"
+  end
+
+  test "descendant_sections: selected sub-group with selected sub-edge excludes IDs not in its list" do
+    user = users(:one)
+    root    = user.groups.create!(name: "Root")
+    a       = user.groups.create!(name: "Alpha")
+    b       = user.groups.create!(name: "Beta")
+    charlie = user.groups.create!(name: "Charlie")  # in b's selected list
+    delta   = user.groups.create!(name: "Delta")    # NOT in b's selected list
+
+    # root →(selected, included=[b])→ a
+    GroupGroup.create!(parent_group: root, child_group: a,
+                       inclusion_mode: "selected", included_subgroup_ids: [ b.id ])
+    # a →(selected, included=[charlie])→ b  — b's own edge is also "selected"
+    GroupGroup.create!(parent_group: a, child_group: b,
+                       inclusion_mode: "selected", included_subgroup_ids: [ charlie.id ])
+    GroupGroup.create!(parent_group: b, child_group: charlie, inclusion_mode: "all")
+    GroupGroup.create!(parent_group: b, child_group: delta,   inclusion_mode: "all")
+
+    names = root.descendant_sections.map(&:name)
+    assert_includes     names, "Alpha", "Alpha should appear"
+    assert_includes     names, "Beta",  "Beta (in root→a's selected list) should appear"
+    # Delta is a child of Beta but is not in Beta's own included_subgroup_ids —
+    # it must be absent regardless of its own edge type.
+    assert_not_includes names, "Delta", "Delta (not in Beta's included list) must not appear"
+  end
+
+  test "descendant_tree: selected sub-group with selected sub-edge excludes IDs not in its list" do
+    user = users(:one)
+    root    = user.groups.create!(name: "Root")
+    a       = user.groups.create!(name: "Alpha")
+    b       = user.groups.create!(name: "Beta")
+    charlie = user.groups.create!(name: "Charlie")
+    delta   = user.groups.create!(name: "Delta")
+
+    GroupGroup.create!(parent_group: root, child_group: a,
+                       inclusion_mode: "selected", included_subgroup_ids: [ b.id ])
+    GroupGroup.create!(parent_group: a, child_group: b,
+                       inclusion_mode: "selected", included_subgroup_ids: [ charlie.id ])
+    GroupGroup.create!(parent_group: b, child_group: charlie, inclusion_mode: "all")
+    GroupGroup.create!(parent_group: b, child_group: delta,   inclusion_mode: "all")
+
+    tree = root.descendant_tree
+    alpha_node = tree.find { |n| n[:group].name == "Alpha" }
+    assert alpha_node, "Alpha should appear"
+
+    beta_node = alpha_node[:children].find { |n| n[:group].name == "Beta" }
+    assert beta_node, "Beta should appear as child of Alpha"
+    assert_not beta_node[:overlapping], "Beta with selected-edge should not be marked as overlapping"
+
+    child_names = beta_node[:children].map { |n| n[:group].name }
+    assert_not_includes child_names, "Delta",
+      "Delta (not in Beta's included_subgroup_ids) must not appear under Beta"
+  end
+
+  test "descendant_sections: selected sub-group with all sub-edge appears but deeper children are limited by CTE depth" do
+    user = users(:one)
+    root     = user.groups.create!(name: "Root")
+    a        = user.groups.create!(name: "Alpha")
+    b        = user.groups.create!(name: "Beta")
+    b_child  = user.groups.create!(name: "BetaChild")
+
+    # root →(selected, included=[b])→ a
+    GroupGroup.create!(parent_group: root, child_group: a,
+                       inclusion_mode: "selected", included_subgroup_ids: [ b.id ])
+    # a →(all)→ b  — b is in the selected list and its sub-edge is "all"
+    GroupGroup.create!(parent_group: a, child_group: b, inclusion_mode: "all")
+    # b →(all)→ b_child  — one level deeper than the CTE pre-loads for selected paths
+    GroupGroup.create!(parent_group: b, child_group: b_child, inclusion_mode: "all")
+
+    names = root.descendant_sections.map(&:name)
+    assert_includes names, "Alpha", "Alpha should appear"
+    assert_includes names, "Beta",  "Beta (all sub-edge, in selected list) should appear"
+    # BetaChild sits one level below the effective CTE pre-load boundary for
+    # selected paths, so it is not present in groups_by_id and must not appear.
+    assert_not_includes names, "BetaChild",
+      "BetaChild is beyond the CTE pre-load depth for selected paths and must not appear"
+  end
 end
