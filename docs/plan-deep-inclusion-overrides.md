@@ -275,7 +275,7 @@ Add to `app/assets/stylesheets/application.css`:
 
 ---
 
-## Phase 6: Repeated Profile Markers
+## Phase 6: Repeated Profile Markers ✅ DONE
 
 ### 26. Track seen profiles in tree building
 
@@ -368,10 +368,10 @@ Manual: load fixtures, visit public group page, confirm Rogue Pack excluded from
 
 ## Implementation Order
 
-1. **Phase 1** (fixtures) — enables testing from the start
-2. **Phase 2** (data model) — lays foundation
-3. **Phase 3** (deep exclusion logic) — the core feature
-4. **Phase 4** (profile control) — small addition on top of Phase 2/3
-5. **Phase 6** (repeated markers) — independent, can be done in parallel with Phase 5
+1. **Phase 6** (repeated markers) — ✅ DONE
+2. **Phase 1** (fixtures) — enables testing from the start
+3. **Phase 2** (data model) — lays foundation
+4. **Phase 3** (deep exclusion logic) — the core feature
+5. **Phase 4** (profile control) — small addition on top of Phase 2/3
 6. **Phase 5** (tree editor) — largest UI effort, builds on all prior phases
 7. **Phase 7** (tests) — written alongside each phase, listed last for organisation
