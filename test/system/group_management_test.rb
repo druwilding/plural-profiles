@@ -186,6 +186,65 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
+  test "public page renders childless sub-group as tree leaf not folder" do
+    user = users(:one)
+    everyone = groups(:everyone)
+
+    empty = user.groups.create!(name: "Empty Crew")
+    GroupGroup.create!(parent_group: everyone, child_group: empty)
+
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      # The childless group should be a leaf node (li.tree__leaf > a > .tree__label)
+      assert_selector "li.tree__leaf > a.tree__item > .tree__label", text: "Empty Crew"
+
+      # It should NOT be a folder with a toggle arrow
+      assert_no_selector "li.tree__folder > .tree__row .tree__label", text: "Empty Crew"
+    end
+  end
+
+  test "public page renders none-mode sub-group with children as tree leaf" do
+    user = users(:one)
+    everyone = groups(:everyone)
+
+    outer = user.groups.create!(name: "Outer Ring")
+    inner = user.groups.create!(name: "Inner Ring")
+    GroupGroup.create!(parent_group: outer, child_group: inner)
+    # outer has a sub-group but no direct profiles — with none mode its
+    # children are hidden, so it should render as a leaf in the parent tree
+    GroupGroup.create!(parent_group: everyone, child_group: outer, inclusion_mode: "none")
+
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      assert_selector "li.tree__leaf > a.tree__item > .tree__label", text: "Outer Ring"
+      assert_no_selector "li.tree__folder > .tree__row .tree__label", text: "Outer Ring"
+      # The hidden child should not appear at all
+      assert_no_text "Inner Ring"
+    end
+  end
+
+  test "public page renders sub-group as leaf when include_direct_profiles is false" do
+    user = users(:one)
+    everyone = groups(:everyone)
+
+    crew = user.groups.create!(name: "Quiet Crew")
+    crew.profiles << profiles(:bob)
+    # The edge hides direct profiles and there are no sub-groups, so the
+    # node has neither children nor profiles — it should be a leaf
+    GroupGroup.create!(parent_group: everyone, child_group: crew, include_direct_profiles: false)
+
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      assert_selector "li.tree__leaf > a.tree__item > .tree__label", text: "Quiet Crew"
+      assert_no_selector "li.tree__folder > .tree__row .tree__label", text: "Quiet Crew"
+      # Bob should not appear under Quiet Crew
+      assert_no_selector "li.tree__leaf > a.tree__item > .tree__label", text: "Bob"
+    end
+  end
+
   test "public page marks repeated profiles in the tree" do
     user = users(:one)
     everyone = groups(:everyone)
