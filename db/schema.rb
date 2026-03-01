@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_172833) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_131025) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -92,6 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_172833) do
     t.string "avatar_alt_text"
     t.datetime "created_at", null: false
     t.text "description"
+    t.jsonb "heart_emojis", default: [], null: false
     t.string "name", null: false
     t.string "pronouns"
     t.datetime "updated_at", null: false
