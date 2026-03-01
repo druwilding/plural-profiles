@@ -45,6 +45,7 @@
                           %span= sub.name
 
                   %label.inclusion-profiles-toggle
+                    = hidden_field_tag "include_direct_profiles", "0"
                     = check_box_tag "include_direct_profiles", "1", link.include_direct_profiles, id: "include_profiles_#{link.id}", data: { inclusion_target: "profilesToggle" }
                     Include this group's own direct profiles
 
