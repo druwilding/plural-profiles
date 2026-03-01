@@ -5,6 +5,6 @@ module PluralProfilesUuid
   REPLACEMENT_CHARS = %w[0 1 2 3 4 5 6 8 9 a b c d e f].freeze
 
   def self.generate
-    SecureRandom.uuid.gsub("7") { REPLACEMENT_CHARS.sample }
+    SecureRandom.uuid.gsub("7") { REPLACEMENT_CHARS[SecureRandom.random_number(15)] }
   end
 end
