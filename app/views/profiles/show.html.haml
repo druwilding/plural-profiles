@@ -34,4 +34,4 @@
       .heart-display__grid
         - @profile.heart_emojis.each do |heart|
           .heart-display__heart
-            = image_tag "/images/hearts/#{heart}.webp", width: 48, height: 48, alt: @profile.heart_emoji_display_name(heart), loading: "lazy"
+            = image_tag "/images/hearts/#{heart}.webp", width: 48, height: 48, alt: @profile.heart_emoji_display_name(heart), title: @profile.heart_emoji_display_name(heart), loading: "lazy"
