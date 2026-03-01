@@ -24,6 +24,12 @@ Rails.application.configure do
   # Store uploaded files on S3-compatible storage (see config/storage.yml for options).
   config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "local").to_sym
 
+  # Extend the S3 signed URL lifetime from the default 5 minutes to 24 hours.
+  # Avatars are stable and don't change often; longer expiry lets the browser
+  # cache images across page loads. 24 hours balances performance against the
+  # privacy tradeoff of leaked URLs remaining valid.
+  config.active_storage.service_urls_expire_in = 24.hours
+
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # config.assume_ssl = true
 
