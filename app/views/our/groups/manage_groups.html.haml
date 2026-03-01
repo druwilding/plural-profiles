@@ -47,10 +47,10 @@
                   %fieldset.inclusion-profiles
                     %legend Include profiles?
                     %label
-                      = radio_button_tag "include_direct_profiles", "1", link.include_direct_profiles
+                      = radio_button_tag "include_direct_profiles", "1", link.include_direct_profiles, id: "include_direct_profiles_#{link.id}_all"
                       All
                     %label
-                      = radio_button_tag "include_direct_profiles", "0", !link.include_direct_profiles
+                      = radio_button_tag "include_direct_profiles", "0", !link.include_direct_profiles, id: "include_direct_profiles_#{link.id}_none"
                       None
 
                 = f.submit "Save", class: "btn btn--small"
