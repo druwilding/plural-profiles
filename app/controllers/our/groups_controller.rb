@@ -69,7 +69,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def manage_groups
-    excluded_ids = @group.ancestor_group_ids | @group.child_group_ids | [@group.id]
+    excluded_ids = @group.ancestor_group_ids | @group.child_group_ids | [ @group.id ]
     @available_groups = Current.user.groups
       .where.not(id: excluded_ids)
       .order(:name)
