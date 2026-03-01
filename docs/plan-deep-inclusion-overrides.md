@@ -35,7 +35,7 @@ Finally, profiles appearing in multiple places in the tree have no visual indica
 
 ---
 
-## Phase 1: Test Fixtures — Mirror the User's Scenario
+## Phase 1: Test Fixtures — Mirror the User's Scenario ✅ DONE
 
 ### 1. New user
 
@@ -369,7 +369,7 @@ Manual: load fixtures, visit public group page, confirm Rogue Pack excluded from
 ## Implementation Order
 
 1. **Phase 6** (repeated markers) — ✅ DONE
-2. **Phase 1** (fixtures) — enables testing from the start
+2. **Phase 1** (fixtures) — ✅ DONE
 3. **Phase 2** (data model) — lays foundation
 4. **Phase 3** (deep exclusion logic) — the core feature
 5. **Phase 4** (profile control) — small addition on top of Phase 2/3
