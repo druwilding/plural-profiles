@@ -158,8 +158,10 @@ class GroupTest < ActiveSupport::TestCase
     # Friends has child: Close Friends
     assert_equal 1, tree.first[:children].length
     assert_equal "Close Friends", tree.first[:children].first[:group].name
-    # Close Friends has Alice
-    assert_equal [ "Alice" ], tree.first[:children].first[:profiles].map(&:name)
+    # Close Friends has Alice (as a tagged profile entry)
+    profile_entries = tree.first[:children].first[:profiles]
+    assert_equal [ "Alice" ], profile_entries.map { |e| e[:profile].name }
+    assert_equal [ false ], profile_entries.map { |e| e[:repeated] }
   end
 
   # -- Overlapping relationship type --
@@ -263,5 +265,59 @@ class GroupTest < ActiveSupport::TestCase
     assert_includes friends.descendant_group_ids, close.id
     assert_includes friends.all_profiles, profiles(:bob)
     assert_equal [ "Close Friends" ], friends.descendant_tree.map { |n| n[:group].name }
+  end
+
+  # -- Repeated profile tracking --
+
+  test "descendant_tree marks profiles as repeated when they appear in multiple groups" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    close = user.groups.create!(name: "Close Friends")
+    GroupGroup.create!(parent_group: friends, child_group: close)
+
+    alice = profiles(:alice)
+    # Alice is in friends (via fixture) and also in close
+    close.profiles << alice
+
+    tree = everyone.descendant_tree
+    friends_node = tree.first
+    close_node = friends_node[:children].first
+
+    # Alice appears first under Close Friends (alphabetically Close < Friends in depth-first)
+    close_entries = close_node[:profiles]
+    friends_entries = friends_node[:profiles]
+
+    close_alice = close_entries.find { |e| e[:profile].id == alice.id }
+    friends_alice = friends_entries.find { |e| e[:profile].id == alice.id }
+
+    # First occurrence is not repeated
+    assert_not close_alice[:repeated], "First occurrence of Alice should not be marked as repeated"
+    # Second occurrence IS repeated
+    assert friends_alice[:repeated], "Second occurrence of Alice should be marked as repeated"
+  end
+
+  test "descendant_tree seen_profile_ids set is populated for root-level tracking" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    alice = profiles(:alice)
+
+    seen = Set.new
+    everyone.descendant_tree(seen_profile_ids: seen)
+
+    # Alice is in friends (a descendant) so she should be in the seen set
+    assert_includes seen, alice.id
+  end
+
+  test "descendant_tree profiles appearing only once are not marked as repeated" do
+    user = users(:one)
+    everyone = groups(:everyone)
+
+    tree = everyone.descendant_tree
+    friends_node = tree.first
+    alice_entry = friends_node[:profiles].find { |e| e[:profile].id == profiles(:alice).id }
+
+    assert_not alice_entry[:repeated], "Profile appearing once should not be marked as repeated"
   end
 end
