@@ -1098,6 +1098,18 @@ details[open] .details-close {
   text-overflow: ellipsis;
 }
 
+.tree__label--repeated {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+@media (forced-colors: active) {
+  .tree__label--repeated {
+    opacity: 1;
+    color: GrayText;
+  }
+}
+
 .tree__overlapping-hint {
   font-size: 0.7rem;
   opacity: 0.6;
@@ -1599,4 +1611,18 @@ details[open] .details-close {
   .form-divider {
     border-top-color: GrayText;
   }
+}
+
+/* ── Utilities ─────────────────────────────────────────── */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

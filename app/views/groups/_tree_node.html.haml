@@ -1,9 +1,10 @@
 -# Recursive tree node for the explorer sidebar.
 -# Locals: node (hash with :group, :profiles, :children)
+-#   node[:profiles] entries are hashes with :profile and :repeated (set by the model).
 - group = node[:group]
-- profiles = Array(node[:profiles])
+- profile_entries = Array(node[:profiles])
 - children = Array(node[:children])
-- has_children = children.any? || profiles.any?
+- has_children = children.any? || profile_entries.any?
 
 - if has_children
   %li.tree__folder{role: "treeitem", "aria-expanded": "true"}
@@ -17,7 +18,9 @@
     %ul.tree__children{role: "group"}
       - children.each do |child_node|
         = render "groups/tree_node", node: child_node
-      - profiles.each do |profile|
+      - profile_entries.each do |entry|
+        - profile = entry[:profile]
+        - repeated = entry[:repeated]
         %li.tree__leaf{role: "treeitem"}
           = link_to group_profile_path(group.uuid, profile.uuid), class: "tree__item", "data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(group.uuid, profile.uuid), "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid do
             - if profile.avatar.attached?
@@ -25,7 +28,12 @@
             - else
               %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
                 = render "shared/plural_pride_logo"
-            %span.tree__label= profile.name
+            - if repeated
+              %span.tree__label.tree__label--repeated{title: "#{profile.name} also appears elsewhere in this group"}
+                = profile.name
+                %span.visually-hidden= " (also appears elsewhere in this group)"
+            - else
+              %span.tree__label= profile.name
 - else
   %li.tree__folder{role: "treeitem"}
     .tree__row

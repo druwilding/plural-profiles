@@ -186,6 +186,29 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
+  test "public page marks repeated profiles in the tree" do
+    user = users(:one)
+    everyone = groups(:everyone)
+    friends = groups(:friends)
+    inner = user.groups.create!(name: "Inner Circle")
+    GroupGroup.create!(parent_group: friends, child_group: inner)
+
+    alice = profiles(:alice)
+    # Alice is already in friends (fixture); add her to inner too
+    inner.profiles << alice
+
+    visit group_path(everyone.uuid)
+
+    within(".explorer__sidebar") do
+      # Alice should appear twice: once not repeated, once repeated
+      labels = all(".tree__label", text: "Alice")
+      assert_equal 2, labels.length, "Alice should appear twice in the tree"
+
+      repeated_labels = all(".tree__label--repeated", text: "Alice")
+      assert_equal 1, repeated_labels.length, "Exactly one Alice should be marked as repeated"
+    end
+  end
+
   private
 
   def sign_in_via_browser

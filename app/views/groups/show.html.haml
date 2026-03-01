@@ -33,6 +33,8 @@
                 = render "groups/tree_node", node: node
               -# Direct profiles at root level
               - @direct_profiles.each do |profile|
+                - repeated = @seen_profile_ids.include?(profile.id)
+                - @seen_profile_ids.add(profile.id)
                 %li.tree__leaf{role: "treeitem"}
                   = link_to group_profile_path(@group.uuid, profile.uuid), class: "tree__item", "data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(@group.uuid, profile.uuid), "data-group-uuid": @group.uuid, "data-profile-uuid": profile.uuid do
                     - if profile.avatar.attached?
@@ -40,7 +42,12 @@
                     - else
                       %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
                         = render "shared/plural_pride_logo"
-                    %span.tree__label= profile.name
+                    - if repeated
+                      %span.tree__label.tree__label--repeated{title: "#{profile.name} also appears elsewhere in this group"}
+                        = profile.name
+                        %span.visually-hidden= " (also appears elsewhere in this group)"
+                    - else
+                      %span.tree__label= profile.name
 
       .explorer__content{"data-tree-target": "content", "aria-live": "polite"}
         -# Default: show root group content
@@ -58,8 +65,8 @@
               = link_to node[:group].name, group_path(node[:group].uuid)
             - if node[:profiles].any?
               .profile-grid
-                - node[:profiles].each do |profile|
-                  = render "groups/profile_card", group: node[:group], profile: profile
+                - node[:profiles].each do |entry|
+                  = render "groups/profile_card", group: node[:group], profile: entry[:profile]
             - render_flat.call(node[:children])
       - render_flat.call(@descendant_tree)
 

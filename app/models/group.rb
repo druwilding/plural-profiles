@@ -121,7 +121,9 @@ class Group < ApplicationRecord
   # Build a nested tree of all descendant groups for tree-view navigation.
   # Returns an array of nodes: { group:, profiles:, children:, overlapping: }
   # Overlapping groups appear in the tree but their own children are omitted.
-  def descendant_tree
+  # Each profile entry is a hash { profile:, repeated: } so the view can
+  # visually distinguish profiles that appear more than once in the tree.
+  def descendant_tree(seen_profile_ids: nil)
     desc_ids = descendant_group_ids - [ id ]
     return [] if desc_ids.empty?
 
@@ -134,7 +136,8 @@ class Group < ApplicationRecord
           .group_by(&:first)
           .transform_values { |rows| rows.map { |r| { id: r[1], inclusion_mode: r[2], included_subgroup_ids: Array(r[3]).map(&:to_i) } } }
 
-    build_tree(id, children_map, groups_by_id)
+    seen_profile_ids ||= Set.new
+    build_tree(id, children_map, groups_by_id, seen_profile_ids)
   end
 
   private
@@ -149,10 +152,7 @@ class Group < ApplicationRecord
         when "all"
           [ g, *walk_descendants(g.id, children_map, groups_by_id) ]
         when "selected"
-          selected = (children_map[g.id] || [])
-                     .select { |e| Array(entry[:included_subgroup_ids]).include?(e[:id]) }
-                     .map { |e| groups_by_id[e[:id]] }
-                     .compact
+          selected = walk_selected_descendants(g.id, entry, children_map, groups_by_id)
           [ g, *selected ]
         else
           [ g ]
@@ -160,7 +160,7 @@ class Group < ApplicationRecord
       end
   end
 
-  def build_tree(parent_id, children_map, groups_by_id)
+  def build_tree(parent_id, children_map, groups_by_id, seen_profile_ids)
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
       .sort_by { |g, entry| g.name }
@@ -168,32 +168,73 @@ class Group < ApplicationRecord
         rel_type = entry[:inclusion_mode]
         overlapping = rel_type == "none"
         children = if rel_type == "all"
-          build_tree(g.id, children_map, groups_by_id)
+          build_tree(g.id, children_map, groups_by_id, seen_profile_ids)
         elsif rel_type == "selected"
-          (children_map[g.id] || [])
-            .select { |e| Array(entry[:included_subgroup_ids]).include?(e[:id]) }
-            .map do |e|
-              child_group = groups_by_id[e[:id]]
-              next unless child_group
-              {
-                group: child_group,
-                profiles: child_group.profiles.to_a,
-                children: build_tree(child_group.id, children_map, groups_by_id),
-                overlapping: e[:inclusion_mode] == "none"
-              }
-            end
-            .compact
+          build_selected_children(g.id, entry, children_map, groups_by_id, seen_profile_ids)
         else
           []
         end
 
         {
           group: g,
-          profiles: g.profiles.to_a,
+          profiles: tag_profiles(g.profiles.to_a, seen_profile_ids),
           children: children,
           overlapping: overlapping
         }
       end
+  end
+
+  # Walk descendants for a "selected" edge — flat list for descendant_sections.
+  # Mirrors build_selected_children but produces a flat depth-first array of groups.
+  def walk_selected_descendants(parent_id, parent_entry, children_map, groups_by_id)
+    (children_map[parent_id] || [])
+      .select { |e| Array(parent_entry[:included_subgroup_ids]).include?(e[:id]) }
+      .filter_map { |e| groups_by_id[e[:id]] ? [ groups_by_id[e[:id]], e ] : nil }
+      .sort_by { |sg, _| sg.name }
+      .flat_map do |sg, se|
+        case se[:inclusion_mode]
+        when "all"
+          [ sg, *walk_descendants(sg.id, children_map, groups_by_id) ]
+        when "selected"
+          [ sg, *walk_selected_descendants(sg.id, se, children_map, groups_by_id) ]
+        else
+          [ sg ]
+        end
+      end
+  end
+
+  # Build children for a "selected" edge — respects each sub-edge's own inclusion_mode.
+  def build_selected_children(parent_id, parent_entry, children_map, groups_by_id, seen_profile_ids)
+    (children_map[parent_id] || [])
+      .select { |e| Array(parent_entry[:included_subgroup_ids]).include?(e[:id]) }
+      .filter_map do |e|
+        child_group = groups_by_id[e[:id]]
+        next unless child_group
+        child_children = case e[:inclusion_mode]
+        when "all"
+                           build_tree(child_group.id, children_map, groups_by_id, seen_profile_ids)
+        when "selected"
+                           build_selected_children(child_group.id, e, children_map, groups_by_id, seen_profile_ids)
+        else
+                           []
+        end
+        {
+          group: child_group,
+          profiles: tag_profiles(child_group.profiles.to_a, seen_profile_ids),
+          children: child_children,
+          overlapping: e[:inclusion_mode] == "none"
+        }
+      end
+  end
+
+  # Tag each profile with :repeated based on whether it has been seen before.
+  # Mutates seen_profile_ids in place so later nodes see earlier occurrences.
+  def tag_profiles(profiles, seen_profile_ids)
+    profiles.map do |profile|
+      repeated = seen_profile_ids.include?(profile.id)
+      seen_profile_ids.add(profile.id)
+      { profile: profile, repeated: repeated }
+    end
   end
 
   def generate_uuid

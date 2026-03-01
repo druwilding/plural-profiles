@@ -4,7 +4,8 @@ class GroupsController < ApplicationController
   def show
     @group = Group.find_by!(uuid: params[:uuid])
     @direct_profiles = @group.profiles
-    @descendant_tree = @group.descendant_tree
+    @seen_profile_ids = Set.new
+    @descendant_tree = @group.descendant_tree(seen_profile_ids: @seen_profile_ids)
   end
 
   def panel
