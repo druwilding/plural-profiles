@@ -12,7 +12,7 @@
       .card.card--row
         .card__header
           - if profile.avatar.attached?
-            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || ""
+            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
           - else
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"
@@ -30,7 +30,7 @@
       .card.card--row
         .card__header
           - if profile.avatar.attached?
-            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || ""
+            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
           - else
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"

@@ -13,7 +13,7 @@
         %span.tree__arrow.tree__arrow--open{"aria-hidden": "true"} ▶
       = link_to group_path(group.uuid), class: "tree__item", "data-action": "click->tree#selectGroup", "data-panel-url": panel_group_path(group.uuid), "data-group-uuid": group.uuid do
         - if group.avatar.attached?
-          = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+          = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: "", loading: "lazy"
         %span.tree__label= group.name
     %ul.tree__children{role: "group"}
       - children.each do |child_node|
@@ -24,7 +24,7 @@
         %li.tree__leaf{role: "treeitem"}
           = link_to group_profile_path(group.uuid, profile.uuid), class: "tree__item", "data-action": "click->tree#selectProfile", "data-panel-url": panel_group_profile_path(group.uuid, profile.uuid), "data-group-uuid": group.uuid, "data-profile-uuid": profile.uuid do
             - if profile.avatar.attached?
-              = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+              = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: "", loading: "lazy"
             - else
               %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
                 = render "shared/plural_pride_logo"
@@ -38,5 +38,5 @@
   %li.tree__leaf{role: "treeitem"}
     = link_to group_path(group.uuid), class: "tree__item", "data-action": "click->tree#selectGroup", "data-panel-url": panel_group_path(group.uuid), "data-group-uuid": group.uuid do
       - if group.avatar.attached?
-        = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+        = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: "", loading: "lazy"
       %span.tree__label= group.name

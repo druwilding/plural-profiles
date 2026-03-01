@@ -4,7 +4,7 @@
   .profile-header
     - if profile.avatar.attached?
       = link_to rails_blob_path(profile.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
-        = image_tag profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: profile.avatar_alt_text.presence || ""
+        = image_tag profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
     - else
       .avatar.avatar--large.avatar--placeholder
         = render "shared/plural_pride_logo"

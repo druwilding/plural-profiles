@@ -14,7 +14,7 @@
       - @sidebar_groups.each do |group|
         %li{class: "sidebar__item #{('sidebar__item--active' if @group && @group.id == group.id)}"}
           - if group.avatar.attached?
-            = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar__avatar", width: 24, height: 24, alt: group.avatar_alt_text.presence || ""
+            = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar__avatar", width: 24, height: 24, alt: group.avatar_alt_text.presence || "", loading: "lazy"
           = link_to group.name, our_group_path(group), class: "sidebar__link"
 
   %hr
@@ -28,7 +28,7 @@
       - @sidebar_profiles.each do |profile|
         %li{class: "sidebar__item #{('sidebar__item--active' if @profile && @profile.id == profile.id)}"}
           - if profile.avatar.attached?
-            = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar__avatar", width: 24, height: 24, alt: profile.avatar_alt_text.presence || ""
+            = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar__avatar", width: 24, height: 24, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
           - else
             %span.sidebar__avatar.sidebar__avatar--placeholder
               = render "shared/plural_pride_logo"

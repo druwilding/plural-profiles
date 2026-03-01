@@ -13,7 +13,7 @@
     = form.file_field :avatar, accept: "image/jpeg, image/png, image/webp"
     - if group.persisted? && group.avatar.attached?
       %p.form-hint Current avatar:
-      = image_tag group.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: group.avatar_alt_text.presence || ""
+      = image_tag group.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: group.avatar_alt_text.presence || "", loading: "lazy"
       %label.checkbox-label
         = check_box_tag "group[remove_avatar]", "1", false
         Remove avatar
