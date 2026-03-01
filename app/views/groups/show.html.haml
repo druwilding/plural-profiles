@@ -30,7 +30,7 @@
             %ul.tree__children{role: "group"}
               -# Child groups (recursive)
               - @descendant_tree.each do |node|
-                = render "groups/tree_node", node: node, seen_profiles: @seen_profile_ids
+                = render "groups/tree_node", node: node
               -# Direct profiles at root level
               - @direct_profiles.each do |profile|
                 - repeated = @seen_profile_ids.include?(profile.id)

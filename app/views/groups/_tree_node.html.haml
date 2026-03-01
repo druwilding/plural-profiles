@@ -1,10 +1,9 @@
 -# Recursive tree node for the explorer sidebar.
--# Locals: node (hash with :group, :profiles, :children),
--#         seen_profiles (Set of profile IDs already rendered — used to mark repeats)
+-# Locals: node (hash with :group, :profiles, :children)
+-#   node[:profiles] entries are hashes with :profile and :repeated (set by the model).
 - group = node[:group]
 - profile_entries = Array(node[:profiles])
 - children = Array(node[:children])
-- seen_profiles = local_assigns.fetch(:seen_profiles, Set.new)
 - has_children = children.any? || profile_entries.any?
 
 - if has_children
@@ -18,7 +17,7 @@
         %span.tree__label= group.name
     %ul.tree__children{role: "group"}
       - children.each do |child_node|
-        = render "groups/tree_node", node: child_node, seen_profiles: seen_profiles
+        = render "groups/tree_node", node: child_node
       - profile_entries.each do |entry|
         - profile = entry[:profile]
         - repeated = entry[:repeated]
