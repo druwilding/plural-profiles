@@ -152,24 +152,7 @@ class Group < ApplicationRecord
         when "all"
           [ g, *walk_descendants(g.id, children_map, groups_by_id) ]
         when "selected"
-          selected = (children_map[g.id] || [])
-                     .select { |e| Array(entry[:included_subgroup_ids]).include?(e[:id]) }
-                     .filter_map { |e| groups_by_id[e[:id]] ? [ groups_by_id[e[:id]], e ] : nil }
-                     .sort_by { |sg, _| sg.name }
-                     .flat_map do |sg, se|
-                       case se[:inclusion_mode]
-                       when "all"
-                         [ sg, *walk_descendants(sg.id, children_map, groups_by_id) ]
-                       when "selected"
-                         inner = (children_map[sg.id] || [])
-                                 .select { |ie| Array(se[:included_subgroup_ids]).include?(ie[:id]) }
-                                 .map { |ie| groups_by_id[ie[:id]] }
-                                 .compact
-                         [ sg, *inner ]
-                       else
-                         [ sg ]
-                       end
-                     end
+          selected = walk_selected_descendants(g.id, entry, children_map, groups_by_id)
           [ g, *selected ]
         else
           [ g ]
@@ -217,6 +200,25 @@ class Group < ApplicationRecord
           children: children,
           overlapping: overlapping
         }
+      end
+  end
+
+  # Walk descendants for a "selected" edge — flat list for descendant_sections.
+  # Mirrors build_selected_children but produces a flat depth-first array of groups.
+  def walk_selected_descendants(parent_id, parent_entry, children_map, groups_by_id)
+    (children_map[parent_id] || [])
+      .select { |e| Array(parent_entry[:included_subgroup_ids]).include?(e[:id]) }
+      .filter_map { |e| groups_by_id[e[:id]] ? [ groups_by_id[e[:id]], e ] : nil }
+      .sort_by { |sg, _| sg.name }
+      .flat_map do |sg, se|
+        case se[:inclusion_mode]
+        when "all"
+          [ sg, *walk_descendants(sg.id, children_map, groups_by_id) ]
+        when "selected"
+          [ sg, *walk_selected_descendants(sg.id, se, children_map, groups_by_id) ]
+        else
+          [ sg ]
+        end
       end
   end
 
