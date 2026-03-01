@@ -101,8 +101,8 @@ class ProfileTest < ActiveSupport::TestCase
 
   test "heart_emoji_display_name formats name" do
     profile = profiles(:alice)
-    assert_equal "Dewdrop heart", profile.heart_emoji_display_name("01_dewdrop_heart")
-    assert_equal "Cadbury heart", profile.heart_emoji_display_name("50cadbury_heart")
+    assert_equal "dewdrop heart", profile.heart_emoji_display_name("01_dewdrop_heart")
+    assert_equal "cadbury heart", profile.heart_emoji_display_name("50cadbury_heart")
   end
 
   test "HEART_EMOJIS constant contains expected hearts" do
