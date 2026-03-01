@@ -111,7 +111,7 @@ Add to `test/fixtures/group_profiles.yml`:
 
 ---
 
-## Phase 2: Data Model — `inclusion_overrides` Table + `include_direct_profiles`
+## Phase 2: Data Model — `inclusion_overrides` Table + `include_direct_profiles` ✅ DONE
 
 ### 6. Migration: `AddIncludeDirectProfilesToGroupGroups`
 
@@ -160,7 +160,7 @@ In `app/models/group.rb`:
 
 ---
 
-## Phase 3: Deep Exclusion — Apply Overrides in Tree Building
+## Phase 3: Deep Exclusion — Apply Overrides in Tree Building ✅ DONE
 
 ### 11. Modify `Group#build_tree` (~line 163)
 
@@ -370,8 +370,8 @@ Manual: load fixtures, visit public group page, confirm Rogue Pack excluded from
 
 1. **Phase 6** (repeated markers) — ✅ DONE
 2. **Phase 1** (fixtures) — ✅ DONE
-3. **Phase 2** (data model) — lays foundation
-4. **Phase 3** (deep exclusion logic) — the core feature
+3. **Phase 2** (data model) — ✅ DONE
+4. **Phase 3** (deep exclusion logic) — ✅ DONE
 5. **Phase 4** (profile control) — small addition on top of Phase 2/3
 6. **Phase 5** (tree editor) — largest UI effort, builds on all prior phases
 7. **Phase 7** (tests) — written alongside each phase, listed last for organisation
