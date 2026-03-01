@@ -175,7 +175,7 @@ class ApplicationHelperTest < ActionView::TestCase
     text = "I love this :11_aqua_heart: so much"
     result = formatted_description(text)
     assert_includes result, '<img src="/images/hearts/11_aqua_heart.webp"'
-    assert_includes result, 'title="11_aqua_heart"'
+    assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_includes result, 'class="heart-inline"'
     assert_not_includes result, ":11_aqua_heart:"
