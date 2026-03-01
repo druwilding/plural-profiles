@@ -41,7 +41,7 @@ module ApplicationHelper
 
     result = parts.map do |part|
       part.gsub(HEART_EMOJI_PATTERN) do |match|
-        name = Regexp.last_match(1)
+        name = Regexp.last_match(1).downcase
         if Profile::HEART_EMOJIS.include?(name)
           display = Profile.heart_emoji_display_name(name)
           '<img src="/images/hearts/%s.webp" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ name, display, display ]

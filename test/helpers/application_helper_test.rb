@@ -171,6 +171,16 @@ class ApplicationHelperTest < ActionView::TestCase
 
   # -- Heart emoji inline replacement --
 
+  test "replaces a valid heart emoji code regardless of case" do
+    text = "I love this :11_AQUA_HEART: so much"
+    result = formatted_description(text)
+    assert_includes result, '<img src="/images/hearts/11_aqua_heart.webp"'
+    assert_includes result, 'title="aqua heart"'
+    assert_includes result, 'alt="aqua heart"'
+    assert_includes result, 'class="heart-inline"'
+    assert_not_includes result, ":11_AQUA_HEART:"
+  end
+
   test "replaces a valid heart emoji code with an image" do
     text = "I love this :11_aqua_heart: so much"
     result = formatted_description(text)
