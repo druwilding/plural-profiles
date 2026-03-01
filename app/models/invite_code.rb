@@ -35,7 +35,7 @@ class InviteCode < ApplicationRecord
 
   def generate_code
     self.code ||= loop {
-      candidate = CODE_LENGTH.times.map { CODE_ALPHABET.sample }.join
+      candidate = CODE_LENGTH.times.map { CODE_ALPHABET[SecureRandom.random_number(CODE_ALPHABET.size)] }.join
       break candidate unless InviteCode.exists?(code: candidate)
     }
   end
