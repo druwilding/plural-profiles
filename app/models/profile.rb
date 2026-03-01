@@ -62,7 +62,7 @@ class Profile < ApplicationRecord
   end
 
   def heart_emoji_display_name(heart)
-    heart.sub(/\A\d+_?/, "").tr("_", " ").capitalize
+    heart.sub(/\A\d+_?/, "").tr("_", " ")
   end
 
   private
