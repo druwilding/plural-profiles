@@ -23,15 +23,13 @@
       %h1= @profile.name
       - if @profile.pronouns.present?
         %p.pronouns= @profile.pronouns
+      - if @profile.heart_emojis.any?
+        .heart-display
+          .heart-display__grid
+            - @profile.heart_emojis.each do |heart|
+              .heart-display__heart
+                = image_tag "/images/hearts/#{heart}.webp", width: 24, height: 24, alt: @profile.heart_emoji_display_name(heart), title: @profile.heart_emoji_display_name(heart), loading: "lazy"
 
   - if @profile.description.present?
     .profile-description{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       = formatted_description(@profile.description)
-
-  - if @profile.heart_emojis.any?
-    .heart-display
-      %h3 Heart emojis
-      .heart-display__grid
-        - @profile.heart_emojis.each do |heart|
-          .heart-display__heart
-            = image_tag "/images/hearts/#{heart}.webp", width: 48, height: 48, alt: @profile.heart_emoji_display_name(heart), title: @profile.heart_emoji_display_name(heart), loading: "lazy"

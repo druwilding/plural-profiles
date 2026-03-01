@@ -48,7 +48,7 @@
         - Profile::HEART_EMOJIS.each do |heart|
           %label.heart-picker__heart{title: profile.heart_emoji_display_name(heart)}
             %input.heart-picker__checkbox{type: "checkbox", name: "profile[heart_emojis][]", value: heart, checked: profile.heart_emojis.include?(heart) || nil, "aria-label": profile.heart_emoji_display_name(heart)}
-            = image_tag "/images/hearts/#{heart}.webp", width: 48, height: 48, alt: "", loading: "lazy"
+            = image_tag "/images/hearts/#{heart}.webp", width: 24, height: 24, alt: "", loading: "lazy"
 
   - if profile.persisted?
     .form-group

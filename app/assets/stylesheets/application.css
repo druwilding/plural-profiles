@@ -1620,8 +1620,8 @@ details[open] .details-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 32px;
+  height: 32px;
   padding: 4px;
   border: 2px solid transparent;
   border-radius: 0.5rem;
