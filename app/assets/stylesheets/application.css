@@ -1616,6 +1616,7 @@ details[open] .details-close {
 }
 
 .heart-picker__heart {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1632,22 +1633,21 @@ details[open] .details-close {
 .heart-picker__heart:has(input:checked) {
   opacity: 1;
   border-color: var(--link);
-  box-shadow: 0 0 0 2px var(--link);
 }
 
 .heart-picker__heart img {
   pointer-events: none;
 }
 
-/* When JS is active, visually hide checkboxes */
-.heart-picker--enhanced .heart-picker__checkbox {
+/* Checkbox is always hidden — the label itself is the interactive control */
+.heart-picker__checkbox {
+  -webkit-appearance: none;
+  appearance: none;
   position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
 .heart-display__heart {
@@ -1666,15 +1666,32 @@ details[open] .details-close {
 
 @media (forced-colors: active) {
   .heart-picker__heart {
-    border: 2px solid transparent;
+    border: none;
     opacity: 1;
     background: Canvas;
   }
 
   .heart-picker__heart:has(input:checked) {
-    border-color: CanvasText;
-    box-shadow: 0 0 0 2px CanvasText;
+    border: 2px solid CanvasText;
     background: Canvas;
+  }
+
+  .heart-picker__checkbox,
+  .heart-picker__checkbox:checked {
+    forced-color-adjust: none;
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    background: none;
+    opacity: 0;
+  }
+
+  .heart-picker__checkbox:checked::after {
+    content: none;
   }
 }
 
