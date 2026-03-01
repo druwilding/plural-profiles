@@ -1146,6 +1146,7 @@ details[open] .details-close {
 /* Share box */
 .share-box {
   background-color: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
   border-radius: 6px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
