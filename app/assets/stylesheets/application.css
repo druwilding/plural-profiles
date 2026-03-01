@@ -1725,6 +1725,14 @@ details[open] .details-close {
   }
 }
 
+/* ── Inline heart emojis in descriptions ────────────────── */
+
+.heart-inline {
+  display: inline;
+  vertical-align: -0.25em;
+  width: auto;
+}
+
 /* ── Utilities ─────────────────────────────────────────── */
 
 .visually-hidden {
