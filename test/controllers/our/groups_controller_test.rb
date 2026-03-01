@@ -498,6 +498,92 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], link.included_subgroup_ids
   end
 
+  # -- Update relationship: include_direct_profiles --
+
+  test "update_relationship auto-defaults include_direct_profiles to false when switching to selected" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    link.update!(inclusion_mode: "all", include_direct_profiles: true)
+
+    sub = @user.groups.create!(name: "SubDirect")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, inclusion_mode: "selected", included_subgroup_ids: [ sub.id ]
+    }
+    link.reload
+    assert link.selected?
+    assert_not link.include_direct_profiles, "should auto-default to false when switching to selected"
+  end
+
+  test "update_relationship explicit include_direct_profiles overrides auto-default" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    link.update!(inclusion_mode: "all", include_direct_profiles: true)
+
+    sub = @user.groups.create!(name: "SubExplicit")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, inclusion_mode: "selected", included_subgroup_ids: [ sub.id ],
+      include_direct_profiles: "1"
+    }
+    link.reload
+    assert link.selected?
+    assert link.include_direct_profiles, "explicit param should override auto-default"
+  end
+
+  test "update_relationship preserves include_direct_profiles when staying on same mode" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+
+    sub = @user.groups.create!(name: "SubPreserve")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+    link.update!(inclusion_mode: "selected", included_subgroup_ids: [ sub.id ], include_direct_profiles: false)
+
+    # Re-submit selected without include_direct_profiles param — should preserve false
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, inclusion_mode: "selected", included_subgroup_ids: [ sub.id ]
+    }
+    link.reload
+    assert_not link.include_direct_profiles, "should preserve existing value when mode unchanged"
+  end
+
+  test "update_relationship resets include_direct_profiles to true when switching to all" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+
+    sub = @user.groups.create!(name: "SubReset")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+    link.update!(inclusion_mode: "selected", included_subgroup_ids: [ sub.id ], include_direct_profiles: false)
+
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, inclusion_mode: "all"
+    }
+    link.reload
+    assert link.all?
+    # No explicit param and switching away from selected — keeps existing value
+    # (The auto-default only applies when switching TO selected)
+    assert_not link.include_direct_profiles, "should keep existing value unless explicit param sent"
+  end
+
+  test "update_relationship sets include_direct_profiles via explicit param on all mode" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    link.update!(inclusion_mode: "all", include_direct_profiles: false)
+
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, inclusion_mode: "all", include_direct_profiles: "1"
+    }
+    link.reload
+    assert link.include_direct_profiles, "explicit param should set it to true"
+  end
+
   # -- regenerate_uuid --
 
   test "regenerate_uuid changes the uuid and redirects with notice" do

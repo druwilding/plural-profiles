@@ -486,6 +486,20 @@ fieldset.inclusion-checkboxes legend {
   margin-bottom: 0.35rem;
 }
 
+.inclusion-profiles-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-top: 0.35rem;
+  cursor: pointer;
+}
+
+.inclusion-profiles-toggle input[type="checkbox"] {
+  margin: 0;
+}
+
 @media (max-width: 1024px) {
   .inclusion-row { flex-direction: column !important; }
   fieldset.inclusion-radios { flex: none !important; }

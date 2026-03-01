@@ -44,6 +44,10 @@
                           = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }
                           %span= sub.name
 
+                  %label.inclusion-profiles-toggle
+                    = check_box_tag "include_direct_profiles", "1", link.include_direct_profiles, id: "include_profiles_#{link.id}", data: { inclusion_target: "profilesToggle" }
+                    Include this group's own direct profiles
+
                 = f.submit "Save", class: "btn btn--small"
         = link_to "Remove", remove_group_our_group_path(@group, group_id: child.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
 - else

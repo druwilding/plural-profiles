@@ -118,7 +118,19 @@ class Our::GroupsController < ApplicationController
         valid_included = []
       end
 
-      link.update!(inclusion_mode: mode, included_subgroup_ids: valid_included)
+      # Determine include_direct_profiles:
+      # - Explicit param takes precedence
+      # - Auto-default to false when switching to "selected"
+      # - Otherwise keep existing value
+      include_profiles = if params.key?(:include_direct_profiles)
+        params[:include_direct_profiles] == "1"
+      elsif mode == "selected" && link.inclusion_mode != "selected"
+        false
+      else
+        link.include_direct_profiles
+      end
+
+      link.update!(inclusion_mode: mode, included_subgroup_ids: valid_included, include_direct_profiles: include_profiles)
     end
 
     redirect_to manage_groups_our_group_path(@group), notice: "Relationship updated."
