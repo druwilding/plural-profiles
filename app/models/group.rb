@@ -170,26 +170,7 @@ class Group < ApplicationRecord
         children = if rel_type == "all"
           build_tree(g.id, children_map, groups_by_id, seen_profile_ids)
         elsif rel_type == "selected"
-          (children_map[g.id] || [])
-            .select { |e| Array(entry[:included_subgroup_ids]).include?(e[:id]) }
-            .filter_map do |e|
-              child_group = groups_by_id[e[:id]]
-              next unless child_group
-              child_children = case e[:inclusion_mode]
-              when "all"
-                                 build_tree(child_group.id, children_map, groups_by_id, seen_profile_ids)
-              when "selected"
-                                 build_selected_children(child_group.id, e, children_map, groups_by_id, seen_profile_ids)
-              else
-                                 []
-              end
-              {
-                group: child_group,
-                profiles: tag_profiles(child_group.profiles.to_a, seen_profile_ids),
-                children: child_children,
-                overlapping: e[:inclusion_mode] == "none"
-              }
-            end
+          build_selected_children(g.id, entry, children_map, groups_by_id, seen_profile_ids)
         else
           []
         end
