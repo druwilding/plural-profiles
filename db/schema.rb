@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_131025) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_140100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_131025) do
   create_table "group_groups", force: :cascade do |t|
     t.bigint "child_group_id", null: false
     t.datetime "created_at", null: false
+    t.boolean "include_direct_profiles", default: true, null: false
     t.jsonb "included_subgroup_ids", default: [], null: false
     t.string "inclusion_mode", default: "all", null: false
     t.bigint "parent_group_id", null: false
@@ -74,6 +75,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_131025) do
     t.string "uuid", null: false
     t.index ["user_id"], name: "index_groups_on_user_id"
     t.index ["uuid"], name: "index_groups_on_uuid", unique: true
+  end
+
+  create_table "inclusion_overrides", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "group_group_id", null: false
+    t.boolean "include_direct_profiles", default: true, null: false
+    t.jsonb "included_subgroup_ids", default: [], null: false
+    t.string "inclusion_mode", default: "all", null: false
+    t.bigint "target_group_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_group_id", "target_group_id"], name: "idx_on_group_group_id_target_group_id_bb02b96ff7", unique: true
+    t.index ["group_group_id"], name: "index_inclusion_overrides_on_group_group_id"
+    t.index ["target_group_id"], name: "index_inclusion_overrides_on_target_group_id"
   end
 
   create_table "invite_codes", force: :cascade do |t|
@@ -128,6 +142,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_131025) do
   add_foreign_key "group_profiles", "groups"
   add_foreign_key "group_profiles", "profiles"
   add_foreign_key "groups", "users"
+  add_foreign_key "inclusion_overrides", "group_groups", on_delete: :cascade
+  add_foreign_key "inclusion_overrides", "groups", column: "target_group_id", on_delete: :cascade
   add_foreign_key "invite_codes", "users"
   add_foreign_key "invite_codes", "users", column: "redeemed_by_id"
   add_foreign_key "profiles", "users"

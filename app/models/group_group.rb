@@ -4,6 +4,8 @@ class GroupGroup < ApplicationRecord
   belongs_to :parent_group, class_name: "Group"
   belongs_to :child_group, class_name: "Group"
 
+  has_many :inclusion_overrides, dependent: :destroy
+
   validates :child_group_id, uniqueness: { scope: :parent_group_id }
   validates :inclusion_mode, inclusion: { in: INCLUSION_MODES }
   validate :same_user
