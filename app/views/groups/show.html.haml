@@ -43,9 +43,9 @@
                       %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
                         = render "shared/plural_pride_logo"
                     - if repeated
-                      %span.tree__label.tree__label--repeated{title: "#{profile.name} also appears elsewhere in this group"}
+                      %span.tree__label.tree__label--repeated{title: "#{profile.name} already listed elsewhere in this group"}
                         = profile.name
-                        %span.visually-hidden= " (also appears elsewhere in this group)"
+                        %span.visually-hidden= " (already listed elsewhere in this group)"
                     - else
                       %span.tree__label= profile.name
 
