@@ -45,13 +45,13 @@
                           %span= sub.name
 
                   %fieldset.inclusion-profiles
-                    %legend Include direct profiles?
+                    %legend Include profiles?
                     %label
-                      = radio_button_tag "include_direct_profiles", "1", link.include_direct_profiles, id: "include_profiles_#{link.id}_yes"
-                      Yes
+                      = radio_button_tag "include_direct_profiles", "1", link.include_direct_profiles
+                      All
                     %label
-                      = radio_button_tag "include_direct_profiles", "0", !link.include_direct_profiles, id: "include_profiles_#{link.id}_no"
-                      No
+                      = radio_button_tag "include_direct_profiles", "0", !link.include_direct_profiles
+                      None
 
                 = f.submit "Save", class: "btn btn--small"
         = link_to "Remove", remove_group_our_group_path(@group, group_id: child.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
