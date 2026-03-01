@@ -36,7 +36,15 @@
     %h3 Share this profile
     .share-url
       %input{type: "text", value: profile_url(@profile.uuid), readonly: true, id: "profile-share-url"}
-      %button.btn{onclick: "navigator.clipboard.writeText(document.getElementById('profile-share-url').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"} Copy
+      %button.btn{onclick: "navigator.clipboard.writeText(document.getElementById('profile-share-url').value); this.querySelector('span:first-child').textContent='Copied!'; setTimeout(() => this.querySelector('span:first-child').textContent='Copy', 2000)"}
+        %span Copy
+        %span{aria: {hidden: "true"}} ⧉
+      = link_to profile_url(@profile.uuid), target: "_blank", rel: "noopener", class: "btn btn--secondary" do
+        Open
+        %span{aria: {hidden: "true"}} ↗
+    %p.share-url-hint
+      You can regenerate this URL if you want a new one, for example, if you've shared it with someone and no longer want them to be able to see this profile.
+      = link_to "Regenerate URL", regenerate_uuid_our_profile_path(@profile), data: { turbo_method: :patch, turbo_confirm: "This will break any existing links to this profile. Are you sure?" }, class: "btn btn--outline btn--small"
 
   - if @profile.groups.any?
     %h3 In groups

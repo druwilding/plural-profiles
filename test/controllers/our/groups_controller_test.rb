@@ -497,4 +497,36 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert link.all?
     assert_equal [], link.included_subgroup_ids
   end
+
+  # -- regenerate_uuid --
+
+  test "regenerate_uuid changes the uuid and redirects with notice" do
+    sign_in_as @user
+    old_uuid = @group.uuid
+    patch regenerate_uuid_our_group_path(@group)
+    assert_redirected_to our_group_path(@group.reload)
+    assert_not_equal old_uuid, @group.uuid
+    follow_redirect!
+    assert_match "Share URL regenerated.", response.body
+  end
+
+  test "regenerate_uuid does not contain the digit 7" do
+    sign_in_as @user
+    patch regenerate_uuid_our_group_path(@group)
+    assert_no_match(/7/, @group.reload.uuid)
+  end
+
+  test "regenerate_uuid redirects logged-out user to sign in" do
+    patch regenerate_uuid_our_group_path(@group)
+    assert_redirected_to new_session_path
+    assert_equal groups(:friends).uuid, @group.reload.uuid
+  end
+
+  test "regenerate_uuid redirects wrong user to public group" do
+    sign_in_as @other_user
+    old_uuid = @group.uuid
+    patch regenerate_uuid_our_group_path(@group)
+    assert_redirected_to group_path(@group.uuid)
+    assert_equal old_uuid, @group.reload.uuid
+  end
 end

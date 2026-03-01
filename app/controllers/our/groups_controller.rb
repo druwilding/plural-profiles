@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship regenerate_uuid ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -43,6 +43,11 @@ class Our::GroupsController < ApplicationController
   def destroy
     @group.destroy
     redirect_to our_groups_path, notice: "Group deleted.", status: :see_other
+  end
+
+  def regenerate_uuid
+    @group.update!(uuid: PluralProfilesUuid.generate)
+    redirect_to our_group_path(@group), notice: "Share URL regenerated."
   end
 
   def manage_profiles

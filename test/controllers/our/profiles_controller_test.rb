@@ -229,4 +229,36 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to profile_path(@profile.uuid)
   end
+
+  # -- regenerate_uuid --
+
+  test "regenerate_uuid changes the uuid and redirects with notice" do
+    sign_in_as @user
+    old_uuid = @profile.uuid
+    patch regenerate_uuid_our_profile_path(@profile)
+    assert_redirected_to our_profile_path(@profile.reload)
+    assert_not_equal old_uuid, @profile.uuid
+    follow_redirect!
+    assert_match "Share URL regenerated.", response.body
+  end
+
+  test "regenerate_uuid does not contain the digit 7" do
+    sign_in_as @user
+    patch regenerate_uuid_our_profile_path(@profile)
+    assert_no_match(/7/, @profile.reload.uuid)
+  end
+
+  test "regenerate_uuid redirects logged-out user to sign in" do
+    patch regenerate_uuid_our_profile_path(@profile)
+    assert_redirected_to new_session_path
+    assert_equal profiles(:alice).uuid, @profile.reload.uuid
+  end
+
+  test "regenerate_uuid redirects wrong user to public profile" do
+    sign_in_as @other_user
+    old_uuid = @profile.uuid
+    patch regenerate_uuid_our_profile_path(@profile)
+    assert_redirected_to profile_path(@profile.uuid)
+    assert_equal old_uuid, @profile.reload.uuid
+  end
 end

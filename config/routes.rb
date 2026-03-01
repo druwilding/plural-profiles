@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   resources :our_profiles, path: "our/profiles", controller: "our/profiles" do
     member do
       delete :remove_from_group
+      patch :regenerate_uuid
     end
   end
   resources :our_groups, path: "our/groups", controller: "our/groups" do
@@ -19,6 +20,7 @@ Rails.application.routes.draw do
       post :add_group
       delete :remove_group
       patch :update_relationship
+      patch :regenerate_uuid
     end
   end
   resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do

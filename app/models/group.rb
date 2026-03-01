@@ -238,6 +238,6 @@ class Group < ApplicationRecord
   end
 
   def generate_uuid
-    self.uuid = SecureRandom.uuid
+    self.uuid = PluralProfilesUuid.generate
   end
 end

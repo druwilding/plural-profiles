@@ -1,6 +1,8 @@
 class InviteCode < ApplicationRecord
   CODE_LENGTH = 8
   MAX_UNUSED_PER_USER = 10
+  # Deliberately excludes '7' — consistent with PluralProfilesUuid.
+  CODE_ALPHABET = (("A".."Z").to_a + ("0".."9").to_a - [ "7" ]).freeze
 
   belongs_to :user
   belongs_to :redeemed_by, class_name: "User", optional: true
@@ -33,7 +35,7 @@ class InviteCode < ApplicationRecord
 
   def generate_code
     self.code ||= loop {
-      candidate = SecureRandom.alphanumeric(CODE_LENGTH).upcase
+      candidate = CODE_LENGTH.times.map { CODE_ALPHABET[SecureRandom.random_number(CODE_ALPHABET.size)] }.join
       break candidate unless InviteCode.exists?(code: candidate)
     }
   end
