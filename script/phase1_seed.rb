@@ -76,14 +76,14 @@ ActiveRecord::Base.transaction do
 
   # ── Profiles ──────────────────────────────────────────────────────────────
 
-  stray  = user.profiles.create!(name: "Stray",  description: "In rogue_pack — should NOT appear in alpha_clan.")
-  ember  = user.profiles.create!(name: "Ember",  description: "In prism_circle — SHOULD appear in alpha_clan.")
-  drift  = user.profiles.create!(name: "Drift",  description: "In flux (direct) — should NOT appear in delta_clan.")
-  ripple = user.profiles.create!(name: "Ripple", description: "In flux (direct) — should NOT appear in delta_clan.")
-  grove  = user.profiles.create!(name: "Grove",  description: "Direct member of alpha_clan.")
-  shadow = user.profiles.create!(name: "Shadow", description: "Direct member of delta_clan.")
-  mirage = user.profiles.create!(name: "Mirage", description: "In echo_shard — SHOULD appear in delta_clan via flux.")
-  spark  = user.profiles.create!(name: "Spark",  description: "In static_burst — should NOT appear in delta_clan.")
+  stray  = user.profiles.create!(name: "Stray",  pronouns: "they/them", heart_emojis: %w[13_storm_heart 25_shadow_heart],               description: "In rogue_pack — should NOT appear in alpha_clan.")
+  ember  = user.profiles.create!(name: "Ember",  pronouns: "she/her",   heart_emojis: %w[26_blossom_heart 33_passionate_heart],         description: "In prism_circle — SHOULD appear in alpha_clan.")
+  drift  = user.profiles.create!(name: "Drift",  pronouns: "he/him",                                                                    description: "In flux (direct) — should NOT appear in delta_clan.")
+  ripple = user.profiles.create!(name: "Ripple", pronouns: "they/she",  heart_emojis: %w[05_seafoam_heart 11_aqua_heart 20_mist_heart], description: "In flux (direct) — should NOT appear in delta_clan.")
+  grove  = user.profiles.create!(name: "Grove",                                                                                         description: "Direct member of alpha_clan.")
+  shadow = user.profiles.create!(name: "Shadow", pronouns: "she/they",  heart_emojis: %w[24_inky_heart 30_void_heart],                  description: "Direct member of delta_clan.")
+  mirage = user.profiles.create!(name: "Mirage", pronouns: "any/all",   heart_emojis: %w[21_lavender_heart 22_violet_heart],            description: "In echo_shard — SHOULD appear in delta_clan via flux.")
+  spark  = user.profiles.create!(name: "Spark",                         heart_emojis: %w[39_dawn_heart 50sunshine_heart],               description: "In static_burst — should NOT appear in delta_clan.")
 
   [
     [ stray,  "stray" ],
