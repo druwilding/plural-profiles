@@ -61,8 +61,12 @@ class Profile < ApplicationRecord
     uuid
   end
 
-  def heart_emoji_display_name(heart)
+  def self.heart_emoji_display_name(heart)
     heart.sub(/\A\d+_?/, "").tr("_", " ")
+  end
+
+  def heart_emoji_display_name(heart)
+    self.class.heart_emoji_display_name(heart)
   end
 
   private
