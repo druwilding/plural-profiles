@@ -2,7 +2,7 @@ class Our::ProfilesController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_profile, only: %i[ show edit update destroy ]
+  before_action :set_profile, only: %i[ show edit update destroy regenerate_uuid ]
   before_action :set_groups, only: %i[ new create edit update ]
 
   def index
@@ -44,6 +44,11 @@ class Our::ProfilesController < ApplicationController
   def destroy
     @profile.destroy
     redirect_to our_profiles_path, notice: "Profile deleted.", status: :see_other
+  end
+
+  def regenerate_uuid
+    @profile.update!(uuid: PluralProfilesUuid.generate)
+    redirect_to our_profile_path(@profile), notice: "Share URL regenerated."
   end
 
   private

@@ -34,6 +34,9 @@
     .share-url
       %input{type: "text", value: group_url(@group.uuid), readonly: true, id: "group-share-url"}
       %button.btn{onclick: "navigator.clipboard.writeText(document.getElementById('group-share-url').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000)"} Copy
+    %p.share-url-hint
+      You can regenerate this URL if you want a new one, for example, if you've shared it with someone and no longer want them to be able to see this group.
+      = link_to "Regenerate URL", regenerate_uuid_our_group_path(@group), data: { turbo_method: :patch, turbo_confirm: "This will break any existing links to this group. Are you sure?" }, class: "btn btn--outline btn--small"
 
 - if @group.child_groups.any?
   %h2 Groups
