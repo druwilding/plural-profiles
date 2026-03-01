@@ -8,6 +8,14 @@ class InviteCodeTest < ActiveSupport::TestCase
     assert_match(/\A[A-Z0-9]+\z/, code.code)
   end
 
+  test "generated code never contains the digit 7" do
+    1000.times do
+      code = InviteCode.new(user: users(:one))
+      code.send(:generate_code)
+      assert_no_match(/7/, code.code)
+    end
+  end
+
   test "code is unique" do
     code1 = invite_codes(:available)
     code2 = InviteCode.new(code: code1.code, user: users(:two))
