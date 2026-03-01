@@ -74,6 +74,6 @@ class Profile < ApplicationRecord
   def heart_emojis_are_valid
     return if heart_emojis.blank?
     invalid = heart_emojis - HEART_EMOJIS
-    errors.add(:heart_emojis, "contain invalid hearts: #{invalid.join(', ')}") if invalid.any?
+    errors.add(:heart_emojis, "contains invalid hearts: #{invalid.join(', ')}") if invalid.any?
   end
 end
