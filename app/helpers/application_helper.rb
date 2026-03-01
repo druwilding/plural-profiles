@@ -42,7 +42,7 @@ module ApplicationHelper
         name = Regexp.last_match(1)
         if Profile::HEART_EMOJIS.include?(name)
           display = Profile.heart_emoji_display_name(name)
-          '<img src="/images/hearts/%s.webp" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ name, name, display ]
+          '<img src="/images/hearts/%s.webp" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ name, display, display ]
         else
           match
         end
