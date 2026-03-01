@@ -568,6 +568,45 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_not link.include_direct_profiles, "should preserve existing value when param absent"
   end
 
+  test "update_relationship preserves include_direct_profiles for a group with sub-groups but no profiles" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    # Give friends a sub-group so it is not a leaf; remove any direct profiles
+    sub = @user.groups.create!(name: "SubOnly")
+    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, inclusion_mode: "all")
+    groups(:friends).group_profiles.destroy_all
+    link.update!(inclusion_mode: "all", include_direct_profiles: true)
+    assert_equal 0, link.child_group.group_profiles.count, "precondition: friends must have no direct profiles"
+
+    # Form submits inclusion_mode but no include_direct_profiles (field not rendered)
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, inclusion_mode: "none"
+    }
+
+    link.reload
+    assert link.none?, "inclusion_mode should be updated"
+    assert link.include_direct_profiles, "include_direct_profiles should be unchanged when param absent"
+  end
+
+  test "update_relationship updates include_direct_profiles for a leaf group (no sub-groups)" do
+    sign_in_as @user
+    # friends has no child groups, making it a leaf
+    everyone = groups(:everyone)
+    link = group_groups(:friends_in_everyone)
+    assert_equal 0, link.child_group.child_links.count, "precondition: friends must be a leaf"
+    link.update!(include_direct_profiles: false)
+
+    # Submit only include_direct_profiles — no inclusion_mode, matching what the
+    # form sends for a leaf group
+    patch update_relationship_our_group_path(everyone), params: {
+      group_id: @group.id, include_direct_profiles: "1"
+    }
+
+    assert_redirected_to manage_groups_our_group_path(everyone)
+    assert link.reload.include_direct_profiles, "include_direct_profiles should be updated even without inclusion_mode"
+  end
+
   # -- regenerate_uuid --
 
   test "regenerate_uuid changes the uuid and redirects with notice" do

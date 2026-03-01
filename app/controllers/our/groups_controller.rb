@@ -105,6 +105,8 @@ class Our::GroupsController < ApplicationController
     link = @group.child_links.find_by!(child_group_id: params[:group_id])
     allowed_modes = %w[all selected none]
 
+    attrs = {}
+
     if params[:inclusion_mode].present?
       mode = params[:inclusion_mode].to_s
       mode = "none" unless allowed_modes.include?(mode)
@@ -112,22 +114,22 @@ class Our::GroupsController < ApplicationController
       if mode == "selected"
         included = Array(params[:included_subgroup_ids]).map(&:to_i)
         # Only allow immediate sub-groups of the child to be included
-        valid_included = included & link.child_group.child_group_ids
+        attrs[:included_subgroup_ids] = included & link.child_group.child_group_ids
       else
         # For 'all' or 'none' we clear the explicit list to keep data consistent
-        valid_included = []
+        attrs[:included_subgroup_ids] = []
       end
 
-      # Determine include_direct_profiles from the submitted param, falling
-      # back to the existing value if not present (e.g. form without the field).
-      include_profiles = if params.key?(:include_direct_profiles)
-        params[:include_direct_profiles] == "1"
-      else
-        link.include_direct_profiles
-      end
-
-      link.update!(inclusion_mode: mode, included_subgroup_ids: valid_included, include_direct_profiles: include_profiles)
+      attrs[:inclusion_mode] = mode
     end
+
+    # include_direct_profiles is always submitted by the form, regardless of
+    # whether the child has sub-groups, so update it independently.
+    if params.key?(:include_direct_profiles)
+      attrs[:include_direct_profiles] = params[:include_direct_profiles] == "1"
+    end
+
+    link.update!(attrs) if attrs.any?
 
     redirect_to manage_groups_our_group_path(@group), notice: "Relationship updated."
   rescue ActiveRecord::RecordNotFound

@@ -19,39 +19,41 @@
               = render "shared/plural_pride_logo"
           %div
             %span= child.name
-            - if child.child_links.any?
-              -# Inline form to choose inclusion_mode and optional selected sub-groups
+            -# Inline form to configure this relationship link — only shown when there is something to configure
+            - if child.child_links.any? || child.group_profiles.any?
               = form_with url: update_relationship_our_group_path(@group, group_id: child.id), method: :patch, local: false, class: "inclusion-form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
                 .inclusion-row
-                  %fieldset.inclusion-radios
-                    %legend Include sub-groups?
-                    %label
-                      = radio_button_tag "inclusion_mode", "all", link.all?, id: "inclusion_#{link.id}_all"
-                      All
-                    %label
-                      = radio_button_tag "inclusion_mode", "none", link.none?, id: "inclusion_#{link.id}_none"
-                      None
-                    %label
-                      = radio_button_tag "inclusion_mode", "selected", link.selected?, id: "inclusion_#{link.id}_selected"
-                      Selected
+                  - if child.child_links.any?
+                    %fieldset.inclusion-radios
+                      %legend Include sub-groups?
+                      %label
+                        = radio_button_tag "inclusion_mode", "all", link.all?, id: "inclusion_#{link.id}_all"
+                        All
+                      %label
+                        = radio_button_tag "inclusion_mode", "none", link.none?, id: "inclusion_#{link.id}_none"
+                        None
+                      %label
+                        = radio_button_tag "inclusion_mode", "selected", link.selected?, id: "inclusion_#{link.id}_selected"
+                        Selected
 
-                  %fieldset.inclusion-checkboxes
-                    %legend Select sub-groups
-                    .checkbox-list
-                      - child.child_groups.order(:name).each do |sub|
-                        - checked = if link.all? then true elsif link.none? then false else Array(link.included_subgroup_ids).map(&:to_i).include?(sub.id) end
-                        %label.checkbox{for: "included_#{link.id}_#{sub.id}"}
-                          = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }
-                          %span= sub.name
+                    %fieldset.inclusion-checkboxes
+                      %legend Select sub-groups
+                      .checkbox-list
+                        - child.child_groups.order(:name).each do |sub|
+                          - checked = if link.all? then true elsif link.none? then false else Array(link.included_subgroup_ids).map(&:to_i).include?(sub.id) end
+                          %label.checkbox{for: "included_#{link.id}_#{sub.id}"}
+                            = check_box_tag "included_subgroup_ids[]", sub.id, checked, id: "included_#{link.id}_#{sub.id}", data: { inclusion_target: "checkbox" }
+                            %span= sub.name
 
-                  %fieldset.inclusion-profiles
-                    %legend Include profiles?
-                    %label
-                      = radio_button_tag "include_direct_profiles", "1", link.include_direct_profiles, id: "include_direct_profiles_#{link.id}_all"
-                      All
-                    %label
-                      = radio_button_tag "include_direct_profiles", "0", !link.include_direct_profiles, id: "include_direct_profiles_#{link.id}_none"
-                      None
+                  - if child.group_profiles.any?
+                    %fieldset.inclusion-profiles
+                      %legend Include profiles?
+                      %label
+                        = radio_button_tag "include_direct_profiles", "1", link.include_direct_profiles, id: "include_direct_profiles_#{link.id}_all"
+                        All
+                      %label
+                        = radio_button_tag "include_direct_profiles", "0", !link.include_direct_profiles, id: "include_direct_profiles_#{link.id}_none"
+                        None
 
                 = f.submit "Save", class: "btn btn--small"
         = link_to "Remove", remove_group_our_group_path(@group, group_id: child.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
