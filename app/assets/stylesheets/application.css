@@ -1231,6 +1231,19 @@ details[open] .details-close {
   opacity: 0.7;
 }
 
+.tree-editor__tag--hidden {
+  background-color: color-mix(in srgb, var(--error) 20%, transparent);
+  color: var(--error);
+}
+
+.tree-editor__details--hidden {
+  opacity: 0.55;
+}
+
+.tree-editor__details--hidden[open] {
+  opacity: 1;
+}
+
 .tree-editor__mode-label {
   color: var(--text);
   opacity: 0.7;
@@ -1404,6 +1417,20 @@ details[open] .details-close {
 
   .tree-editor__tag--inherit {
     opacity: 1;
+  }
+
+  .tree-editor__tag--hidden {
+    background-color: Canvas;
+    border-color: CanvasText;
+    color: CanvasText;
+  }
+
+  .tree-editor__details--hidden {
+    opacity: 1;
+  }
+
+  .tree-editor__details--hidden .tree-editor__name {
+    color: GrayText;
   }
 }
 

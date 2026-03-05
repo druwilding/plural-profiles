@@ -233,7 +233,10 @@ class Group < ApplicationRecord
   #   edge_mode:, edge_included_ids:, edge_include_profiles: — the physical edge settings
   #   override:       — the InclusionOverride record (or nil) for depth 2+
   #   current_mode:, current_included_ids:, current_include_profiles: — effective settings
-  def build_editor_nodes(parent_id, children_map, groups_by_id, overrides_by_origin, origin_gg_id, depth, path)
+  #   hidden_from_public: — true when this node won't appear in the public view
+  #     (because a parent's mode excludes it, or an ancestor is already hidden)
+  def build_editor_nodes(parent_id, children_map, groups_by_id, overrides_by_origin, origin_gg_id, depth, path,
+                         parent_mode: nil, parent_included_ids: nil, ancestor_hidden: false)
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
       .reject { |_, entry| path.include?(entry[:id]) }
@@ -242,10 +245,19 @@ class Group < ApplicationRecord
         current_origin = depth == 0 ? entry[:gg_id] : origin_gg_id
         override = depth > 0 ? overrides_by_origin.dig(current_origin, g.id) : nil
 
+        eff_mode = override ? override.inclusion_mode : entry[:inclusion_mode]
+        eff_included_ids = override ? Array(override.included_subgroup_ids).map(&:to_i) : entry[:included_subgroup_ids]
+        eff_include_profiles = override.nil? ? entry[:include_direct_profiles] : override.include_direct_profiles
+
+        hidden = node_hidden_from_public?(depth, ancestor_hidden, parent_mode, parent_included_ids, g.id)
+
         {
           group: g,
           profiles: g.profiles.to_a,
-          children: build_editor_nodes(g.id, children_map, groups_by_id, overrides_by_origin, current_origin, depth + 1, path + [ g.id ]),
+          children: build_editor_nodes(
+            g.id, children_map, groups_by_id, overrides_by_origin, current_origin, depth + 1, path + [ g.id ],
+            parent_mode: eff_mode, parent_included_ids: eff_included_ids, ancestor_hidden: hidden
+          ),
           depth: depth + 1,
           gg_id: entry[:gg_id],
           origin_gg_id: current_origin,
@@ -253,11 +265,25 @@ class Group < ApplicationRecord
           edge_included_ids: entry[:included_subgroup_ids],
           edge_include_profiles: entry[:include_direct_profiles],
           override: override,
-          current_mode: override ? override.inclusion_mode : entry[:inclusion_mode],
-          current_included_ids: override ? Array(override.included_subgroup_ids).map(&:to_i) : entry[:included_subgroup_ids],
-          current_include_profiles: override.nil? ? entry[:include_direct_profiles] : override.include_direct_profiles
+          current_mode: eff_mode,
+          current_included_ids: eff_included_ids,
+          current_include_profiles: eff_include_profiles,
+          hidden_from_public: hidden
         }
       end
+  end
+
+  # Determine whether an editor-tree node is hidden from the public view.
+  # Depth-0 nodes (direct children of the root) are always visible.
+  # Deeper nodes are hidden when an ancestor is already hidden, or when the
+  # parent's effective inclusion mode excludes this child.
+  def node_hidden_from_public?(depth, ancestor_hidden, parent_mode, parent_included_ids, group_id)
+    return false if depth == 0
+    return true if ancestor_hidden
+    return true if parent_mode == "none"
+    return true if parent_mode == "selected" && !parent_included_ids&.include?(group_id)
+
+    false
   end
 
   # Resolve effective settings for a child group entry, accounting for any

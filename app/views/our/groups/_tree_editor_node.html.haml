@@ -5,12 +5,14 @@
 - has_profiles = node[:profiles].any?
 - is_direct = node[:depth] == 1
 - has_override = node[:override].present?
+- hidden = node[:hidden_from_public]
+- profiles_only_hidden = !hidden && !node[:current_include_profiles] && has_profiles
 - uid = "te_#{node[:origin_gg_id]}_#{group.id}"
 - mode = node[:current_mode]
 - include_profiles = node[:current_include_profiles]
 
 %li.tree-editor__node
-  %details.tree-editor__details
+  %details.tree-editor__details{class: ("tree-editor__details--hidden" if hidden)}
     %summary.tree-editor__summary
       .tree-editor__summary-row
         .tree-editor__summary-left
@@ -21,6 +23,10 @@
               = render "shared/plural_pride_logo"
           %strong.tree-editor__name= group.name
         .tree-editor__summary-right
+          - if hidden
+            %span.tree-editor__tag.tree-editor__tag--hidden{title: "This group won't appear when viewing #{root_group.name} publicly"} hidden
+          - elsif profiles_only_hidden
+            %span.tree-editor__tag.tree-editor__tag--hidden{title: "Profiles from this group won't appear when viewing #{root_group.name} publicly"} profiles hidden
           - if is_direct
             %span.tree-editor__tag.tree-editor__tag--direct direct child
           - elsif has_override
