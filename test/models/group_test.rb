@@ -465,52 +465,52 @@ class GroupTest < ActiveSupport::TestCase
   # are pulled into the parent's visible set. Sub-groups and their profiles are
   # unaffected — only the immediate profiles of the child group are suppressed.
   #
-  # The fixtures already encode this scenario via delta_clan → flux:
+  # The fixtures already encode this scenario via castle_clan → flux:
   #   inclusion_mode: selected, included_subgroup_ids: [echo_shard], include_direct_profiles: false
   # drift and ripple are direct flux members; mirage is in echo_shard.
 
   test "all_profiles excludes direct profiles of child when include_direct_profiles is false" do
-    delta = groups(:delta_clan)
-    assert_not_includes delta.all_profiles, profiles(:drift),
+    castle = groups(:castle_clan)
+    assert_not_includes castle.all_profiles, profiles(:drift),
       "Drift (direct flux member) should be excluded because include_direct_profiles is false"
-    assert_not_includes delta.all_profiles, profiles(:ripple),
+    assert_not_includes castle.all_profiles, profiles(:ripple),
       "Ripple (direct flux member) should be excluded because include_direct_profiles is false"
   end
 
   test "all_profiles still includes sub-group profiles when include_direct_profiles is false" do
     # echo_shard is in flux's selected list and has include_direct_profiles defaulting to true;
-    # mirage (in echo_shard) must be visible from delta_clan even though flux's own profiles aren't
-    delta = groups(:delta_clan)
-    assert_includes delta.all_profiles, profiles(:mirage),
-      "Mirage (in echo_shard, a selected sub-group of flux) should be visible from delta_clan"
+    # mirage (in echo_shard) must be visible from castle_clan even though flux's own profiles aren't
+    castle = groups(:castle_clan)
+    assert_includes castle.all_profiles, profiles(:mirage),
+      "Mirage (in echo_shard, a selected sub-group of flux) should be visible from castle_clan"
   end
 
   test "descendant_tree shows empty profiles array for node with include_direct_profiles false" do
-    delta = groups(:delta_clan)
-    tree = delta.descendant_tree
+    castle = groups(:castle_clan)
+    tree = castle.descendant_tree
     flux_node = tree.find { |n| n[:group].name == "Flux" }
-    assert flux_node, "Flux should appear in delta_clan's tree"
+    assert flux_node, "Flux should appear in castle_clan's tree"
     assert_empty flux_node[:profiles],
       "Flux's profiles should be empty when include_direct_profiles is false on the edge"
   end
 
   test "descendant_tree still recurses into children when include_direct_profiles is false" do
     # include_direct_profiles only suppresses the node's own profiles; sub-group children are unaffected
-    delta = groups(:delta_clan)
-    tree = delta.descendant_tree
+    castle = groups(:castle_clan)
+    tree = castle.descendant_tree
     flux_node = tree.find { |n| n[:group].name == "Flux" }
-    assert flux_node, "Flux should appear in delta_clan's tree"
+    assert flux_node, "Flux should appear in castle_clan's tree"
     child_names = flux_node[:children].map { |n| n[:group].name }
     assert_includes child_names, "Echo Shard",
       "Echo Shard (in included_subgroup_ids) should still appear as a child of Flux"
   end
 
   test "descendant_tree includes profiles in sub-groups of a node with include_direct_profiles false" do
-    delta = groups(:delta_clan)
-    tree = delta.descendant_tree
+    castle = groups(:castle_clan)
+    tree = castle.descendant_tree
     flux_node = tree.find { |n| n[:group].name == "Flux" }
     echo_node = flux_node&.dig(:children)&.find { |n| n[:group].name == "Echo Shard" }
-    assert echo_node, "Echo Shard should appear under Flux in delta_clan's tree"
+    assert echo_node, "Echo Shard should appear under Flux in castle_clan's tree"
     profile_names = echo_node[:profiles].map { |e| e[:profile].name }
     assert_includes profile_names, "Mirage",
       "Mirage (in echo_shard) should be visible even though Flux has include_direct_profiles false"

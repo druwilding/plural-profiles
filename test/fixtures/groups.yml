@@ -22,10 +22,10 @@ alpha_clan:
   name: Alpha Clan
   description: A clan at the top of the tree.
 
-delta_clan:
+castle_clan:
   user: three
   uuid: def10000-0000-0000-0000-000000000002
-  name: Delta Clan
+  name: Castle Clan
   description: Another clan.
 
 spectrum:
@@ -64,8 +64,8 @@ static_burst:
   name: Static Burst
   description: Another sub-group of Flux.
 
-delta_flux:
+castle_flux:
   user: three
   uuid: def10000-0000-0000-0000-000000000009
-  name: Delta Flux
-  description: Flux section specific to Delta Clan.
+  name: Castle Flux
+  description: Flux section specific to Castle Clan.

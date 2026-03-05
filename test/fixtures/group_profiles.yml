@@ -30,8 +30,8 @@ grove_in_alpha_clan:
   group: alpha_clan
   profile: grove
 
-shadow_in_delta_clan:
-  group: delta_clan
+shadow_in_castle_clan:
+  group: castle_clan
   profile: shadow
 
 mirage_in_echo_shard:

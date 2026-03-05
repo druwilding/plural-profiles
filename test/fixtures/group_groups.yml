@@ -17,8 +17,8 @@ rogue_in_prism:
   child_group: rogue_pack
   inclusion_mode: all
 
-flux_in_delta:
-  parent_group: delta_clan
+flux_in_castle:
+  parent_group: castle_clan
   child_group: flux
   inclusion_mode: selected
   included_subgroup_ids: <%= [ActiveRecord::FixtureSet.identify(:echo_shard)].to_json %>
@@ -34,7 +34,7 @@ static_in_flux:
   child_group: static_burst
   inclusion_mode: all
 
-delta_flux_in_delta:
-  parent_group: delta_clan
-  child_group: delta_flux
+castle_flux_in_castle:
+  parent_group: castle_clan
+  child_group: castle_flux
   inclusion_mode: all

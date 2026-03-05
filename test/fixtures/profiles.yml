@@ -35,13 +35,13 @@ drift:
   user: three
   uuid: abc10000-0000-0000-0000-000000000003
   name: Drift
-  description: In flux (direct) — should NOT appear in delta_clan.
+  description: In flux (direct) — should NOT appear in castle_clan.
 
 ripple:
   user: three
   uuid: abc10000-0000-0000-0000-000000000004
   name: Ripple
-  description: In flux (direct) — should NOT appear in delta_clan.
+  description: In flux (direct) — should NOT appear in castle_clan.
 
 grove:
   user: three
@@ -53,16 +53,16 @@ shadow:
   user: three
   uuid: abc10000-0000-0000-0000-000000000006
   name: Shadow
-  description: Direct member of delta_clan.
+  description: Direct member of castle_clan.
 
 mirage:
   user: three
   uuid: abc10000-0000-0000-0000-000000000007
   name: Mirage
-  description: In echo_shard — SHOULD appear in delta_clan via flux.
+  description: In echo_shard — SHOULD appear in castle_clan via flux.
 
 spark:
   user: three
   uuid: abc10000-0000-0000-0000-000000000008
   name: Spark
-  description: In static_burst — should NOT appear in delta_clan.
+  description: In static_burst — should NOT appear in castle_clan.

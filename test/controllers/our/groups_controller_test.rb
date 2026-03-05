@@ -219,18 +219,18 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
   test "manage_groups allows adding a group that is already an indirect descendant" do
     user_three = users(:three)
     sign_in_as user_three
-    delta_clan = groups(:delta_clan)
-    delta_flux = groups(:delta_flux)
+    castle_clan = groups(:castle_clan)
+    castle_flux = groups(:castle_flux)
 
-    # Create a new top-level group and add Delta Clan to it
+    # Create a new top-level group and add Castle Clan to it
     test_group = user_three.groups.create!(name: "Test Group")
-    test_group.child_links.create!(child_group: delta_clan)
+    test_group.child_links.create!(child_group: castle_clan)
 
-    # Delta Flux is a descendant of Delta Clan, but it should still be
+    # Castle Flux is a descendant of Castle Clan, but it should still be
     # available to add directly to test_group
     get manage_groups_our_group_path(test_group)
     assert_response :success
-    assert_match "Delta Flux", response.body
+    assert_match "Castle Flux", response.body
   end
 
   test "add_group adds a sub-group" do
@@ -741,11 +741,11 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     user_three = users(:three)
     sign_in_as user_three
     alpha = groups(:alpha_clan)
-    # Delta Clan is not a child of Alpha Clan, so it can be added
-    delta = groups(:delta_clan)
+    # Castle Clan is not a child of Alpha Clan, so it can be added
+    castle = groups(:castle_clan)
 
     post add_group_our_group_path(alpha), params: {
-      group_id: delta.id,
+      group_id: castle.id,
       return_to: "tree_editor"
     }
     assert_redirected_to tree_editor_our_group_path(alpha)

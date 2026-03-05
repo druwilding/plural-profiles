@@ -48,66 +48,66 @@ Add to `test/fixtures/groups.yml`:
 | Fixture name   | Name         | Role in scenario                                    |
 | -------------- | ------------ | --------------------------------------------------- |
 | `alpha_clan`   | Alpha Clan   | A clan (top of a tree)                              |
-| `delta_clan`   | Delta Clan   | Another clan                                        |
+| `castle_clan`  | Castle Clan  | Another clan                                        |
 | `spectrum`     | Spectrum     | Overarching category spanning clans                 |
 | `prism_circle` | Prism Circle | Sub-category inside Spectrum                        |
 | `rogue_pack`   | Rogue Pack   | Sub-group of Prism Circle; its own independent clan |
 | `flux`         | Flux         | Category spanning multiple clans                    |
 | `echo_shard`   | Echo Shard   | Sub-group of Flux                                   |
 | `static_burst` | Static Burst | Another sub-group of Flux                           |
-| `delta_flux`   | Delta Flux   | Flux section specific to Delta Clan                 |
+| `castle_flux`  | Castle Flux  | Flux section specific to Castle Clan                |
 
 ### 3. Group relationships
 
 Add to `test/fixtures/group_groups.yml`:
 
-| Fixture name          | Parent → Child            | inclusion_mode | Notes                                                |
-| --------------------- | ------------------------- | -------------- | ---------------------------------------------------- |
-| `spectrum_in_alpha`   | alpha_clan → spectrum     | `all`          | **Problem edge**: can't currently exclude rogue_pack |
-| `prism_in_spectrum`   | spectrum → prism_circle   | `all`          |                                                      |
-| `rogue_in_prism`      | prism_circle → rogue_pack | `all`          |                                                      |
-| `flux_in_delta`       | delta_clan → flux         | `selected`     | `included_subgroup_ids: [echo_shard.id]`             |
-| `echo_in_flux`        | flux → echo_shard         | `all`          |                                                      |
-| `static_in_flux`      | flux → static_burst       | `all`          |                                                      |
-| `delta_flux_in_delta` | delta_clan → delta_flux   | `all`          |                                                      |
+| Fixture name            | Parent → Child            | inclusion_mode | Notes                                                |
+| ----------------------- | ------------------------- | -------------- | ---------------------------------------------------- |
+| `spectrum_in_alpha`     | alpha_clan → spectrum     | `all`          | **Problem edge**: can't currently exclude rogue_pack |
+| `prism_in_spectrum`     | spectrum → prism_circle   | `all`          |                                                      |
+| `rogue_in_prism`        | prism_circle → rogue_pack | `all`          |                                                      |
+| `flux_in_castle`        | castle_clan → flux        | `selected`     | `included_subgroup_ids: [echo_shard.id]`             |
+| `echo_in_flux`          | flux → echo_shard         | `all`          |                                                      |
+| `static_in_flux`        | flux → static_burst       | `all`          |                                                      |
+| `castle_flux_in_castle` | castle_clan → castle_flux | `all`          |                                                      |
 
 ### 4. Profiles (8 new, all under user `three`)
 
 Add to `test/fixtures/profiles.yml`:
 
-| Fixture name | Name   | Notes                                              |
-| ------------ | ------ | -------------------------------------------------- |
-| `stray`      | Stray  | In rogue_pack — should NOT appear in alpha_clan    |
-| `ember`      | Ember  | In prism_circle — SHOULD appear in alpha_clan      |
-| `drift`      | Drift  | In flux (direct) — should NOT appear in delta_clan |
-| `ripple`     | Ripple | In flux (direct) — same as above                   |
-| `grove`      | Grove  | In alpha_clan directly                             |
-| `shadow`     | Shadow | In delta_clan directly                             |
-| `mirage`     | Mirage | In echo_shard — SHOULD appear in delta_clan        |
-| `spark`      | Spark  | In static_burst                                    |
+| Fixture name | Name   | Notes                                               |
+| ------------ | ------ | --------------------------------------------------- |
+| `stray`      | Stray  | In rogue_pack — should NOT appear in alpha_clan     |
+| `ember`      | Ember  | In prism_circle — SHOULD appear in alpha_clan       |
+| `drift`      | Drift  | In flux (direct) — should NOT appear in castle_clan |
+| `ripple`     | Ripple | In flux (direct) — same as above                    |
+| `grove`      | Grove  | In alpha_clan directly                              |
+| `shadow`     | Shadow | In castle_clan directly                             |
+| `mirage`     | Mirage | In echo_shard — SHOULD appear in castle_clan        |
+| `spark`      | Spark  | In static_burst                                     |
 
 ### 5. Group memberships
 
 Add to `test/fixtures/group_profiles.yml`:
 
-| Profile → Group        | Test purpose                                    |
-| ---------------------- | ----------------------------------------------- |
-| `stray` → rogue_pack   | Deep exclusion: should not appear in alpha_clan |
-| `stray` → prism_circle | Repeated profile: same person in two places     |
-| `ember` → prism_circle | Should flow up to alpha_clan via spectrum       |
-| `drift` → flux         | Direct profile exclusion test                   |
-| `ripple` → flux        | Direct profile exclusion test                   |
-| `grove` → alpha_clan   | Direct member of top-level clan                 |
-| `shadow` → delta_clan  | Direct member of another clan                   |
-| `mirage` → echo_shard  | Should appear in delta_clan via flux→echo_shard |
-| `spark` → static_burst | Should NOT appear in delta_clan (not selected)  |
+| Profile → Group        | Test purpose                                     |
+| ---------------------- | ------------------------------------------------ |
+| `stray` → rogue_pack   | Deep exclusion: should not appear in alpha_clan  |
+| `stray` → prism_circle | Repeated profile: same person in two places      |
+| `ember` → prism_circle | Should flow up to alpha_clan via spectrum        |
+| `drift` → flux         | Direct profile exclusion test                    |
+| `ripple` → flux        | Direct profile exclusion test                    |
+| `grove` → alpha_clan   | Direct member of top-level clan                  |
+| `shadow` → castle_clan | Direct member of another clan                    |
+| `mirage` → echo_shard  | Should appear in castle_clan via flux→echo_shard |
+| `spark` → static_burst | Should NOT appear in castle_clan (not selected)  |
 
 ### Test scenarios these fixtures enable
 
 1. **Deep exclusion**: Alpha Clan → Spectrum → Prism Circle → Rogue Pack. Want to exclude Rogue Pack from Alpha Clan without losing Prism Circle.
-2. **Direct profile control**: Flux in Delta Clan with "selected" sub-groups — Drift and Ripple (direct Flux members) should not appear in Delta Clan, only Mirage (in Echo Shard) should.
+2. **Direct profile control**: Flux in Castle Clan with "selected" sub-groups — Drift and Ripple (direct Flux members) should not appear in Castle Clan, only Mirage (in Echo Shard) should.
 3. **Repeated profiles**: Stray appears in both Rogue Pack and Prism Circle — should be marked as repeated in the tree view.
-4. **Selected sub-groups**: Delta Clan includes Flux with only Echo Shard selected — Static Burst and its members should not appear.
+4. **Selected sub-groups**: Castle Clan includes Flux with only Echo Shard selected — Static Burst and its members should not appear.
 
 ---
 
@@ -118,7 +118,7 @@ Add to `test/fixtures/group_profiles.yml`:
 Add `include_direct_profiles` boolean column to `group_groups`:
 - Default: `true`
 - Not null
-- Handles the immediate-edge profile control (e.g., Flux in Delta Clan shouldn't bring Flux's direct profiles when mode is `selected`)
+- Handles the immediate-edge profile control (e.g., Flux in Castle Clan shouldn't bring Flux's direct profiles when mode is `selected`)
 
 ### 7. Migration: `CreateInclusionOverrides`
 
@@ -333,7 +333,7 @@ Create `test/models/inclusion_override_test.rb`:
 In `test/models/group_test.rb`:
 - **Deep exclusion**: set up alpha_clan → spectrum → prism_circle → rogue_pack, add override on the alpha→spectrum edge targeting prism_circle with `selected` mode excluding rogue_pack. Assert rogue_pack not in `descendant_tree` from alpha_clan but IS in tree from spectrum.
 - **`all_profiles` respects overrides**: same setup, assert Stray (in rogue_pack) not in `alpha_clan.all_profiles` but IS in `spectrum.all_profiles`.
-- **`include_direct_profiles: false`**: set up flux → delta_clan with `include_direct_profiles: false`. Assert Drift/Ripple not in delta_clan tree but Mirage (in echo_shard) IS.
+- **`include_direct_profiles: false`**: set up flux → castle_clan with `include_direct_profiles: false`. Assert Drift/Ripple not in castle_clan tree but Mirage (in echo_shard) IS.
 - **Repeated profiles**: assert profiles in multiple groups get `repeated: true` on second occurrence.
 
 ### 32. Expand controller tests
@@ -364,7 +364,7 @@ bin/rails test:system
 bin/rubocop
 ```
 
-Manual: load fixtures, visit public group page, confirm Rogue Pack excluded from Alpha Clan tree but visible in Spectrum tree; confirm Drift/Ripple excluded from Delta Clan when Flux has `include_direct_profiles: false`.
+Manual: load fixtures, visit public group page, confirm Rogue Pack excluded from Alpha Clan tree but visible in Spectrum tree; confirm Drift/Ripple excluded from Castle Clan when Flux has `include_direct_profiles: false`.
 
 ---
 
