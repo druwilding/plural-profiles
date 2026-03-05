@@ -6,5 +6,5 @@ rogue_pack_excluded_from_alpha:
   group_group: spectrum_in_alpha
   target_group: prism_circle
   inclusion_mode: selected
-  included_subgroup_ids: "[]"
+  included_subgroup_ids: []
   include_direct_profiles: true
