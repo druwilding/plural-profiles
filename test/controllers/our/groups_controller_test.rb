@@ -667,5 +667,4 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to tree_editor_our_group_path(alpha)
   end
-
 end
