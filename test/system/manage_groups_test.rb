@@ -437,22 +437,27 @@ class ManageGroupsTest < ApplicationSystemTestCase
     target = all("summary.tree-editor__summary").find do |s|
       s.find("strong.tree-editor__name").text.strip == name
     end
+    assert target, "Expected to find tree node named '#{name}'"
     target.click
   end
 
   # Find a node's summary by exact <strong> name match.
   def find_node_summary_exact(name)
-    all("summary.tree-editor__summary").find do |s|
+    target = all("summary.tree-editor__summary").find do |s|
       s.find("strong.tree-editor__name").text.strip == name
     end
+    assert target, "Expected to find tree node summary named '#{name}'"
+    target
   end
 
   # Find the <details> element whose own summary <strong> matches the name.
   def node_details(name)
-    all("details.tree-editor__details").find do |d|
+    target = all("details.tree-editor__details").find do |d|
       strong = d.first("summary.tree-editor__summary > .tree-editor__summary-row strong.tree-editor__name")
       strong&.text&.strip == name
     end
+    assert target, "Expected to find tree node details for '#{name}'"
+    target
   end
 
   alias_method :node_details_exact, :node_details
