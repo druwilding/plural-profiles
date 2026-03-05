@@ -156,15 +156,12 @@ class Group < ApplicationRecord
     result.to_a
   end
 
-  # Cached variant for repeated reads within a single browsing session
-  # (e.g. sidebar panel requests). Keyed by id + updated_at so a management
-  # change to this group immediately busts the cache; the short TTL provides
-  # an extra safety net for subtree changes (child groups / edges) that do not
-  # touch the root group's own updated_at.
+  # Memoized variant for repeated reads during a single request
+  # (e.g. sidebar panel partials rendered off the same loaded group).
+  # Uses per-instance memoization rather than a cross-request cache so that
+  # changes to edges / overrides are always reflected on the next request.
   def cached_profile_visible_group_ids
-    Rails.cache.fetch("group_profile_visible_ids/#{id}/#{updated_at.to_i}", expires_in: 10.minutes) do
-      profile_visible_group_ids
-    end
+    @cached_profile_visible_group_ids ||= profile_visible_group_ids
   end
 
   # Collect all profiles from this group and all descendant groups,
