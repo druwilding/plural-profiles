@@ -1115,6 +1115,19 @@ details[open] .details-close {
   padding: 0.5rem 0.75rem;
   list-style: none;
   user-select: none;
+  outline: none;
+}
+
+.tree-editor__summary:focus-visible .tree-editor__summary-row {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (forced-colors: active) {
+  .tree-editor__summary:focus-visible .tree-editor__summary-row {
+    outline: 2px solid CanvasText;
+  }
 }
 
 .tree-editor__summary::-webkit-details-marker {
