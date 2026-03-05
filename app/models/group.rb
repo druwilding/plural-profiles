@@ -165,6 +165,33 @@ class Group < ApplicationRecord
     )
   end
 
+  # Build a tree for the tree editor. Shows ALL physical edges unfiltered
+  # (regardless of inclusion mode), with edge metadata and any overrides
+  # for this group's direct edges. Used for the management UI where users
+  # configure inclusion modes and overrides at every depth.
+  def editor_tree
+    all_ids = reachable_group_ids - [ id ]
+    return [] if all_ids.empty?
+
+    children_map = build_children_map([ id ] + all_ids)
+
+    # Preload overrides for this group's direct child edges only
+    direct_gg_ids = (children_map[id] || []).map { |e| e[:gg_id] }
+    overrides_by_origin = {}
+    if direct_gg_ids.any?
+      InclusionOverride.where(group_group_id: direct_gg_ids).each do |ov|
+        overrides_by_origin[ov.group_group_id] ||= {}
+        overrides_by_origin[ov.group_group_id][ov.target_group_id] = ov
+      end
+    end
+
+    groups_by_id = Group.where(id: all_ids)
+                        .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
+                        .index_by(&:id)
+
+    build_editor_nodes(id, children_map, groups_by_id, overrides_by_origin, nil, 0, [])
+  end
+
   private
 
   # Build the children_map used by tree traversal methods.
@@ -191,6 +218,45 @@ class Group < ApplicationRecord
       .group_by(&:first)
       .transform_values do |rows|
         rows.to_h { |r| [ r[1], { inclusion_mode: r[2], included_subgroup_ids: Array(r[3]).map(&:to_i), include_direct_profiles: r[4] } ] }
+      end
+  end
+
+  # -- Editor tree (tree_editor) ---------------------------------------------
+
+  # Build the full unfiltered tree for the editor UI.
+  # Unlike build_tree (which filters by inclusion mode), this follows ALL edges
+  # so the user can see and configure every descendant.
+  # Each node carries:
+  #   group:, profiles:, children:, depth:,
+  #   gg_id:          — the GroupGroup id for this specific physical edge
+  #   origin_gg_id:   — the root's direct edge that leads to this subtree
+  #   edge_mode:, edge_included_ids:, edge_include_profiles: — the physical edge settings
+  #   override:       — the InclusionOverride record (or nil) for depth 2+
+  #   current_mode:, current_included_ids:, current_include_profiles: — effective settings
+  def build_editor_nodes(parent_id, children_map, groups_by_id, overrides_by_origin, origin_gg_id, depth, path)
+    (children_map[parent_id] || [])
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
+      .reject { |_, entry| path.include?(entry[:id]) }
+      .sort_by { |g, _| g.name }
+      .map do |g, entry|
+        current_origin = depth == 0 ? entry[:gg_id] : origin_gg_id
+        override = depth > 0 ? overrides_by_origin.dig(current_origin, g.id) : nil
+
+        {
+          group: g,
+          profiles: g.profiles.to_a,
+          children: build_editor_nodes(g.id, children_map, groups_by_id, overrides_by_origin, current_origin, depth + 1, path + [ g.id ]),
+          depth: depth + 1,
+          gg_id: entry[:gg_id],
+          origin_gg_id: current_origin,
+          edge_mode: entry[:inclusion_mode],
+          edge_included_ids: entry[:included_subgroup_ids],
+          edge_include_profiles: entry[:include_direct_profiles],
+          override: override,
+          current_mode: override ? override.inclusion_mode : entry[:inclusion_mode],
+          current_included_ids: override ? Array(override.included_subgroup_ids).map(&:to_i) : entry[:included_subgroup_ids],
+          current_include_profiles: override.nil? ? entry[:include_direct_profiles] : override.include_direct_profiles
+        }
       end
   end
 

@@ -1,0 +1,45 @@
+- content_for(:title) { "Tree editor for #{@group.name} — Plural Profiles" }
+
+%h1
+  Tree editor for
+  = @group.name
+
+- if @editor_tree.any?
+  .tree-editor
+    %p.tree-editor__hint
+      Expand each group to configure how it appears when viewing
+      %strong= @group.name
+      publicly. Direct children can be added or removed. Deeper descendants can have overrides
+      that change their behaviour only in this tree.
+    %ul.tree-editor__tree{"aria-label": "Group tree for #{@group.name}"}
+      - @editor_tree.each do |node|
+        = render "our/groups/tree_editor_node", node: node, root_group: @group
+- else
+  .card
+    %p This group has no sub-groups yet. Add one below.
+
+%h2 Add a group
+
+- if @available_groups.any?
+  .card-list
+    - @available_groups.each do |group|
+      .card.card--row
+        .card__header
+          - if group.avatar.attached?
+            = image_tag group.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: group.avatar_alt_text.presence || "", loading: "lazy"
+          - else
+            .avatar.avatar--small.avatar--placeholder
+              = render "shared/plural_pride_logo"
+          %span= group.name
+        = link_to "Add", add_group_our_group_path(@group, group_id: group.id, return_to: "tree_editor"), data: { turbo_method: :post }, class: "btn btn--small"
+- else
+  .card
+    %p
+      - if Current.user.groups.count > 1
+        All your other groups are already in this tree.
+      - else
+        You need to
+        = link_to "create more groups", new_our_group_path
+        first.
+
+%p= link_to "← Back to group", our_group_path(@group)

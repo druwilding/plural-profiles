@@ -1,0 +1,149 @@
+-# Recursive tree editor node partial.
+-# Locals: node (hash from Group#editor_tree), root_group (the group being edited)
+- group = node[:group]
+- has_children = node[:children].any?
+- has_profiles = node[:profiles].any?
+- is_direct = node[:depth] == 1
+- has_override = node[:override].present?
+- uid = "te_#{node[:origin_gg_id]}_#{group.id}"
+- mode = node[:current_mode]
+- include_profiles = node[:current_include_profiles]
+
+%li.tree-editor__node
+  %details.tree-editor__details
+    %summary.tree-editor__summary
+      .tree-editor__summary-row
+        .tree-editor__summary-left
+          - if group.avatar.attached?
+            = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+          - else
+            %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+              = render "shared/plural_pride_logo"
+          %strong.tree-editor__name= group.name
+        .tree-editor__summary-right
+          - if is_direct
+            %span.tree-editor__tag.tree-editor__tag--direct direct child
+          - elsif has_override
+            %span.tree-editor__tag.tree-editor__tag--override override
+          - else
+            %span.tree-editor__tag.tree-editor__tag--inherit inheriting
+          - if has_children
+            %span.tree-editor__mode-label
+              - case mode
+              - when "all"
+                all sub-groups
+              - when "selected"
+                - total = node[:children].size
+                - count = node[:current_included_ids].count { |cid| node[:children].any? { |c| c[:group].id == cid } }
+                = "#{count} of #{total} sub-groups"
+              - when "none"
+                no sub-groups
+          - if has_profiles
+            %span.tree-editor__mode-label
+              - if include_profiles
+                = "#{node[:profiles].size} #{node[:profiles].size == 1 ? 'profile' : 'profiles'}"
+              - else
+                no profiles
+
+    .tree-editor__controls
+      - if is_direct
+        -# Direct child: form updates the GroupGroup record
+        = form_with url: update_relationship_our_group_path(root_group, group_id: group.id, return_to: "tree_editor"), method: :patch, class: "tree-editor__form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
+          .tree-editor__fieldsets
+            - if has_children
+              %fieldset.tree-editor__fieldset
+                %legend Sub-groups
+                .tree-editor__radio-group
+                  %label{for: "#{uid}_mode_all"}
+                    = radio_button_tag "inclusion_mode", "all", mode == "all", id: "#{uid}_mode_all"
+                    All
+                  %label{for: "#{uid}_mode_selected"}
+                    = radio_button_tag "inclusion_mode", "selected", mode == "selected", id: "#{uid}_mode_selected"
+                    Selected
+                  %label{for: "#{uid}_mode_none"}
+                    = radio_button_tag "inclusion_mode", "none", mode == "none", id: "#{uid}_mode_none"
+                    None
+                .checkbox-list.tree-editor__checkbox-list
+                  - node[:children].each do |child|
+                    - child_id = child[:group].id
+                    - checked = mode == "all" || (mode == "selected" && node[:current_included_ids].include?(child_id))
+                    %label.checkbox-label{for: "#{uid}_sub_#{child_id}"}
+                      = check_box_tag "included_subgroup_ids[]", child_id, checked, id: "#{uid}_sub_#{child_id}", data: { inclusion_target: "checkbox" }
+                      = child[:group].name
+
+            - if has_profiles
+              %fieldset.tree-editor__fieldset
+                %legend
+                  Profiles
+                  %span.tree-editor__count= "(#{node[:profiles].size})"
+                .tree-editor__radio-group
+                  %label{for: "#{uid}_profiles_all"}
+                    = radio_button_tag "include_direct_profiles", "1", include_profiles, id: "#{uid}_profiles_all"
+                    All
+                  %label{for: "#{uid}_profiles_none"}
+                    = radio_button_tag "include_direct_profiles", "0", !include_profiles, id: "#{uid}_profiles_none"
+                    None
+
+          .tree-editor__actions
+            = f.submit "Save", class: "btn btn--small"
+            = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id, return_to: "tree_editor"), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--danger btn--small"
+
+      - else
+        -# Deeper descendant: form creates/updates an InclusionOverride
+        = form_with url: update_override_our_group_path(root_group), method: :patch, class: "tree-editor__form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
+          = hidden_field_tag :edge_id, node[:origin_gg_id]
+          = hidden_field_tag :target_group_id, group.id
+
+          - if has_override
+            %p.tree-editor__override-note
+              Override active — changes apply only when viewing
+              %strong= root_group.name
+          - else
+            %p.tree-editor__override-note
+              No override set. Saving will create one that applies only when viewing
+              %strong= root_group.name
+
+          .tree-editor__fieldsets
+            - if has_children
+              %fieldset.tree-editor__fieldset
+                %legend Sub-groups
+                .tree-editor__radio-group
+                  %label{for: "#{uid}_mode_all"}
+                    = radio_button_tag "inclusion_mode", "all", mode == "all", id: "#{uid}_mode_all"
+                    All
+                  %label{for: "#{uid}_mode_selected"}
+                    = radio_button_tag "inclusion_mode", "selected", mode == "selected", id: "#{uid}_mode_selected"
+                    Selected
+                  %label{for: "#{uid}_mode_none"}
+                    = radio_button_tag "inclusion_mode", "none", mode == "none", id: "#{uid}_mode_none"
+                    None
+                .checkbox-list.tree-editor__checkbox-list
+                  - node[:children].each do |child|
+                    - child_id = child[:group].id
+                    - checked = mode == "all" || (mode == "selected" && node[:current_included_ids].include?(child_id))
+                    %label.checkbox-label{for: "#{uid}_sub_#{child_id}"}
+                      = check_box_tag "included_subgroup_ids[]", child_id, checked, id: "#{uid}_sub_#{child_id}", data: { inclusion_target: "checkbox" }
+                      = child[:group].name
+
+            - if has_profiles
+              %fieldset.tree-editor__fieldset
+                %legend
+                  Profiles
+                  %span.tree-editor__count= "(#{node[:profiles].size})"
+                .tree-editor__radio-group
+                  %label{for: "#{uid}_profiles_all"}
+                    = radio_button_tag "include_direct_profiles", "1", include_profiles, id: "#{uid}_profiles_all"
+                    All
+                  %label{for: "#{uid}_profiles_none"}
+                    = radio_button_tag "include_direct_profiles", "0", !include_profiles, id: "#{uid}_profiles_none"
+                    None
+
+          .tree-editor__actions
+            = f.submit has_override ? "Save override" : "Set override", class: "btn btn--small"
+            - if has_override
+              = link_to "Clear override", remove_override_our_group_path(root_group, edge_id: node[:origin_gg_id], target_group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Clear override for #{group.name}? It will revert to the edge defaults." }, class: "btn btn--outline btn--small"
+
+  - if has_children
+    %ul.tree-editor__children
+      - node[:children].each do |child_node|
+        = render "our/groups/tree_editor_node", node: child_node, root_group: root_group

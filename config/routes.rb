@@ -21,6 +21,9 @@ Rails.application.routes.draw do
       delete :remove_group
       patch :update_relationship
       patch :regenerate_uuid
+      get :tree_editor
+      patch :update_override
+      delete :remove_override
     end
   end
   resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do

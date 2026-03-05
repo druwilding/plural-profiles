@@ -1123,6 +1123,290 @@ details[open] .details-close {
   cursor: help;
 }
 
+/* ── Tree editor (authenticated group management) ──────── */
+
+.tree-editor__hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 1.25rem;
+}
+
+.tree-editor__tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree-editor__children {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  border-left: 1px solid var(--tree-guide);
+}
+
+.tree-editor__node {
+  margin-bottom: 0.25rem;
+}
+
+.tree-editor__details {
+  background-color: var(--bg-contrast);
+  border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tree-editor__details[open] {
+  border-color: var(--input-border);
+}
+
+.tree-editor__summary {
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  list-style: none;
+  user-select: none;
+}
+
+.tree-editor__summary::-webkit-details-marker {
+  display: none;
+}
+
+.tree-editor__summary::marker {
+  content: "";
+}
+
+.tree-editor__summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tree-editor__summary-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.tree-editor__summary-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.tree-editor__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--heading);
+}
+
+.tree-editor__tag {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tree-editor__tag--direct {
+  background-color: color-mix(in srgb, var(--link) 25%, transparent);
+  color: var(--link);
+}
+
+.tree-editor__tag--override {
+  background-color: color-mix(in srgb, var(--warning) 25%, transparent);
+  color: var(--warning);
+}
+
+.tree-editor__tag--inherit {
+  background-color: color-mix(in srgb, var(--text) 15%, transparent);
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.tree-editor__mode-label {
+  color: var(--text);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.tree-editor__mode-label::before {
+  content: "·";
+  margin-right: 0.35rem;
+}
+
+/* Controls area revealed on expand */
+.tree-editor__controls {
+  padding: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--input-border) 40%, transparent);
+}
+
+.tree-editor__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tree-editor__fieldsets {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.tree-editor__fieldset {
+  border: 1px solid rgba(255,255,255,0.04);
+  background-color: rgba(255,255,255,0.02);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  min-width: 150px;
+  flex: 1 1 200px;
+}
+
+.tree-editor__fieldset legend {
+  color: var(--heading);
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.tree-editor__count {
+  font-weight: 400;
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.tree-editor__radio-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.tree-editor__radio-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.tree-editor__checkbox-list {
+  margin-top: 0.35rem;
+}
+
+/* Visually dim checkboxes when mode is not "selected" — pure CSS, no JS */
+.tree-editor__fieldset:has(input[name="inclusion_mode"][value="all"]:checked) .tree-editor__checkbox-list {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.tree-editor__fieldset:has(input[name="inclusion_mode"][value="none"]:checked) .tree-editor__checkbox-list {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.tree-editor__override-note {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin: 0 0 0.5rem;
+  font-style: italic;
+}
+
+.tree-editor__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .tree-editor__fieldsets {
+    flex-direction: column;
+  }
+
+  .tree-editor__fieldset {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
+
+  .tree-editor__summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tree-editor__children {
+    padding-left: 0.75rem;
+  }
+}
+
+/* ── Forced-colors overrides for tree editor ───────────── */
+@media (forced-colors: active) {
+  .tree-editor__details {
+    border-color: CanvasText;
+  }
+
+  .tree-editor__name {
+    color: CanvasText;
+  }
+
+  .tree-editor__tag {
+    background-color: Canvas;
+    border: 1px solid CanvasText;
+    color: CanvasText;
+  }
+
+  .tree-editor__tag--override {
+    background-color: Canvas;
+    border-color: CanvasText;
+    color: CanvasText;
+  }
+
+  .tree-editor__mode-label {
+    color: CanvasText;
+    opacity: 1;
+  }
+
+  .tree-editor__controls {
+    border-top-color: CanvasText;
+  }
+
+  .tree-editor__fieldset {
+    border-color: CanvasText;
+    background-color: Canvas;
+  }
+
+  .tree-editor__fieldset legend {
+    color: CanvasText;
+  }
+
+  .tree-editor__radio-group label {
+    color: CanvasText;
+  }
+
+  .tree-editor__children {
+    border-left-color: CanvasText;
+  }
+
+  .tree-editor__override-note {
+    opacity: 1;
+    color: CanvasText;
+  }
+
+  .tree-editor__tag--inherit {
+    opacity: 1;
+  }
+}
+
 /* Timestamps */
 .timestamps {
   font-size: 0.85rem;

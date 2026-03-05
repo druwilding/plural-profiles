@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship regenerate_uuid ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship regenerate_uuid tree_editor update_override remove_override ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -85,20 +85,20 @@ class Our::GroupsController < ApplicationController
     child = Current.user.groups.find(params[:group_id])
     group_group = @group.child_links.build(child_group: child)
     if group_group.save
-      redirect_to manage_groups_our_group_path(@group), notice: "Group added."
+      redirect_to group_management_path, notice: "Group added."
     else
-      redirect_to manage_groups_our_group_path(@group), alert: group_group.errors.full_messages.to_sentence
+      redirect_to group_management_path, alert: group_group.errors.full_messages.to_sentence
     end
   rescue ActiveRecord::RecordNotFound
-    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
+    redirect_to group_management_path, alert: "Group not found."
   end
 
   def remove_group
     child = @group.child_groups.find(params[:group_id])
     @group.child_groups.delete(child)
-    redirect_to manage_groups_our_group_path(@group), notice: "Group removed."
+    redirect_to group_management_path, notice: "Group removed."
   rescue ActiveRecord::RecordNotFound
-    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
+    redirect_to group_management_path, alert: "Group not found."
   end
 
   def update_relationship
@@ -131,12 +131,70 @@ class Our::GroupsController < ApplicationController
 
     link.update!(attrs) if attrs.any?
 
-    redirect_to manage_groups_our_group_path(@group), notice: "Relationship updated."
+    redirect_to group_management_path, notice: "Relationship updated."
   rescue ActiveRecord::RecordNotFound
-    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
+    redirect_to group_management_path, alert: "Group not found."
+  end
+
+  def tree_editor
+    @editor_tree = @group.editor_tree
+    excluded_ids = @group.ancestor_group_ids | @group.child_group_ids | [ @group.id ]
+    @available_groups = Current.user.groups
+      .where.not(id: excluded_ids)
+      .includes(avatar_attachment: :blob)
+      .order(:name)
+  end
+
+  def update_override
+    edge = @group.child_links.find(params[:edge_id])
+    target_group = Current.user.groups.find(params[:target_group_id])
+
+    override = edge.inclusion_overrides.find_or_initialize_by(target_group: target_group)
+
+    mode = params[:inclusion_mode].to_s
+    mode = "all" unless %w[all selected none].include?(mode)
+
+    attrs = { inclusion_mode: mode }
+
+    if mode == "selected"
+      included = Array(params[:included_subgroup_ids]).map(&:to_i)
+      attrs[:included_subgroup_ids] = included & target_group.child_group_ids
+    else
+      attrs[:included_subgroup_ids] = []
+    end
+
+    if params.key?(:include_direct_profiles)
+      attrs[:include_direct_profiles] = params[:include_direct_profiles] == "1"
+    end
+
+    override.assign_attributes(attrs)
+    override.save!
+
+    redirect_to tree_editor_our_group_path(@group), notice: "Override saved."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to tree_editor_our_group_path(@group), alert: e.record.errors.full_messages.to_sentence
+  rescue ActiveRecord::RecordNotFound
+    redirect_to tree_editor_our_group_path(@group), alert: "Group not found."
+  end
+
+  def remove_override
+    edge = @group.child_links.find(params[:edge_id])
+    override = edge.inclusion_overrides.find_by!(target_group_id: params[:target_group_id])
+    override.destroy!
+    redirect_to tree_editor_our_group_path(@group), notice: "Override cleared."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to tree_editor_our_group_path(@group), alert: "Override not found."
   end
 
   private
+
+  def group_management_path
+    if params[:return_to] == "tree_editor"
+      tree_editor_our_group_path(@group)
+    else
+      manage_groups_our_group_path(@group)
+    end
+  end
 
   def set_group
     @group = Current.user&.groups&.find_by(uuid: params[:id])

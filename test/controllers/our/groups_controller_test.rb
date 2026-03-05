@@ -638,4 +638,129 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to group_path(@group.uuid)
     assert_equal old_uuid, @group.reload.uuid
   end
+
+  # -- Tree editor --
+
+  test "tree_editor renders for group with children" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    get tree_editor_our_group_path(alpha)
+    assert_response :success
+    assert_match "Tree editor for", response.body
+    assert_match "Spectrum", response.body
+  end
+
+  test "tree_editor renders for group without children" do
+    sign_in_as @user
+    get tree_editor_our_group_path(@group)
+    assert_response :success
+    assert_match "no sub-groups yet", response.body
+  end
+
+  test "tree_editor requires authentication" do
+    alpha = groups(:alpha_clan)
+    get tree_editor_our_group_path(alpha)
+    assert_redirected_to new_session_path
+  end
+
+  test "update_override creates an override" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
+    target = groups(:prism_circle)
+
+    assert_difference "InclusionOverride.count", 1 do
+      patch update_override_our_group_path(alpha), params: {
+        edge_id: edge.id,
+        target_group_id: target.id,
+        inclusion_mode: "none",
+        include_direct_profiles: "0"
+      }
+    end
+    assert_redirected_to tree_editor_our_group_path(alpha)
+
+    override = InclusionOverride.last
+    assert_equal "none", override.inclusion_mode
+    assert_equal false, override.include_direct_profiles
+  end
+
+  test "update_override updates an existing override" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
+    target = groups(:prism_circle)
+
+    # Create the override first
+    override = edge.inclusion_overrides.create!(
+      target_group: target,
+      inclusion_mode: "none",
+      include_direct_profiles: false
+    )
+
+    assert_no_difference "InclusionOverride.count" do
+      patch update_override_our_group_path(alpha), params: {
+        edge_id: edge.id,
+        target_group_id: target.id,
+        inclusion_mode: "all",
+        include_direct_profiles: "1"
+      }
+    end
+    assert_redirected_to tree_editor_our_group_path(alpha)
+
+    override.reload
+    assert_equal "all", override.inclusion_mode
+    assert_equal true, override.include_direct_profiles
+  end
+
+  test "remove_override destroys an override" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
+    target = groups(:prism_circle)
+
+    edge.inclusion_overrides.create!(
+      target_group: target,
+      inclusion_mode: "none",
+      include_direct_profiles: false
+    )
+
+    assert_difference "InclusionOverride.count", -1 do
+      delete remove_override_our_group_path(alpha), params: {
+        edge_id: edge.id,
+        target_group_id: target.id
+      }
+    end
+    assert_redirected_to tree_editor_our_group_path(alpha)
+  end
+
+  test "add_group with return_to tree_editor redirects to tree editor" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    # Delta Clan is not a child of Alpha Clan, so it can be added
+    delta = groups(:delta_clan)
+
+    post add_group_our_group_path(alpha), params: {
+      group_id: delta.id,
+      return_to: "tree_editor"
+    }
+    assert_redirected_to tree_editor_our_group_path(alpha)
+  end
+
+  test "remove_group with return_to tree_editor redirects to tree editor" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    spectrum = groups(:spectrum)
+
+    delete remove_group_our_group_path(alpha), params: {
+      group_id: spectrum.id,
+      return_to: "tree_editor"
+    }
+    assert_redirected_to tree_editor_our_group_path(alpha)
+  end
 end
