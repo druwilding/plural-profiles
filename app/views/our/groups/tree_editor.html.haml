@@ -8,7 +8,7 @@
   .tree-editor
     %p.tree-editor__hint
       Expand each group to configure how it appears when viewing
-      %strong= @group.name
+      %strong= link_to @group.name, group_path(@group.uuid), target: "_blank", rel: "noopener noreferrer"
       publicly. Direct children can be added or removed. Deeper descendants can have overrides
       that change their behaviour only in this tree.
     %ul.tree-editor__tree{"aria-label": "Group tree for #{@group.name}"}

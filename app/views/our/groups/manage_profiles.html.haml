@@ -17,12 +17,14 @@
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"
           %span= profile.name
-        = link_to "Remove", remove_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
+        = link_to "Remove from #{@group.name}", remove_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
 - else
   .card
     %p No profiles in this group yet.
 
-%h2 Add a profile
+%h2
+  Add a profile to
+  = @group.name
 
 - if @available_profiles.any?
   .card-list
@@ -35,7 +37,7 @@
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"
           %span= profile.name
-        = link_to "Add", add_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small"
+        = link_to "Add to #{@group.name}", add_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small"
 - else
   .card
     %p
