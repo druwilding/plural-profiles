@@ -122,7 +122,7 @@
           .tree-editor__actions
             = f.submit has_override ? "Save override" : "Set override", class: "btn btn--small"
             - if has_override
-              = link_to "Clear override", remove_override_our_group_path(root_group, edge_id: node[:origin_gg_id], target_group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Clear override for #{group.name}? It will revert to the edge defaults." }, class: "btn btn--danger btn--small"
+              = link_to "Clear override", remove_override_our_group_path(root_group, edge_id: node[:origin_gg_id], target_group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Clear override for #{group.name}? It will go back to using the parent group's settings." }, class: "btn btn--danger btn--small"
 
   - if has_children
     %ul.tree-editor__children
