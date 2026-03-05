@@ -23,12 +23,12 @@
               = render "shared/plural_pride_logo"
           %strong.tree-editor__name= group.name
         .tree-editor__summary-right
+          - if !is_direct && has_override
+            %span.tree-editor__tag.tree-editor__tag--override{title: "This group has an override that changes how it appears when viewing #{root_group.name} publicly"} override
           - if hidden
             %span.tree-editor__tag.tree-editor__tag--hidden{title: "This group won't appear when viewing #{root_group.name} publicly"} hidden
           - elsif profiles_only_hidden
             %span.tree-editor__tag.tree-editor__tag--hidden{title: "Profiles from this group won't appear when viewing #{root_group.name} publicly"} profiles hidden
-          - if !is_direct && has_override
-            %span.tree-editor__tag.tree-editor__tag--override override
 
     .tree-editor__controls
       - if is_direct
@@ -86,7 +86,7 @@
 
             - if has_override
               %p.tree-editor__override-note
-                Override active — changes apply only when viewing
+                Override active. Changes apply only when viewing
                 %strong= root_group.name
             - else
               %p.tree-editor__override-note
