@@ -69,7 +69,7 @@
 
           .tree-editor__actions
             = f.submit "Save", class: "btn btn--small"
-            = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id, return_to: "tree_editor"), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--danger btn--small"
+            = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id, return_to: "tree_editor"), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
 
       - else
         -# Deeper descendant: form creates/updates an InclusionOverride
@@ -122,7 +122,7 @@
           .tree-editor__actions
             = f.submit has_override ? "Save override" : "Set override", class: "btn btn--small"
             - if has_override
-              = link_to "Clear override", remove_override_our_group_path(root_group, edge_id: node[:origin_gg_id], target_group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Clear override for #{group.name}? It will revert to the edge defaults." }, class: "btn btn--outline btn--small"
+              = link_to "Clear override", remove_override_our_group_path(root_group, edge_id: node[:origin_gg_id], target_group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Clear override for #{group.name}? It will revert to the edge defaults." }, class: "btn btn--danger btn--small"
 
   - if has_children
     %ul.tree-editor__children
