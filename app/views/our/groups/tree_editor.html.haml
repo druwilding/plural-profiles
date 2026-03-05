@@ -33,7 +33,7 @@
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"
           %span= group.name
-        = link_to "Add", add_group_our_group_path(@group, group_id: group.id, return_to: "tree_editor"), data: { turbo_method: :post }, class: "btn btn--small"
+        = link_to "Add", add_group_our_group_path(@group, group_id: group.id), data: { turbo_method: :post }, class: "btn btn--small"
 - else
   .card
     %p

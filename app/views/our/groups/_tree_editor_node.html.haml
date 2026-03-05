@@ -33,7 +33,7 @@
     .tree-editor__controls
       - if is_direct
         -# Direct child: form updates the GroupGroup record
-        = form_with url: update_relationship_our_group_path(root_group, group_id: group.id, return_to: "tree_editor"), method: :patch, class: "tree-editor__form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
+        = form_with url: update_relationship_our_group_path(root_group, group_id: group.id), method: :patch, class: "tree-editor__form", data: { controller: "inclusion", action: "change->inclusion#change" } do |f|
           .tree-editor__fieldsets
             - if has_children
               %fieldset.tree-editor__fieldset
@@ -69,7 +69,7 @@
 
           .tree-editor__actions
             = f.submit "Save", class: "btn btn--small"
-            = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id, return_to: "tree_editor"), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
+            = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
 
       - else
         -# Deeper descendant: form creates/updates an InclusionOverride

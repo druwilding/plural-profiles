@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile manage_groups add_group remove_group update_relationship regenerate_uuid tree_editor update_override remove_override ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group update_relationship regenerate_uuid tree_editor update_override remove_override ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -66,19 +66,6 @@ class Our::GroupsController < ApplicationController
     profile = @group.profiles.find(params[:profile_id])
     @group.profiles.delete(profile)
     redirect_to manage_profiles_our_group_path(@group), notice: "Profile removed from group."
-  end
-
-  def manage_groups
-    excluded_ids = @group.ancestor_group_ids | @group.child_group_ids | [ @group.id ]
-    @available_groups = Current.user.groups
-      .where.not(id: excluded_ids)
-      .order(:name)
-    @child_links = @group.child_links.includes(
-      child_group: [
-        { avatar_attachment: :blob },
-        { child_links: :child_group }
-      ]
-    ).order("groups.name")
   end
 
   def add_group
@@ -189,11 +176,7 @@ class Our::GroupsController < ApplicationController
   private
 
   def group_management_path
-    if params[:return_to] == "tree_editor"
-      tree_editor_our_group_path(@group)
-    else
-      manage_groups_our_group_path(@group)
-    end
+    tree_editor_our_group_path(@group)
   end
 
   def set_group
