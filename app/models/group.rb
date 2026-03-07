@@ -254,12 +254,12 @@ class Group < ApplicationRecord
   # Unlike build_tree (which filters by inclusion mode), this follows ALL edges
   # so the user can see and configure every descendant.
   # Each node carries:
-  #   group:, has_profiles:, children:, depth:,
+  #   group:, has_profiles:, profiles_list:, children:, depth:,
   #   gg_id:          — the GroupGroup id for this specific physical edge
   #   origin_gg_id:   — the root's direct edge that leads to this subtree
-  #   edge_mode:, edge_included_ids:, edge_include_profiles: — the physical edge settings
+  #   edge_mode:, edge_included_ids:, edge_profile_mode:, edge_included_profile_ids: — the physical edge settings
   #   override:       — the InclusionOverride record (or nil) for depth 2+
-  #   current_mode:, current_included_ids:, current_include_profiles: — effective settings
+  #   current_mode:, current_included_ids:, current_profile_mode:, current_included_profile_ids: — effective settings
   #   hidden_from_public: — true when this node won't appear in the public view
   #     (because a parent's mode excludes it, or an ancestor is already hidden)
   def build_editor_nodes(parent_id, children_map, groups_by_id, overrides_by_origin, origin_gg_id, depth, path, groups_with_profiles, profiles_by_group,
