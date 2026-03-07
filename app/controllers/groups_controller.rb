@@ -19,7 +19,7 @@ class GroupsController < ApplicationController
       else
         selected_ids = visibility[:selected_profile_ids]
         matching = @group.profile_ids & selected_ids.to_a
-        @profiles = matching.any? ? Profile.where(id: matching) : Profile.none
+        @profiles = matching.any? ? @group.profiles.where(id: matching) : Profile.none
       end
     else
       @profiles = @group.profiles
