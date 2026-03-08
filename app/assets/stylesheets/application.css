@@ -1270,8 +1270,13 @@ details[open] > .tree-editor__summary::before {
 }
 
 .tree-editor__tag--hidden {
+  display: none;
   background-color: color-mix(in srgb, var(--danger-button-bg) 35%, transparent);
   color: var(--danger-button-text);
+}
+
+.tree-editor__node--hidden .tree-editor__tag--hidden {
+  display: inline-block;
 }
 
 /* ── Save indicator ──────────────────────────────────── */

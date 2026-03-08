@@ -14,8 +14,7 @@
       %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
         = render "shared/plural_pride_logo"
     %span.tree-editor__name= profile.name
-    - if effectively_hidden
-      %span.tree-editor__tag.tree-editor__tag--hidden hidden
+    %span.tree-editor__tag.tree-editor__tag--hidden hidden
   .tree-editor__actions
     .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
     = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do

@@ -20,8 +20,7 @@
           %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
             = render "shared/plural_pride_logo"
         %span.tree-editor__name= group.name
-        - if effectively_hidden
-          %span.tree-editor__tag.tree-editor__tag--hidden hidden
+        %span.tree-editor__tag.tree-editor__tag--hidden hidden
       .tree-editor__actions
         .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
         - unless is_direct
@@ -51,8 +50,7 @@
         %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
           = render "shared/plural_pride_logo"
       %span.tree-editor__name= group.name
-      - if effectively_hidden
-        %span.tree-editor__tag.tree-editor__tag--hidden hidden
+      %span.tree-editor__tag.tree-editor__tag--hidden hidden
     .tree-editor__actions
       .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
       - unless is_direct
