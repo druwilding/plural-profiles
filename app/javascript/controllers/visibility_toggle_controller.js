@@ -101,7 +101,9 @@ export default class extends Controller {
         : node.querySelector(".tree-editor__actions input[type='checkbox']")
 
       if (checkbox?.checked) {
-        // This node is directly hidden — leave it and its subtree alone.
+        // This node is directly hidden — leave it and its subtree alone,
+        // but re-enable its own checkbox so the user can unhide it later.
+        if (checkbox) checkbox.disabled = false
         return
       }
 

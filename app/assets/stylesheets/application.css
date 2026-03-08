@@ -1228,6 +1228,10 @@ details[open] > .tree-editor__summary::before {
   min-width: 0;
 }
 
+.tree-editor__item-info .btn {
+  margin-left: 0.6rem;
+}
+
 .tree-editor__name {
   overflow: hidden;
   text-overflow: ellipsis;

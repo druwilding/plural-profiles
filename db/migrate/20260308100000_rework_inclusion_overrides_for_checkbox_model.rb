@@ -1,3 +1,5 @@
+require "set"
+
 class ReworkInclusionOverridesForCheckboxModel < ActiveRecord::Migration[8.1]
   def up
     # ── Phase 1: snapshot existing data before any schema changes ──────────

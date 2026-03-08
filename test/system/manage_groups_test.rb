@@ -117,16 +117,17 @@ class ManageGroupsTest < ApplicationSystemTestCase
     visit manage_groups_our_group_path(alpha)
 
     accept_confirm do
-      click_link "Remove from Alpha Clan", match: :first
+      within find(".tree-editor__item-info", text: "Spectrum") do
+        click_link "Remove from Alpha Clan"
+      end
     end
 
     assert_text "Group removed."
 
     visit group_path(alpha.uuid)
-    # The first direct child (alphabetically) was removed
-    # We can't predict which one (Spectrum or Echo Shard) was
-    # removed since we use match: :first — just verify removal happened
-    assert_text "Alpha Clan"
+    within(".explorer__sidebar") do
+      assert_no_text "Spectrum"
+    end
   end
 
   # -- Back link --
