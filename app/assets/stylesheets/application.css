@@ -1915,7 +1915,7 @@ input[type="submit"].btn--small,
 
 .heart-picker__heart:has(input:checked) {
   opacity: 1;
-  border-color: var(--link);
+  border-color: var(--input-border);
 }
 
 .heart-picker__heart img {
@@ -1935,7 +1935,7 @@ input[type="submit"].btn--small,
 }
 
 .heart-picker__heart:has(input:focus-visible) {
-  outline: 3px solid var(--link);
+  outline: 3px solid var(--input-border);
   outline-offset: 2px;
 }
 
