@@ -258,7 +258,7 @@ class Group < ApplicationRecord
         effectively_hidden = hidden || ancestor_hidden
         child_path = current_path + [ g.id ]
 
-        profile_entries = g.profiles.order(:name).map do |profile|
+        profile_entries = g.profiles.map do |profile|
           {
             profile: profile,
             hidden: overrides.include?([ child_path, "Profile", profile.id ]),
