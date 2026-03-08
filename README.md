@@ -7,11 +7,9 @@ A web app for pluralfolk to create and share multiple profiles. Each account can
 - **Email & password authentication** — sign up, sign in, sign out, password reset, and email verification (built on Rails 8's built-in authentication generator)
 - **Multiple profiles per account** — each with a name, pronouns, description, and avatar image (via Active Storage)
 - **Groups** — organise profiles into named groups with a description
-- **Group nesting** — groups can contain other groups. Each parent→child link has a configurable inclusion mode; when the child has sub-groups of its own, the mode controls how much of its sub-tree appears in the parent:
-  - **All** — all of the child's profiles and sub-groups appear in the parent's tree
-  - **Selected** — only specific direct sub-groups of the child are included in the parent; those sub-groups' own children are not automatically pulled in, and sub-groups not in the list are excluded. The `profile_inclusion_mode` setting on the edge controls whether the child's own direct profiles are pulled in (all, selected, or none)
-  - **None** — only the child's direct profiles appear in the parent; its own sub-groups remain private to it. Visiting the child group directly still shows everything
-- **Deep inclusion overrides** — any edge can carry per-target-group overrides (stored in `inclusion_overrides`) that rewrite that target group's inclusion settings *in the context of this edge only*, without affecting the target group's own view or any other parent's view. This enables precise, depth-unlimited control — e.g. excluding a sub-sub-sub-group from one top-level group while leaving it fully visible everywhere else
+- **Group nesting** — groups can contain other groups, forming trees of arbitrary depth. Each item (group or profile) in the tree can be individually hidden from the parent group's public view using a simple checkbox, with hiding cascading to all descendants
+- **Path-scoped visibility** — when the same group appears at multiple points in a tree (diamond pattern), visibility overrides are scoped to the specific traversal path. Hiding a profile via one path doesn't affect its visibility via another path within the same root group
+- **Deep inclusion overrides** — per-item hidden state is stored in `inclusion_overrides`, scoped to a root group and a full traversal path (array of group IDs from root to the target's container). This enables precise, context-dependent control without affecting the target's own view or any other parent's view
 - **Shareable UUID URLs** — every profile and group gets a unique public URL (e.g. `/profiles/:uuid`, `/groups/:uuid`) that anyone can view without signing in
 - **Privacy-conscious sharing** — visitors can only see what you link them to; there's no way to browse from one profile to discover other profiles or groups
 - **Invite-only registration** — new accounts require an invite code. Signed-in users can generate up to 10 unused invite codes from their account page to share with people they trust. Each code is single-use and is marked as redeemed when the new account is created
@@ -38,22 +36,21 @@ User
  └── has_many Sessions
 
 Profile ←→ Group (many-to-many through GroupProfile)
-Group   ←→ Group (many-to-many through GroupGroup, with subgroup_inclusion_mode: all | selected | none)
-GroupGroup → has_many InclusionOverrides (context-dependent deep overrides)
+Group   ←→ Group (many-to-many through GroupGroup)
+Group   → has_many InclusionOverrides (path-scoped per-item hidden state)
 InviteCode — belongs to the generating User; records redeemed_by (User) and redeemed_at once used
 ```
 
-The `GroupGroup` join table connects parent and child groups. Each link has:
+The `GroupGroup` join table connects parent and child groups with no additional columns — it is a simple edge in the group tree.
 
-- `subgroup_inclusion_mode` — controls how much of the child group's sub-tree is pulled into the parent:
-  - `all` (default) — the child's entire sub-tree (groups and profiles) is included.
-  - `selected` — only the direct sub-groups listed in `included_subgroup_ids` are included in the parent. Those sub-groups' own children are not automatically pulled in, and sub-groups not in the list are excluded.
-  - `none` — the child group only partially overlaps with the parent. When viewing the parent, the child group appears but recursion stops there. Visiting the child group directly still shows its full tree.
-- `profile_inclusion_mode` — controls whether the child group's own direct profiles are pulled into the parent's tree:
-  - `all` (default) — all of the child group's direct profiles appear.
-  - `selected` — only the profiles listed in `included_profile_ids` are included.
-  - `none` — none of the child group's direct profiles are pulled in. Setting this to `none` lets you include a group's sub-structure without pulling in its top-level members.
-- `has_many :inclusion_overrides` — per-target-group settings that override `subgroup_inclusion_mode`, `included_subgroup_ids`, `profile_inclusion_mode`, and `included_profile_ids` for a specific descendant group *in the context of this edge only*. This enables deep, context-specific exclusions at any depth without affecting the target group's own view.
+The `InclusionOverride` table stores per-item hidden state scoped to a root group and traversal path:
+
+- `group_id` — the root group this override applies to
+- `path` (jsonb array) — ordered list of group IDs from root (exclusive) to the group containing the target (inclusive). Empty array `[]` means the target is directly on the root group
+- `target_type` — `"Group"` or `"Profile"`
+- `target_id` — ID of the hidden group or profile
+
+Unique constraint on `(group_id, path, target_type, target_id)` ensures each item can only be hidden once per path per root. Because `path` is an ordered array, the same item can be hidden along one traversal path but visible along another — even when the same `group_group` edge is involved (diamond pattern).
 
 This allows plural folk to model complex, Venn-diagram-style group arrangements where not every part of one group belongs inside another.
 
@@ -123,7 +120,7 @@ Fixtures live in `test/fixtures/`. Three users are defined:
 | ------- | ----------------- | ---------------------------------------------------------- |
 | `one`   | one@example.com   | Primary user for most existing tests                       |
 | `two`   | two@example.com   | Secondary user (isolation tests, cross-account validation) |
-| `three` | three@example.com | Phase 1 deep-inclusion scenario (see below)                |
+| `three` | three@example.com | Checkbox-model visibility scenario with diamond paths      |
 
 All fixture accounts share the password `Plur4l!Pr0files#2026`.
 
@@ -142,51 +139,54 @@ One group and one profile:
 - **Family** — contains Carol
 - Profile **Carol** (they/them)
 
-#### User `three` — deep-inclusion scenario
+#### User `three` — checkbox-model visibility scenario
 
-Nine groups and eight profiles, arranged to demonstrate and test the deep-inclusion override features planned in `docs/plan-deep-inclusion-overrides.md`.
+Nine groups and eight profiles, arranged to test path-scoped visibility overrides (the checkbox model). The key feature is a **diamond path**: Prism Circle is reachable via two different routes within Alpha Clan, allowing the same item to be hidden along one path but visible along another.
 
-**Alpha Clan tree** (deep-exclusion test):
+**Alpha Clan tree** (diamond-path test):
 
 ```
 Alpha Clan  ← Grove (direct)
-  └── Spectrum (all)
-        └── Prism Circle [override: subgroups selected+[], profiles selected+[Ember]]  ← Ember, Stray
-              └── Rogue Pack  [excluded from Alpha Clan — override stops recursion here]
+  ├── Spectrum
+  │     └── Prism Circle  ← Ember, Stray
+  │           └── Rogue Pack  [HIDDEN at path spectrum→prism_circle]  ← Stray [HIDDEN at this path]
+  └── Echo Shard
+        └── Prism Circle  (same group, different path)
+              └── Rogue Pack  (visible here — no override for echo_shard path)  ← Stray (visible here)
 ```
 
-An `InclusionOverride` on the Alpha Clan → Spectrum edge targets Prism Circle with `subgroup_inclusion_mode: selected, included_subgroup_ids: []` and `profile_inclusion_mode: selected, included_profile_ids: [Ember]`. From Alpha Clan's perspective, Rogue Pack is excluded (no sub-groups selected) and only Ember is visible (Stray is excluded from the profile selection). Viewing Spectrum directly still shows both profiles and Rogue Pack. Stray appears in both Prism Circle and Rogue Pack (repeated profile marker test when viewing Spectrum).
+`InclusionOverride` records:
+- Hide Rogue Pack at path `[spectrum, prism_circle]` → excluded from Alpha Clan via the Spectrum branch
+- Hide Stray at path `[spectrum, prism_circle, rogue_pack]` → excluded via Spectrum branch
 
-**Castle Clan tree** (selected sub-groups + direct profile exclusion):
+Via the Echo Shard branch, no overrides exist — Rogue Pack and Stray are both visible. Viewing Spectrum directly (as its own root) also shows everything, since overrides are scoped to Alpha Clan.
+
+**Castle Clan tree** (selective hiding via overrides):
 
 ```
 Castle Clan  ← Shadow (direct)
-  ├── Flux [selected: echo_shard only]
-  │     ├── Echo Shard (all)  ← Mirage
-  │     └── Static Burst (all)  ← Spark  [excluded from Castle Clan — not selected]
-  └── Castle Flux (all)
+  ├── Flux
+  │     ├── Echo Shard  ← Mirage (visible)
+  │     └── Static Burst  [HIDDEN at path flux]  ← Spark (cascade-hidden)
+  │     ← Drift [HIDDEN at path flux], Ripple [HIDDEN at path flux]
+  └── Castle Flux
 ```
 
-Flux has `subgroup_inclusion_mode: selected` with only Echo Shard in `included_subgroup_ids`. The `profile_inclusion_mode` setting on the edge controls whether Flux's own direct profiles are pulled in (`all`, `selected`, or `none`). This means:
-- Mirage (in Echo Shard) **should** appear in Castle Clan
-- Drift and Ripple (direct Flux members) appear only when `profile_inclusion_mode: "all"` on the edge; setting it to `"none"` excludes them
-- Spark (in Static Burst) **should not** appear in Castle Clan (not in selected list)
+`InclusionOverride` records hide Static Burst, Drift, and Ripple at path `[flux]` within Castle Clan. This means:
+- Mirage (in Echo Shard) **appears** in Castle Clan
+- Drift and Ripple (direct Flux profiles) are **hidden** from Castle Clan
+- Spark (in Static Burst) is **cascade-hidden** from Castle Clan (parent group hidden)
+- Viewing Flux directly still shows everything
 
 #### Seeding the development database
 
-To create the Phase 1 scenario in your local development database, pass the email address of the account you want to seed into:
-
-```sh
-bin/rails runner script/phase1_seed.rb "you@example.com"
-```
-
-If no email is given, it falls back to user id 1:
+To create the test scenario in your local development database:
 
 ```sh
 bin/rails runner script/phase1_seed.rb
 ```
 
-The script is safe to re-run — it checks for an existing Alpha Clan group first and exits early if found.
+The script is safe to re-run — it creates a new user every time with unique groups, profiles and relationships.
 
 ### Linting
 

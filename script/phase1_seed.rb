@@ -1,7 +1,7 @@
-# Phase 1 seed script — deep inclusion test scenario
+# Phase 1 seed script — checkbox-model test scenario
 # Run with: bin/rails runner script/phase1_seed.rb
 #
-# Creates the full Phase 1 group/profile hierarchy under user id 1.
+# Creates the full group/profile hierarchy under a new user.
 # Safe to re-run: wraps everything in a transaction and skips if alpha_clan already exists.
 
 FIXTURE_FILES = Rails.root.join("test/fixtures/files")
@@ -25,11 +25,6 @@ user = User.create!(
 )
 
 puts "Seeding for new user #{user.email_address} (id #{user.id})."
-
-if user.groups.exists?(name: "Alpha Clan")
-  puts "Alpha Clan already exists for #{user.email_address} — skipping. Delete it first if you want to re-seed."
-  exit
-end
 
 ActiveRecord::Base.transaction do
   # ── Groups ────────────────────────────────────────────────────────────────
@@ -60,27 +55,32 @@ ActiveRecord::Base.transaction do
 
   # ── Group relationships ────────────────────────────────────────────────────
   #
-  # Alpha Clan tree:
-  #   alpha_clan → spectrum (all)
-  #     spectrum → prism_circle (all)
-  #       prism_circle → rogue_pack (all)   ← problem edge: rogue_pack leaks into alpha_clan
+  # Alpha Clan tree (with diamond — Prism Circle reachable via two paths):
+  #   alpha_clan → spectrum
+  #     spectrum → prism_circle
+  #       prism_circle → rogue_pack
+  #   alpha_clan → echo_shard
+  #     echo_shard → prism_circle  (same group, different path)
+  #       prism_circle → rogue_pack  (same edge, different ancestor path)
   #
   # Castle Clan tree:
-  #   castle_clan → flux (selected: echo_shard only)
-  #     flux → echo_shard (all)
-  #     flux → static_burst (all)           ← excluded from castle_clan by selected mode
-  #   castle_clan → castle_flux (all)
+  #   castle_clan → flux
+  #     flux → echo_shard
+  #     flux → static_burst
+  #   castle_clan → castle_flux
 
-  GroupGroup.create!(parent_group: alpha_clan,   child_group: spectrum,     subgroup_inclusion_mode: "all")
-  GroupGroup.create!(parent_group: spectrum,     child_group: prism_circle, subgroup_inclusion_mode: "all")
-  GroupGroup.create!(parent_group: prism_circle, child_group: rogue_pack,   subgroup_inclusion_mode: "all")
-  GroupGroup.create!(parent_group: castle_clan,   child_group: flux,         subgroup_inclusion_mode: "selected",
-                     included_subgroup_ids: [ echo_shard.id ], profile_inclusion_mode: "none")
-  GroupGroup.create!(parent_group: flux,         child_group: echo_shard,   subgroup_inclusion_mode: "all")
-  GroupGroup.create!(parent_group: flux,         child_group: static_burst, subgroup_inclusion_mode: "all")
-  GroupGroup.create!(parent_group: castle_clan,   child_group: castle_flux,   subgroup_inclusion_mode: "all")
+  GroupGroup.create!(parent_group: alpha_clan,   child_group: spectrum)
+  GroupGroup.create!(parent_group: spectrum,     child_group: prism_circle)
+  GroupGroup.create!(parent_group: prism_circle, child_group: rogue_pack)
+  GroupGroup.create!(parent_group: castle_clan,   child_group: flux)
+  GroupGroup.create!(parent_group: flux,         child_group: echo_shard)
+  GroupGroup.create!(parent_group: flux,         child_group: static_burst)
+  GroupGroup.create!(parent_group: castle_clan,   child_group: castle_flux)
+  # Diamond path: Echo Shard also under Alpha Clan
+  GroupGroup.create!(parent_group: alpha_clan,   child_group: echo_shard)
+  GroupGroup.create!(parent_group: echo_shard,   child_group: prism_circle)
 
-  puts "Created 7 group relationships."
+  puts "Created 9 group relationships."
 
   # ── Profiles ──────────────────────────────────────────────────────────────
 
@@ -106,30 +106,56 @@ ActiveRecord::Base.transaction do
 
   puts "Created 8 profiles."
 
-  # ── Inclusion overrides ───────────────────────────────────────────────────
+  # ── Inclusion overrides (checkbox model) ─────────────────────────────────
   #
-  # Demonstrates Phase 3: deep exclusion without touching the intermediate group.
+  # Overrides hide specific items at specific paths within a root group's tree.
+  # path = array of group IDs from root (exclusive) to the group containing the target (inclusive).
   #
-  #   Override on the alpha_clan → spectrum edge, targeting prism_circle:
-  #     subgroup_inclusion_mode: "selected", included_subgroup_ids: []
-  #     profile_inclusion_mode: "selected", included_profile_ids: [ember.id]
+  # Alpha Clan overrides:
+  #   - Hide Rogue Pack at path [spectrum, prism_circle] (but visible via echo_shard path)
+  #   - Hide Stray at path [spectrum, prism_circle, rogue_pack] (but visible via echo_shard path)
   #
-  #   Effect: from Alpha Clan's perspective, Prism Circle exposes no sub-groups
-  #   (so Rogue Pack is excluded) and only Ember is visible (Stray is excluded).
-  #   Spectrum's own tree is unaffected — both profiles and Rogue Pack still
-  #   appear when you view Spectrum directly.
+  # Castle Clan overrides:
+  #   - Hide Static Burst at path [flux]
+  #   - Hide Drift at path [flux]
+  #   - Hide Ripple at path [flux]
 
-  spectrum_in_alpha_edge = GroupGroup.find_by!(parent_group: alpha_clan, child_group: spectrum)
   InclusionOverride.create!(
-    group_group: spectrum_in_alpha_edge,
-    target_group: prism_circle,
-    subgroup_inclusion_mode: "selected",
-    included_subgroup_ids: [],
-    profile_inclusion_mode: "selected",
-    included_profile_ids: [ ember.id ]
+    group: alpha_clan,
+    path: [ spectrum.id, prism_circle.id ],
+    target_type: "Group",
+    target_id: rogue_pack.id
   )
 
-  puts "Created 1 inclusion override."
+  InclusionOverride.create!(
+    group: alpha_clan,
+    path: [ spectrum.id, prism_circle.id, rogue_pack.id ],
+    target_type: "Profile",
+    target_id: stray.id
+  )
+
+  InclusionOverride.create!(
+    group: castle_clan,
+    path: [ flux.id ],
+    target_type: "Group",
+    target_id: static_burst.id
+  )
+
+  InclusionOverride.create!(
+    group: castle_clan,
+    path: [ flux.id ],
+    target_type: "Profile",
+    target_id: drift.id
+  )
+
+  InclusionOverride.create!(
+    group: castle_clan,
+    path: [ flux.id ],
+    target_type: "Profile",
+    target_id: ripple.id
+  )
+
+  puts "Created 5 inclusion overrides."
 
   # ── Group memberships ─────────────────────────────────────────────────────
 
@@ -147,24 +173,28 @@ ActiveRecord::Base.transaction do
 end
 
 puts ""
-puts "Done. Phase 1 data seeded for #{user.email_address} (id #{user.id})."
+puts "Done. Data seeded for #{user.email_address} (id #{user.id})."
 puts ""
 puts "Scenario summary:"
 puts "  Alpha Clan → Spectrum → Prism Circle → Rogue Pack"
+puts "  Alpha Clan → Echo Shard → Prism Circle → Rogue Pack  (diamond — same groups, different path)"
 puts "    Grove is a direct member of Alpha Clan."
-puts "    Ember is in Prism Circle (SHOULD appear — selected in profile override)."
-puts "    Stray is in Rogue Pack AND Prism Circle (should NOT appear — excluded by profile override)."
-puts "    Override on alpha→spectrum edge targets Prism Circle:"
-puts "      subgroups: selected+[] → Rogue Pack excluded from Alpha Clan's tree."
-puts "      profiles: selected+[Ember] → only Ember visible; Stray excluded."
-puts "      Spectrum's own tree is unaffected."
+puts "    Ember is in Prism Circle (visible from Alpha Clan)."
+puts "    Stray is in Rogue Pack AND Prism Circle."
+puts "    Override: Rogue Pack hidden at path [spectrum, prism_circle]."
+puts "    Override: Stray hidden at path [spectrum, prism_circle, rogue_pack]."
+puts "    → Via Spectrum: Rogue Pack excluded, Stray excluded."
+puts "    → Via Echo Shard: Rogue Pack and Stray both visible."
 puts ""
-puts "  Castle Clan → Flux [selected: echo_shard only] → Echo Shard / Static Burst"
+puts "  Castle Clan → Flux → Echo Shard / Static Burst"
 puts "  Castle Clan → Castle Flux"
 puts "    Shadow is a direct member of Castle Clan."
-puts "    Mirage is in Echo Shard (SHOULD appear in Castle Clan — echo_shard is selected)."
-puts "    Drift and Ripple are direct Flux members (should NOT appear in Castle Clan)."
-puts "    Spark is in Static Burst (should NOT appear in Castle Clan — not selected)."
+puts "    Mirage is in Echo Shard (visible in Castle Clan via Flux)."
+puts "    Override: Static Burst hidden at path [flux]."
+puts "    Override: Drift hidden at path [flux]."
+puts "    Override: Ripple hidden at path [flux]."
+puts "    → Spark (in Static Burst) excluded from Castle Clan."
+puts "    → Drift and Ripple (direct Flux members) excluded from Castle Clan."
 puts ""
 puts "────────────────────────────────"
 puts "Login credentials:"

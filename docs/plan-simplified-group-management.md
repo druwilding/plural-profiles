@@ -700,7 +700,7 @@ Key CSS additions:
 
 ---
 
-## Phase 7: Test Fixture Updates
+## Phase 7: Test Fixture Updates — ✅ DONE
 
 ### 7a. Remove mode data from `group_groups` fixtures
 
@@ -852,7 +852,7 @@ After all tests pass, review the Group model for any dead code from the old syst
 
 1. **Phase 1** — Migration - ✅ DONE
 2. **Phase 2** — Model changes - ✅ DONE
-3. **Phase 7** — Test fixtures
+3. **Phase 7** — Test fixtures — ✅ DONE
 4. **Phase 3** — Routes & controller
 5. **Phase 4** — Views
 6. **Phase 5** — JavaScript

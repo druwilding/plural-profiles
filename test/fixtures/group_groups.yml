@@ -5,36 +5,36 @@ friends_in_everyone:
 spectrum_in_alpha:
   parent_group: alpha_clan
   child_group: spectrum
-  subgroup_inclusion_mode: all
 
 prism_in_spectrum:
   parent_group: spectrum
   child_group: prism_circle
-  subgroup_inclusion_mode: all
 
 rogue_in_prism:
   parent_group: prism_circle
   child_group: rogue_pack
-  subgroup_inclusion_mode: all
 
 flux_in_castle:
   parent_group: castle_clan
   child_group: flux
-  subgroup_inclusion_mode: selected
-  included_subgroup_ids: <%= [ActiveRecord::FixtureSet.identify(:echo_shard)].to_json %>
-  profile_inclusion_mode: none
 
 echo_in_flux:
   parent_group: flux
   child_group: echo_shard
-  subgroup_inclusion_mode: all
 
 static_in_flux:
   parent_group: flux
   child_group: static_burst
-  subgroup_inclusion_mode: all
 
 castle_flux_in_castle:
   parent_group: castle_clan
   child_group: castle_flux
-  subgroup_inclusion_mode: all
+
+# Diamond-path fixtures: Prism Circle reachable via two paths in Alpha Clan
+echo_in_alpha:
+  parent_group: alpha_clan
+  child_group: echo_shard
+
+prism_in_echo:
+  parent_group: echo_shard
+  child_group: prism_circle

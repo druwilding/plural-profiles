@@ -23,25 +23,25 @@ stray:
   user: three
   uuid: abc10000-0000-0000-0000-000000000001
   name: Stray
-  description: In prism_circle & rogue_pack — should NOT appear in alpha_clan (excluded by profile override).
+  description: In prism_circle & rogue_pack — hidden from alpha_clan via spectrum path, visible via echo_shard path.
 
 ember:
   user: three
   uuid: abc10000-0000-0000-0000-000000000002
   name: Ember
-  description: In prism_circle — SHOULD appear in alpha_clan (selected in profile override).
+  description: In prism_circle — visible in alpha_clan.
 
 drift:
   user: three
   uuid: abc10000-0000-0000-0000-000000000003
   name: Drift
-  description: In flux (direct) — should NOT appear in castle_clan.
+  description: In flux (direct) — hidden from castle_clan via override.
 
 ripple:
   user: three
   uuid: abc10000-0000-0000-0000-000000000004
   name: Ripple
-  description: In flux (direct) — should NOT appear in castle_clan.
+  description: In flux (direct) — hidden from castle_clan via override.
 
 grove:
   user: three
@@ -65,4 +65,4 @@ spark:
   user: three
   uuid: abc10000-0000-0000-0000-000000000008
   name: Spark
-  description: In static_burst — should NOT appear in castle_clan.
+  description: In static_burst — cascade-hidden from castle_clan (static_burst is hidden).

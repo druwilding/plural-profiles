@@ -1,12 +1,40 @@
-# Demonstrates deep exclusion (Phase 3):
-# When traversing Alpha Clan via the spectrum_in_alpha edge, Prism Circle is
-# overridden to subgroups: selected+[] and profiles: selected+[Ember].
-# Rogue Pack is excluded from Alpha Clan's tree, and only Ember is visible
-# (Stray is excluded). Spectrum's own tree is unaffected.
-rogue_pack_excluded_from_alpha:
-  group_group: spectrum_in_alpha
-  target_group: prism_circle
-  subgroup_inclusion_mode: selected
-  included_subgroup_ids: []
-  profile_inclusion_mode: selected
-  included_profile_ids: <%= [ActiveRecord::FixtureSet.identify(:ember)].to_json %>
+# New checkbox-model inclusion overrides (Phase 7).
+# Each record represents a hidden item at a specific path within a root group's tree.
+# path = array of group IDs from root (exclusive) to the group containing the target (inclusive).
+
+# Alpha Clan: hide Rogue Pack when reached via Spectrum → Prism Circle
+# (but NOT via Echo Shard → Prism Circle — diamond-path test)
+rogue_pack_hidden_in_alpha_via_spectrum:
+  group: alpha_clan
+  path: <%= [ActiveRecord::FixtureSet.identify(:spectrum), ActiveRecord::FixtureSet.identify(:prism_circle)].to_json %>
+  target_type: Group
+  target_id: <%= ActiveRecord::FixtureSet.identify(:rogue_pack) %>
+
+# Castle Clan: hide Drift (profile) in Flux
+drift_hidden_in_castle:
+  group: castle_clan
+  path: <%= [ActiveRecord::FixtureSet.identify(:flux)].to_json %>
+  target_type: Profile
+  target_id: <%= ActiveRecord::FixtureSet.identify(:drift) %>
+
+# Castle Clan: hide Ripple (profile) in Flux
+ripple_hidden_in_castle:
+  group: castle_clan
+  path: <%= [ActiveRecord::FixtureSet.identify(:flux)].to_json %>
+  target_type: Profile
+  target_id: <%= ActiveRecord::FixtureSet.identify(:ripple) %>
+
+# Castle Clan: hide Static Burst (group) in Flux
+static_burst_hidden_in_castle:
+  group: castle_clan
+  path: <%= [ActiveRecord::FixtureSet.identify(:flux)].to_json %>
+  target_type: Group
+  target_id: <%= ActiveRecord::FixtureSet.identify(:static_burst) %>
+
+# Alpha Clan: hide Stray (profile) in Rogue Pack via Spectrum path only
+# (diamond-path test — Stray remains visible via Echo Shard → Prism Circle → Rogue Pack)
+stray_hidden_in_rogue_pack_via_spectrum:
+  group: alpha_clan
+  path: <%= [ActiveRecord::FixtureSet.identify(:spectrum), ActiveRecord::FixtureSet.identify(:prism_circle), ActiveRecord::FixtureSet.identify(:rogue_pack)].to_json %>
+  target_type: Profile
+  target_id: <%= ActiveRecord::FixtureSet.identify(:stray) %>
