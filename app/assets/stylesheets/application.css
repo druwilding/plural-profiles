@@ -3,17 +3,23 @@
  */
 
 :root {
-  --bg: #1E2D25;
-  --text: #819d6c;
-  --link: #4e855f;
-  --heading: #ecd3a2;
-  --bg-contrast: #291c13;
+  --page-bg: #0e2e24;
+  --pane-bg: #133b2f;
+  --pane-border: #02120e;
+  --text: #5ea389;
+  --link: #3ab580;
+  --heading: var(--text);
+  --primary-button-bg: #11694a;
+  --primary-button-text: #58cc9d;
+  --secondary-button-text: var(--primary-button-text);
+  --danger-button-bg: #a81d49;
+  --danger-button-text: #e6c4cf;
+  --input-bg: #263a2e;
+  --input-border: var(--text);
+  --spoiler: #3A3A3A;
   --error: #d96459;
   --success: #6dbf7b;
   --warning: #e2a854;
-  --input-bg: #263a2e;
-  --input-border: #4e855f;
-  --spoiler: #3A3A3A;
   --tree-guide: color-mix(in srgb, var(--text) 30%, transparent);
   --placeholder-border: color-mix(in srgb, var(--text) 50%, transparent);
 }
@@ -25,19 +31,19 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg);
+  background-color: var(--page-bg);
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
 }
 
 .site-header {
-  background-color: var(--bg-contrast);
+  background-color: var(--pane-bg);
   padding: 1rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--input-border);
+  border-bottom: 1px solid var(--pane-border);
 }
 
 .site-header .logo {
@@ -92,15 +98,15 @@ body {
   position: sticky;
   top: 2rem;
   align-self: start;
-  background-color: var(--bg-contrast);
+  background-color: var(--pane-bg);
   border-radius: 8px;
   padding: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
+  border: 1px solid var(--pane-border);
 }
 
 .sidebar hr {
   border: none;
-  border-top: 1px solid var(--input-border);
+  border-top: 1px solid var(--pane-border);
   margin: 0.5rem 0.5rem;
 }
 
@@ -111,8 +117,8 @@ body {
 }
 
 .terms {
-  background: var(--bg-contrast);
-  border: 1px solid var(--input-border);
+  background: var(--pane-bg);
+  border: 1px solid var(--pane-border);
   border-radius: 6px;
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
@@ -482,9 +488,9 @@ input[type="file"] {
 }
 
 input[type="file"]::file-selector-button {
-  background-color: var(--link);
-  color: #fff;
-  border: none;
+  background-color: var(--primary-button-bg);
+  color: var(--primary-button-text);
+  border: 1px solid var(--primary-button-text);
   border-radius: 6px;
   padding: 0.4rem 1rem;
   font-size: 0.9rem;
@@ -494,7 +500,7 @@ input[type="file"]::file-selector-button {
 }
 
 input[type="file"]::file-selector-button:hover {
-  background-color: #3d6d4c;
+  background-color: color-mix(in srgb, var(--primary-button-bg) 60%, transparent);
 }
 
 /* Disabled form controls */
@@ -523,9 +529,9 @@ button,
 .btn {
   display: inline-block;
   padding: 0.6rem 1.5rem;
-  background-color: var(--link);
-  color: #fff;
-  border: none;
+  background-color: var(--primary-button-bg);
+  color: var(--primary-button-text);
+  border: 1px solid var(--primary-button-text);
   border-radius: 6px;
   font-size: 0.95rem;
   font-family: inherit;
@@ -544,23 +550,24 @@ button,
 input[type="submit"]:hover,
 button:hover,
 .btn:hover {
-  background-color: #3d6d4c;
+  background-color: color-mix(in srgb, var(--primary-button-bg) 60%, transparent);
 }
 
 .btn--secondary {
   background-color: transparent;
-  border: 1px solid var(--link);
-  color: var(--link);
+  border: 1px solid var(--secondary-button-text);
+  color: var(--secondary-button-text);
 }
 
 .btn--secondary:hover {
-  background-color: var(--link);
-  color: #fff;
+  background-color: color-mix(in srgb, var(--primary-button-bg) 60%, transparent);
+  color: var(--secondary-button-text);
 }
 
 /* Card */
 .card {
-  background-color: var(--bg-contrast);
+  background-color: var(--pane-bg);
+  border: 1px solid var(--pane-border);
   border-radius: 8px;
   padding: 2rem;
   margin-bottom: 1.5rem;
@@ -624,13 +631,13 @@ button:hover,
 
 .btn--outline {
   background-color: transparent;
-  border: 1px solid var(--link);
-  color: var(--link);
+  border: 1px solid var(--secondary-button-text);
+  color: var(--secondary-button-text);
 }
 
 .btn--outline:hover {
-  background-color: var(--link);
-  color: #fff;
+  background-color: color-mix(in srgb, var(--primary-button-bg) 60%, transparent);
+  color: var(--secondary-button-text);
 }
 
 /* Stats grid */
@@ -891,9 +898,9 @@ details[open] .details-close {
 }
 
 .explorer__sidebar {
-  background-color: var(--bg-contrast);
+  background-color: var(--pane-bg);
+  border: 1px solid var(--pane-border);
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
   padding: 0.5rem;
   overflow-y: auto;
   max-height: 80vh;
@@ -1100,7 +1107,7 @@ details[open] .details-close {
 }
 
 .tree-editor__details {
-  background-color: var(--bg-contrast);
+  background-color: var(--pane-bg);
   border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
   border-radius: 6px;
   overflow: hidden;
@@ -1406,7 +1413,7 @@ details[open] .details-close {
 
 /* Share box */
 .share-box {
-  background-color: var(--bg);
+  background-color: var(--page-bg);
   border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
   border-radius: 6px;
   padding: 1.25rem;
@@ -1459,11 +1466,13 @@ input[type="submit"].btn--small,
 }
 
 .btn--danger {
-  background-color: var(--error);
+  background-color: var(--danger-button-bg);
+  border: 1px solid var(--danger-button-text);
+  color: var(--danger-button-text);
 }
 
 .btn--danger:hover {
-  background-color: #c04e44;
+  background-color: color-mix(in srgb, var(--danger-button-bg) 80%, transparent);
 }
 
 /* Utility classes (for user-generated content) */
