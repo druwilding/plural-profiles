@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group update_relationship regenerate_uuid manage_groups update_override remove_override ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group regenerate_uuid manage_groups toggle_visibility ]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -88,54 +88,9 @@ class Our::GroupsController < ApplicationController
     redirect_to group_management_path, alert: "Group not found."
   end
 
-  def update_relationship
-    link = @group.child_links.find_by!(child_group_id: params[:group_id])
-    allowed_modes = %w[all selected none]
-
-    attrs = {}
-
-    if params[:subgroup_inclusion_mode].present?
-      mode = params[:subgroup_inclusion_mode].to_s
-      mode = "none" unless allowed_modes.include?(mode)
-
-      if mode == "selected"
-        included = Array(params[:included_subgroup_ids]).map(&:to_i)
-        # Only allow immediate sub-groups of the child to be included
-        attrs[:included_subgroup_ids] = included & link.child_group.child_group_ids
-      else
-        # For 'all' or 'none' we clear the explicit list to keep data consistent
-        attrs[:included_subgroup_ids] = []
-      end
-
-      attrs[:subgroup_inclusion_mode] = mode
-    end
-
-    # profile_inclusion_mode is only rendered when the child has direct profiles,
-    # so the param may be absent — only apply it when present.
-    if params[:profile_inclusion_mode].present?
-      profile_mode = params[:profile_inclusion_mode].to_s
-      profile_mode = "none" unless allowed_modes.include?(profile_mode)
-
-      if profile_mode == "selected"
-        included = Array(params[:included_profile_ids]).map(&:to_i)
-        # Only allow profiles that are direct members of the child group
-        attrs[:included_profile_ids] = included & link.child_group.profile_ids
-      else
-        attrs[:included_profile_ids] = []
-      end
-
-      attrs[:profile_inclusion_mode] = profile_mode
-    end
-
-    link.update!(attrs) if attrs.any?
-
-    redirect_to group_management_path, notice: "Relationship updated."
-  rescue ActiveRecord::RecordNotFound
-    redirect_to group_management_path, alert: "Group not found."
-  end
-
   def manage_groups
-    @editor_tree = @group.editor_tree
+    @management_tree = @group.management_tree
+    @root_profiles = @group.management_root_profiles
     excluded_ids = @group.ancestor_group_ids | @group.child_group_ids | [ @group.id ]
     @available_groups = Current.user.groups
       .where.not(id: excluded_ids)
@@ -143,63 +98,57 @@ class Our::GroupsController < ApplicationController
       .order(:name)
   end
 
-  def update_override
-    edge = @group.child_links.find(params[:edge_id])
-    target_group = Current.user.groups.find(params[:target_group_id])
+  def toggle_visibility
+    target_type = params[:target_type].to_s
+    target_id = params[:target_id].to_i
+    path = JSON.parse(params[:path] || "[]").map(&:to_i)
 
-    unless edge.child_group.reachable_group_ids.include?(target_group.id)
-      return redirect_to manage_groups_our_group_path(@group), alert: "The target group is not within the selected group's subtree."
-    end
-
-    override = edge.inclusion_overrides.find_or_initialize_by(target_group: target_group)
-
-    attrs = {}
-
-    if params[:subgroup_inclusion_mode].present?
-      mode = params[:subgroup_inclusion_mode].to_s
-      mode = "none" unless %w[all selected none].include?(mode)
-
-      attrs[:subgroup_inclusion_mode] = mode
-
-      if mode == "selected"
-        included = Array(params[:included_subgroup_ids]).map(&:to_i)
-        attrs[:included_subgroup_ids] = included & target_group.child_group_ids
-      else
-        attrs[:included_subgroup_ids] = []
+    unless %w[Group Profile].include?(target_type)
+      return respond_to do |format|
+        format.html { redirect_to manage_groups_our_group_path(@group), alert: "Invalid target." }
+        format.json { render json: { error: "Invalid target" }, status: :unprocessable_entity }
       end
     end
 
-    if params[:profile_inclusion_mode].present?
-      profile_mode = params[:profile_inclusion_mode].to_s
-      profile_mode = "none" unless %w[all selected none].include?(profile_mode)
-
-      if profile_mode == "selected"
-        included = Array(params[:included_profile_ids]).map(&:to_i)
-        attrs[:included_profile_ids] = included & target_group.profile_ids
-      else
-        attrs[:included_profile_ids] = []
+    # Verify target belongs to current user
+    target = target_type.constantize.find_by(id: target_id, user_id: Current.user.id)
+    unless target
+      return respond_to do |format|
+        format.html { redirect_to manage_groups_our_group_path(@group), alert: "Not found." }
+        format.json { render json: { error: "Not found" }, status: :not_found }
       end
-
-      attrs[:profile_inclusion_mode] = profile_mode
     end
 
-    override.assign_attributes(attrs)
-    override.save!
+    # Verify all groups in path belong to current user and are in this tree
+    if path.any?
+      reachable = @group.reachable_group_ids
+      unless path.all? { |gid| reachable.include?(gid) }
+        return respond_to do |format|
+          format.html { redirect_to manage_groups_our_group_path(@group), alert: "Not found." }
+          format.json { render json: { error: "Not found" }, status: :not_found }
+        end
+      end
+    end
 
-    redirect_to manage_groups_our_group_path(@group), notice: "Override saved."
-  rescue ActiveRecord::RecordInvalid => e
-    redirect_to manage_groups_our_group_path(@group), alert: e.record.errors.full_messages.to_sentence
-  rescue ActiveRecord::RecordNotFound
-    redirect_to manage_groups_our_group_path(@group), alert: "Group not found."
-  end
+    hidden = params[:hidden] == "1" || params[:hidden] == "true"
+    override = InclusionOverride.find_by(
+      group_id: @group.id, path: path,
+      target_type: target_type, target_id: target_id
+    )
 
-  def remove_override
-    edge = @group.child_links.find(params[:edge_id])
-    override = edge.inclusion_overrides.find_by!(target_group_id: params[:target_group_id])
-    override.destroy!
-    redirect_to manage_groups_our_group_path(@group), notice: "Override cleared."
-  rescue ActiveRecord::RecordNotFound
-    redirect_to manage_groups_our_group_path(@group), alert: "Override not found."
+    if hidden && !override
+      InclusionOverride.create!(
+        group_id: @group.id, path: path,
+        target_type: target_type, target_id: target_id
+      )
+    elsif !hidden && override
+      override.destroy!
+    end
+
+    respond_to do |format|
+      format.html { redirect_to manage_groups_our_group_path(@group), notice: "Visibility updated." }
+      format.json { render json: { hidden: hidden }, status: :ok }
+    end
   end
 
   private

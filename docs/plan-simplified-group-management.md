@@ -287,7 +287,7 @@ This should reduce the Group model from ~564 lines to roughly ~250.
 
 ---
 
-## Phase 3: Routes & Controller
+## Phase 3: Routes & Controller — ✅ DONE
 
 ### 3a. Routes
 
@@ -853,7 +853,7 @@ After all tests pass, review the Group model for any dead code from the old syst
 1. **Phase 1** — Migration - ✅ DONE
 2. **Phase 2** — Model changes - ✅ DONE
 3. **Phase 7** — Test fixtures — ✅ DONE
-4. **Phase 3** — Routes & controller
+4. **Phase 3** — Routes & controller — ✅ DONE
 5. **Phase 4** — Views
 6. **Phase 5** — JavaScript
 7. **Phase 6** — CSS

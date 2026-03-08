@@ -18,11 +18,9 @@ Rails.application.routes.draw do
       delete :remove_profile
       post :add_group
       delete :remove_group
-      patch :update_relationship
       patch :regenerate_uuid
       get :manage_groups
-      patch :update_override
-      delete :remove_override
+      patch :toggle_visibility
     end
   end
   resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do
