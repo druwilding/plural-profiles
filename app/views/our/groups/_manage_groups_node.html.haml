@@ -31,8 +31,8 @@
             = hidden_field_tag :target_id, group.id
             = hidden_field_tag :hidden, hidden ? "0" : "1"
             %label.tree-editor__hide-label
-              = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
               Hide
+              = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
             %noscript
               = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
         - if is_direct
@@ -62,8 +62,8 @@
           = hidden_field_tag :target_id, group.id
           = hidden_field_tag :hidden, hidden ? "0" : "1"
           %label.tree-editor__hide-label
-            = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
             Hide
+            = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
           %noscript
             = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
       - if is_direct

@@ -24,7 +24,7 @@
       = hidden_field_tag :target_id, profile.id
       = hidden_field_tag :hidden, hidden ? "0" : "1"
       %label.tree-editor__hide-label
-        = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: container_path.to_json, target_type: "Profile", target_id: profile.id, visibility_toggle_target: "checkbox" }
         Hide
+        = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: container_path.to_json, target_type: "Profile", target_id: profile.id, visibility_toggle_target: "checkbox" }
       %noscript
         = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
