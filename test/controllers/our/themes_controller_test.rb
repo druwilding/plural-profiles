@@ -43,7 +43,7 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
         theme: { name: "Midnight", colors: { page_bg: "#000000", text: "#ffffff" } }
       }
     end
-    assert_redirected_to edit_our_theme_path(Theme.last)
+    assert_redirected_to our_themes_path
   end
 
   test "create rejects blank name" do
@@ -78,7 +78,7 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     patch our_theme_path(@theme), params: {
       theme: { name: "Dark Forest v2", colors: { page_bg: "#111111" } }
     }
-    assert_redirected_to edit_our_theme_path(@theme)
+    assert_redirected_to our_themes_path
     @theme.reload
     assert_equal "Dark Forest v2", @theme.name
     assert_equal "#111111", @theme.colors["page_bg"]

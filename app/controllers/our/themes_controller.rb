@@ -1,5 +1,6 @@
 class Our::ThemesController < ApplicationController
   include OurSidebar
+  skip_before_action :set_sidebar_data, only: %i[new create edit update]
   before_action :set_theme, only: %i[edit update destroy activate]
 
   def index
@@ -16,7 +17,7 @@ class Our::ThemesController < ApplicationController
   def create
     @theme = Current.user.themes.build(theme_params)
     if @theme.save
-      redirect_to edit_our_theme_path(@theme), notice: "Theme created."
+      redirect_to our_themes_path, notice: "Theme created."
     else
       render :new, status: :unprocessable_entity
     end
@@ -27,7 +28,7 @@ class Our::ThemesController < ApplicationController
 
   def update
     if @theme.update(theme_params)
-      redirect_to edit_our_theme_path(@theme), notice: "Theme saved."
+      redirect_to our_themes_path, notice: "Theme saved."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -58,6 +59,11 @@ class Our::ThemesController < ApplicationController
   end
 
   def theme_params
-    params.require(:theme).permit(:name, colors: Theme::THEMEABLE_PROPERTIES.keys)
+    permitted = params.require(:theme).permit(:name, colors: {})
+    # Ensure only known colour keys are stored
+    if permitted[:colors].present?
+      permitted[:colors] = permitted[:colors].to_h.slice(*Theme::THEMEABLE_PROPERTIES.keys)
+    end
+    permitted
   end
 end

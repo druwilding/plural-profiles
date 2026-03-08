@@ -3,14 +3,25 @@
 -# updated live by the theme-designer Stimulus controller.
 
 .theme-preview__section
-  %h3 Page & text
+  %h3 Navigation header
+  .theme-preview__header
+    %span.theme-preview__logo
+      = render "shared/plural_pride_logo"
+      Plural Profiles
+    %nav
+      %a{href: "#"} Groups
+      %a{href: "#"} Profiles
+
+.theme-preview__section
+  %h2 Theme preview
+  %p This preview updates live as you change colours.
   %p This is body text on the page background. Here is a #{link_to "sample link", "#"} in a sentence.
   %h2 Heading example
 
 .theme-preview__section
   .card
-    %h3 Card
-    %p This is a card with pane background and border.
+    %h3 Pane
+    %p This is a pane with background and border. Here is a #{link_to "sample link", "#"} in a sentence.
     %p
       Here is some text with a
       %span.spoiler.spoiler--revealed spoiler revealed
@@ -24,16 +35,15 @@
     %button.btn Primary button
     %button.btn.btn--secondary Secondary button
     %button.btn.btn--danger Danger button
-    %button.btn.btn--outline Outline button
 
 .theme-preview__section
   %h3 Form controls
   .form-group
     %label Text input
-    %input{type: "text", value: "Sample text", disabled: true}
+    %input{type: "text", placeholder: "Sample text"}
   .form-group
     %label Textarea
-    %textarea{disabled: true, rows: 2} Sample textarea content
+    %textarea{rows: 2, placeholder: "Sample textarea content"}
   .form-group
     %label.checkbox-label
       %input{type: "checkbox", checked: true, disabled: true}
@@ -53,13 +63,3 @@
         = render "shared/plural_pride_logo"
       %h3 Example Profile
       %span.pronouns they/them
-
-.theme-preview__section
-  %h3 Navigation header
-  .theme-preview__header
-    %span.theme-preview__logo
-      = render "shared/plural_pride_logo"
-      Plural Profiles
-    %nav
-      %a{href: "#"} Groups
-      %a{href: "#"} Profiles
