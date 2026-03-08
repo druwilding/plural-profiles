@@ -1231,6 +1231,11 @@ details[open] > .tree-editor__summary::before {
   color: var(--heading);
 }
 
+.tree-editor__node--hidden .tree-editor__name {
+  font-style: italic;
+  opacity: 0.5;
+}
+
 .tree-editor__actions {
   display: flex;
   align-items: center;

@@ -39,10 +39,11 @@ export default class extends Controller {
         const row = checkbox.closest(".tree-editor__leaf, .tree-editor__folder")
         if (row) row.classList.toggle("tree-editor__node--hidden", hidden)
 
-        // Cascade: if hiding a group, disable and dim descendant checkboxes
-        if (targetType === "Group") {
-          const node = checkbox.closest(".tree-editor__folder")
-          if (node) this.cascadeGroupVisibility(node, hidden)
+        // Cascade: only if this group is rendered as a folder (has children).
+        // If it's a leaf we have nothing to cascade into, and climbing to the
+        // nearest ancestor folder would wrongly affect siblings.
+        if (targetType === "Group" && row?.classList.contains("tree-editor__folder")) {
+          this.cascadeGroupVisibility(row, hidden)
         }
       } else {
         // Revert on failure
@@ -65,33 +66,21 @@ export default class extends Controller {
   }
 
   cascadeGroupVisibility(groupNode, hidden) {
-    // Find the children container within this folder's details element
+    // Find the children container within this folder's details element.
+    // The CSS rule `.tree-editor__node--hidden .tree-editor__tag--hidden`
+    // already makes every descendant tag visible when the parent row carries
+    // the class, so we only need to manage checkbox disabled state here.
     const childrenContainer = groupNode.querySelector(".tree-editor__children")
     if (!childrenContainer) return
 
-    // Get all descendant folders and leaves
-    const descendants = childrenContainer.querySelectorAll(".tree-editor__folder, .tree-editor__leaf")
-    descendants.forEach(node => {
-      const cb = node.querySelector('input[type="checkbox"]')
-
+    const checkboxes = childrenContainer.querySelectorAll('input[type="checkbox"]')
+    checkboxes.forEach(cb => {
       if (hidden) {
-        node.classList.add("tree-editor__node--hidden")
-        if (cb) cb.disabled = true
+        cb.disabled = true
       } else {
-        this.uncascadeNode(node, cb)
+        // Re-enable unless the checkbox's own row is directly hidden
+        if (!cb.checked) cb.disabled = false
       }
     })
-  }
-
-  uncascadeNode(node, cb) {
-    // Only un-cascade nodes that aren't directly hidden themselves
-    if (!cb?.checked) {
-      // Node is not directly hidden — remove hidden styling
-      node.classList.remove("tree-editor__node--hidden")
-      if (cb) cb.disabled = false
-    } else {
-      // Node is directly hidden — keep it hidden but re-enable its checkbox
-      if (cb) cb.disabled = false
-    }
   }
 }

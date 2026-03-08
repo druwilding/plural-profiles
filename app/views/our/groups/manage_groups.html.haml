@@ -12,9 +12,9 @@
     %p.tree-editor__hint
       Use the
       %strong Hide
-      checkboxes to control what visitors can see on
-      = succeed "." do
-        = link_to @group.name, group_path(@group.uuid), target: "_blank", rel: "noopener noreferrer"
+      checkboxes to determine what can be seen when viewing
+      %strong= link_to @group.name, group_path(@group.uuid), target: "_blank", rel: "noopener noreferrer"
+      publicly.
       Hiding a group also hides everything inside it.
 
     -# Root group node (collapsible, no Hide/Remove)
