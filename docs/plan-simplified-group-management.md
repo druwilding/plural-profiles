@@ -57,7 +57,7 @@ The `path` is an array of group IDs representing the traversal from root (exclus
 
 ---
 
-## Phase 1: Migration
+## Phase 1: Migration - ✅ DONE
 
 ### 1a. Rework `inclusion_overrides` table
 
@@ -850,7 +850,7 @@ After all tests pass, review the Group model for any dead code from the old syst
 
 ## Implementation Order
 
-1. **Phase 1** — Migration
+1. **Phase 1** — Migration - ✅ DONE
 2. **Phase 2** — Model changes
 3. **Phase 7** — Test fixtures
 4. **Phase 3** — Routes & controller

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_100355) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,11 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_100355) do
   create_table "group_groups", force: :cascade do |t|
     t.bigint "child_group_id", null: false
     t.datetime "created_at", null: false
-    t.jsonb "included_profile_ids", default: [], null: false
-    t.jsonb "included_subgroup_ids", default: [], null: false
     t.bigint "parent_group_id", null: false
-    t.string "profile_inclusion_mode", default: "all", null: false
-    t.string "subgroup_inclusion_mode", default: "all", null: false
     t.datetime "updated_at", null: false
     t.index ["child_group_id"], name: "index_group_groups_on_child_group_id"
     t.index ["parent_group_id", "child_group_id"], name: "index_group_groups_on_parent_group_id_and_child_group_id", unique: true
@@ -80,16 +76,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_100355) do
 
   create_table "inclusion_overrides", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "group_group_id", null: false
-    t.jsonb "included_profile_ids", default: [], null: false
-    t.jsonb "included_subgroup_ids", default: [], null: false
-    t.string "profile_inclusion_mode", default: "all", null: false
-    t.string "subgroup_inclusion_mode", default: "all", null: false
-    t.bigint "target_group_id", null: false
+    t.bigint "group_id", null: false
+    t.jsonb "path", default: [], null: false
+    t.bigint "target_id", null: false
+    t.string "target_type", null: false
     t.datetime "updated_at", null: false
-    t.index ["group_group_id", "target_group_id"], name: "idx_on_group_group_id_target_group_id_bb02b96ff7", unique: true
-    t.index ["group_group_id"], name: "index_inclusion_overrides_on_group_group_id"
-    t.index ["target_group_id"], name: "index_inclusion_overrides_on_target_group_id"
+    t.index ["group_id", "path", "target_type", "target_id"], name: "idx_inclusion_overrides_unique", unique: true
+    t.index ["group_id"], name: "index_inclusion_overrides_on_group_id"
   end
 
   create_table "invite_codes", force: :cascade do |t|
@@ -144,8 +137,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_100355) do
   add_foreign_key "group_profiles", "groups"
   add_foreign_key "group_profiles", "profiles"
   add_foreign_key "groups", "users"
-  add_foreign_key "inclusion_overrides", "group_groups", on_delete: :cascade
-  add_foreign_key "inclusion_overrides", "groups", column: "target_group_id", on_delete: :cascade
+  add_foreign_key "inclusion_overrides", "groups", on_delete: :cascade
   add_foreign_key "invite_codes", "users"
   add_foreign_key "invite_codes", "users", column: "redeemed_by_id"
   add_foreign_key "profiles", "users"
