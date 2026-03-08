@@ -34,7 +34,7 @@
               = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
             - unless cascade_hidden
               %noscript
-                = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
+                = submit_tag hidden ? "Show #{group.name}" : "Hide #{group.name}", class: "btn btn--small"
         - if is_direct
           = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
     .tree-editor__children
@@ -65,6 +65,6 @@
             = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
           - unless cascade_hidden
             %noscript
-              = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
+              = submit_tag hidden ? "Show #{group.name}" : "Hide #{group.name}", class: "btn btn--small"
       - if is_direct
         = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"

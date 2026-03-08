@@ -27,4 +27,4 @@
         = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: container_path.to_json, target_type: "Profile", target_id: profile.id, visibility_toggle_target: "checkbox" }
       - unless cascade_hidden
         %noscript
-          = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
+          = submit_tag hidden ? "Show #{profile.name}" : "Hide #{profile.name}", class: "btn btn--small"
