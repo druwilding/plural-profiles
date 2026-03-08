@@ -641,7 +641,7 @@ export default class extends Controller {
 
 ---
 
-## Phase 6: CSS Updates
+## Phase 6: CSS Updates — ✅ DONE
 
 Update the `.tree-editor` styles in `application.css`:
 
@@ -856,7 +856,7 @@ After all tests pass, review the Group model for any dead code from the old syst
 4. **Phase 3** — Routes & controller — ✅ DONE
 5. **Phase 4** — Views — ✅ DONE
 6. **Phase 5** — JavaScript — ✅ DONE
-7. **Phase 6** — CSS
+7. **Phase 6** — CSS — ✅ DONE
 8. **Phase 8** — Tests
 9. **Phase 9** — Cleanup
 

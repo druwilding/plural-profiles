@@ -1177,6 +1177,10 @@ details[open] .details-close {
   color: var(--danger-button-text);
 }
 
+.tree-editor__node--profile {
+  margin-left: 0.25rem;
+}
+
 .tree-editor__node--hidden {
   opacity: 0.5;
 }
