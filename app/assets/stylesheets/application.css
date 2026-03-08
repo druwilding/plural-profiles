@@ -1101,21 +1101,27 @@ details[open] .details-close {
   margin-bottom: 1.25rem;
 }
 
-.tree-editor__section {
-  border-left: 1px solid var(--tree-guide);
-  padding-left: 1rem;
-  margin-bottom: 0.25rem;
+/* ── Layout variables (mirrors public tree) ──────────── */
+.tree-editor__folder,
+.tree-editor__children {
+  --te-indent: 1.5rem;
+  --te-arrow-width: 1.4rem;
+  --te-row-center: 0.95rem;
+  --te-guide-inset: -0.35rem;
+  --te-leaf-connector: 1.6rem;
 }
 
-.tree-editor__section > .tree-editor__section-content {
-  padding: 0.25rem 0;
+/* ── Folder (details/summary) ────────────────────────── */
+.tree-editor__folder {
+  margin: 0;
+  position: relative;
 }
 
 .tree-editor__summary {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.25rem;
+  padding: 0.3rem 0.5rem;
   cursor: pointer;
   list-style: none;
   border-radius: 4px;
@@ -1127,12 +1133,13 @@ details[open] .details-close {
 
 .tree-editor__summary::before {
   content: "▶";
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   flex-shrink: 0;
   display: inline-block;
   transition: transform 0.15s ease;
-  width: 1rem;
+  width: var(--te-arrow-width);
   text-align: center;
+  line-height: 1;
 }
 
 details[open] > .tree-editor__summary::before {
@@ -1152,18 +1159,59 @@ details[open] > .tree-editor__summary::before {
   margin-left: auto;
 }
 
-.tree-editor__node {
-  margin-bottom: 0.25rem;
+/* ── Children container (indented with guide lines) ──── */
+.tree-editor__children {
+  padding-left: var(--te-indent);
+  margin: 0;
 }
 
+/* Vertical + horizontal guide lines on direct children */
+.tree-editor__children > .tree-editor__folder,
+.tree-editor__children > .tree-editor__leaf {
+  position: relative;
+}
+
+/* Vertical guide line running down the left */
+.tree-editor__children > .tree-editor__folder::before,
+.tree-editor__children > .tree-editor__leaf::before {
+  content: "";
+  position: absolute;
+  left: var(--te-guide-inset);
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--tree-guide);
+  pointer-events: none;
+}
+
+/* Last child: vertical line stops at the row center */
+.tree-editor__children > .tree-editor__folder:last-child::before,
+.tree-editor__children > .tree-editor__leaf:last-child::before {
+  bottom: auto;
+  height: var(--te-row-center);
+}
+
+/* Horizontal connector line into leaf items */
+.tree-editor__children > .tree-editor__leaf::after {
+  content: "";
+  position: absolute;
+  left: var(--te-guide-inset);
+  top: var(--te-row-center);
+  width: var(--te-leaf-connector);
+  border-top: 1px solid var(--tree-guide);
+  pointer-events: none;
+}
+
+/* ── Leaf items (profiles + groups without children) ─── */
 .tree-editor__leaf {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.25rem;
-  padding-left: calc(1rem + 0.25rem);
+  padding: 0.3rem 0.5rem;
+  padding-left: calc(var(--te-arrow-width) + 0.5rem);
+  margin: 0;
 }
 
+/* ── Common elements ─────────────────────────────────── */
 .tree-editor__toggle-form {
   display: contents;
 }
@@ -1221,26 +1269,16 @@ details[open] > .tree-editor__summary::before {
   color: var(--danger-button-text);
 }
 
-.tree-editor__node--profile {
-  margin-left: 0;
-}
-
+/* ── Hidden state ────────────────────────────────────── */
 .tree-editor__node--hidden {
   opacity: 0.5;
 }
 
-.tree-editor__node--hidden .tree-editor__section-content {
+.tree-editor__node--hidden .tree-editor__children {
   opacity: 0.7;
 }
 
-.tree-editor__profiles-heading {
-  margin-top: 1.5rem;
-}
-
-.tree-editor__profile-list {
-  padding-left: 0;
-}
-
+/* ── Save indicator ──────────────────────────────────── */
 .tree-editor__save-indicator {
   font-size: 0.8rem;
   color: var(--primary-button-text);
@@ -1268,7 +1306,7 @@ details[open] > .tree-editor__summary::before {
     flex-wrap: wrap;
   }
 
-  .tree-editor__section {
+  .tree-editor__children {
     padding-left: 0.5rem;
   }
 }
@@ -1291,8 +1329,10 @@ details[open] > .tree-editor__summary::before {
     color: CanvasText;
   }
 
-  .tree-editor__section {
-    border-left-color: CanvasText;
+  .tree-editor__children > .tree-editor__folder::before,
+  .tree-editor__children > .tree-editor__leaf::before,
+  .tree-editor__children > .tree-editor__leaf::after {
+    border-color: CanvasText;
   }
 
   .tree-editor__node--hidden {

@@ -37,7 +37,7 @@ export default class extends Controller {
 
         // Cascade: if hiding a group, disable and dim descendant checkboxes
         if (targetType === "Group") {
-          const node = checkbox.closest(".tree-editor__node")
+          const node = checkbox.closest(".tree-editor__folder")
           if (node) this.cascadeGroupVisibility(node, hidden)
         }
       } else {
@@ -61,12 +61,13 @@ export default class extends Controller {
   }
 
   cascadeGroupVisibility(groupNode, hidden) {
-    // Find the section content within this node's details element
-    const sectionContent = groupNode.querySelector(".tree-editor__section-content")
-    if (!sectionContent) return
+    // Find the children container within this folder's details element
+    const childrenContainer = groupNode.querySelector(".tree-editor__children")
+    if (!childrenContainer) return
 
-    const descendantNodes = sectionContent.querySelectorAll(".tree-editor__node")
-    descendantNodes.forEach(node => {
+    // Get all descendant folders and leaves
+    const descendants = childrenContainer.querySelectorAll(".tree-editor__folder, .tree-editor__leaf")
+    descendants.forEach(node => {
       const cb = node.querySelector('input[type="checkbox"]')
       const tag = node.querySelector(".tree-editor__tag--hidden")
 

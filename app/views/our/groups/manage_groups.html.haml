@@ -18,27 +18,22 @@
       Hiding a group also hides everything inside it.
 
     -# Root group node (collapsible, no Hide/Remove)
-    - if has_tree
-      %details.tree-editor__section{open: true}
-        %summary.tree-editor__summary
-          .tree-editor__item-info
-            - if @group.avatar.attached?
-              = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
-            - else
-              %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
-                = render "shared/plural_pride_logo"
-            %span.tree-editor__name= @group.name
-        .tree-editor__section-content
+    %details.tree-editor__folder.tree-editor__folder--root{open: true}
+      %summary.tree-editor__summary
+        .tree-editor__item-info
+          - if @group.avatar.attached?
+            = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+          - else
+            %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+              = render "shared/plural_pride_logo"
+          %span.tree-editor__name= @group.name
+      .tree-editor__children
+        - if has_tree
           - @management_tree.each do |node|
             = render "our/groups/manage_groups_node", node: node, root_group: @group
-
-    - if has_root_profiles
-      %h2.tree-editor__profiles-heading
-        Profiles directly in
-        = @group.name
-      .tree-editor__profile-list
-        - @root_profiles.each do |entry|
-          = render "our/groups/manage_groups_profile_node", entry: entry, root_group: @group
+        - if has_root_profiles
+          - @root_profiles.each do |entry|
+            = render "our/groups/manage_groups_profile_node", entry: entry, root_group: @group
 - else
   .card
     %p This group has no sub-groups or profiles yet. Add a group below.

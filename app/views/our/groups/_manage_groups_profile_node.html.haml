@@ -6,26 +6,25 @@
 - cascade_hidden = entry[:cascade_hidden]
 - effectively_hidden = hidden || cascade_hidden
 
-.tree-editor__node.tree-editor__node--profile{class: ("tree-editor__node--hidden" if effectively_hidden)}
-  .tree-editor__leaf
-    .tree-editor__item-info
-      - if profile.avatar.attached?
-        = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
-      - else
-        %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
-          = render "shared/plural_pride_logo"
-      %span.tree-editor__name= profile.name
-      - if effectively_hidden
-        %span.tree-editor__tag.tree-editor__tag--hidden hidden
-    .tree-editor__actions
-      .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
-      = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do
-        = hidden_field_tag :path, container_path.to_json
-        = hidden_field_tag :target_type, "Profile"
-        = hidden_field_tag :target_id, profile.id
-        = hidden_field_tag :hidden, hidden ? "0" : "1"
-        %label.tree-editor__hide-label
-          = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: container_path.to_json, target_type: "Profile", target_id: profile.id, visibility_toggle_target: "checkbox" }
-          Hide
-        %noscript
-          = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
+.tree-editor__leaf.tree-editor__leaf--profile{class: ("tree-editor__node--hidden" if effectively_hidden)}
+  .tree-editor__item-info
+    - if profile.avatar.attached?
+      = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+    - else
+      %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+        = render "shared/plural_pride_logo"
+    %span.tree-editor__name= profile.name
+    - if effectively_hidden
+      %span.tree-editor__tag.tree-editor__tag--hidden hidden
+  .tree-editor__actions
+    .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
+    = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do
+      = hidden_field_tag :path, container_path.to_json
+      = hidden_field_tag :target_type, "Profile"
+      = hidden_field_tag :target_id, profile.id
+      = hidden_field_tag :hidden, hidden ? "0" : "1"
+      %label.tree-editor__hide-label
+        = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: container_path.to_json, target_type: "Profile", target_id: profile.id, visibility_toggle_target: "checkbox" }
+        Hide
+      %noscript
+        = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"

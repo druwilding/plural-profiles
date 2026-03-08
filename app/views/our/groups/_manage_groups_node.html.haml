@@ -10,41 +10,9 @@
 - has_children = children.any? || profiles.any?
 - is_direct = path.empty?
 
-.tree-editor__node{class: ("tree-editor__node--hidden" if effectively_hidden)}
-  - if has_children
-    %details.tree-editor__section{open: !effectively_hidden}
-      %summary.tree-editor__summary
-        .tree-editor__item-info
-          - if group.avatar.attached?
-            = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
-          - else
-            %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
-              = render "shared/plural_pride_logo"
-          %span.tree-editor__name= group.name
-          - if effectively_hidden
-            %span.tree-editor__tag.tree-editor__tag--hidden hidden
-        .tree-editor__actions
-          .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
-          - unless is_direct
-            = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do
-              = hidden_field_tag :path, path.to_json
-              = hidden_field_tag :target_type, "Group"
-              = hidden_field_tag :target_id, group.id
-              = hidden_field_tag :hidden, hidden ? "0" : "1"
-              %label.tree-editor__hide-label
-                = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
-                Hide
-              %noscript
-                = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
-          - if is_direct
-            = link_to "Remove", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
-      .tree-editor__section-content
-        - children.each do |child_node|
-          = render "our/groups/manage_groups_node", node: child_node, root_group: root_group
-        - profiles.each do |entry|
-          = render "our/groups/manage_groups_profile_node", entry: entry, root_group: root_group
-  - else
-    .tree-editor__leaf
+- if has_children
+  %details.tree-editor__folder{class: ("tree-editor__node--hidden" if effectively_hidden), open: !effectively_hidden}
+    %summary.tree-editor__summary
       .tree-editor__item-info
         - if group.avatar.attached?
           = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
@@ -69,3 +37,34 @@
               = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
         - if is_direct
           = link_to "Remove", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
+    .tree-editor__children
+      - children.each do |child_node|
+        = render "our/groups/manage_groups_node", node: child_node, root_group: root_group
+      - profiles.each do |entry|
+        = render "our/groups/manage_groups_profile_node", entry: entry, root_group: root_group
+- else
+  .tree-editor__leaf{class: ("tree-editor__node--hidden" if effectively_hidden)}
+    .tree-editor__item-info
+      - if group.avatar.attached?
+        = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+      - else
+        %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+          = render "shared/plural_pride_logo"
+      %span.tree-editor__name= group.name
+      - if effectively_hidden
+        %span.tree-editor__tag.tree-editor__tag--hidden hidden
+    .tree-editor__actions
+      .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
+      - unless is_direct
+        = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do
+          = hidden_field_tag :path, path.to_json
+          = hidden_field_tag :target_type, "Group"
+          = hidden_field_tag :target_id, group.id
+          = hidden_field_tag :hidden, hidden ? "0" : "1"
+          %label.tree-editor__hide-label
+            = check_box_tag :hidden_toggle, "1", hidden, disabled: cascade_hidden, data: { action: "change->visibility-toggle#toggle", path: path.to_json, target_type: "Group", target_id: group.id, visibility_toggle_target: "checkbox" }
+            Hide
+          %noscript
+            = submit_tag hidden ? "Show" : "Hide", class: "btn btn--small"
+      - if is_direct
+        = link_to "Remove", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
