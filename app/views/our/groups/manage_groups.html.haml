@@ -7,7 +7,7 @@
 - if @management_tree.any?
   .tree-editor
     %p.tree-editor__hint
-      Uncheck a group or profile to hide it from the public view of
+      Check a group or profile to hide it from the public view of
       = succeed "." do
         %strong= link_to @group.name, group_path(@group.uuid), target: "_blank", rel: "noopener noreferrer"
       Hiding a group also hides everything inside it.

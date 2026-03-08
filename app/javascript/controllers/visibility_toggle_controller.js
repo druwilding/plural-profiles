@@ -5,7 +5,7 @@ export default class extends Controller {
 
   async toggle(event) {
     const checkbox = event.target
-    const hidden = !checkbox.checked
+    const hidden = checkbox.checked
     const targetType = checkbox.dataset.targetType
     const targetId = checkbox.dataset.targetId
 
@@ -86,8 +86,8 @@ export default class extends Controller {
 
   uncascadeNode(node, cb, tag) {
     // Only un-cascade nodes that aren't directly hidden themselves
-    if (cb?.checked) {
-      // Node is visible — remove hidden styling
+    if (!cb?.checked) {
+      // Node is not directly hidden — remove hidden styling
       node.classList.remove("tree-editor__node--hidden")
       if (cb) cb.disabled = false
       if (tag) tag.remove()

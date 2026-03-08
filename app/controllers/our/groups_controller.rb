@@ -131,10 +131,12 @@ class Our::GroupsController < ApplicationController
     end
 
     hidden = params[:hidden] == "1" || params[:hidden] == "true"
-    override = InclusionOverride.find_by(
-      group_id: @group.id, path: path,
+    # NOTE: Cannot use find_by(path: array) — ActiveRecord treats arrays as IN clauses,
+    # which breaks JSONB equality comparison. Use explicit JSONB cast instead.
+    override = InclusionOverride.where(
+      group_id: @group.id,
       target_type: target_type, target_id: target_id
-    )
+    ).where("path = ?::jsonb", path.to_json).first
 
     if hidden && !override
       InclusionOverride.create!(
