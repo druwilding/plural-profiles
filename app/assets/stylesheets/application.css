@@ -211,7 +211,7 @@ body {
 .sidebar__avatar {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: 25%;
   flex-shrink: 0;
   object-fit: cover;
 }
@@ -817,7 +817,7 @@ details[open] .details-close {
 
 /* Avatars */
 .avatar {
-  border-radius: 50%;
+  border-radius: 25%;
   object-fit: cover;
 }
 
@@ -856,7 +856,7 @@ details[open] .details-close {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 25%;
   width: 64px;
   height: 64px;
   min-width: 64px;
@@ -1052,7 +1052,7 @@ details[open] .details-close {
 .tree__avatar {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: 25%;
   flex-shrink: 0;
   object-fit: cover;
 }
