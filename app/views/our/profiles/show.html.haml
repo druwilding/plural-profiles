@@ -50,7 +50,7 @@
         %span{aria: {hidden: "true"}} ↗
     %p.share-url-hint
       You can regenerate this URL if you want a new one, for example, if you've shared it with someone and no longer want them to be able to see this profile.
-      = link_to "Regenerate URL", regenerate_uuid_our_profile_path(@profile), data: { turbo_method: :patch, turbo_confirm: "This will break any existing links to this profile. Are you sure?" }, class: "btn btn--outline btn--small"
+      = link_to "Regenerate URL", regenerate_uuid_our_profile_path(@profile), data: { turbo_method: :patch, turbo_confirm: "This will break any existing links to this profile. Are you sure?" }, class: "btn btn--outline btn--small btn--danger"
 
   - if @profile.groups.any?
     %h3 In groups

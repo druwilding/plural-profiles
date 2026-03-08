@@ -684,6 +684,12 @@ button:hover,
   color: var(--text);
 }
 
+@media (forced-colors: active) {
+  .profile-card {
+    border: 1px solid CanvasText;
+  }
+}
+
 .profile-card h3 {
   margin: 0.75rem 0 0.25rem;
   font-size: 1rem;
@@ -1414,7 +1420,7 @@ details[open] .details-close {
 /* Share box */
 .share-box {
   background-color: var(--page-bg);
-  border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
+  border: 1px solid var(--pane-border);
   border-radius: 6px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
@@ -1437,7 +1443,6 @@ details[open] .details-close {
 
 .share-url-hint {
   font-size: 0.85rem;
-  opacity: 0.7;
   margin-top: 0.75rem;
   margin-bottom: 0;
   display: flex;
@@ -1473,6 +1478,7 @@ input[type="submit"].btn--small,
 
 .btn--danger:hover {
   background-color: color-mix(in srgb, var(--danger-button-bg) 80%, transparent);
+  color: var(--danger-button-text);
 }
 
 /* Utility classes (for user-generated content) */
