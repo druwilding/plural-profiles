@@ -13,14 +13,8 @@ class GroupsController < ApplicationController
 
     if params[:root].present? && params[:root] != params[:uuid]
       root_group = Group.find_by!(uuid: params[:root])
-      visibility = root_group.cached_profile_visibility
-      if visibility[:all_group_ids].include?(@group.id)
-        @profiles = @group.profiles
-      else
-        selected_ids = visibility[:selected_profile_ids]
-        matching = @group.profile_ids & selected_ids.to_a
-        @profiles = matching.any? ? @group.profiles.where(id: matching) : Profile.none
-      end
+      visible_from_root = root_group.all_profiles
+      @profiles = @group.profiles.where(id: visible_from_root.select(:id))
     else
       @profiles = @group.profiles
     end

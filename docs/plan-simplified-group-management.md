@@ -120,7 +120,7 @@ Create migration `RemoveInclusionModesFromGroupGroups`:
 
 ---
 
-## Phase 2: Model Changes
+## Phase 2: Model Changes - ✅ DONE
 
 ### 2a. `InclusionOverride` model
 
@@ -851,7 +851,7 @@ After all tests pass, review the Group model for any dead code from the old syst
 ## Implementation Order
 
 1. **Phase 1** — Migration - ✅ DONE
-2. **Phase 2** — Model changes
+2. **Phase 2** — Model changes - ✅ DONE
 3. **Phase 7** — Test fixtures
 4. **Phase 3** — Routes & controller
 5. **Phase 4** — Views
