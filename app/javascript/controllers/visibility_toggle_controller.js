@@ -76,9 +76,13 @@ export default class extends Controller {
     if (!childrenContainer) return
 
     if (hidden) {
-      // Cascade hidden: disable every descendant checkbox in one pass.
+      // Cascade hidden: mark every descendant node as hidden and disable its checkbox.
+      childrenContainer.querySelectorAll(".tree-editor__leaf, .tree-editor__folder").forEach(node => {
+        node.classList.add("tree-editor__node--hidden")
+      })
       childrenContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.disabled = true
+        cb.setAttribute("aria-disabled", "true")
       })
     } else {
       // Cascade un-hidden: walk direct children, removing the hidden class
@@ -103,13 +107,19 @@ export default class extends Controller {
       if (checkbox?.checked) {
         // This node is directly hidden — leave it and its subtree alone,
         // but re-enable its own checkbox so the user can unhide it later.
-        if (checkbox) checkbox.disabled = false
+        if (checkbox) {
+          checkbox.disabled = false
+          checkbox.removeAttribute("aria-disabled")
+        }
         return
       }
 
       // Not directly hidden: remove the cascade class and re-enable.
       node.classList.remove("tree-editor__node--hidden")
-      if (checkbox) checkbox.disabled = false
+      if (checkbox) {
+        checkbox.disabled = false
+        checkbox.removeAttribute("aria-disabled")
+      }
 
       // Recurse into folder children.
       if (isFolder) {
