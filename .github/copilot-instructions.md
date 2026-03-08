@@ -35,7 +35,7 @@ All views use `.html.haml`. Never generate ERB templates. Use HAML syntax for ev
 ### CSS — hand-written, no frameworks
 The app uses a single `application.css` file with CSS custom properties (see `:root` block). There is no Tailwind, Bootstrap, or any CSS framework. All styling is hand-written.
 
-Key custom properties: `--bg`, `--text`, `--link`, `--heading`, `--bg-contrast`, `--error`, `--success`, `--warning`, `--input-bg`, `--input-border`, `--spoiler`, `--tree-guide`, `--placeholder-border`.
+Key custom properties: `--page-bg`, `--pane-bg`, `--pane-border`, `--text`, `--link`, `--heading`, `--primary-button-bg`, `--primary-button-text`, `--secondary-button-text`, `--danger-button-bg`, `--danger-button-text`, `--input-bg`, `--input-border`, `--spoiler`, `--notice-bg`, `--notice-border`, `--notice-text`, `--alert-bg`, `--alert-border`, `--alert-text`, `--warning-bg`, `--warning-border`, `--warning-text`, `--tree-guide`, `--avatar-placeholder-border`.
 
 Always consider `@media (forced-colors: active)` for accessibility when adding interactive or visual components. Use system colours (`Canvas`, `CanvasText`, `Highlight`, `HighlightText`, `ButtonText`, `ButtonFace`) in forced-colors mode.
 
