@@ -27,7 +27,7 @@
   --warning-border: var(--danger-button-text);
   --warning-text: var(--danger-button-text);
   --tree-guide: color-mix(in srgb, var(--text) 30%, transparent);
-  --placeholder-border: color-mix(in srgb, var(--text) 50%, transparent);
+  --avatar-placeholder-border: color-mix(in srgb, var(--text) 50%, transparent);
 }
 
 *, *::before, *::after {
@@ -842,7 +842,7 @@ details[open] .details-close {
 .sidebar__avatar--placeholder,
 .tree__avatar--placeholder {
   color: var(--text);
-  border: 1px solid var(--placeholder-border);
+  border: 1px solid var(--avatar-placeholder-border);
 }
 
 .avatar--placeholder svg,
