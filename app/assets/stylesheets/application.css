@@ -1236,16 +1236,20 @@ details[open] > .tree-editor__summary::before {
   gap: 0.5rem;
   flex-shrink: 0;
   margin-left: auto;
+  line-height: 24px;
 }
 
 .tree-editor__hide-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   cursor: pointer;
   font-size: 0.85rem;
   white-space: nowrap;
   user-select: none;
+  line-height: 24px;
+  vertical-align: middle;
+  margin-bottom: 0;
 }
 
 .tree-editor__hide-label input[type="checkbox"] {
