@@ -3,41 +3,8 @@ require "test_helper"
 class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:one)
-    @group = groups(:friends)
     @other_user = users(:two)
-    @other_group = groups(:family)
-  end
-
-  test "update_override does not reset subgroup_inclusion_mode when param is absent" do
-    user_three = users(:three)
-    sign_in_as user_three
-    alpha = groups(:alpha_clan)
-    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
-    target = groups(:prism_circle)
-    override = inclusion_overrides(:rogue_pack_excluded_from_alpha)
-
-    # Precondition: override has subgroup_inclusion_mode 'selected', included_subgroup_ids []
-    assert_equal "selected", override.subgroup_inclusion_mode
-    assert_equal [], override.included_subgroup_ids
-    assert_equal "selected", override.profile_inclusion_mode
-    ember_id = profiles(:ember).id
-    assert_equal [ ember_id ], override.included_profile_ids
-
-    # Submit only profile_inclusion_mode (simulate UI for group with no children)
-    patch update_override_our_group_path(alpha), params: {
-      edge_id: edge.id,
-      target_group_id: target.id,
-      profile_inclusion_mode: "none"
-    }
-    assert_redirected_to manage_groups_our_group_path(alpha)
-
-    override.reload
-    # subgroup_inclusion_mode and included_subgroup_ids should be unchanged
-    assert_equal "selected", override.subgroup_inclusion_mode
-    assert_equal [], override.included_subgroup_ids
-    # profile_inclusion_mode should be updated
-    assert_equal "none", override.profile_inclusion_mode
-    assert_equal [], override.included_profile_ids
+    @group = groups(:friends)
   end
 
   # -- Authenticated happy paths --
@@ -406,169 +373,6 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to group_path(everyone.uuid)
   end
 
-  # -- Update relationship type --
-
-  test "update_relationship switches all to none" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    link.update!(subgroup_inclusion_mode: "all")
-    assert link.subgroup_all?
-
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, subgroup_inclusion_mode: "none" }
-    assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.subgroup_none?
-  end
-
-  test "update_relationship switches none back to all" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    link.update!(subgroup_inclusion_mode: "none")
-
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, subgroup_inclusion_mode: "all" }
-    assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.subgroup_all?
-  end
-
-  test "update_relationship with invalid group_id shows alert" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    patch update_relationship_our_group_path(everyone), params: { group_id: 999999 }
-    assert_redirected_to manage_groups_our_group_path(everyone)
-    follow_redirect!
-    assert_match "Group not found", response.body
-  end
-
-  test "update_relationship redirects logged-out user to sign in" do
-    everyone = groups(:everyone)
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id }
-    assert_redirected_to new_session_path
-  end
-
-  test "update_relationship redirects wrong user to public group" do
-    sign_in_as @other_user
-    everyone = groups(:everyone)
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id }
-    assert_redirected_to group_path(everyone.uuid)
-  end
-
-  test "update_relationship accepts subgroup_inclusion_mode selected and persisted ids" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-
-    # create a child sub-group under friends so it can be selected
-    sub = @user.groups.create!(name: "Subgroup")
-    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, subgroup_inclusion_mode: "all")
-
-    assert_not link.subgroup_selected?
-
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, subgroup_inclusion_mode: "selected", included_subgroup_ids: [ sub.id ] }
-    assert_redirected_to manage_groups_our_group_path(everyone)
-    link.reload
-    assert link.subgroup_selected?
-    assert_equal [ sub.id ], link.included_subgroup_ids.map(&:to_i)
-  end
-
-  test "update_relationship clears included_subgroup_ids for all or none" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-
-    # prepare existing included ids
-    sub = @user.groups.create!(name: "Subgroup2")
-    GroupGroup.create!(parent_group: groups(:friends), child_group: sub, subgroup_inclusion_mode: "all")
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, subgroup_inclusion_mode: "selected", included_subgroup_ids: [ sub.id ] }
-    link.reload
-    assert link.subgroup_selected?
-    assert_equal [ sub.id ], link.included_subgroup_ids.map(&:to_i)
-
-    patch update_relationship_our_group_path(everyone), params: { group_id: @group.id, subgroup_inclusion_mode: "all" }
-    link.reload
-    assert link.subgroup_all?
-    assert_equal [], link.included_subgroup_ids
-  end
-
-  # -- Update relationship: profile_inclusion_mode --
-
-  test "update_relationship sets profile_inclusion_mode to all via explicit param" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    link.update!(subgroup_inclusion_mode: "all", profile_inclusion_mode: "none")
-
-    patch update_relationship_our_group_path(everyone), params: {
-      group_id: @group.id, profile_inclusion_mode: "all"
-    }
-    link.reload
-    assert link.profile_all?
-  end
-
-  test "update_relationship sets profile_inclusion_mode to none via explicit param" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    link.update!(subgroup_inclusion_mode: "all", profile_inclusion_mode: "all")
-
-    patch update_relationship_our_group_path(everyone), params: {
-      group_id: @group.id, profile_inclusion_mode: "none"
-    }
-    link.reload
-    assert link.profile_none?
-  end
-
-  test "update_relationship sets profile_inclusion_mode to selected with ids" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    profile = groups(:friends).profiles.first
-    assert profile, "precondition: friends must have at least one profile"
-
-    patch update_relationship_our_group_path(everyone), params: {
-      group_id: @group.id, profile_inclusion_mode: "selected", included_profile_ids: [ profile.id ]
-    }
-    link.reload
-    assert link.profile_selected?
-    assert_equal [ profile.id ], link.included_profile_ids.map(&:to_i)
-  end
-
-  test "update_relationship clears included_profile_ids for all or none profile mode" do
-    sign_in_as @user
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    profile = groups(:friends).profiles.first
-
-    # Set to selected first
-    link.update!(profile_inclusion_mode: "selected", included_profile_ids: [ profile.id ])
-    assert_equal [ profile.id ], link.included_profile_ids.map(&:to_i)
-
-    patch update_relationship_our_group_path(everyone), params: {
-      group_id: @group.id, profile_inclusion_mode: "all"
-    }
-    link.reload
-    assert link.profile_all?
-    assert_equal [], link.included_profile_ids
-  end
-
-  test "update_relationship updates profile_inclusion_mode for a leaf group (no sub-groups)" do
-    sign_in_as @user
-    # friends has no child groups, making it a leaf
-    everyone = groups(:everyone)
-    link = group_groups(:friends_in_everyone)
-    assert_equal 0, link.child_group.child_links.count, "precondition: friends must be a leaf"
-    link.update!(profile_inclusion_mode: "none")
-
-    # Submit only profile_inclusion_mode — no subgroup_inclusion_mode, matching what the
-    # form sends for a leaf group
-    patch update_relationship_our_group_path(everyone), params: {
-      group_id: @group.id, profile_inclusion_mode: "all"
-    }
-
-    assert_redirected_to manage_groups_our_group_path(everyone)
-    assert link.reload.profile_all?, "profile_inclusion_mode should be updated even without subgroup_inclusion_mode"
-  end
-
   # -- regenerate_uuid --
 
   test "regenerate_uuid changes the uuid and redirects with notice" do
@@ -615,9 +419,20 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
 
   test "manage_groups renders for group without children" do
     sign_in_as @user
+    # Friends has no child groups, but has Alice as a direct profile.
+    # The tree editor renders with root profiles.
     get manage_groups_our_group_path(@group)
     assert_response :success
-    assert_match "no sub-groups yet", response.body
+    assert_match "Manage groups in", response.body
+    assert_match "Alice", response.body
+  end
+
+  test "manage_groups shows empty state for group with no children or profiles" do
+    sign_in_as @user
+    empty_group = @user.groups.create!(name: "Empty")
+    get manage_groups_our_group_path(empty_group)
+    assert_response :success
+    assert_match "no sub-groups or profiles yet", response.body
   end
 
   test "manage_groups requires authentication" do
@@ -626,64 +441,243 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  test "update_override creates an override" do
+  # -- toggle_visibility --
+
+  test "toggle_visibility hides a group" do
     user_three = users(:three)
     sign_in_as user_three
     alpha = groups(:alpha_clan)
-    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
-    target = groups(:rogue_pack)
+    spectrum = groups(:spectrum)
+    prism = groups(:prism_circle)
 
-    assert_difference "InclusionOverride.count", 1 do
-      patch update_override_our_group_path(alpha), params: {
-        edge_id: edge.id,
-        target_group_id: target.id,
-        subgroup_inclusion_mode: "none",
-        profile_inclusion_mode: "none"
+    # Create a new override to hide Prism Circle at [spectrum]
+    assert_difference("InclusionOverride.count", 1) do
+      patch toggle_visibility_our_group_path(alpha), params: {
+        target_type: "Group",
+        target_id: prism.id,
+        path: [ spectrum.id ].to_json,
+        hidden: "1"
       }
     end
     assert_redirected_to manage_groups_our_group_path(alpha)
-
-    override = InclusionOverride.last
-    assert_equal "none", override.subgroup_inclusion_mode
-    assert_equal "none", override.profile_inclusion_mode
   end
 
-  test "update_override updates an existing override" do
+  test "toggle_visibility shows a previously hidden group" do
     user_three = users(:three)
     sign_in_as user_three
     alpha = groups(:alpha_clan)
-    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
-    target = groups(:prism_circle)
-    override = inclusion_overrides(:rogue_pack_excluded_from_alpha)
+    spectrum = groups(:spectrum)
+    prism = groups(:prism_circle)
+    rogue = groups(:rogue_pack)
 
-    assert_no_difference "InclusionOverride.count" do
-      patch update_override_our_group_path(alpha), params: {
-        edge_id: edge.id,
-        target_group_id: target.id,
-        subgroup_inclusion_mode: "all",
-        profile_inclusion_mode: "all"
+    # Rogue Pack is hidden at [spectrum, prism_circle] via fixture
+    override = InclusionOverride.find_by(
+      group: alpha, target_type: "Group", target_id: rogue.id
+    )
+    assert_not_nil override, "Fixture override should exist"
+
+    assert_difference("InclusionOverride.count", -1) do
+      patch toggle_visibility_our_group_path(alpha), params: {
+        target_type: "Group",
+        target_id: rogue.id,
+        path: [ spectrum.id, prism.id ].to_json,
+        hidden: "0"
       }
     end
     assert_redirected_to manage_groups_our_group_path(alpha)
-
-    override.reload
-    assert_equal "all", override.subgroup_inclusion_mode
-    assert_equal "all", override.profile_inclusion_mode
   end
 
-  test "remove_override destroys an override" do
+  test "toggle_visibility hides a profile" do
     user_three = users(:three)
     sign_in_as user_three
     alpha = groups(:alpha_clan)
-    edge = alpha.child_links.find_by(child_group: groups(:spectrum))
-    target = groups(:prism_circle)
+    spectrum = groups(:spectrum)
+    prism = groups(:prism_circle)
+    ember = profiles(:ember)
 
-    assert_difference "InclusionOverride.count", -1 do
-      delete remove_override_our_group_path(alpha), params: {
-        edge_id: edge.id,
-        target_group_id: target.id
+    assert_difference("InclusionOverride.count", 1) do
+      patch toggle_visibility_our_group_path(alpha), params: {
+        target_type: "Profile",
+        target_id: ember.id,
+        path: [ spectrum.id, prism.id ].to_json,
+        hidden: "1"
       }
     end
     assert_redirected_to manage_groups_our_group_path(alpha)
+  end
+
+  test "toggle_visibility shows a previously hidden profile" do
+    user_three = users(:three)
+    sign_in_as user_three
+    castle = groups(:castle_clan)
+    flux = groups(:flux)
+    drift = profiles(:drift)
+
+    # Drift is hidden at [flux] via fixture
+    override = InclusionOverride.find_by(
+      group: castle, target_type: "Profile", target_id: drift.id
+    )
+    assert_not_nil override, "Drift override should exist"
+
+    assert_difference("InclusionOverride.count", -1) do
+      patch toggle_visibility_our_group_path(castle), params: {
+        target_type: "Profile",
+        target_id: drift.id,
+        path: [ flux.id ].to_json,
+        hidden: "0"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(castle)
+  end
+
+  test "toggle_visibility hides a root-level profile (empty path)" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    # Add Alice as a direct profile of Everyone
+    everyone.profiles << profiles(:alice) unless everyone.profiles.include?(profiles(:alice))
+
+    assert_difference("InclusionOverride.count", 1) do
+      patch toggle_visibility_our_group_path(everyone), params: {
+        target_type: "Profile",
+        target_id: profiles(:alice).id,
+        path: [].to_json,
+        hidden: "1"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(everyone)
+  end
+
+  test "toggle_visibility rejects invalid target type" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+
+    assert_no_difference("InclusionOverride.count") do
+      patch toggle_visibility_our_group_path(alpha), params: {
+        target_type: "User",
+        target_id: user_three.id,
+        path: [].to_json,
+        hidden: "1"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(alpha)
+    follow_redirect!
+    assert_match "Invalid target", response.body
+  end
+
+  test "toggle_visibility rejects target belonging to another user" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    # Try to hide a profile belonging to user three
+    ember = profiles(:ember)
+
+    assert_no_difference("InclusionOverride.count") do
+      patch toggle_visibility_our_group_path(everyone), params: {
+        target_type: "Profile",
+        target_id: ember.id,
+        path: [].to_json,
+        hidden: "1"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(everyone)
+  end
+
+  test "toggle_visibility rejects bad path" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+
+    # Path with a group ID that's not in the tree
+    assert_no_difference("InclusionOverride.count") do
+      patch toggle_visibility_our_group_path(alpha), params: {
+        target_type: "Group",
+        target_id: groups(:spectrum).id,
+        path: [ 999_999 ].to_json,
+        hidden: "1"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(alpha)
+  end
+
+  test "toggle_visibility responds to JSON" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    spectrum = groups(:spectrum)
+    prism = groups(:prism_circle)
+
+    patch toggle_visibility_our_group_path(alpha, format: :json), params: {
+      target_type: "Group",
+      target_id: prism.id,
+      path: [ spectrum.id ].to_json,
+      hidden: "1"
+    }
+    assert_response :ok
+    json = JSON.parse(response.body)
+    assert_equal true, json["hidden"]
+  end
+
+  test "toggle_visibility is idempotent for hide" do
+    user_three = users(:three)
+    sign_in_as user_three
+    alpha = groups(:alpha_clan)
+    spectrum = groups(:spectrum)
+    prism = groups(:prism_circle)
+    rogue = groups(:rogue_pack)
+
+    # Rogue Pack is already hidden at [spectrum, prism] — hiding again should not create duplicate
+    assert_no_difference("InclusionOverride.count") do
+      patch toggle_visibility_our_group_path(alpha), params: {
+        target_type: "Group",
+        target_id: rogue.id,
+        path: [ spectrum.id, prism.id ].to_json,
+        hidden: "1"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(alpha)
+  end
+
+  test "toggle_visibility is idempotent for show" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+
+    # No override exists — showing again should not raise
+    assert_no_difference("InclusionOverride.count") do
+      patch toggle_visibility_our_group_path(everyone), params: {
+        target_type: "Group",
+        target_id: groups(:friends).id,
+        path: [].to_json,
+        hidden: "0"
+      }
+    end
+    assert_redirected_to manage_groups_our_group_path(everyone)
+  end
+
+  test "toggle_visibility redirects logged-out user to sign in" do
+    alpha = groups(:alpha_clan)
+    patch toggle_visibility_our_group_path(alpha), params: {
+      target_type: "Group", target_id: groups(:spectrum).id,
+      path: [].to_json, hidden: "1"
+    }
+    assert_redirected_to new_session_path
+  end
+
+  test "toggle_visibility redirects wrong user to public group" do
+    sign_in_as @other_user
+    alpha = groups(:alpha_clan)
+    patch toggle_visibility_our_group_path(alpha), params: {
+      target_type: "Group", target_id: groups(:spectrum).id,
+      path: [].to_json, hidden: "1"
+    }
+    assert_redirected_to group_path(alpha.uuid)
+  end
+
+  private
+
+  def sign_in_as(user)
+    post session_path, params: {
+      email_address: user.email_address,
+      password: "Plur4l!Pr0files#2026"
+    }
   end
 end

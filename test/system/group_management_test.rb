@@ -45,7 +45,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert_text "Bob"   # available to add
   end
 
-  test "public page shows all sub-group's profiles but hides none sub-group's profiles" do
+  test "public page hides groups removed by inclusion override" do
     user = users(:one)
     everyone = groups(:everyone)
     friends = groups(:friends)
@@ -55,7 +55,7 @@ class GroupManagementTest < ApplicationSystemTestCase
     GroupGroup.create!(parent_group: friends, child_group: inner)
     inner.profiles << profiles(:bob)
 
-    # --- all: inner group and Bob should be visible ---
+    # --- No overrides: inner group and Bob should be visible ---
     visit group_path(everyone.uuid)
 
     within(".explorer__sidebar") do
@@ -66,9 +66,13 @@ class GroupManagementTest < ApplicationSystemTestCase
       assert_text "Alice"
     end
 
-    # --- Switch to none: inner group and Bob should disappear ---
-    link = GroupGroup.find_by(parent_group: everyone, child_group: friends)
-    link.update!(subgroup_inclusion_mode: "none")
+    # --- Add override to hide Inner Circle at path [friends.id] in everyone ---
+    InclusionOverride.create!(
+      group: everyone,
+      path: [ friends.id ],
+      target_type: "Group",
+      target_id: inner.id
+    )
 
     visit group_path(everyone.uuid)
 
@@ -92,20 +96,26 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
-  test "public page shows only selected immediate sub-groups" do
+  test "public page hides sub-groups via inclusion overrides" do
     user = users(:one)
     everyone = groups(:everyone)
 
     # Create a fresh friends branch with two immediate sub-groups
-    friends = user.groups.create!(name: "Friends Selected", description: "Test friends", user: user)
-    close = user.groups.create!(name: "Close Friends", description: "Close pals", user: user)
-    acquaintances = user.groups.create!(name: "Acquaintances", description: "Not close", user: user)
+    friends = user.groups.create!(name: "Friends Selected", description: "Test friends")
+    close = user.groups.create!(name: "Close Friends", description: "Close pals")
+    acquaintances = user.groups.create!(name: "Acquaintances", description: "Not close")
 
     GroupGroup.create!(parent_group: friends, child_group: close)
     GroupGroup.create!(parent_group: friends, child_group: acquaintances)
+    GroupGroup.create!(parent_group: everyone, child_group: friends)
 
-    # everyone -> friends but only include 'close' as selected
-    GroupGroup.create!(parent_group: everyone, child_group: friends, subgroup_inclusion_mode: "selected", included_subgroup_ids: [ close.id ])
+    # Hide acquaintances at path [friends.id] in everyone
+    InclusionOverride.create!(
+      group: everyone,
+      path: [ friends.id ],
+      target_type: "Group",
+      target_id: acquaintances.id
+    )
 
     visit group_path(everyone.uuid)
 
@@ -135,16 +145,23 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
-  test "public page renders none-mode sub-group with children as tree leaf" do
+  test "public page renders group as leaf when all children are hidden" do
     user = users(:one)
     everyone = groups(:everyone)
 
     outer = user.groups.create!(name: "Outer Ring")
     inner = user.groups.create!(name: "Inner Ring")
     GroupGroup.create!(parent_group: outer, child_group: inner)
-    # outer has a sub-group but no direct profiles — with none mode its
-    # children are hidden, so it should render as a leaf in the parent tree
-    GroupGroup.create!(parent_group: everyone, child_group: outer, subgroup_inclusion_mode: "none")
+    # outer has a sub-group but no direct profiles — with its only child
+    # hidden, it should render as a leaf in the parent tree
+    GroupGroup.create!(parent_group: everyone, child_group: outer)
+
+    InclusionOverride.create!(
+      group: everyone,
+      path: [ outer.id ],
+      target_type: "Group",
+      target_id: inner.id
+    )
 
     visit group_path(everyone.uuid)
 
@@ -156,15 +173,22 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
-  test "public page renders sub-group as leaf when profile_inclusion_mode is none" do
+  test "public page renders group as leaf when all profiles are hidden" do
     user = users(:one)
     everyone = groups(:everyone)
 
     crew = user.groups.create!(name: "Quiet Crew")
     crew.profiles << profiles(:bob)
-    # The edge hides direct profiles and there are no sub-groups, so the
-    # node has neither children nor profiles — it should be a leaf
-    GroupGroup.create!(parent_group: everyone, child_group: crew, profile_inclusion_mode: "none")
+    # The group has a direct profile but no sub-groups — with its only
+    # profile hidden, it should render as a leaf
+    GroupGroup.create!(parent_group: everyone, child_group: crew)
+
+    InclusionOverride.create!(
+      group: everyone,
+      path: [ crew.id ],
+      target_type: "Profile",
+      target_id: profiles(:bob).id
+    )
 
     visit group_path(everyone.uuid)
 
@@ -199,13 +223,14 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
-  test "content panel hides profiles excluded by include_direct_profiles override" do
+  test "content panel hides profiles excluded by inclusion overrides" do
     castle = groups(:castle_clan)
     flux = groups(:flux)
 
     visit group_path(castle.uuid)
 
     # The sidebar should show Flux and Echo Shard but NOT Drift/Ripple
+    # (hidden by inclusion overrides on castle_clan)
     within(".explorer__sidebar") do
       assert_text "Flux"
       assert_text "Echo Shard"
@@ -218,7 +243,7 @@ class GroupManagementTest < ApplicationSystemTestCase
       find(".tree__item[data-group-uuid='#{flux.uuid}']").click
     end
 
-    # The content panel should show Flux's name but NOT its direct profiles
+    # The content panel should show Flux's name but NOT its hidden profiles
     within(".explorer__content") do
       assert_text "Flux"
       assert_no_text "Drift"
@@ -226,24 +251,25 @@ class GroupManagementTest < ApplicationSystemTestCase
     end
   end
 
-  test "alpha clan profile override shows Ember but hides Stray" do
+  test "alpha clan diamond path shows Rogue Pack via Echo Shard but not via Spectrum" do
     alpha = groups(:alpha_clan)
     spectrum = groups(:spectrum)
 
-    # The inclusion override on alpha→spectrum targeting prism_circle sets
-    # profile_inclusion_mode: "selected" with only Ember — Stray should be
-    # excluded from Alpha Clan's public view entirely.
+    # The inclusion override on alpha_clan hides Rogue Pack when reached
+    # via Spectrum → Prism Circle, but the diamond path through Echo Shard
+    # → Prism Circle has no override, so Rogue Pack appears there.
     visit group_path(alpha.uuid)
 
     within(".explorer__sidebar") do
-      assert_text "Ember"
-      assert_no_text "Stray"
+      # All profiles visible (Grove direct, Ember + Stray in Prism Circle)
       assert_text "Grove"
-      # Rogue Pack should also be hidden (sub-group exclusion)
-      assert_no_text "Rogue Pack"
+      assert_text "Ember"
+      assert_text "Stray"
+      # Rogue Pack is visible via Echo Shard path
+      assert_text "Rogue Pack"
     end
 
-    # Visiting Spectrum directly should still show both profiles and Rogue Pack
+    # Visiting Spectrum directly shows everything (no overrides on its own view)
     visit group_path(spectrum.uuid)
 
     within(".explorer__sidebar") do
@@ -257,34 +283,33 @@ class GroupManagementTest < ApplicationSystemTestCase
     alpha = groups(:alpha_clan)
     ember = profiles(:ember)
 
-    # Ember is in Prism Circle (a descendant of Alpha Clan via Spectrum).
-    # The fallback renders profile cards with the root group UUID, so
-    # visiting this URL should work and link back to Alpha Clan.
+    # Ember is in Prism Circle (a descendant of Alpha Clan via both Spectrum
+    # and Echo Shard paths). The fallback profile link uses the root group UUID.
     visit group_profile_path(alpha.uuid, ember.uuid)
 
     assert_text "Ember"
     assert_text "Back to Alpha Clan"
   end
 
-  test "no-JS fallback profile link blocks hidden profiles" do
+  test "no-JS fallback blocks profiles hidden by inclusion overrides" do
     castle = groups(:castle_clan)
     drift = profiles(:drift)
 
-    # Drift is in Flux, but profile_inclusion_mode is "none" on the
-    # castle→flux edge. Accessing Drift through Castle Clan should 404.
+    # Drift is in Flux, but hidden from Castle Clan via an inclusion override.
+    # Accessing Drift through Castle Clan should 404.
     visit group_profile_path(castle.uuid, drift.uuid)
 
     assert_text "RecordNotFound"
   end
 
-  test "no-JS fallback blocks Stray through Alpha Clan via profile override" do
-    alpha = groups(:alpha_clan)
-    stray = profiles(:stray)
+  test "no-JS fallback blocks cascade-hidden profiles" do
+    castle = groups(:castle_clan)
+    spark = profiles(:spark)
 
-    # Stray is in Prism Circle but excluded by the profile_inclusion_mode
-    # override (selected with only Ember). Accessing Stray through Alpha
-    # Clan should 404.
-    visit group_profile_path(alpha.uuid, stray.uuid)
+    # Spark is in Static Burst, which is hidden from Castle Clan at path
+    # [flux.id]. Since the group is hidden, its profiles are
+    # cascade-hidden — Spark should not be accessible through Castle Clan.
+    visit group_profile_path(castle.uuid, spark.uuid)
 
     assert_text "RecordNotFound"
   end

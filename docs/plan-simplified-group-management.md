@@ -773,7 +773,7 @@ stray_hidden_in_rogue_pack_via_spectrum:
 
 ---
 
-## Phase 8: Test Updates
+## Phase 8: Test Updates — ✅ DONE
 
 ### 8a. Model tests — `group_test.rb`
 
@@ -857,7 +857,7 @@ After all tests pass, review the Group model for any dead code from the old syst
 5. **Phase 4** — Views — ✅ DONE
 6. **Phase 5** — JavaScript — ✅ DONE
 7. **Phase 6** — CSS — ✅ DONE
-8. **Phase 8** — Tests
+8. **Phase 8** — Tests — ✅ DONE
 9. **Phase 9** — Cleanup
 
 ---
