@@ -2,8 +2,12 @@ class InclusionOverride < ApplicationRecord
   belongs_to :group # the root group this override applies to
 
   validates :target_type, inclusion: { in: %w[Group Profile] }
-  validates :target_id, uniqueness: { scope: %i[group_id path target_type] }
+  # NOTE: Cannot use the standard uniqueness validator here — ActiveRecord treats Array values as
+  # IN (...) predicates, which breaks JSONB equality on the path column. The DB unique index
+  # (idx_inclusion_overrides_unique) provides the hard constraint; this custom validation gives
+  # a friendly error message at the model layer using an explicit JSONB cast.
   validate :path_not_nil
+  validate :unique_within_path
   validate :same_user
   validate :path_groups_exist
 
@@ -18,6 +22,16 @@ class InclusionOverride < ApplicationRecord
 
   def path_not_nil
     errors.add(:path, "can't be nil") if path.nil?
+  end
+
+  def unique_within_path
+    return unless group_id && target_type && target_id && path
+
+    scope = InclusionOverride
+      .where(group_id: group_id, target_type: target_type, target_id: target_id)
+      .where("path = ?::jsonb", path.to_json)
+    scope = scope.where.not(id: id) if persisted?
+    errors.add(:target_id, :taken) if scope.exists?
   end
 
   def same_user
