@@ -222,7 +222,9 @@ In `app/views/our/groups/manage_groups.html.haml`:
 
 ---
 
-## Phase 5: Tree Editor
+## Phase 5: Tree Editor ✅ DONE
+
+_Implemented as the `manage_groups` page rather than a separate `tree_editor` route. The existing `manage_groups.html.haml` + `_manage_groups_node.html.haml` recursive partial serve as the tree editor, with `inclusion_controller.js` for interactive behaviour and standard Turbo form submissions._
 
 ### 19. New route and action
 
@@ -317,7 +319,9 @@ Add to `app/assets/stylesheets/application.css`:
 
 ---
 
-## Phase 7: Tests
+## Phase 7: Tests ✅ DONE
+
+_All tests written except item 30 (InclusionOverride model tests) — this will be superseded by the simplified group management rework._
 
 ### 30. `InclusionOverride` model tests
 
@@ -375,5 +379,5 @@ Manual: load fixtures, visit public group page, confirm Rogue Pack excluded from
 3. **Phase 2** (data model) — ✅ DONE
 4. **Phase 3** (deep exclusion logic) — ✅ DONE
 5. **Phase 4** (profile control) — ✅ DONE
-6. **Phase 5** (tree editor) — largest UI effort, builds on all prior phases
-7. **Phase 7** (tests) — written alongside each phase, listed last for organisation
+6. **Phase 5** (tree editor) — ✅ DONE (as `manage_groups` page)
+7. **Phase 7** (tests) — ✅ DONE (except #30 `InclusionOverride` model tests — superseded by simplified group management rework)
