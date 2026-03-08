@@ -115,18 +115,31 @@ class Group < ApplicationRecord
     build_tree(id, [], children_map, groups_by_id, seen_profile_ids, overrides)
   end
 
+  # Root-level profiles visible in the public view, filtering out
+  # those hidden by inclusion overrides at path=[].
+  def visible_root_profiles
+    hidden_profile_ids = inclusion_overrides
+      .where(target_type: "Profile")
+      .where("path = '[]'::jsonb")
+      .pluck(:target_id)
+    profiles.where.not(id: hidden_profile_ids).order(:name)
+  end
+
   # Collect all profiles from this group and all descendant groups,
   # respecting path-scoped inclusion overrides.
   # Walks the tree depth-first, checking overrides at each path.
   # Profiles may appear in multiple sub-groups; the result is de-duplicated.
   def all_profiles
     all_ids = reachable_group_ids - [ id ]
+    overrides = overrides_index
 
-    # Root group's own profiles are always included
-    visible_profile_ids = Set.new(profiles.pluck(:id))
+    # Root group's own profiles, filtered by root-level overrides
+    root_profile_ids = profiles.pluck(:id)
+    visible_profile_ids = Set.new(
+      root_profile_ids.reject { |pid| overrides.include?([ [], "Profile", pid ]) }
+    )
 
     if all_ids.any?
-      overrides = overrides_index
       children_map = build_children_map([ id ] + all_ids)
       groups_by_id = Group.where(id: all_ids)
                           .includes(:profiles)

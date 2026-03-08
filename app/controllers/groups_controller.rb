@@ -3,7 +3,7 @@ class GroupsController < ApplicationController
 
   def show
     @group = Group.find_by!(uuid: params[:uuid])
-    @direct_profiles = @group.profiles
+    @direct_profiles = @group.visible_root_profiles
     @seen_profile_ids = Set.new
     @descendant_tree = @group.descendant_tree(seen_profile_ids: @seen_profile_ids)
   end
@@ -16,7 +16,7 @@ class GroupsController < ApplicationController
       visible_from_root = root_group.all_profiles
       @profiles = @group.profiles.where(id: visible_from_root.select(:id))
     else
-      @profiles = @group.profiles
+      @profiles = @group.visible_root_profiles
     end
 
     render partial: "groups/group_content", locals: { group: @group, profiles: @profiles }, layout: false
