@@ -11,7 +11,7 @@ class ThemeTest < ActiveSupport::TestCase
     theme = Theme.new(user: users(:one), name: "Test")
     theme.colors = nil
     assert_not theme.valid?
-    assert_includes theme.errors[:colors], "can't be blank"
+    assert_includes theme.errors[:colors], "must be a hash"
   end
 
   test "belongs to user" do
