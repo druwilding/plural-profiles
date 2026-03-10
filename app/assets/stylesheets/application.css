@@ -331,7 +331,6 @@ fieldset.form-group legend {
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.95rem;
-  color: var(--text);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -343,7 +342,7 @@ label {
   display: block;
   margin-bottom: 0.35rem;
   font-size: 0.9rem;
-  color: var(--input-label);
+  color: var(--text);
 }
 
 input[type="text"],
