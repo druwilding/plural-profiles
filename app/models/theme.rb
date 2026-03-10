@@ -3,6 +3,8 @@ class Theme < ApplicationRecord
 
   validates :name, presence: true
   validates :colors, presence: true
+  validate :colors_keys_are_known
+  validate :colors_values_are_hex
 
   # The CSS custom properties that can be themed, mapped to their default values.
   # Properties that reference other variables (e.g. --heading: var(--text)) are
@@ -66,4 +68,27 @@ class Theme < ApplicationRecord
     }
     ":root {\n#{lines.join("\n")}\n}"
   end
+
+  private
+
+    HEX_COLOR_PATTERN = /\A#[0-9A-Fa-f]{6}\z/
+
+    def colors_keys_are_known
+      return unless colors.is_a?(Hash)
+
+      unknown = colors.keys - THEMEABLE_PROPERTIES.keys
+      if unknown.any?
+        errors.add(:colors, "contains unknown keys: #{unknown.join(', ')}")
+      end
+    end
+
+    def colors_values_are_hex
+      return unless colors.is_a?(Hash)
+
+      colors.each do |key, value|
+        unless value.to_s.match?(HEX_COLOR_PATTERN)
+          errors.add(:colors, "value for '#{key}' is not a valid hex colour (expected #RRGGBB)")
+        end
+      end
+    end
 end
