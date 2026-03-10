@@ -201,11 +201,11 @@ body {
 }
 
 .sidebar__item:hover {
-  background-color: rgba(78, 133, 95, 0.1);
+  background-color: color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .sidebar__item--active {
-  background-color: rgba(78, 133, 95, 0.2);
+  background-color: color-mix(in srgb, var(--text) 20%, transparent);
 }
 
 .sidebar__item--active .sidebar__link {
@@ -368,7 +368,7 @@ fieldset.form-group legend {
   position: relative;
   width: 2rem;
   height: 1.15rem;
-  background-color: #888;
+  background-color: color-mix(in srgb, var(--text) 25%, var(--page-bg));
   border: 1px solid color-mix(in srgb, var(--link) 10%, transparent);
   border-radius: 0.6rem;
   flex-shrink: 0;
@@ -382,7 +382,7 @@ fieldset.form-group legend {
   left: 0.1rem;
   width: 0.85rem;
   height: 0.85rem;
-  background-color: #fff;
+  background-color: color-mix(in srgb, var(--primary-button-text) 20%, white);
   border-radius: 50%;
   transition: transform 0.2s;
 }
@@ -1008,7 +1008,7 @@ details[open] .details-close {
 }
 
 .tree__arrow-btn:hover {
-  background-color: rgba(78, 133, 95, 0.15);
+  background-color: color-mix(in srgb, var(--text) 15%, transparent);
 }
 
 .tree__item {
@@ -1030,11 +1030,11 @@ details[open] .details-close {
 }
 
 .tree__item:hover {
-  background-color: rgba(78, 133, 95, 0.1);
+  background-color: color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .tree__item--active {
-  background-color: rgba(78, 133, 95, 0.2);
+  background-color: color-mix(in srgb, var(--text) 20%, transparent);
   color: var(--heading);
   font-weight: 600;
 }
@@ -1153,7 +1153,7 @@ details[open] > .tree-editor__summary::before {
 
 .tree-editor__summary:hover,
 .tree-editor__leaf:hover {
-  background-color: rgba(78, 133, 95, 0.1);
+  background-color: color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .tree-editor__summary .tree-editor__item-info {
