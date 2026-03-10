@@ -11,11 +11,11 @@
   .card
     %h3 Pane
     %p This is a pane with background and border. Here is a #{link_to "sample link", "#"} in a sentence.
-    %p
+    %p{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       Here is some text with a
-      %span.spoiler.spoiler--revealed spoiler revealed
+      %span.spoiler.spoiler--revealed{aria: {expanded: "true"}} spoiler revealed
       and a
-      %span.spoiler spoiler hidden
+      %span.spoiler{tabindex: "0", role: "button", aria: {expanded: "false", label: "Hidden content, click to reveal"}} spoiler hidden
       element.
 
 .theme-preview__section
