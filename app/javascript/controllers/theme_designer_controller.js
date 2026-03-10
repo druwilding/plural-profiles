@@ -87,6 +87,13 @@ export default class extends Controller {
         label.textContent = "Copied!"
         setTimeout(() => { label.textContent = original }, 2000)
       }
+    }).catch(() => {
+      if (this.hasCopyLabelTarget) {
+        const label = this.copyLabelTarget
+        const original = label.textContent
+        label.textContent = "Copy failed"
+        setTimeout(() => { label.textContent = original }, 2000)
+      }
     })
   }
 
