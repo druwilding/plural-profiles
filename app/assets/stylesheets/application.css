@@ -1271,6 +1271,28 @@ details[open] > .tree-editor__summary::before {
   flex-shrink: 0;
 }
 
+/* ── Status tags / badges ──────────────────────────────── */
+.tag {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.tag--active {
+  background-color: color-mix(in srgb, var(--primary-button-bg) 35%, transparent);
+  color: var(--text);
+}
+
+@media (forced-colors: active) {
+  .tag--active {
+    outline: 1px solid CanvasText;
+  }
+}
+
 .tree-editor__tag {
   display: inline-block;
   padding: 0.1rem 0.45rem;

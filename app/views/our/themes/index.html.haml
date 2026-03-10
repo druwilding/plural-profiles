@@ -9,7 +9,7 @@
         .card__header
           %h3= link_to theme.name, edit_our_theme_path(theme)
           - if Current.user.active_theme_id == theme.id
-            %span.btn.btn--small.btn--outline{style: "cursor: default; opacity: 0.8;"} Active
+            %span.tag.tag--active active
         .card__actions
           - if Current.user.active_theme_id == theme.id
             = link_to "Deactivate", deactivate_our_themes_path, data: { turbo_method: :patch }, class: "btn btn--small btn--secondary"
