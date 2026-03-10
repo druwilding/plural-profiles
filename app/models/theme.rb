@@ -2,9 +2,15 @@ class Theme < ApplicationRecord
   belongs_to :user
 
   validates :name, presence: true
-  validates :colors, presence: true
+  validate :colors_is_a_hash
   validate :colors_keys_are_known
   validate :colors_values_are_hex
+
+  before_validation :normalize_colors_keys
+
+  def colors=(value)
+    super(value.is_a?(Hash) ? value.transform_keys(&:to_s) : value)
+  end
 
   # The CSS custom properties that can be themed, mapped to their default values.
   # Properties that reference other variables (e.g. --heading: var(--text)) are
@@ -73,10 +79,18 @@ class Theme < ApplicationRecord
 
     HEX_COLOR_PATTERN = /\A#[0-9A-Fa-f]{6}\z/
 
+    def normalize_colors_keys
+      self.colors = colors.transform_keys(&:to_s) if colors.is_a?(Hash)
+    end
+
+    def colors_is_a_hash
+      errors.add(:colors, "must be a hash") unless colors.is_a?(Hash)
+    end
+
     def colors_keys_are_known
       return unless colors.is_a?(Hash)
 
-      unknown = colors.keys - THEMEABLE_PROPERTIES.keys
+      unknown = colors.transform_keys(&:to_s).keys - THEMEABLE_PROPERTIES.keys
       if unknown.any?
         errors.add(:colors, "contains unknown keys: #{unknown.join(', ')}")
       end
@@ -85,7 +99,7 @@ class Theme < ApplicationRecord
     def colors_values_are_hex
       return unless colors.is_a?(Hash)
 
-      colors.each do |key, value|
+      colors.transform_keys(&:to_s).each do |key, value|
         unless value.to_s.match?(HEX_COLOR_PATTERN)
           errors.add(:colors, "value for '#{key}' is not a valid hex colour (expected #RRGGBB)")
         end

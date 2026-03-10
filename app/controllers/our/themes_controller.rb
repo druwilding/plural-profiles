@@ -1,6 +1,6 @@
 class Our::ThemesController < ApplicationController
   include OurSidebar
-  skip_before_action :set_sidebar_data, only: %i[new create edit update]
+  skip_before_action :set_sidebar_data, only: %i[new create edit update activate deactivate destroy]
   before_action :set_theme, only: %i[edit update destroy activate]
 
   def index
