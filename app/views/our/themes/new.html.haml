@@ -1,0 +1,15 @@
+- content_for(:title) { "New theme — Plural Profiles" }
+- content_for(:container_class, "theme-designer-container")
+
+%h1 New theme
+
+.theme-designer{data: { controller: "theme-designer" }}
+  .theme-designer__controls
+    .card
+      = render "our/themes/form", theme: @theme
+
+  .theme-designer__preview
+    .theme-preview{data: { "theme-designer-target": "preview" }}
+      = render "our/themes/preview"
+
+%p= link_to "← Back to themes", our_themes_path

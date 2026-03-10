@@ -29,6 +29,14 @@ Rails.application.routes.draw do
     delete :cancel_email_change
   end
   resources :our_invite_codes, path: "our/invite-codes", controller: "our/invite_codes", only: %i[create destroy]
+  resources :our_themes, path: "our/themes", controller: "our/themes" do
+    member do
+      patch :activate
+    end
+    collection do
+      patch :deactivate
+    end
+  end
 
   # Public shareable URLs (no auth required)
   resources :profiles, only: :show, param: :uuid

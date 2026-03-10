@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_08_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_10_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,13 +120,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_100001) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "themes", force: :cascade do |t|
+    t.jsonb "colors", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_themes_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
+    t.bigint "active_theme_id"
     t.datetime "created_at", null: false
     t.string "email_address", null: false
     t.datetime "email_verified_at"
     t.string "password_digest", null: false
     t.string "unverified_email_address"
     t.datetime "updated_at", null: false
+    t.index ["active_theme_id"], name: "index_users_on_active_theme_id"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
@@ -142,4 +153,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_100001) do
   add_foreign_key "invite_codes", "users", column: "redeemed_by_id"
   add_foreign_key "profiles", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "themes", "users"
+  add_foreign_key "users", "themes", column: "active_theme_id", on_delete: :nullify
 end

@@ -1,0 +1,22 @@
+= form_with model: theme, url: (theme.persisted? ? our_theme_path(theme) : our_themes_path), method: (theme.persisted? ? :patch : :post) do |form|
+  - if theme.errors.any?
+    .error-messages
+      - theme.errors.full_messages.each do |message|
+        %p= message
+
+  .form-group
+    = form.label :name
+    = form.text_field :name, required: true
+
+  - Theme::PROPERTY_GROUPS.each do |group_key, group_label|
+    %hr.form-divider
+    %h3= group_label
+    - Theme::THEMEABLE_PROPERTIES.select { |_, v| v[:group] == group_key }.each do |prop, meta|
+      .form-group.theme-designer__color-group
+        %label{for: "theme_colors_#{prop}"}= meta[:label]
+        .theme-designer__color-input
+          %input{type: "color", name: "theme[colors][#{prop}]", value: theme.color_for(prop), id: "theme_colors_#{prop}", data: { "theme-designer-target": "colorInput", property: prop, action: "input->theme-designer#updatePreview" }}
+          %input.theme-designer__hex-input{type: "text", value: theme.color_for(prop), maxlength: 7, pattern: "#[0-9a-fA-F]{6}", aria: { label: "#{meta[:label]} hex" }, data: { "theme-designer-target": "hexInput", property: prop, action: "input->theme-designer#updateFromHex" }}
+
+  .form-group{style: "margin-top: 2rem;"}
+    = form.submit(theme.persisted? ? "Save theme" : "Create theme")

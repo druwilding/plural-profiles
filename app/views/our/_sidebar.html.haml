@@ -37,5 +37,7 @@
   %hr
 
   %ul.sidebar__list
+    %li{class: "sidebar__item #{('sidebar__item--active' if current_page?(our_themes_path))}"}
+      = link_to "Themes", our_themes_path, class: "sidebar__link"
     %li{class: "sidebar__item #{('sidebar__item--active' if current_page?(our_account_path))}"}
       = link_to "Account", our_account_path, class: "sidebar__link"

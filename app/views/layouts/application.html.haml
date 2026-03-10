@@ -24,7 +24,7 @@
     = stylesheet_link_tag :app, "data-turbo-track": "reload"
     = javascript_importmap_tags
 
-  %body
+  %body{style: active_theme_style}
     %header.site-header
       = link_to root_path, class: "logo" do
         = render "shared/plural_pride_logo"

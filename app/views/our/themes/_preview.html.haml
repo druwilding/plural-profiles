@@ -1,0 +1,56 @@
+-# Preview panel showing all themed UI elements
+-# This is rendered inside a scoped container whose CSS variables are
+-# updated live by the theme-designer Stimulus controller.
+
+.theme-preview__section
+  %h2 Theme preview
+  %p This preview updates live as you change colours.
+  %p This is body text on the page background. Here is a #{link_to "sample link", "#"} in a sentence.
+
+.theme-preview__section
+  .card
+    %h3 Pane
+    %p This is a pane with background and border. Here is a #{link_to "sample link", "#"} in a sentence.
+    %p{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
+      Here is some text with a
+      %span.spoiler.spoiler--revealed{aria: {expanded: "true"}} spoiler revealed
+      and a
+      %span.spoiler{tabindex: "0", role: "button", aria: {expanded: "false", label: "Hidden content, click to reveal"}} spoiler hidden
+      element.
+
+.theme-preview__section
+  %h3 Buttons
+  .theme-preview__buttons
+    %button.btn Primary button
+    %button.btn.btn--secondary Secondary button
+    %button.btn.btn--danger Danger button
+
+.theme-preview__section
+  .card
+    %h3 Form controls
+    .form-group
+      %label Text input
+      %input{type: "text", placeholder: "Sample text"}
+    .form-group
+      %label Textarea
+      %textarea{rows: 2, placeholder: "Sample textarea content"}
+    %fieldset.form-group
+      %legend Checkbox group
+      %label.checkbox-label
+        %input{type: "checkbox", checked: true, disabled: true}
+        Checkbox option
+
+.theme-preview__section
+  %h3 Flash messages
+  .flash.flash--notice This is a notice message.
+  .flash.flash--alert This is an alert message.
+  .flash.flash--warning This is a warning message.
+
+.theme-preview__section
+  %h3 Profile card
+  .profile-grid
+    .card.profile-card
+      .avatar.avatar--large.avatar--placeholder
+        = render "shared/plural_pride_logo"
+      %h3 Example Profile
+      %span.pronouns they/them
