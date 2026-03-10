@@ -44,7 +44,7 @@ class Our::ThemesController < ApplicationController
 
   def activate
     Current.user.update!(active_theme: @theme)
-    redirect_to our_themes_path, notice: "Theme "#{@theme.name}" is now active."
+    redirect_to our_themes_path, notice: "Theme '#{@theme.name}' is now active."
   end
 
   def deactivate
