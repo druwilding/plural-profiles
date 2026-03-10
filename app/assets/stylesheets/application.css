@@ -1361,6 +1361,11 @@ details[open] > .tree-editor__summary::before {
   .tree-editor__summary {
     color: CanvasText;
   }
+
+  .tree-editor__summary:hover,
+  .tree-editor__leaf:hover {
+    outline: 1px solid GrayText;
+  }
 }
 
 /* Timestamps */
