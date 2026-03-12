@@ -2044,6 +2044,82 @@ input[type="submit"].btn--small,
   font-size: 0.9rem;
 }
 
+/* ── Import theme dialog ────────────────────────────────── */
+
+.theme-import {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.import-dialog {
+  background-color: var(--pane-bg);
+  color: var(--text);
+  border: 1px solid var(--pane-border);
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 560px;
+  width: 90vw;
+}
+
+.import-dialog::backdrop {
+  background-color: color-mix(in srgb, black 60%, transparent);
+}
+
+.import-dialog h2 {
+  color: var(--heading);
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.import-dialog p {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.import-dialog__textarea {
+  font-family: monospace;
+  font-size: 0.8rem;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 200px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.import-dialog__error {
+  color: var(--alert-text);
+  background-color: var(--alert-bg);
+  border: 1px solid var(--alert-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.import-dialog__error:empty {
+  display: none;
+}
+
+.import-dialog__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+@media (forced-colors: active) {
+  .import-dialog {
+    border: 2px solid ButtonText;
+  }
+}
+
 /* Responsive: stack on narrow screens */
 @media (max-width: 900px) {
   .theme-designer {

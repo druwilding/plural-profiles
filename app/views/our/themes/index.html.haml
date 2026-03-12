@@ -2,6 +2,20 @@
 
 %h1 Themes
 
+.theme-import{data: { controller: "theme-import", "theme-import-new-url-value": new_our_theme_path }}
+  = link_to "New theme", new_our_theme_path, class: "btn"
+  %button.btn.btn--outline{type: "button", data: { action: "click->theme-import#open" }} Import theme
+
+  %dialog.import-dialog{data: { "theme-import-target": "dialog", action: "click->theme-import#backdropClick" }}
+    %form{data: { action: "submit->theme-import#import" }}
+      %h2 Import theme
+      %p Paste the CSS block copied from the theme editor below.
+      %textarea.import-dialog__textarea{data: { "theme-import-target": "cssInput" }, rows: 12, placeholder: ":root {\n  --page-bg: #123456;\n  ...\n}", spellcheck: false}
+      %p.import-dialog__error{data: { "theme-import-target": "error" }, role: "alert"}
+      .import-dialog__actions
+        %button.btn{type: "submit"} Import
+        %button.btn.btn--secondary{type: "button", data: { action: "click->theme-import#close" }} Cancel
+
 - if @themes.any?
   .card-list
     - @themes.each do |theme|
@@ -20,6 +34,3 @@
 - else
   .card
     %p You haven't created any themes yet. Themes let you customise the colours used across the site.
-
-%p{style: "margin-top: 1.5rem;"}
-  = link_to "New theme", new_our_theme_path, class: "btn"

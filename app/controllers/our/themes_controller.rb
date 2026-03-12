@@ -8,9 +8,14 @@ class Our::ThemesController < ApplicationController
   end
 
   def new
+    colors = Theme::THEMEABLE_PROPERTIES.transform_values { |v| v[:default] }
+    if params[:theme].present? && params[:theme][:colors].present?
+      imported = params[:theme][:colors].to_unsafe_h.transform_keys(&:to_s).slice(*Theme::THEMEABLE_PROPERTIES.keys)
+      colors.merge!(imported)
+    end
     @theme = Current.user.themes.build(
       name: "New theme",
-      colors: Theme::THEMEABLE_PROPERTIES.transform_values { |v| v[:default] }
+      colors: colors
     )
   end
 
