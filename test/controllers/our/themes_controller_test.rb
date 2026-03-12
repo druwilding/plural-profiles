@@ -109,21 +109,21 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_difference("Theme.count", 1) do
       post duplicate_our_theme_path(@theme)
     end
-    copy = Theme.order(:created_at).last
+    copy = Theme.last
     assert_equal "Dark Forest (copy)", copy.name
   end
 
   test "duplicate copies the colors from the original" do
     sign_in_as @user
     post duplicate_our_theme_path(@theme)
-    copy = Theme.order(:created_at).last
+    copy = Theme.last
     assert_equal @theme.colors, copy.colors
   end
 
   test "duplicate redirects to the edit page for the copy" do
     sign_in_as @user
     post duplicate_our_theme_path(@theme)
-    copy = Theme.order(:created_at).last
+    copy = Theme.last
     assert_redirected_to edit_our_theme_path(copy)
   end
 
