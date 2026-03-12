@@ -1,7 +1,7 @@
 class Theme < ApplicationRecord
   belongs_to :user
 
-  validates :name, presence: true
+  validates :name, presence: true, length: { maximum: 255 }
   validate :colors_is_a_hash
   validate :colors_keys_are_known
   validate :colors_values_are_hex

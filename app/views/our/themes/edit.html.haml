@@ -9,13 +9,14 @@
       = render "our/themes/form", theme: @theme
 
     .card
-      %h3 Export
-      %p.text-muted Copy this CSS to share your theme with others.
-      .form-group
-        %textarea.theme-designer__css-output{readonly: true, rows: 8, data: { "theme-designer-target": "cssOutput" }}= @theme.to_css
-      %button.btn.btn--secondary{data: { action: "click->theme-designer#copyCss" }}
-        %span{data: { "theme-designer-target": "copyLabel" }} Copy CSS
-        %span{aria: {hidden: "true"}} ⧉
+      %details
+        %summary Export theme
+        %p.text-muted Copy this CSS to share your theme with others.
+        .form-group
+          %textarea.theme-designer__css-output{readonly: true, rows: 8, data: { "theme-designer-target": "cssOutput" }}= @theme.to_css
+        %button.btn.btn--secondary{data: { action: "click->theme-designer#copyCss" }}
+          %span{data: { "theme-designer-target": "copyLabel" }} Copy CSS
+          %span{aria: {hidden: "true"}} ⧉
 
   .theme-designer__preview
     .theme-preview{data: { "theme-designer-target": "preview" }}

@@ -6,7 +6,7 @@
 
   .form-group
     = form.label :name
-    = form.text_field :name, required: true
+    = form.text_field :name, required: true, maxlength: 255
 
   - Theme::PROPERTY_GROUPS.each do |group_key, group_label|
     %hr.form-divider
