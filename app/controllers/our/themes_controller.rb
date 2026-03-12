@@ -1,7 +1,7 @@
 class Our::ThemesController < ApplicationController
   include OurSidebar
-  skip_before_action :set_sidebar_data, only: %i[new create edit update activate deactivate destroy]
-  before_action :set_theme, only: %i[edit update destroy activate]
+  skip_before_action :set_sidebar_data, only: %i[new create edit update activate deactivate destroy duplicate]
+  before_action :set_theme, only: %i[edit update destroy activate duplicate]
 
   def index
     @themes = Current.user.themes.order(:name)
@@ -45,6 +45,14 @@ class Our::ThemesController < ApplicationController
     end
     @theme.destroy
     redirect_to our_themes_path, notice: "Theme deleted.", status: :see_other
+  end
+
+  def duplicate
+    copy = Current.user.themes.create!(
+      name: "#{@theme.name} (copy)",
+      colors: @theme.colors
+    )
+    redirect_to edit_our_theme_path(copy), notice: "Theme duplicated. You're now editing the copy."
   end
 
   def activate
