@@ -32,6 +32,7 @@ class Theme < ApplicationRecord
     "input_label"          => { label: "Input labels",              default: "#5ea389", group: :forms },
     "input_bg"             => { label: "Input background",          default: "#263a2e", group: :forms },
     "input_border"         => { label: "Input border",              default: "#5ea389", group: :forms },
+    "input_text"           => { label: "Input text",                default: "#5ea389", group: :forms },
     "notice_bg"            => { label: "Notice background",         default: "#133b2f", group: :flash },
     "notice_border"        => { label: "Notice border",             default: "#5ea389", group: :flash },
     "notice_text"          => { label: "Notice text",               default: "#5ea389", group: :flash },

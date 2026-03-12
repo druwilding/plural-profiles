@@ -22,6 +22,7 @@
   --input-label: var(--heading);
   --input-bg: #263a2e;
   --input-border: var(--text);
+  --input-text: var(--text);
   --notice-bg: var(--pane-bg);
   --notice-border: var(--text);
   --notice-text: var(--text);
@@ -356,7 +357,7 @@ select {
   background-color: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: 6px;
-  color: var(--text);
+  color: var(--input-text);
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s;
@@ -383,10 +384,10 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-text-fill-color: var(--text);
+  -webkit-text-fill-color: var(--input-text);
   -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset;
   border-color: var(--input-border);
-  caret-color: var(--text);
+  caret-color: var(--input-text);
   transition: background-color 5000s ease-in-out 0s;
 }
 
