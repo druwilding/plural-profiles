@@ -167,8 +167,8 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @user
     get our_themes_path
     assert_response :success
-    assert_match "dark", response.body
-    assert_match "warm-colours", response.body
+    assert_match "Dark", response.body
+    assert_match "Warm colours", response.body
   end
 
   test "index filtered by tag returns only matching themes" do
