@@ -9,6 +9,7 @@ class Our::ThemesController < ApplicationController
     @filter_tags = Array(params[:tags]).reject(&:blank?) & Theme::TAGS.keys
     @active_theme = Current.user.active_theme
 
+    @any_shared_themes = Theme.shared.exists?
     @shared_themes = Theme.shared.order(:name)
     @shared_themes = @shared_themes.where("tags @> ARRAY[?]::varchar[]", @filter_tags) if @filter_tags.any?
 
