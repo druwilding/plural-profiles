@@ -99,17 +99,17 @@ class Our::ThemesController < ApplicationController
   def set_theme_for_duplicate
     @theme = if Theme.shared.exists?(params[:id])
                Theme.shared.find(params[:id])
-             else
+    else
                Current.user.themes.find(params[:id])
-             end
+    end
   end
 
   def set_theme_for_show
     @theme = if Current.user.themes.exists?(params[:id])
                Current.user.themes.find(params[:id])
-             else
+    else
                Theme.shared.find(params[:id])
-             end
+    end
   end
 
   def theme_params
@@ -125,4 +125,3 @@ class Our::ThemesController < ApplicationController
     permitted
   end
 end
-
