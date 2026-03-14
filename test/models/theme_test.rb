@@ -51,4 +51,40 @@ class ThemeTest < ActiveSupport::TestCase
     assert_includes groups, :buttons
     assert_includes groups, :flash
   end
+
+  # -- Tags --
+
+  test "tags default to empty array" do
+    theme = Theme.new(user: users(:one), name: "Tagless", colors: {})
+    assert_equal [], theme.tags
+  end
+
+  test "TAGS is a non-empty hash" do
+    assert_kind_of Hash, Theme::TAGS
+    assert Theme::TAGS.any?
+  end
+
+  test "valid with known tags" do
+    theme = Theme.new(user: users(:one), name: "Tagged", colors: {}, tags: [ "dark", "high-contrast" ])
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "valid with empty tags" do
+    theme = Theme.new(user: users(:one), name: "No tags", colors: {}, tags: [])
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "invalid with unknown tag" do
+    theme = Theme.new(user: users(:one), name: "Bad tag", colors: {}, tags: [ "unknown-tag" ])
+    assert_not theme.valid?
+    assert_match "unknown-tag", theme.errors[:tags].to_sentence
+  end
+
+  test "fixture dark_forest has expected tags" do
+    assert_equal [ "dark", "cool-colours" ], themes(:dark_forest).tags
+  end
+
+  test "fixture sunset has expected tags" do
+    assert_equal [ "light", "warm-colours" ], themes(:sunset).tags
+  end
 end

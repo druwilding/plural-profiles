@@ -120,6 +120,13 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_equal @theme.colors, copy.colors
   end
 
+  test "duplicate copies the tags from the original" do
+    sign_in_as @user
+    post duplicate_our_theme_path(@theme)
+    copy = Theme.last
+    assert_equal @theme.tags, copy.tags
+  end
+
   test "duplicate redirects to the edit page for the copy" do
     sign_in_as @user
     post duplicate_our_theme_path(@theme)
@@ -152,5 +159,97 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     @user.reload
     assert_nil @user.active_theme_id
     assert_redirected_to our_themes_path
+  end
+
+  # -- Tags --
+
+  test "index shows themes with their tags" do
+    sign_in_as @user
+    get our_themes_path
+    assert_response :success
+    assert_match "dark", response.body
+    assert_match "warm-colours", response.body
+  end
+
+  test "index filtered by tag returns only matching themes" do
+    sign_in_as @user
+    get our_themes_path, params: { tags: [ "dark" ] }
+    assert_response :success
+    assert_match "Dark Forest", response.body
+    assert_no_match "Sunset", response.body
+  end
+
+  test "index filtered by tag excludes themes that do not match" do
+    sign_in_as @user
+    get our_themes_path, params: { tags: [ "warm-colours" ] }
+    assert_response :success
+    assert_match "Sunset", response.body
+    assert_no_match "Dark Forest", response.body
+  end
+
+  test "index with multiple tags requires all to match" do
+    sign_in_as @user
+    get our_themes_path, params: { tags: [ "dark", "warm-colours" ] }
+    assert_response :success
+    assert_no_match "Dark Forest", response.body
+    assert_no_match "Sunset", response.body
+    assert_match "No themes match", response.body
+  end
+
+  test "index filter ignores unknown tags" do
+    sign_in_as @user
+    get our_themes_path, params: { tags: [ "nonsense" ] }
+    assert_response :success
+    # Unknown tag is silently dropped so all themes are shown
+    assert_match "Dark Forest", response.body
+    assert_match "Sunset", response.body
+  end
+
+  test "active theme is shown even when tag filter excludes it" do
+    sign_in_as @user
+    @user.update!(active_theme: @theme)
+    # dark_forest has tags [dark, cool-colours] — filter by warm-colours excludes it
+    get our_themes_path, params: { tags: [ "warm-colours" ] }
+    assert_response :success
+    assert_match "Active theme", response.body
+    assert_match "Dark Forest", response.body
+  end
+
+  test "create saves tags" do
+    sign_in_as @user
+    post our_themes_path, params: {
+      theme: { name: "Night Owl", colors: {}, tags: [ "dark", "cool-colours" ] }
+    }
+    assert_redirected_to our_themes_path
+    theme = Theme.find_by!(name: "Night Owl")
+    assert_equal [ "dark", "cool-colours" ], theme.tags
+  end
+
+  test "create strips unknown tags" do
+    sign_in_as @user
+    post our_themes_path, params: {
+      theme: { name: "Mystery", colors: {}, tags: [ "dark", "invented-tag" ] }
+    }
+    assert_redirected_to our_themes_path
+    theme = Theme.find_by!(name: "Mystery")
+    assert_equal [ "dark" ], theme.tags
+  end
+
+  test "update saves tags" do
+    sign_in_as @user
+    patch our_theme_path(@theme), params: {
+      theme: { name: @theme.name, colors: @theme.colors, tags: [ "light", "high-contrast" ] }
+    }
+    assert_redirected_to our_themes_path
+    assert_equal [ "light", "high-contrast" ], @theme.reload.tags
+  end
+
+  test "update clears tags when none submitted" do
+    sign_in_as @user
+    patch our_theme_path(@theme), params: {
+      theme: { name: @theme.name, colors: @theme.colors, tags: [ "" ] }
+    }
+    assert_redirected_to our_themes_path
+    assert_equal [], @theme.reload.tags
   end
 end
