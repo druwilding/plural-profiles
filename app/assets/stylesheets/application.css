@@ -1245,6 +1245,7 @@ details[open] > .tree-editor__summary::before {
   color: var(--text);
   margin-right: 0.25rem;
   white-space: nowrap;
+  flex-basis: 100%;
 }
 
 .theme-tag-filter__clear {

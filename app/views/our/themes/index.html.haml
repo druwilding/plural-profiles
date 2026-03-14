@@ -21,22 +21,22 @@
   .card-list
     = render "our/themes/theme_card", theme: @active_theme
 
-- if @shared_themes.any?
-  %h2 Shared themes
-  .card-list
-    - @shared_themes.each do |theme|
-      = render "our/themes/shared_theme_card", theme: theme
-
-%h2= @active_theme ? "Your themes" : "Your themes"
-
 .theme-tag-filter
-  %span.theme-tag-filter__label Filter by tags:
+  %span.theme-tag-filter__label Filter themes by tags:
   - Theme::TAGS.each do |value, label|
     - active = @filter_tags.include?(value)
     - new_tags = active ? @filter_tags - [value] : @filter_tags + [value]
     = link_to label, our_themes_path(tags: new_tags), class: "tag tag--filter #{'tag--filter-active' if active}"
   - if @filter_tags.any?
     = link_to "Clear filter", our_themes_path, class: "theme-tag-filter__clear"
+
+- if @shared_themes.any?
+  %h2 Shared themes
+  .card-list
+    - @shared_themes.each do |theme|
+      = render "our/themes/shared_theme_card", theme: theme
+
+%h2 Our themes
 
 - if @other_themes.any?
   .card-list
