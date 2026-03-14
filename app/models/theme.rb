@@ -14,10 +14,10 @@ class Theme < ApplicationRecord
     "bright"           => "Bright",
     "light"            => "Light",
     "dark"             => "Dark",
+    "super-contrast"   => "Super contrast",
     "high-contrast"    => "High contrast",
     "mid-contrast"     => "Mid contrast",
     "low-contrast"     => "Low contrast",
-    "super-contrast"   => "Super contrast",
     "warm-colours"     => "Warm colours",
     "cool-colours"     => "Cool colours",
     "blind-low-vision" => "Blind/low vision"
