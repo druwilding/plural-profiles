@@ -1,11 +1,10 @@
 - content_for(:title) { "#{@theme.name} — Plural Profiles" }
 - content_for(:container_class, "theme-designer-container")
 
-%h1= @theme.name
-
 .theme-designer
   .theme-designer__controls
     .card
+      %h1= @theme.name
       - if @theme.shared?
         %p
           %span.tag.tag--active Shared theme

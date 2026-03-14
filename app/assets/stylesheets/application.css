@@ -564,6 +564,10 @@ button:hover,
   flex-shrink: 0;
 }
 
+.card__tags + .card__actions {
+  margin-top: 1rem;
+}
+
 .btn--outline {
   background-color: var(--secondary-button-bg);
   border: 1px solid var(--secondary-button-text);
