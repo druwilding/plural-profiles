@@ -237,6 +237,82 @@ end
       Share this theme with everyone
 ```
 
+### Theme show / preview page
+
+Non-admin users need a way to see what a shared theme actually looks like before deciding to activate or duplicate it. This is also useful for a user's own themes as a quicker read-only overview vs. loading the full editor.
+
+**Route** — `resources :our_themes` already generates a `show` route (`GET /our/themes/:id`). No route change needed.
+
+**Controller — new `show` action**:
+
+```ruby
+before_action :set_theme_for_show, only: %i[show]
+
+def show
+end
+
+private
+
+def set_theme_for_show
+  # Allow viewing own themes OR any shared theme
+  @theme = if Current.user.themes.exists?(params[:id])
+             Current.user.themes.find(params[:id])
+           else
+             Theme.shared.find(params[:id])
+           end
+end
+```
+
+**New view: `show.html.haml`** — shares the two-column `theme-designer-container` layout with the edit view, but has no form inputs. The preview container receives the theme's CSS as a static `style` attribute rather than being driven by the Stimulus controller:
+
+```haml
+- content_for(:title) { "#{@theme.name} — Plural Profiles" }
+- content_for(:container_class, "theme-designer-container")
+
+%h1= @theme.name
+
+.theme-designer
+  .theme-designer__controls
+    .card
+      - if @theme.credit.present?
+        %p.theme-credit Made by #{@theme.credit}
+      - if @theme.notes.present?
+        %p.theme-notes= @theme.notes
+      - if @theme.tags.any?
+        .card__tags
+          - @theme.tags.each do |tag|
+            %span.tag.tag--theme= Theme::TAGS[tag] || tag
+
+      .card__actions
+        - if Current.user.active_theme_id == @theme.id
+          = link_to "Deactivate", deactivate_our_themes_path, data: { turbo_method: :patch }, class: "btn btn--small"
+        - else
+          = link_to "Activate", activate_our_theme_path(@theme), data: { turbo_method: :patch }, class: "btn btn--small"
+        = link_to "Duplicate", duplicate_our_theme_path(@theme), data: { turbo_method: :post }, class: "btn btn--small btn--secondary"
+        - if Current.user.admin? && @theme.shared?
+          = link_to "Edit", edit_our_theme_path(@theme), class: "btn btn--small btn--secondary"
+
+    .card
+      %details
+        %summary Export theme
+        %p.text-muted Copy this CSS to use this theme elsewhere.
+        .form-group
+          %textarea.theme-designer__css-output{readonly: true, rows: 8}= @theme.to_css
+
+  .theme-designer__preview
+    .theme-preview{style: @theme.to_css_properties}
+      = render "our/themes/preview"
+
+%p= link_to "← Back to themes", our_themes_path
+```
+
+The crucial difference from the edit view: `.theme-preview{style: @theme.to_css_properties}` inlines the resolved hex values directly. No `data: { "theme-designer-target": "preview" }`, no wrapping `theme-designer` Stimulus controller. The preview renders correctly with plain CSS, JavaScript not required.
+
+**Linking to the show page**:
+
+- In `_shared_theme_card.html.haml`: theme name links to `our_theme_path(theme)`, and a "Preview" button is shown.
+- In `_theme_card.html.haml` (own themes): theme name links to `our_theme_path(theme)` (replacing the current link to the edit page). An "Edit" button is still shown in `card__actions`.
+
 ### Tests
 
 - Admin can create/edit a shared theme.
@@ -245,6 +321,9 @@ end
 - Non-admin can duplicate a shared theme.
 - Non-admin cannot edit or delete a shared theme.
 - Duplicated shared theme belongs to current user with `shared: false`.
+- Any logged-in user can visit the show page for a shared theme.
+- A user can visit the show page for their own theme.
+- A user cannot visit the show page for another user's personal theme (→ 404).
 
 ---
 
@@ -258,14 +337,6 @@ Exactly one shared theme can be marked as the **default**. This theme is used:
 - For **logged-in users who have not activated a theme** (`active_theme_id` is nil)
 
 ### Migration
-
-```ruby
-add_column :themes, :default, :boolean, default: false, null: false
-# Partial unique index: only one theme can be default
-add_index :themes, :default, unique: true, where: '"default" = true', name: "index_themes_on_default_unique"
-```
-
-Note: `default` is a reserved word in some contexts, so the column will be quoted in the index. Alternatively, we could name it `site_default` — **decision: use `site_default`** to avoid collisions with Ruby/Rails `default` method naming.
 
 ```ruby
 add_column :themes, :site_default, :boolean, default: false, null: false
@@ -424,21 +495,22 @@ These have no dependencies on each other and can be run in either order.
 
 ## Implementation order
 
-| Step | What | Depends on |
-|------|------|------------|
-| 1 | Migration: credit + notes on themes | — |
-| 2 | Model + controller + views for credit & notes | Step 1 |
-| 3 | Tests for credit & notes | Step 2 |
-| 4 | Migration: admin on users | — |
-| 5 | Migration: shared + site_default on themes | — |
-| 6 | Model changes for shared themes | Steps 4, 5 |
-| 7 | Controller changes for shared themes | Step 6 |
-| 8 | Views for shared themes (index sections, shared card, form checkbox) | Step 7 |
-| 9 | Tests for shared themes | Step 8 |
-| 10 | Model + helper changes for default theme | Step 6 |
-| 11 | Controller + view changes for default theme | Step 10 |
-| 12 | Tests for default theme | Step 11 |
-| 13 | System tests for full flow | Steps 9, 12 |
+| Step | What                                                                 | Depends on   |
+| ---- | -------------------------------------------------------------------- | ------------ |
+| 1    | Migration: credit + notes on themes                                  | —            |
+| 2    | Model + controller + views for credit & notes                        | Step 1       |
+| 3    | Tests for credit & notes                                             | Step 2       |
+| 4    | Migration: admin on users                                            | —            |
+| 5    | Migration: shared + site_default on themes                           | —            |
+| 6    | Model changes for shared themes                                      | Steps 4, 5   |
+| 7    | Controller changes for shared themes                                 | Step 6       |
+| 8    | Views for shared themes (index sections, shared card, form checkbox) | Step 7       |
+| 9    | Theme show/preview page (controller action + view)                   | Step 7       |
+| 10   | Tests for shared themes + preview page                               | Steps 8, 9   |
+| 11   | Model + helper changes for default theme                             | Step 6       |
+| 12   | Controller + view changes for default theme                          | Step 11      |
+| 13   | Tests for default theme                                              | Step 12      |
+| 14   | System tests for full flow                                           | Steps 10, 13 |
 
 ---
 
