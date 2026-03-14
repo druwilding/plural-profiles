@@ -16,6 +16,13 @@
         %button.btn{type: "submit"} Import
         %button.btn.btn--secondary{type: "button", data: { action: "click->theme-import#close" }} Cancel
 
+- if @active_theme
+  %h2 Active theme
+  .card-list
+    = render "our/themes/theme_card", theme: @active_theme
+
+%h2= @active_theme ? "Other themes" : "Themes"
+
 .theme-tag-filter
   %span.theme-tag-filter__label Filter by tags:
   - Theme::TAGS.each do |value, label|
@@ -25,20 +32,14 @@
   - if @filter_tags.any?
     = link_to "Clear filter", our_themes_path, class: "theme-tag-filter__clear"
 
-- if @active_theme
-  %h2 Active theme
-  .card-list
-    = render "our/themes/theme_card", theme: @active_theme
-
 - if @other_themes.any?
-  %h2= @active_theme ? "Other themes" : "Themes"
   .card-list
     - @other_themes.each do |theme|
       = render "our/themes/theme_card", theme: theme
+- elsif @filter_tags.any?
+  .card
+    %p No themes match the selected tags.
 - elsif @active_theme.nil?
   .card
-    - if @filter_tags.any?
-      %p No themes match the selected tags.
-    - else
-      %p You haven't created any themes yet. Themes let you customise the colours used across the site.
+    %p You haven't created any themes yet. Themes let you customise the colours used across the site.
 
