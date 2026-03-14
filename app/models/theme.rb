@@ -8,6 +8,7 @@ class Theme < ApplicationRecord
   validate :tags_are_known
 
   before_validation :normalize_colors_keys
+  before_validation :normalize_tags
 
   TAGS = {
     "light"         => "Light",
@@ -95,6 +96,10 @@ class Theme < ApplicationRecord
       self.colors = colors.transform_keys(&:to_s) if colors.is_a?(Hash)
     end
 
+    def normalize_tags
+      self.tags = [] if tags.nil?
+    end
+
     def colors_is_a_hash
       errors.add(:colors, "must be a hash") unless colors.is_a?(Hash)
     end
@@ -119,7 +124,10 @@ class Theme < ApplicationRecord
     end
 
     def tags_are_known
-      return unless tags.is_a?(Array)
+      unless tags.is_a?(Array)
+        errors.add(:tags, "must be an array")
+        return
+      end
 
       unknown = tags - TAGS.keys
       errors.add(:tags, "contains unknown values: #{unknown.join(', ')}") if unknown.any?
