@@ -61,6 +61,7 @@ class Our::ThemesController < ApplicationController
       colors: @theme.colors,
       tags: @theme.tags,
       credit: @theme.credit,
+      credit_url: @theme.credit_url,
       notes: @theme.notes
     )
     if copy.save
@@ -87,7 +88,7 @@ class Our::ThemesController < ApplicationController
   end
 
   def theme_params
-    permitted = params.require(:theme).permit(:name, :credit, :notes, tags: [], colors: {})
+    permitted = params.require(:theme).permit(:name, :credit, :credit_url, :notes, tags: [], colors: {})
     # Ensure only known tag values are stored
     permitted[:tags] = (permitted[:tags] || []).reject(&:blank?).uniq & Theme::TAGS.keys
     # Ensure only known colour keys are stored

@@ -266,6 +266,25 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Some notes here", theme.notes
   end
 
+  test "create saves credit_url" do
+    sign_in_as @user
+    post our_themes_path, params: {
+      theme: { name: "Linked Credit", colors: {}, credit: "Dru", credit_url: "https://example.com" }
+    }
+    assert_redirected_to our_themes_path
+    assert_equal "https://example.com", Theme.find_by!(name: "Linked Credit").credit_url
+  end
+
+  test "create rejects invalid credit_url" do
+    sign_in_as @user
+    assert_no_difference("Theme.count") do
+      post our_themes_path, params: {
+        theme: { name: "Bad URL", colors: {}, credit_url: "not-a-url" }
+      }
+    end
+    assert_response :unprocessable_entity
+  end
+
   test "update saves credit and notes" do
     sign_in_as @user
     patch our_theme_path(@theme), params: {
@@ -279,10 +298,11 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
 
   test "duplicate copies credit and notes" do
     sign_in_as @user
-    @theme.update!(credit: "Dru", notes: "Original notes")
+    @theme.update!(credit: "Dru", notes: "Original notes", credit_url: "https://example.com")
     post duplicate_our_theme_path(@theme)
     copy = Theme.order(:created_at).last
     assert_equal "Dru", copy.credit
     assert_equal "Original notes", copy.notes
+    assert_equal "https://example.com", copy.credit_url
   end
 end

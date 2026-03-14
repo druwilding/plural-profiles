@@ -1,8 +1,12 @@
 class Theme < ApplicationRecord
   belongs_to :user
 
+  VALID_URL_REGEX = /\Ahttps?:\/\/.+\z/i
+
   validates :name, presence: true, length: { maximum: 255 }
   validates :credit, length: { maximum: 255 }, allow_nil: true
+  validates :credit_url, length: { maximum: 255 }, allow_blank: true
+  validates :credit_url, format: { with: VALID_URL_REGEX, message: "must be a valid http or https URL" }, allow_blank: true
   validate :colors_is_a_hash
   validate :colors_keys_are_known
   validate :colors_values_are_hex

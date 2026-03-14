@@ -110,4 +110,39 @@ class ThemeTest < ActiveSupport::TestCase
     theme = Theme.new(user: users(:one), name: "Max credit", colors: {}, credit: "a" * 255)
     assert theme.valid?, theme.errors.full_messages.inspect
   end
+
+  # -- Credit URL --
+
+  test "valid with a https credit_url" do
+    theme = Theme.new(user: users(:one), name: "Linked", colors: {}, credit_url: "https://example.com")
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "valid with a http credit_url" do
+    theme = Theme.new(user: users(:one), name: "Linked", colors: {}, credit_url: "http://example.com")
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "valid without credit_url" do
+    theme = Theme.new(user: users(:one), name: "No link", colors: {})
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "invalid credit_url without scheme" do
+    theme = Theme.new(user: users(:one), name: "Bad link", colors: {}, credit_url: "example.com")
+    assert_not theme.valid?
+    assert_includes theme.errors[:credit_url], "must be a valid http or https URL"
+  end
+
+  test "invalid credit_url with ftp scheme" do
+    theme = Theme.new(user: users(:one), name: "FTP", colors: {}, credit_url: "ftp://example.com")
+    assert_not theme.valid?
+    assert_includes theme.errors[:credit_url], "must be a valid http or https URL"
+  end
+
+  test "credit_url over 255 characters is invalid" do
+    theme = Theme.new(user: users(:one), name: "Long URL", colors: {}, credit_url: "https://" + "a" * 248)
+    assert_not theme.valid?
+    assert_includes theme.errors[:credit_url], "is too long (maximum is 255 characters)"
+  end
 end

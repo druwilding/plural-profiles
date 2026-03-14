@@ -15,7 +15,10 @@
       - if theme.credit.present?
         %p.theme-card__credit
           Made by
-          %strong= theme.credit
+          - if theme.credit_url.present?
+            %strong= link_to theme.credit, theme.credit_url, target: "_blank", rel: "noopener noreferrer"
+          - else
+            %strong= theme.credit
       - if theme.notes.present?
         %p.theme-card__notes= theme.notes
   - if theme.tags.any?
