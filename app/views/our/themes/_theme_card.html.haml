@@ -10,6 +10,19 @@
       = link_to "Edit", edit_our_theme_path(theme), class: "btn btn--small btn--secondary"
       = link_to "Duplicate", duplicate_our_theme_path(theme), data: { turbo_method: :post }, class: "btn btn--small btn--secondary"
       = link_to "Delete", our_theme_path(theme), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this theme?" }, class: "btn btn--small btn--danger"
+  - if theme.credit.present? || theme.credit_url.present? || theme.notes.present?
+    .card__body
+      - if theme.credit.present? || theme.credit_url.present?
+        %p.theme-card__credit
+          Made by
+          - if theme.credit.present? && theme.credit_url.present?
+            %strong= link_to theme.credit, theme.credit_url, target: "_blank", rel: "noopener noreferrer"
+          - elsif theme.credit.present?
+            %strong= theme.credit
+          - elsif theme.credit_url.present?
+            %strong= link_to theme.credit_url, theme.credit_url, target: "_blank", rel: "noopener noreferrer"
+      - if theme.notes.present?
+        %p.theme-card__notes= theme.notes
   - if theme.tags.any?
     .card__tags
       - theme.tags.each do |tag|

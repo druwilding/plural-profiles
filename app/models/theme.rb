@@ -1,7 +1,12 @@
+require "uri"
+
 class Theme < ApplicationRecord
   belongs_to :user
 
   validates :name, presence: true, length: { maximum: 255 }
+  validates :credit, length: { maximum: 255 }, allow_nil: true
+  validates :credit_url, length: { maximum: 255 }, allow_blank: true
+  validate :credit_url_must_be_http_url
   validate :colors_is_a_hash
   validate :colors_keys_are_known
   validate :colors_values_are_hex
@@ -9,6 +14,7 @@ class Theme < ApplicationRecord
 
   before_validation :normalize_colors_keys
   before_validation :normalize_tags
+  before_validation :normalize_credit_url
 
   TAGS = {
     "bright"           => "Bright",
@@ -25,6 +31,25 @@ class Theme < ApplicationRecord
 
   def colors=(value)
     super(value.is_a?(Hash) ? value.transform_keys(&:to_s) : value)
+  end
+
+  def normalize_credit_url
+    return if credit_url.nil?
+
+    stripped = credit_url.strip
+    self.credit_url = stripped.presence
+  end
+
+  def credit_url_must_be_http_url
+    return if credit_url.blank?
+
+    uri = URI.parse(credit_url)
+
+    unless uri.is_a?(URI::HTTP) && uri.host.present?
+      errors.add(:credit_url, "must be a valid http or https URL")
+    end
+  rescue URI::InvalidURIError
+    errors.add(:credit_url, "must be a valid http or https URL")
   end
 
   # The CSS custom properties that can be themed, mapped to their default values.

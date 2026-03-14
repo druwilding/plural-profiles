@@ -542,6 +542,10 @@ button:hover,
   margin-top: 0.6rem;
 }
 
+.theme-card__notes {
+  font-style: italic;
+}
+
 .card__header {
   display: flex;
   align-items: center;

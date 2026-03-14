@@ -8,6 +8,18 @@
     = form.label :name
     = form.text_field :name, required: true, maxlength: 255
 
+  .form-group
+    = form.label :credit, "Made by"
+    = form.text_field :credit, maxlength: 255
+
+  .form-group
+    = form.label :credit_url, "Made by link"
+    = form.url_field :credit_url, maxlength: 255, placeholder: "https://"
+
+  .form-group
+    = form.label :notes, "Notes"
+    = form.text_area :notes, rows: 4
+
   - Theme::PROPERTY_GROUPS.each do |group_key, group_label|
     %hr.form-divider
     %h3= group_label
