@@ -11,13 +11,16 @@ class Theme < ApplicationRecord
   before_validation :normalize_tags
 
   TAGS = {
-    "light"         => "Light",
-    "dark"          => "Dark",
-    "high-contrast" => "High contrast",
-    "mid-contrast"  => "Mid contrast",
-    "low-contrast"  => "Low contrast",
-    "warm-colours"  => "Warm colours",
-    "cool-colours"  => "Cool colours"
+    "bright"           => "Bright",
+    "light"            => "Light",
+    "dark"             => "Dark",
+    "high-contrast"    => "High contrast",
+    "mid-contrast"     => "Mid contrast",
+    "low-contrast"     => "Low contrast",
+    "super-contrast"   => "Super contrast",
+    "warm-colours"     => "Warm colours",
+    "cool-colours"     => "Cool colours",
+    "blind-low-vision" => "Blind/low vision"
   }.freeze
 
   def colors=(value)
