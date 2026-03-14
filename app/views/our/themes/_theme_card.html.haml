@@ -1,0 +1,16 @@
+.card.card--stacked
+  .card__main
+    .card__header
+      %h3= link_to theme.name, edit_our_theme_path(theme)
+      - if Current.user.active_theme_id == theme.id
+        = link_to "Deactivate", deactivate_our_themes_path, data: { turbo_method: :patch }, class: "btn btn--small"
+      - else
+        = link_to "Activate", activate_our_theme_path(theme), data: { turbo_method: :patch }, class: "btn btn--small"
+    .card__actions
+      = link_to "Edit", edit_our_theme_path(theme), class: "btn btn--small btn--secondary"
+      = link_to "Duplicate", duplicate_our_theme_path(theme), data: { turbo_method: :post }, class: "btn btn--small btn--secondary"
+      = link_to "Delete", our_theme_path(theme), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this theme?" }, class: "btn btn--small btn--danger"
+  - if theme.tags.any?
+    .card__tags
+      - theme.tags.each do |tag|
+        %span.tag.tag--theme= Theme::TAGS[tag] || tag

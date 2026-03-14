@@ -1,6 +1,9 @@
 dark_forest:
   name: Dark Forest
   user: one
+  tags:
+    - dark
+    - cool-colours
   colors:
     page_bg: "#0e2e24"
     pane_bg: "#133b2f"
@@ -31,6 +34,9 @@ dark_forest:
 sunset:
   name: Sunset
   user: one
+  tags:
+    - light
+    - warm-colours
   colors:
     page_bg: "#2e1a0e"
     pane_bg: "#3b2213"

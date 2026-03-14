@@ -18,5 +18,15 @@
           %input{type: "color", name: "theme[colors][#{prop}]", value: theme.color_for(prop), id: "theme_colors_#{prop}", data: { "theme-designer-target": "colorInput", property: prop, action: "input->theme-designer#updatePreview" }}
           %input.theme-designer__hex-input{type: "text", value: theme.color_for(prop), maxlength: 7, pattern: "#[0-9a-fA-F]{6}", aria: { label: "#{meta[:label]} hex" }, data: { "theme-designer-target": "hexInput", property: prop, action: "input->theme-designer#updateFromHex" }}
 
+  %hr.form-divider
+  %details
+    %summary Tags
+    = hidden_field_tag "theme[tags][]", ""
+    .checkbox-list
+      - Theme::TAGS.each do |value, label|
+        %label.checkbox-label
+          = check_box_tag "theme[tags][]", value, theme.tags.include?(value)
+          = label
+
   .form-group{style: "margin-top: 2rem;"}
     = form.submit(theme.persisted? ? "Save theme" : "Create theme")

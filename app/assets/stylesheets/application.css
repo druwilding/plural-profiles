@@ -525,6 +525,23 @@ button:hover,
   padding: 1rem 1.5rem;
 }
 
+.card--stacked {
+  padding: 1rem 1.5rem;
+}
+
+.card--stacked .card__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
 .card__header {
   display: flex;
   align-items: center;
@@ -1194,6 +1211,77 @@ details[open] > .tree-editor__summary::before {
 @media (forced-colors: active) {
   .tag--active {
     outline: 1px solid CanvasText;
+  }
+}
+
+/* Descriptive tags shown on theme cards */
+.tag--theme {
+  background-color: color-mix(in srgb, var(--input-border) 20%, transparent);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--input-border) 50%, transparent);
+}
+
+@media (forced-colors: active) {
+  .tag--theme {
+    outline: 1px solid CanvasText;
+  }
+}
+
+/* Tag filter pills on the themes index */
+.theme-tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.theme-tag-filter__label {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+.theme-tag-filter__clear {
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+.tag--filter {
+  background-color: color-mix(in srgb, var(--input-border) 15%, transparent);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--input-border) 40%, transparent);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.tag--filter:hover {
+  background-color: color-mix(in srgb, var(--input-border) 30%, transparent);
+  text-decoration: none;
+}
+
+.tag--filter-active {
+  background-color: color-mix(in srgb, var(--link) 25%, transparent);
+  color: var(--heading);
+  border-color: color-mix(in srgb, var(--link) 60%, transparent);
+  font-weight: 600;
+}
+
+.tag--filter-active:hover {
+  background-color: color-mix(in srgb, var(--link) 35%, transparent);
+}
+
+@media (forced-colors: active) {
+  .tag--filter {
+    outline: 1px solid ButtonText;
+  }
+
+  .tag--filter-active {
+    outline: 2px solid Highlight;
+    color: HighlightText;
+    background-color: Highlight;
   }
 }
 
