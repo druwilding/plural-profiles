@@ -283,6 +283,39 @@ h1, h2, h3 {
 
 h1 { font-size: 1.75rem; }
 h2 { font-size: 1.4rem; }
+
+/* Page title row with inline label badges */
+.profile-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.profile-title h1 {
+  margin-bottom: 0;
+}
+
+.profile-title .label-badges {
+  margin-top: 0;
+}
+
+/* Inline name + labels row inside card headers */
+.name-with-labels {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.name-with-labels h2 {
+  margin-bottom: 0;
+}
+
+.name-with-labels .label-badges {
+  margin-top: 0;
+}
 h2 a { color: inherit; }
 h2 a:hover { text-decoration: none; opacity: 0.8; }
 
@@ -655,6 +688,10 @@ button:hover,
 .profile-card h3 {
   margin: 0.75rem 0 0.25rem;
   font-size: 1rem;
+}
+
+.profile-card .label-badges {
+  justify-content: center;
 }
 
 /* Profile header (show pages) */
@@ -2260,5 +2297,31 @@ input[type="submit"].btn--small,
 @media (max-width: 600px) {
   .theme-designer-container {
     max-width: 100%;
+  }
+}
+
+/* ── Label badges ───────────────────────────────────────── */
+.label-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.label-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: color-mix(in srgb, var(--primary-button-bg) 20%, transparent);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--primary-button-bg) 40%, transparent);
+}
+
+@media (forced-colors: active) {
+  .label-badge {
+    border: 1px solid ButtonText;
+    background: Canvas;
+    color: CanvasText;
   }
 }

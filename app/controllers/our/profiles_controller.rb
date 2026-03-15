@@ -63,7 +63,7 @@ class Our::ProfilesController < ApplicationController
   end
 
   def profile_params
-    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, group_ids: [], heart_emojis: []).tap do |p|
+    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, :labels_text, group_ids: [], heart_emojis: []).tap do |p|
       p[:heart_emojis] = p[:heart_emojis].reject(&:blank?) if p.key?(:heart_emojis)
       if p[:created_at].blank? ||
           !p[:created_at].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/) ||

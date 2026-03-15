@@ -308,4 +308,58 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_match "01_dewdrop_heart.webp", response.body
     assert_match "22_violet_heart.webp", response.body
   end
+
+  # -- labels --
+
+  test "create saves labels from comma-separated text" do
+    sign_in_as @user
+    post our_profiles_path, params: {
+      profile: { name: "Labelled", labels_text: "safe, work" }
+    }
+    assert_redirected_to our_profile_path(Profile.last)
+    assert_equal %w[safe work], Profile.last.labels
+  end
+
+  test "update saves labels" do
+    sign_in_as @user
+    patch our_profile_path(@profile), params: {
+      profile: { labels_text: "close friends, family" }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_equal [ "close friends", "family" ], @profile.reload.labels
+  end
+
+  test "update clears labels with blank text" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe work])
+    patch our_profile_path(@profile), params: {
+      profile: { labels_text: "" }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_equal [], @profile.reload.labels
+  end
+
+  test "show displays labels on private page" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe work])
+    get our_profile_path(@profile)
+    assert_response :success
+    assert_match "safe", response.body
+    assert_match "work", response.body
+  end
+
+  test "index displays labels on profile cards" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path
+    assert_response :success
+    assert_match "safe", response.body
+  end
+
+  test "labels do not appear on public profile page" do
+    @profile.update!(labels: %w[safe work])
+    get profile_path(@profile.uuid)
+    assert_response :success
+    assert_no_match "label-badge", response.body
+  end
 end

@@ -66,6 +66,10 @@
           .avatar.avatar--placeholder
             = render "shared/plural_pride_logo"
         %h3= link_to profile.name, our_profile_path(profile)
+        - if profile.labels.any?
+          .label-badges
+            - profile.labels.each do |label|
+              %span.label-badge= label
         - if profile.pronouns.present?
           %span.pronouns= profile.pronouns
 - else

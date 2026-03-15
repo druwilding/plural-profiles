@@ -1,6 +1,11 @@
 - content_for(:title) { @profile.name + " — Plural Profiles" }
 
-%h1= @profile.name
+.profile-title
+  %h1= @profile.name
+  - if @profile.labels.any?
+    .label-badges
+      - @profile.labels.each do |label|
+        %span.label-badge= label
 
 .card
   .profile-header
