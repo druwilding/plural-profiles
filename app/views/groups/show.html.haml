@@ -83,3 +83,5 @@
     - if @group.description.present?
       .group-description{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
         = formatted_description(@group.description)
+
+- content_for(:footer) { render "groups/theme_credit", group: @group }

@@ -29,3 +29,5 @@
       = formatted_description(@profile.description)
 
 %p= link_to "← Back to #{@group.name}", group_path(@group.uuid)
+
+- content_for(:footer) { render "groups/theme_credit", group: @group }

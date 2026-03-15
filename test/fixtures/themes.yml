@@ -1,6 +1,8 @@
 dark_forest:
   name: Dark Forest
   user: one
+  credit: Verdant Studio
+  credit_url: https://example.com/verdant
   tags:
     - dark
     - cool-colours

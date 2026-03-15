@@ -1,0 +1,12 @@
+- if group.theme.present?
+  .theme-credit
+    %span.theme-credit__name
+      Theme:
+      = group.theme.name
+    - if group.theme.credit.present?
+      %span.theme-credit__by
+        — Made by
+        - if group.theme.credit_url.present?
+          = link_to group.theme.credit, group.theme.credit_url, target: "_blank", rel: "noopener noreferrer"
+        - else
+          = group.theme.credit

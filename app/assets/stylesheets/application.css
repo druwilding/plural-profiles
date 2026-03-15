@@ -48,6 +48,8 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .site-header {
@@ -107,9 +109,11 @@ body {
 }
 
 .container {
+  width: 100%;
   max-width: 960px;
   margin: 2rem auto;
   padding: 0 1.5rem;
+  flex: 1;
 }
 
 .container:has(.layout),
@@ -2347,4 +2351,36 @@ input[type="submit"].btn--small,
   color: var(--link);
   text-decoration: underline;
   padding: 0.35rem 0;
+}
+
+/* ── Theme credit footer bar ─────────────────────────────── */
+.theme-credit {
+  background-color: var(--pane-bg);
+  border-top: 1px solid var(--pane-border);
+  padding: 0.75rem 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+}
+
+.theme-credit__name {
+  font-weight: 600;
+}
+
+.theme-credit__by {
+  margin-left: 0.25em;
+}
+
+.theme-credit a {
+  color: var(--link);
+}
+
+@media (forced-colors: active) {
+  .theme-credit {
+    color: CanvasText;
+    border-top: 1px solid CanvasText;
+  }
+  .theme-credit a {
+    color: LinkText;
+  }
 }

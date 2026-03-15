@@ -96,4 +96,41 @@ class ThemesTest < ApplicationSystemTestCase
     assert_no_link "Make default"
     assert_no_link "Remove default"
   end
+
+  # -- Theme credit footer on public group pages --
+
+  test "public group page with a theme shows theme name in footer" do
+    visit group_path(groups(:friends).uuid)
+
+    assert_css ".theme-credit"
+    assert_text "Theme: Dark Forest"
+  end
+
+  test "public group page with a theme shows Made by credit" do
+    visit group_path(groups(:friends).uuid)
+
+    assert_text "Made by Verdant Studio"
+  end
+
+  test "public group page with a theme links to credit_url" do
+    visit group_path(groups(:friends).uuid)
+
+    assert_link "Verdant Studio", href: "https://example.com/verdant"
+  end
+
+  test "public group page without a theme shows no theme credit footer" do
+    visit group_path(groups(:everyone).uuid)
+
+    assert_no_css ".theme-credit"
+  end
+
+  test "group profile page with a group theme shows theme name in footer" do
+    profile = groups(:friends).profiles.first
+    skip "friends group has no profiles" if profile.nil?
+
+    visit group_profile_path(groups(:friends).uuid, profile.uuid)
+
+    assert_css ".theme-credit"
+    assert_text "Theme: Dark Forest"
+  end
 end
