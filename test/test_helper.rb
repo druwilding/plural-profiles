@@ -3,6 +3,14 @@ require_relative "../config/environment"
 require "rails/test_help"
 require_relative "test_helpers/session_test_helper"
 
+if ENV["CI"]
+  require "minitest/reporters"
+  Minitest::Reporters.use! [
+    Minitest::Reporters::DefaultReporter.new(color: true),
+    Minitest::Reporters::HtmlReporter.new(reports_dir: "test/reports")
+  ]
+end
+
 module ActiveSupport
   class TestCase
     # Run tests in parallel with specified workers

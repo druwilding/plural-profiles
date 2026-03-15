@@ -33,4 +33,7 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Ignore generated test reports (uploaded as CI artifacts)
+/test/reports/
+
 .vscode

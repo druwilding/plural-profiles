@@ -104,6 +104,15 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
 
+      - name: Upload test reports
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: test-reports
+          path: test/reports
+          archive: false
+          if-no-files-found: ignore
+
   system-test:
     runs-on: ubuntu-latest
 
@@ -143,10 +152,20 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test:system
 
+      - name: Upload system test reports
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: system-test-reports
+          path: test/reports
+          archive: false
+          if-no-files-found: ignore
+
       - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: screenshots
           path: ${{ github.workspace }}/tmp/screenshots
+          archive: false
           if-no-files-found: ignore
