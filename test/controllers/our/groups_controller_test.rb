@@ -34,6 +34,17 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @user
     get new_our_group_path
     assert_select "select[name='group[theme_id]'] optgroup[label='Our themes']"
+    # Ensure only non-shared themes are in the personal optgroup
+    doc = Nokogiri::HTML(response.body)
+    our_themes_optgroup = doc.at_css("select[name='group[theme_id]'] optgroup[label='Our themes']")
+    option_values = our_themes_optgroup.css("option").map { |opt| opt["value"].to_i }
+    # Should include only personal (non-shared) themes for @user
+    personal_theme_ids = Theme.personal.where(user: @user).pluck(:id)
+    shared_theme_ids = Theme.shared.where(user: @user).pluck(:id)
+    assert_equal personal_theme_ids.sort, option_values.sort, "Personal optgroup should only include non-shared themes"
+    shared_theme_ids.each do |shared_id|
+      refute_includes option_values, shared_id, "Personal optgroup should not include shared theme id \\#{shared_id}"
+    end
   end
 
   test "new form includes Shared themes optgroup when shared themes exist" do

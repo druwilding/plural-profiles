@@ -196,7 +196,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def load_theme_options
-    @personal_themes = Current.user.themes.order(:name)
+    @personal_themes = Current.user.themes.personal.order(:name)
     @shared_themes = Theme.shared.order(:name)
   end
 
