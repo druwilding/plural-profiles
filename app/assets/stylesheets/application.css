@@ -37,6 +37,11 @@
   --avatar-placeholder-border: color-mix(in srgb, var(--text) 50%, transparent);
 }
 
+html {
+  background-color: var(--pane-bg);
+  overscroll-behavior: none;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -50,6 +55,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overscroll-behavior: none;
 }
 
 .site-header {
