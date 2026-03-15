@@ -44,6 +44,9 @@
           %label.checkbox-label
             = check_box_tag "profile[group_ids][]", group.id, profile.group_ids.include?(group.id), id: "profile_group_ids_#{group.id}"
             = group.name
+            - if group.labels.any?
+              - group.labels.each do |label|
+                %span.label-badge.label-badge--inline= label
 
   %fieldset.form-group
     %legend Heart emojis

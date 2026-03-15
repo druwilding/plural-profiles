@@ -23,6 +23,11 @@
     = form.text_field :avatar_alt_text, placeholder: "Describe the image for screen readers"
 
   .form-group
+    = form.label :labels_text, "Labels (private, comma-separated)"
+    = form.text_field :labels_text, value: group.labels_text, placeholder: "e.g. safe, work, close friends"
+    %p.form-hint Labels are only visible to you — they never appear on shared pages.
+
+  .form-group
     = form.label :description
     = form.text_area :description, placeholder: "Describe this group...", rows: 18
 
