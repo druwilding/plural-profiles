@@ -1,5 +1,6 @@
 class Profile < ApplicationRecord
   include HasAvatar
+  include HasLabels
 
   HEART_EMOJIS = [
     "01_dewdrop_heart",

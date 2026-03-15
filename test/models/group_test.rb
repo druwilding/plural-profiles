@@ -467,4 +467,54 @@ class GroupTest < ActiveSupport::TestCase
     group = user.groups.build(name: "Past Group", created_at: 1.day.ago)
     assert group.valid?
   end
+
+  # -- labels --
+
+  test "labels defaults to empty array" do
+    group = users(:one).groups.create!(name: "Labels Test")
+    assert_equal [], group.labels
+  end
+
+  test "labels_text= parses comma-separated string into array" do
+    group = groups(:friends)
+    group.labels_text = "safe, work, close friends"
+    assert_equal [ "safe", "work", "close friends" ], group.labels
+  end
+
+  test "labels_text= trims whitespace and rejects blanks" do
+    group = groups(:friends)
+    group.labels_text = "  safe ,, work ,  "
+    assert_equal [ "safe", "work" ], group.labels
+  end
+
+  test "labels_text= deduplicates entries" do
+    group = groups(:friends)
+    group.labels_text = "safe, safe, work"
+    assert_equal [ "safe", "work" ], group.labels
+  end
+
+  test "labels_text returns labels joined with comma and space" do
+    group = groups(:friends)
+    group.labels = [ "safe", "work" ]
+    assert_equal "safe, work", group.labels_text
+  end
+
+  test "labels_text returns empty string when no labels" do
+    group = groups(:friends)
+    group.labels = []
+    assert_equal "", group.labels_text
+  end
+
+  test "normalize_labels cleans up array on validation" do
+    group = groups(:friends)
+    group.labels = [ "  safe  ", "", "work" ]
+    group.validate
+    assert_equal [ "safe", "work" ], group.labels
+  end
+
+  test "labels round-trip through save" do
+    group = users(:one).groups.create!(name: "Labels RT")
+    group.update!(labels: [ "family", "private" ])
+    assert_equal [ "family", "private" ], group.reload.labels
+  end
 end
