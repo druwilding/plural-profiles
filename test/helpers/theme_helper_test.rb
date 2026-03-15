@@ -56,7 +56,7 @@ class ThemeHelperTest < ActionView::TestCase
 
   test "logged-in user with active theme and no override sees the group theme" do
     user = users(:two)
-    user.update!(active_theme: themes(:other_user_theme), override_group_themes: false)
+    user.update!(active_theme: themes(:other_user_theme), override_themes: false)
     Current.session = user.sessions.create!
     @group_theme = themes(:dark_forest)
     assert_equal themes(:dark_forest).to_css_properties, active_theme_style
@@ -64,7 +64,7 @@ class ThemeHelperTest < ActionView::TestCase
 
   test "logged-in user with active theme and override enabled sees their own theme" do
     user = users(:two)
-    user.update!(active_theme: themes(:other_user_theme), override_group_themes: true)
+    user.update!(active_theme: themes(:other_user_theme), override_themes: true)
     Current.session = user.sessions.create!
     @group_theme = themes(:dark_forest)
     assert_equal themes(:other_user_theme).to_css_properties, active_theme_style
@@ -73,7 +73,7 @@ class ThemeHelperTest < ActionView::TestCase
   test "logged-in user with no active theme and override on sees the site default, not the group theme" do
     user = users(:two)
     assert_nil user.active_theme
-    user.update!(override_group_themes: true)
+    user.update!(override_themes: true)
     Current.session = user.sessions.create!
     @group_theme = themes(:dark_forest)
     assert_equal themes(:default_shared).to_css_properties, active_theme_style
@@ -89,7 +89,7 @@ class ThemeHelperTest < ActionView::TestCase
 
   test "logged-in user with active theme and no override sees the profile theme" do
     user = users(:two)
-    user.update!(active_theme: themes(:other_user_theme), override_group_themes: false)
+    user.update!(active_theme: themes(:other_user_theme), override_themes: false)
     Current.session = user.sessions.create!
     @profile_theme = themes(:dark_forest)
     assert_equal themes(:dark_forest).to_css_properties, active_theme_style
@@ -97,7 +97,7 @@ class ThemeHelperTest < ActionView::TestCase
 
   test "logged-in user with active theme and override enabled sees their own theme over profile theme" do
     user = users(:two)
-    user.update!(active_theme: themes(:other_user_theme), override_group_themes: true)
+    user.update!(active_theme: themes(:other_user_theme), override_themes: true)
     Current.session = user.sessions.create!
     @profile_theme = themes(:dark_forest)
     assert_equal themes(:other_user_theme).to_css_properties, active_theme_style

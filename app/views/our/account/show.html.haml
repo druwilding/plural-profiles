@@ -23,10 +23,10 @@
   = form_with url: update_preferences_our_account_path, method: :patch do |form|
     .form-group
       %label.checkbox-label
-        = check_box_tag :override_group_themes, "1", Current.user.override_group_themes
+        = check_box_tag :override_themes, "1", Current.user.override_themes
         Always use our own theme on public pages
       %p.form-hint
-        When enabled, public group pages will always display in your active theme, even if the group sets a different theme.
+        When enabled, public pages will always display in your active theme.
     .form-group
       = form.submit "Save preferences"
 

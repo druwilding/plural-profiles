@@ -34,7 +34,7 @@ class Our::AccountController < ApplicationController
   end
 
   def update_preferences
-    Current.user.update!(override_group_themes: params[:override_group_themes] == "1")
+    Current.user.update!(override_themes: params[:override_themes] == "1")
     redirect_to our_account_path, notice: "Preferences updated."
   end
 

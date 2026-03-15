@@ -134,13 +134,13 @@ class ThemesTest < ApplicationSystemTestCase
     assert_text "Theme: Dark Forest"
   end
 
-  # -- override_group_themes preference --
+  # -- override_themes preference --
   # friends group uses dark_forest (page-bg: #0e2e24)
   # everyone group has no theme
   # sunset: page-bg #2e1a0e  |  ocean_shared: page-bg #0e1e2e  |  default_shared: page-bg #1a1a2e
 
   test "override on with a personal active theme: sees own theme on a group page" do
-    users(:one).update!(active_theme: themes(:sunset), override_group_themes: true)
+    users(:one).update!(active_theme: themes(:sunset), override_themes: true)
     sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
 
@@ -148,7 +148,7 @@ class ThemesTest < ApplicationSystemTestCase
   end
 
   test "override on with a shared active theme: sees own theme on a group page" do
-    users(:one).update!(active_theme: themes(:ocean_shared), override_group_themes: true)
+    users(:one).update!(active_theme: themes(:ocean_shared), override_themes: true)
     sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
 
@@ -156,7 +156,7 @@ class ThemesTest < ApplicationSystemTestCase
   end
 
   test "override on but no active theme set: default theme applies instead of group theme" do
-    users(:one).update!(active_theme: nil, override_group_themes: true)
+    users(:one).update!(active_theme: nil, override_themes: true)
     sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
 
@@ -164,7 +164,7 @@ class ThemesTest < ApplicationSystemTestCase
   end
 
   test "override off with a personal active theme: group theme takes precedence" do
-    users(:one).update!(active_theme: themes(:sunset), override_group_themes: false)
+    users(:one).update!(active_theme: themes(:sunset), override_themes: false)
     sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
 
@@ -172,7 +172,7 @@ class ThemesTest < ApplicationSystemTestCase
   end
 
   test "override off on a group with no theme: own active theme still applies" do
-    users(:one).update!(active_theme: themes(:sunset), override_group_themes: false)
+    users(:one).update!(active_theme: themes(:sunset), override_themes: false)
     sign_in_via_browser(users(:one))
     visit group_path(groups(:everyone).uuid)
 

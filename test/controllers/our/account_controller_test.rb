@@ -155,28 +155,28 @@ class Our::AccountControllerTest < ActionDispatch::IntegrationTest
 
   # -- update_preferences --
 
-  test "update_preferences sets override_group_themes to true" do
+  test "update_preferences sets override_themes to true" do
     sign_in_as @user
-    @user.update!(override_group_themes: false)
-    patch update_preferences_our_account_path, params: { override_group_themes: "1" }
+    @user.update!(override_themes: false)
+    patch update_preferences_our_account_path, params: { override_themes: "1" }
     assert_redirected_to our_account_path
     follow_redirect!
     assert_match "Preferences updated.", response.body
-    assert @user.reload.override_group_themes
+    assert @user.reload.override_themes
   end
 
-  test "update_preferences sets override_group_themes to false when unchecked" do
+  test "update_preferences sets override_themes to false when unchecked" do
     sign_in_as @user
-    @user.update!(override_group_themes: true)
+    @user.update!(override_themes: true)
     patch update_preferences_our_account_path, params: {}
     assert_redirected_to our_account_path
     follow_redirect!
     assert_match "Preferences updated.", response.body
-    assert_not @user.reload.override_group_themes
+    assert_not @user.reload.override_themes
   end
 
   test "update_preferences redirects unauthenticated user" do
-    patch update_preferences_our_account_path, params: { override_group_themes: "1" }
+    patch update_preferences_our_account_path, params: { override_themes: "1" }
     assert_redirected_to new_session_path
   end
 end
