@@ -61,6 +61,6 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 
-  # JUnit XML report output (used in CI)
+  # HTML/pretty test report output (used in CI)
   gem "minitest-reporters"
 end

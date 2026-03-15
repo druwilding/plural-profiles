@@ -3,7 +3,7 @@ require_relative "../config/environment"
 require "rails/test_help"
 require_relative "test_helpers/session_test_helper"
 
-if ENV["CI"]
+if ENV["CI"].present?
   require "minitest/reporters"
   Minitest::Reporters.use! [
     Minitest::Reporters::DefaultReporter.new(color: true),
@@ -13,8 +13,8 @@ end
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # Run tests in parallel with specified workers (single worker in CI so reporters work)
+    parallelize(workers: ENV["CI"].present? ? 1 : :number_of_processors)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
