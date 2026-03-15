@@ -108,10 +108,11 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: test-reports
-          path: test/reports/test-report.html
           archive: false
           if-no-files-found: ignore
+          name: test-reports
+          path: test/reports/test-report.html
+          retention-days: 5
 
   system-test:
     runs-on: ubuntu-latest
@@ -156,16 +157,18 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: system-test-reports
-          path: test/reports/system-test-report.html
           archive: false
           if-no-files-found: ignore
+          name: system-test-reports
+          path: test/reports/system-test-report.html
+          retention-days: 5
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v7
         if: failure()
         with:
+          archive: true
+          if-no-files-found: ignore
           name: screenshots
           path: ${{ github.workspace }}/tmp/screenshots
-          archive: false
-          if-no-files-found: ignore
+          retention-days: 5
