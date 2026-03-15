@@ -3,6 +3,7 @@ class GroupsController < ApplicationController
 
   def show
     @group = Group.find_by!(uuid: params[:uuid])
+    @group_theme = @group.theme
     @direct_profiles = @group.visible_root_profiles
     @seen_profile_ids = Set.new
     @descendant_tree = @group.descendant_tree(seen_profile_ids: @seen_profile_ids)
@@ -10,6 +11,7 @@ class GroupsController < ApplicationController
 
   def panel
     @group = Group.find_by!(uuid: params[:uuid])
+    @group_theme = @group.theme
 
     if params[:root].present? && params[:root] != params[:uuid]
       root_group = Group.find_by!(uuid: params[:root])

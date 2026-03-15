@@ -45,4 +45,37 @@ class ThemeHelperTest < ActionView::TestCase
     Current.session = nil
     assert_nil active_theme_style
   end
+
+  # -- group theme (@group_theme) --
+
+  test "unauthenticated visitor with a group theme sees the group theme's CSS" do
+    Current.session = nil
+    @group_theme = themes(:dark_forest)
+    assert_equal themes(:dark_forest).to_css_properties, active_theme_style
+  end
+
+  test "logged-in user with active theme and no override sees the group theme" do
+    user = users(:two)
+    user.update!(active_theme: themes(:other_user_theme), override_group_themes: false)
+    Current.session = user.sessions.create!
+    @group_theme = themes(:dark_forest)
+    assert_equal themes(:dark_forest).to_css_properties, active_theme_style
+  end
+
+  test "logged-in user with active theme and override enabled sees their own theme" do
+    user = users(:two)
+    user.update!(active_theme: themes(:other_user_theme), override_group_themes: true)
+    Current.session = user.sessions.create!
+    @group_theme = themes(:dark_forest)
+    assert_equal themes(:other_user_theme).to_css_properties, active_theme_style
+  end
+
+  test "logged-in user with no active theme sees the group theme" do
+    user = users(:two)
+    assert_nil user.active_theme
+    user.update!(override_group_themes: true) # override irrelevant without active theme
+    Current.session = user.sessions.create!
+    @group_theme = themes(:dark_forest)
+    assert_equal themes(:dark_forest).to_css_properties, active_theme_style
+  end
 end

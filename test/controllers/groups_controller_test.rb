@@ -121,4 +121,20 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Drift", response.body
     assert_match "Ripple", response.body
   end
+
+  test "show applies group theme CSS when group has a theme" do
+    group = groups(:friends) # has theme: dark_forest
+    get group_path(uuid: group.uuid)
+    assert_response :success
+    # dark_forest theme has --page-bg: #0e2e24 — should appear in body style
+    assert_match "--page-bg: #0e2e24", response.body
+  end
+
+  test "show uses site default CSS when group has no theme" do
+    group = groups(:everyone) # no theme in fixture
+    get group_path(uuid: group.uuid)
+    assert_response :success
+    # default_shared theme has --page-bg: #1a1a2e
+    assert_match "--page-bg: #1a1a2e", response.body
+  end
 end

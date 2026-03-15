@@ -76,4 +76,22 @@ class GroupProfilesControllerTest < ActionDispatch::IntegrationTest
     get panel_group_profile_path(group_uuid: castle.uuid, uuid: drift.uuid)
     assert_response :not_found
   end
+
+  test "show applies group theme CSS when group has a theme" do
+    group = groups(:friends) # has theme: dark_forest
+    profile = profiles(:alice)
+    get group_profile_path(group_uuid: group.uuid, uuid: profile.uuid)
+    assert_response :success
+    # dark_forest theme has --page-bg: #0e2e24 — should appear in body style
+    assert_match "--page-bg: #0e2e24", response.body
+  end
+
+  test "show uses site default CSS when group has no theme" do
+    group = groups(:everyone)
+    profile = profiles(:alice)
+    get group_profile_path(group_uuid: group.uuid, uuid: profile.uuid)
+    assert_response :success
+    # default_shared theme has --page-bg: #1a1a2e
+    assert_match "--page-bg: #1a1a2e", response.body
+  end
 end
