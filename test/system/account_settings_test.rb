@@ -99,14 +99,4 @@ class AccountSettingsTest < ApplicationSystemTestCase
       assert_text invite_codes(:available).code
     end
   end
-
-  private
-
-  def sign_in_via_browser
-    visit new_session_path
-    fill_in "Email address", with: @user.email_address
-    fill_in "Password", with: "Plur4l!Pr0files#2026"
-    click_button "Sign in"
-    assert_current_path root_path
-  end
 end

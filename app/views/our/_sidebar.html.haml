@@ -16,6 +16,9 @@
           - if group.avatar.attached?
             = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar__avatar", width: 24, height: 24, alt: group.avatar_alt_text.presence || "", loading: "lazy"
           = link_to group.name, our_group_path(group), class: "sidebar__link"
+          - if group.labels.any?
+            - group.labels.each do |label|
+              %span.label-badge.label-badge--sidebar= label
 
   %hr
 
@@ -33,6 +36,9 @@
             %span.sidebar__avatar.sidebar__avatar--placeholder
               = render "shared/plural_pride_logo"
           = link_to profile.name, our_profile_path(profile), class: "sidebar__link"
+          - if profile.labels.any?
+            - profile.labels.each do |label|
+              %span.label-badge.label-badge--sidebar= label
 
   %hr
 

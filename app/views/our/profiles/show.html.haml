@@ -1,6 +1,11 @@
 - content_for(:title) { @profile.name + " — Plural Profiles" }
 
-%h1= @profile.name
+.profile-title
+  %h1= @profile.name
+  - if @profile.labels.any?
+    .label-badges
+      - @profile.labels.each do |label|
+        %span.label-badge= label
 
 .card
   .profile-header
@@ -56,6 +61,10 @@
     %h3 In groups
     %ul
       - @profile.groups.where(user: Current.user).each do |group|
-        %li= link_to group.name, our_group_path(group)
+        %li
+          = link_to group.name, our_group_path(group)
+          - if group.labels.any?
+            - group.labels.each do |label|
+              %span.label-badge.label-badge--inline= label
 
 %p= link_to "← Back to our profiles", our_profiles_path

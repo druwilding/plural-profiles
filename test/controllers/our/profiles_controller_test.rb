@@ -308,4 +308,120 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_match "01_dewdrop_heart.webp", response.body
     assert_match "22_violet_heart.webp", response.body
   end
+
+  # -- labels --
+
+  test "create saves labels from comma-separated text" do
+    sign_in_as @user
+    post our_profiles_path, params: {
+      profile: { name: "Labelled", labels_text: "safe, work" }
+    }
+    assert_redirected_to our_profile_path(Profile.last)
+    assert_equal %w[safe work], Profile.last.labels
+  end
+
+  test "update saves labels" do
+    sign_in_as @user
+    patch our_profile_path(@profile), params: {
+      profile: { labels_text: "close friends, family" }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_equal [ "close friends", "family" ], @profile.reload.labels
+  end
+
+  test "update clears labels with blank text" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe work])
+    patch our_profile_path(@profile), params: {
+      profile: { labels_text: "" }
+    }
+    assert_redirected_to our_profile_path(@profile)
+    assert_equal [], @profile.reload.labels
+  end
+
+  test "show displays labels on private page" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe work])
+    get our_profile_path(@profile)
+    assert_response :success
+    assert_match "safe", response.body
+    assert_match "work", response.body
+  end
+
+  test "index displays labels on profile cards" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path
+    assert_response :success
+    assert_match "safe", response.body
+  end
+
+  test "labels do not appear on public profile page" do
+    @profile.update!(labels: %w[safe work])
+    get profile_path(@profile.uuid)
+    assert_response :success
+    assert_no_match "label-badge", response.body
+  end
+
+  # -- Label filtering --
+
+  test "index shows all profiles when no label filter applied" do
+    sign_in_as @user
+    @profile.update!(labels: %w[public])
+    get our_profiles_path
+    assert_response :success
+    assert_match "Alice", response.body
+    assert_match "Bob", response.body
+  end
+
+  test "index filters profiles by label" do
+    sign_in_as @user
+    @profile.update!(labels: %w[public safe])
+    bob = profiles(:bob)
+    bob.update!(labels: %w[private])
+    get our_profiles_path(label: "public")
+    assert_response :success
+    assert_select ".main-content h2 a", text: "Alice"
+    assert_select ".main-content h2 a", text: "Bob", count: 0
+  end
+
+  test "index filter returns no profiles when no match" do
+    sign_in_as @user
+    @profile.update!(labels: %w[public])
+    get our_profiles_path(label: "nonexistent")
+    assert_response :success
+    assert_select ".main-content .card-list", count: 0
+  end
+
+  test "index shows filter bar when labels exist" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path
+    assert_response :success
+    assert_match "filter-bar", response.body
+    assert_match "safe", response.body
+  end
+
+  test "index hides filter bar when no labels exist" do
+    sign_in_as @user
+    get our_profiles_path
+    assert_response :success
+    assert_no_match "filter-bar", response.body
+  end
+
+  test "index shows clear filter link when label filter is active" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path(label: "safe")
+    assert_response :success
+    assert_match "Clear filter", response.body
+  end
+
+  test "index does not show clear filter link without active filter" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path
+    assert_response :success
+    assert_no_match "Clear filter", response.body
+  end
 end

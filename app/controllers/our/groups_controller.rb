@@ -6,6 +6,14 @@ class Our::GroupsController < ApplicationController
 
   def index
     @groups = Current.user.groups.order(:name)
+    if params[:label].present?
+      @groups = @groups.where("labels @> ?", [ params[:label] ].to_json)
+    end
+    @all_labels = Current.user.groups
+      .joins("CROSS JOIN LATERAL jsonb_array_elements_text(labels) AS label_val")
+      .distinct
+      .order("label_val")
+      .pluck("label_val")
   end
 
   def show
@@ -183,7 +191,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def group_params
-    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at).tap do |p|
+    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at, :labels_text).tap do |p|
       if p[:created_at].blank? ||
           !p[:created_at].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/) ||
           (@group&.created_at && p[:created_at] == @group.created_at.utc.strftime("%Y-%m-%dT%H:%M"))

@@ -7,6 +7,14 @@ class Our::ProfilesController < ApplicationController
 
   def index
     @profiles = Current.user.profiles.order(:name)
+    if params[:label].present?
+      @profiles = @profiles.where("labels @> ?", [ params[:label] ].to_json)
+    end
+    @all_labels = Current.user.profiles
+      .joins("CROSS JOIN LATERAL jsonb_array_elements_text(labels) AS label_val")
+      .distinct
+      .order("label_val")
+      .pluck("label_val")
   end
 
   def show
@@ -63,7 +71,7 @@ class Our::ProfilesController < ApplicationController
   end
 
   def profile_params
-    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, group_ids: [], heart_emojis: []).tap do |p|
+    params.require(:profile).permit(:name, :pronouns, :description, :avatar, :avatar_alt_text, :created_at, :labels_text, group_ids: [], heart_emojis: []).tap do |p|
       p[:heart_emojis] = p[:heart_emojis].reject(&:blank?) if p.key?(:heart_emojis)
       if p[:created_at].blank? ||
           !p[:created_at].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/) ||

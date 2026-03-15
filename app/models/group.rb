@@ -1,5 +1,6 @@
 class Group < ApplicationRecord
   include HasAvatar
+  include HasLabels
 
   belongs_to :user
   has_many :group_profiles, dependent: :destroy

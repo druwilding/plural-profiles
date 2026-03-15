@@ -39,6 +39,9 @@
           %label.checkbox-label
             = check_box_tag "profile[group_ids][]", group.id, profile.group_ids.include?(group.id), id: "profile_group_ids_#{group.id}"
             = group.name
+            - if group.labels.any?
+              - group.labels.each do |label|
+                %span.label-badge.label-badge--inline= label
 
   %fieldset.form-group
     %legend Heart emojis
@@ -49,6 +52,11 @@
           %label.heart-picker__heart{title: profile.heart_emoji_display_name(heart)}
             %input.heart-picker__checkbox{type: "checkbox", name: "profile[heart_emojis][]", value: heart, checked: profile.heart_emojis.include?(heart) || nil, "aria-label": profile.heart_emoji_display_name(heart)}
             = image_tag "/images/hearts/#{heart}.webp", width: 24, height: 24, alt: "", loading: "lazy"
+
+  .form-group
+    = form.label :labels_text, "Labels (optional, comma-separated)"
+    = form.text_field :labels_text, value: profile.labels_text, placeholder: "e.g. safe, work, close friends"
+    %p.form-hint Labels are only visible to you, they never appear on shared pages.
 
   - if profile.persisted?
     .form-group

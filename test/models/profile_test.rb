@@ -133,4 +133,54 @@ class ProfileTest < ActiveSupport::TestCase
     assert_equal "50cadbury_heart", Profile::HEART_EMOJI_ALIASES["cadbury_heart"]
     assert_equal 42, Profile::HEART_EMOJI_ALIASES.size
   end
+
+  # -- labels --
+
+  test "labels defaults to empty array" do
+    profile = users(:one).profiles.create!(name: "Labels Test")
+    assert_equal [], profile.labels
+  end
+
+  test "labels_text= parses comma-separated string into array" do
+    profile = profiles(:alice)
+    profile.labels_text = "safe, work, close friends"
+    assert_equal [ "safe", "work", "close friends" ], profile.labels
+  end
+
+  test "labels_text= trims whitespace and rejects blanks" do
+    profile = profiles(:alice)
+    profile.labels_text = "  safe ,, work ,  "
+    assert_equal [ "safe", "work" ], profile.labels
+  end
+
+  test "labels_text= deduplicates entries" do
+    profile = profiles(:alice)
+    profile.labels_text = "safe, safe, work"
+    assert_equal [ "safe", "work" ], profile.labels
+  end
+
+  test "labels_text returns labels joined with comma and space" do
+    profile = profiles(:alice)
+    profile.labels = [ "safe", "work" ]
+    assert_equal "safe, work", profile.labels_text
+  end
+
+  test "labels_text returns empty string when no labels" do
+    profile = profiles(:alice)
+    profile.labels = []
+    assert_equal "", profile.labels_text
+  end
+
+  test "normalize_labels cleans up array on validation" do
+    profile = profiles(:alice)
+    profile.labels = [ "  safe  ", "", "work" ]
+    profile.validate
+    assert_equal [ "safe", "work" ], profile.labels
+  end
+
+  test "labels round-trip through save" do
+    profile = users(:one).profiles.create!(name: "Labels RT")
+    profile.update!(labels: [ "family", "private" ])
+    assert_equal [ "family", "private" ], profile.reload.labels
+  end
 end

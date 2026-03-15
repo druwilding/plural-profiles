@@ -2,6 +2,14 @@
 
 %h1 Our profiles
 
+- if @all_labels.any?
+  .filter-bar
+    %span.filter-bar__label Filter by label:
+    - @all_labels.each do |label|
+      = link_to label, our_profiles_path(label: label), class: "btn btn--small #{' btn--secondary' if params[:label] != label}"
+    - if params[:label]
+      = link_to "Clear filter", our_profiles_path, class: "filter-bar__clear"
+
 - if @profiles.any?
   .card-list
     - @profiles.each do |profile|
@@ -13,7 +21,12 @@
             .avatar.avatar--small.avatar--placeholder
               = render "shared/plural_pride_logo"
           %div
-            %h2= link_to profile.name, our_profile_path(profile)
+            .name-with-labels
+              %h2= link_to profile.name, our_profile_path(profile)
+              - if profile.labels.any?
+                .label-badges
+                  - profile.labels.each do |label|
+                    %span.label-badge= label
             - if profile.pronouns.present?
               %span.pronouns= profile.pronouns
 - else

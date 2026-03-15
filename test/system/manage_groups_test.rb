@@ -81,7 +81,7 @@ class ManageGroupsTest < ApplicationSystemTestCase
 
   test "shows message when all groups are already in tree" do
     user = users(:one)
-    sign_in_via_browser(user: user)
+    sign_in_via_browser(user)
 
     visit manage_groups_our_group_path(groups(:everyone))
 
@@ -139,16 +139,5 @@ class ManageGroupsTest < ApplicationSystemTestCase
     click_link "Back to group"
 
     assert_current_path our_group_path(alpha)
-  end
-
-  private
-
-  def sign_in_via_browser(user: nil)
-    user ||= @user
-    visit new_session_path
-    fill_in "Email address", with: user.email_address
-    fill_in "Password", with: "Plur4l!Pr0files#2026"
-    click_button "Sign in"
-    assert_current_path root_path
   end
 end

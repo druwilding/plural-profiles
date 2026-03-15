@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -66,10 +66,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000001) do
     t.string "avatar_alt_text"
     t.datetime "created_at", null: false
     t.text "description"
+    t.jsonb "labels", default: [], null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.index ["labels"], name: "index_groups_on_labels", using: :gin
     t.index ["user_id"], name: "index_groups_on_user_id"
     t.index ["uuid"], name: "index_groups_on_uuid", unique: true
   end
@@ -102,11 +104,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000001) do
     t.datetime "created_at", null: false
     t.text "description"
     t.jsonb "heart_emojis", default: [], null: false
+    t.jsonb "labels", default: [], null: false
     t.string "name", null: false
     t.string "pronouns"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.index ["labels"], name: "index_profiles_on_labels", using: :gin
     t.index ["user_id"], name: "index_profiles_on_user_id"
     t.index ["uuid"], name: "index_profiles_on_uuid", unique: true
   end

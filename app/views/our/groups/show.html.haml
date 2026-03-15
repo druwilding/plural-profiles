@@ -1,6 +1,11 @@
 - content_for(:title) { @group.name + " — Plural Profiles" }
 
-%h1= @group.name
+.profile-title
+  %h1= @group.name
+  - if @group.labels.any?
+    .label-badges
+      - @group.labels.each do |label|
+        %span.label-badge= label
 
 .card
   .profile-header
@@ -54,6 +59,10 @@
           .avatar.avatar--placeholder
             = render "shared/plural_pride_logo"
         %h3= link_to child.name, our_group_path(child)
+        - if child.labels.any?
+          .label-badges
+            - child.labels.each do |label|
+              %span.label-badge= label
 
 %h2 Profiles
 - if @group.profiles.any?
@@ -66,6 +75,10 @@
           .avatar.avatar--placeholder
             = render "shared/plural_pride_logo"
         %h3= link_to profile.name, our_profile_path(profile)
+        - if profile.labels.any?
+          .label-badges
+            - profile.labels.each do |label|
+              %span.label-badge= label
         - if profile.pronouns.present?
           %span.pronouns= profile.pronouns
 - else
