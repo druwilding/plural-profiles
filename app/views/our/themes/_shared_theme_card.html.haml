@@ -16,7 +16,7 @@
           = link_to "Remove default", set_default_our_theme_path(theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
         - else
           = link_to "Make default", set_default_our_theme_path(theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
-  - if theme.credit.present? || theme.credit_url.present? || theme.notes.present?
+  - if theme.credit.present? || theme.credit_url.present? || theme.notes.present? || theme.site_default?
     .card__body
       - if theme.credit.present? || theme.credit_url.present?
         %p.theme-card__credit
