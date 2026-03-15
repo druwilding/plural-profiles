@@ -12,3 +12,4 @@ two:
 three:
   email_address: three@example.com
   password_digest: <%= password_digest %>
+  admin: true

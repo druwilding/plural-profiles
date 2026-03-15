@@ -104,6 +104,15 @@ ocean_shared:
     warning_border: "#e6c4cf"
     warning_text: "#e6c4cf"
 
+another_admin_shared:
+  name: Another Admin Shared
+  user: three
+  shared: true
+  colors:
+    page_bg: "#2e0e0e"
+    pane_bg: "#3b1313"
+    text: "#a35e5e"
+
 default_shared:
   name: Default Shared
   user: one

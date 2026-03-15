@@ -110,7 +110,9 @@ class Our::ThemesController < ApplicationController
   private
 
   def set_theme
-    @theme = Current.user.themes.find(params[:id])
+    @theme = Current.user.themes.find_by(id: params[:id])
+    @theme ||= Theme.shared.find(params[:id]) if Current.user.admin?
+    raise ActiveRecord::RecordNotFound unless @theme
   end
 
   def set_theme_for_duplicate

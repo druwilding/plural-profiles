@@ -135,7 +135,7 @@ class Theme < ApplicationRecord
   private
 
     def only_admin_can_share
-      if shared? && !user&.admin?
+      if shared? && (new_record? || shared_changed?) && !user&.admin?
         errors.add(:shared, "can only be set by admins")
       end
     end
