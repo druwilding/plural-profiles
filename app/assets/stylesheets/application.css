@@ -2327,14 +2327,14 @@ input[type="submit"].btn--small,
   padding: 0.125rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  background: color-mix(in srgb, var(--primary-button-bg) 20%, transparent);
-  color: var(--text);
-  border: 1px solid color-mix(in srgb, var(--primary-button-bg) 40%, transparent);
+  background: color-mix(in srgb, var(--primary-button-bg) 60%, transparent);
+  color: var(--primary-button-text);
+  border: 1px solid color-mix(in srgb, var(--primary-button-text) 40%, transparent);
 }
 
 @media (forced-colors: active) {
   .label-badge {
-    border: 1px solid ButtonText;
+    border: 1px solid CanvasText;
     background: Canvas;
     color: CanvasText;
   }
