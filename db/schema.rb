@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -68,10 +68,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
     t.text "description"
     t.jsonb "labels", default: [], null: false
     t.string "name", null: false
+    t.bigint "theme_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
     t.index ["labels"], name: "index_groups_on_labels", using: :gin
+    t.index ["theme_id"], name: "index_groups_on_theme_id"
     t.index ["user_id"], name: "index_groups_on_user_id"
     t.index ["uuid"], name: "index_groups_on_uuid", unique: true
   end
@@ -148,6 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
     t.datetime "created_at", null: false
     t.string "email_address", null: false
     t.datetime "email_verified_at"
+    t.boolean "override_group_themes", default: false, null: false
     t.string "password_digest", null: false
     t.string "unverified_email_address"
     t.datetime "updated_at", null: false
@@ -161,6 +164,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
   add_foreign_key "group_groups", "groups", column: "parent_group_id"
   add_foreign_key "group_profiles", "groups"
   add_foreign_key "group_profiles", "profiles"
+  add_foreign_key "groups", "themes", on_delete: :nullify
   add_foreign_key "groups", "users"
   add_foreign_key "inclusion_overrides", "groups", on_delete: :cascade
   add_foreign_key "invite_codes", "users"

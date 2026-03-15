@@ -3,6 +3,7 @@ class Group < ApplicationRecord
   include HasLabels
 
   belongs_to :user
+  belongs_to :theme, optional: true
   has_many :group_profiles, dependent: :destroy
   has_many :profiles, -> { order(:name) }, through: :group_profiles
 

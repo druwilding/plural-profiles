@@ -3,6 +3,7 @@ friends:
   uuid: def11111-1111-1111-1111-111111111111
   name: Friends
   description: Our close friends group.
+  theme: dark_forest
 
 everyone:
   user: one

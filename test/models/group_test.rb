@@ -517,4 +517,27 @@ class GroupTest < ActiveSupport::TestCase
     group.update!(labels: [ "family", "private" ])
     assert_equal [ "family", "private" ], group.reload.labels
   end
+
+  # -- Phase 1: group theme association --
+
+  test "group without a theme is valid" do
+    group = users(:one).groups.build(name: "Themeless")
+    assert group.valid?
+  end
+
+  test "group with a theme is valid" do
+    group = users(:one).groups.build(name: "Themed", theme: themes(:dark_forest))
+    assert group.valid?
+  end
+
+  test "theme association is accessible via fixture" do
+    assert_equal themes(:dark_forest), groups(:friends).theme
+  end
+
+  test "deleting a theme nullifies the group theme_id" do
+    group = users(:one).groups.create!(name: "Will Lose Theme", theme: themes(:sunset))
+    assert_not_nil group.theme_id
+    themes(:sunset).destroy
+    assert_nil group.reload.theme_id
+  end
 end
