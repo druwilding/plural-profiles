@@ -101,11 +101,22 @@ class Our::ThemesController < ApplicationController
       redirect_to our_themes_path, alert: "Only admins can set the default theme."
       return
     end
-    @theme.update!(site_default: !@theme.site_default?)
-    if @theme.site_default?
-      redirect_to our_themes_path, notice: "'#{@theme.name}' is now the default theme."
-    else
-      redirect_to our_themes_path, notice: "'#{@theme.name}' is no longer the default theme."
+    unless @theme.shared?
+      redirect_to our_themes_path, alert: "Only shared themes can be set as the default."
+      return
+    end
+    begin
+      if @theme.update(site_default: !@theme.site_default?)
+        if @theme.site_default?
+          redirect_to our_themes_path, notice: "'#{@theme.name}' is now the default theme."
+        else
+          redirect_to our_themes_path, notice: "'#{@theme.name}' is no longer the default theme."
+        end
+      else
+        redirect_to our_themes_path, alert: "Could not update default theme: #{@theme.errors.full_messages.to_sentence}"
+      end
+    rescue ActiveRecord::RecordNotUnique
+      redirect_to our_themes_path, alert: "Another theme was just set as the default at the same time. Please try again."
     end
   end
 

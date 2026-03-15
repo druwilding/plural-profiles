@@ -128,7 +128,7 @@ class Theme < ApplicationRecord
 
   def self.site_default_theme
     Rails.cache.fetch("site_default_theme", expires_in: 5.minutes) do
-      find_by(site_default: true)
+      shared.find_by(site_default: true)
     end
   end
 
