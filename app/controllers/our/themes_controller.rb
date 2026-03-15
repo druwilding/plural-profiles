@@ -3,7 +3,7 @@ class Our::ThemesController < ApplicationController
   skip_before_action :set_sidebar_data, only: %i[new create edit update activate deactivate destroy duplicate show]
   before_action :set_theme, only: %i[edit update destroy]
   before_action :set_theme_for_duplicate, only: %i[duplicate]
-  before_action :set_theme_for_show, only: %i[show activate]
+  before_action :set_theme_for_show, only: %i[show activate set_default]
 
   def index
     @filter_tags = Array(params[:tags]).reject(&:blank?) & Theme::TAGS.keys
@@ -54,6 +54,10 @@ class Our::ThemesController < ApplicationController
   end
 
   def destroy
+    if @theme.site_default?
+      redirect_to our_themes_path, alert: "Cannot delete the default theme. Remove its default status first.", status: :see_other
+      return
+    end
     if Current.user.active_theme_id == @theme.id
       Current.user.update!(active_theme_id: nil)
     end
@@ -87,7 +91,20 @@ class Our::ThemesController < ApplicationController
 
   def deactivate
     Current.user.update!(active_theme: nil)
-    redirect_to our_themes_path, notice: "Switched back to default theme."
+    redirect_to our_themes_path, notice: "Switched to site default theme."
+  end
+
+  def set_default
+    unless Current.user.admin?
+      redirect_to our_themes_path, alert: "Only admins can set the default theme."
+      return
+    end
+    @theme.update!(site_default: !@theme.site_default?)
+    if @theme.site_default?
+      redirect_to our_themes_path, notice: "'#{@theme.name}' is now the default theme."
+    else
+      redirect_to our_themes_path, notice: "'#{@theme.name}' is no longer the default theme."
+    end
   end
 
   private
@@ -105,9 +122,10 @@ class Our::ThemesController < ApplicationController
   end
 
   def theme_params
-    permitted = params.require(:theme).permit(:name, :credit, :credit_url, :notes, :shared, tags: [], colors: {})
-    # Strip shared param if user is not admin
+    permitted = params.require(:theme).permit(:name, :credit, :credit_url, :notes, :shared, :site_default, tags: [], colors: {})
+    # Strip admin-only params if user is not admin
     permitted.delete(:shared) unless Current.user.admin?
+    permitted.delete(:site_default) unless Current.user.admin?
     # Ensure only known tag values are stored
     permitted[:tags] = (permitted[:tags] || []).reject(&:blank?).uniq & Theme::TAGS.keys
     # Ensure only known colour keys are stored

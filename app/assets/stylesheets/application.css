@@ -105,6 +105,26 @@ body {
   }
 }
 
+.badge--default {
+  margin-left: 0.5em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.2em 0.5em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--primary-button-bg) 70%, transparent);
+  color: var(--primary-button-text);
+  vertical-align: middle;
+}
+
+@media (forced-colors: active) {
+  .badge--default {
+    border: 1px solid Highlight;
+    color: HighlightText;
+    background: Highlight;
+  }
+}
+
 .container {
   max-width: 960px;
   margin: 2rem auto;

@@ -179,4 +179,44 @@ class ThemeTest < ActiveSupport::TestCase
     assert_includes personal, themes(:dark_forest)
     assert_includes personal, themes(:sunset)
   end
+
+  # -- Default theme --
+
+  test "site_default can only be set on shared themes" do
+    theme = Theme.new(user: users(:one), name: "Personal Default", colors: {}, shared: false, site_default: true)
+    assert_not theme.valid?
+    assert_includes theme.errors[:site_default], "can only be set on shared themes"
+  end
+
+  test "site_default on a shared theme is valid" do
+    theme = Theme.new(user: users(:one), name: "Shared Default", colors: {}, shared: true, site_default: true)
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "site_default_theme returns the default theme" do
+    Rails.cache.clear
+    assert_equal themes(:default_shared), Theme.site_default_theme
+  end
+
+  test "site_default_theme returns nil when no default is set" do
+    Rails.cache.clear
+    themes(:default_shared).update!(site_default: false)
+    assert_nil Theme.site_default_theme
+  end
+
+  test "setting site_default clears it on other themes" do
+    Rails.cache.clear
+    themes(:ocean_shared).update!(site_default: true)
+    assert themes(:ocean_shared).reload.site_default?
+    assert_not themes(:default_shared).reload.site_default?
+  end
+
+  test "destroying the default theme busts the cache" do
+    Rails.cache.clear
+    # Warm the cache
+    Theme.site_default_theme
+    # Destroy the default theme — cache should be busted
+    themes(:default_shared).destroy
+    assert_nil Theme.site_default_theme
+  end
 end

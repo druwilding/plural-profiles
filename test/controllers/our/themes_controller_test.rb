@@ -419,4 +419,56 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     get our_theme_path(@theme)
     assert_response :not_found
   end
+
+  # -- Default theme --
+
+  test "admin can set a shared theme as the default" do
+    sign_in_as @user
+    assert @user.admin?
+    theme = themes(:ocean_shared)
+    assert_not theme.site_default?
+    patch set_default_our_theme_path(theme)
+    assert_redirected_to our_themes_path
+    assert theme.reload.site_default?
+    assert_match "is now the default theme", flash[:notice]
+  end
+
+  test "set_default toggles off when theme is already the default" do
+    sign_in_as @user
+    theme = themes(:default_shared)
+    assert theme.site_default?
+    patch set_default_our_theme_path(theme)
+    assert_redirected_to our_themes_path
+    assert_not theme.reload.site_default?
+    assert_match "is no longer the default theme", flash[:notice]
+  end
+
+  test "non-admin cannot call set_default" do
+    sign_in_as @other_user
+    assert_not @other_user.admin?
+    theme = themes(:ocean_shared)
+    patch set_default_our_theme_path(theme)
+    assert_redirected_to our_themes_path
+    assert_match "Only admins", flash[:alert]
+    assert_not theme.reload.site_default?
+  end
+
+  test "cannot delete the default theme" do
+    sign_in_as @user
+    theme = themes(:default_shared)
+    assert theme.site_default?
+    assert_no_difference("Theme.count") do
+      delete our_theme_path(theme)
+    end
+    assert_redirected_to our_themes_path
+    assert_match "Cannot delete the default theme", flash[:alert]
+  end
+
+  test "deactivate shows site default message" do
+    sign_in_as @user
+    @user.update!(active_theme: themes(:dark_forest))
+    patch deactivate_our_themes_path
+    assert_redirected_to our_themes_path
+    assert_match "site default", flash[:notice]
+  end
 end

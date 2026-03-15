@@ -32,6 +32,7 @@ Rails.application.routes.draw do
   resources :our_themes, path: "our/themes", controller: "our/themes" do
     member do
       patch :activate
+      patch :set_default
       post :duplicate
     end
     collection do

@@ -26,6 +26,12 @@
         = form.check_box :shared
         Share this theme with everyone
 
+  - if Current.user.admin? && theme.shared?
+    .form-group
+      %label.checkbox-label
+        = form.check_box :site_default
+        Mark as site default theme
+
   - Theme::PROPERTY_GROUPS.each do |group_key, group_label|
     %hr.form-divider
     %h3= group_label

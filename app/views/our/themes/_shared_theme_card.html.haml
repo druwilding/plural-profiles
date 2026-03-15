@@ -1,7 +1,10 @@
 .card.card--stacked
   .card__main
     .card__header
-      %h3= link_to theme.name, our_theme_path(theme)
+      %h3
+        = link_to theme.name, our_theme_path(theme)
+        - if theme.site_default?
+          %span.badge.badge--default (default)
       - if Current.user.active_theme_id == theme.id
         = link_to "Deactivate", deactivate_our_themes_path, data: { turbo_method: :patch }, class: "btn btn--small"
       - else
@@ -11,6 +14,10 @@
       = link_to "Duplicate", duplicate_our_theme_path(theme), data: { turbo_method: :post }, class: "btn btn--small btn--secondary"
       - if Current.user.admin?
         = link_to "Edit", edit_our_theme_path(theme), class: "btn btn--small btn--secondary"
+        - if theme.site_default?
+          = link_to "Remove default", set_default_our_theme_path(theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
+        - else
+          = link_to "Set as default", set_default_our_theme_path(theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
   - if theme.credit.present? || theme.credit_url.present? || theme.notes.present?
     .card__body
       - if theme.credit.present? || theme.credit_url.present?

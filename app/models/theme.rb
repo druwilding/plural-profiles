@@ -11,6 +11,7 @@ class Theme < ApplicationRecord
   validates :credit_url, length: { maximum: 255 }, allow_blank: true
   validate :credit_url_must_be_http_url
   validate :only_admin_can_share
+  validate :site_default_must_be_shared
   validate :colors_is_a_hash
   validate :colors_keys_are_known
   validate :colors_values_are_hex
@@ -19,6 +20,11 @@ class Theme < ApplicationRecord
   before_validation :normalize_colors_keys
   before_validation :normalize_tags
   before_validation :normalize_credit_url
+
+  before_save :clear_other_defaults, if: -> { site_default? && site_default_changed? }
+
+  after_save :bust_default_theme_cache, if: -> { saved_change_to_site_default? }
+  after_destroy :bust_default_theme_cache, if: :site_default?
 
   TAGS = {
     "bright"           => "Bright",
@@ -120,12 +126,32 @@ class Theme < ApplicationRecord
     ":root {\n#{lines.join("\n")}\n}"
   end
 
+  def self.site_default_theme
+    Rails.cache.fetch("site_default_theme", expires_in: 5.minutes) do
+      find_by(site_default: true)
+    end
+  end
+
   private
 
     def only_admin_can_share
       if shared? && !user&.admin?
         errors.add(:shared, "can only be set by admins")
       end
+    end
+
+    def site_default_must_be_shared
+      if site_default? && !shared?
+        errors.add(:site_default, "can only be set on shared themes")
+      end
+    end
+
+    def clear_other_defaults
+      Theme.where(site_default: true).where.not(id: id).update_all(site_default: false)
+    end
+
+    def bust_default_theme_cache
+      Rails.cache.delete("site_default_theme")
     end
 
     HEX_COLOR_PATTERN = /\A#[0-9A-Fa-f]{6}\z/
