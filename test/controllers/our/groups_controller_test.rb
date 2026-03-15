@@ -726,6 +726,68 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "label-badge", response.body
   end
 
+  # -- Label filtering --
+
+  test "index shows all groups when no label filter applied" do
+    sign_in_as @user
+    @group.update!(labels: %w[close])
+    get our_groups_path
+    assert_response :success
+    assert_match "Friends", response.body
+    assert_match "Everyone", response.body
+  end
+
+  test "index filters groups by label" do
+    sign_in_as @user
+    @group.update!(labels: %w[close])
+    everyone = groups(:everyone)
+    everyone.update!(labels: %w[public])
+    get our_groups_path(label: "close")
+    assert_response :success
+    assert_select ".main-content h2 a", text: "Friends"
+    assert_select ".main-content h2 a", text: "Everyone", count: 0
+  end
+
+  test "index filter returns no groups when no match" do
+    sign_in_as @user
+    @group.update!(labels: %w[close])
+    get our_groups_path(label: "nonexistent")
+    assert_response :success
+    assert_select ".main-content .card-list", count: 0
+  end
+
+  test "index shows filter bar when labels exist" do
+    sign_in_as @user
+    @group.update!(labels: %w[close])
+    get our_groups_path
+    assert_response :success
+    assert_match "filter-bar", response.body
+    assert_match "close", response.body
+  end
+
+  test "index hides filter bar when no labels exist" do
+    sign_in_as @user
+    get our_groups_path
+    assert_response :success
+    assert_no_match "filter-bar", response.body
+  end
+
+  test "index shows clear filter link when label filter is active" do
+    sign_in_as @user
+    @group.update!(labels: %w[close])
+    get our_groups_path(label: "close")
+    assert_response :success
+    assert_match "Clear filter", response.body
+  end
+
+  test "index does not show clear filter link without active filter" do
+    sign_in_as @user
+    @group.update!(labels: %w[close])
+    get our_groups_path
+    assert_response :success
+    assert_no_match "Clear filter", response.body
+  end
+
   private
 
   def sign_in_as(user)

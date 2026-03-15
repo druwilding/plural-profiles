@@ -362,4 +362,66 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match "label-badge", response.body
   end
+
+  # -- Label filtering --
+
+  test "index shows all profiles when no label filter applied" do
+    sign_in_as @user
+    @profile.update!(labels: %w[public])
+    get our_profiles_path
+    assert_response :success
+    assert_match "Alice", response.body
+    assert_match "Bob", response.body
+  end
+
+  test "index filters profiles by label" do
+    sign_in_as @user
+    @profile.update!(labels: %w[public safe])
+    bob = profiles(:bob)
+    bob.update!(labels: %w[private])
+    get our_profiles_path(label: "public")
+    assert_response :success
+    assert_select ".main-content h2 a", text: "Alice"
+    assert_select ".main-content h2 a", text: "Bob", count: 0
+  end
+
+  test "index filter returns no profiles when no match" do
+    sign_in_as @user
+    @profile.update!(labels: %w[public])
+    get our_profiles_path(label: "nonexistent")
+    assert_response :success
+    assert_select ".main-content .card-list", count: 0
+  end
+
+  test "index shows filter bar when labels exist" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path
+    assert_response :success
+    assert_match "filter-bar", response.body
+    assert_match "safe", response.body
+  end
+
+  test "index hides filter bar when no labels exist" do
+    sign_in_as @user
+    get our_profiles_path
+    assert_response :success
+    assert_no_match "filter-bar", response.body
+  end
+
+  test "index shows clear filter link when label filter is active" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path(label: "safe")
+    assert_response :success
+    assert_match "Clear filter", response.body
+  end
+
+  test "index does not show clear filter link without active filter" do
+    sign_in_as @user
+    @profile.update!(labels: %w[safe])
+    get our_profiles_path
+    assert_response :success
+    assert_no_match "Clear filter", response.body
+  end
 end

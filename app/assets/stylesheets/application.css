@@ -2339,3 +2339,24 @@ input[type="submit"].btn--small,
     color: CanvasText;
   }
 }
+
+/* ── Label filter bar ───────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filter-bar__label {
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.filter-bar__clear {
+  font-size: 0.8rem;
+  color: var(--link);
+  text-decoration: underline;
+  padding: 0.35rem 0;
+}

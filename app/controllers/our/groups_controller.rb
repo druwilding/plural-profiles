@@ -6,6 +6,10 @@ class Our::GroupsController < ApplicationController
 
   def index
     @groups = Current.user.groups.order(:name)
+    if params[:label].present?
+      @groups = @groups.where("labels @> ?", [ params[:label] ].to_json)
+    end
+    @all_labels = Current.user.groups.pluck(:labels).flatten.uniq.sort
   end
 
   def show

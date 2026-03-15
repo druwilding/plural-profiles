@@ -7,6 +7,10 @@ class Our::ProfilesController < ApplicationController
 
   def index
     @profiles = Current.user.profiles.order(:name)
+    if params[:label].present?
+      @profiles = @profiles.where("labels @> ?", [ params[:label] ].to_json)
+    end
+    @all_labels = Current.user.profiles.pluck(:labels).flatten.uniq.sort
   end
 
   def show
