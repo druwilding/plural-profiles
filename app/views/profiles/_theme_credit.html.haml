@@ -1,12 +1,2 @@
-- if profile.theme.present?
-  .theme-credit
-    %span.theme-credit__name
-      Theme:
-      = profile.theme.name
-    - if profile.theme.credit.present?
-      %span.theme-credit__by
-        by
-        - if profile.theme.credit_url.present?
-          = link_to profile.theme.credit, profile.theme.credit_url, target: "_blank", rel: "noopener noreferrer"
-        - else
-          = profile.theme.credit
+
+= render "shared/theme_credit", themeable: profile

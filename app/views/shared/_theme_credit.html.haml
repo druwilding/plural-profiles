@@ -1,0 +1,12 @@
+- if themeable.theme.present?
+  .theme-credit
+    %span.theme-credit__name
+      Theme:
+      = themeable.theme.name
+    - if themeable.theme.credit.present?
+      %span.theme-credit__by
+        by
+        - if themeable.theme.credit_url.present?
+          = link_to themeable.theme.credit, themeable.theme.credit_url, target: "_blank", rel: "noopener noreferrer"
+        - else
+          = themeable.theme.credit
