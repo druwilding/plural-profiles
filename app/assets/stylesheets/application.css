@@ -2204,7 +2204,7 @@ input[type="submit"].btn--small,
   resize: vertical;
   min-height: 200px;
   background-color: var(--input-bg);
-  color: var(--text);
+  color: var(--input-text);
   border: 1px solid var(--input-border);
   border-radius: 4px;
   padding: 0.5rem;
