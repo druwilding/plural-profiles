@@ -31,6 +31,11 @@
     = form.text_field :labels_text, value: group.labels_text, placeholder: "e.g. safe, work, close friends"
     %p.form-hint Labels are only visible to you, they never appear on shared pages.
 
+  .form-group
+    = form.label :theme_id, "Public theme"
+    = form.select :theme_id, grouped_options_for_select(grouped_theme_options(@personal_themes, @shared_themes), group.theme_id), { include_blank: "None (use default)" }, {}
+    %p.form-hint Visitors to this group's public page will see this theme. Leave blank for the site default.
+
   - if group.persisted?
     .form-group
       = form.label :created_at, "Created at (UTC)"

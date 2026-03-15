@@ -3,6 +3,7 @@ class Our::GroupsController < ApplicationController
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
   before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group regenerate_uuid manage_groups toggle_visibility ]
+  before_action :validate_theme_choice, only: %i[create update]
 
   def index
     @groups = Current.user.groups.order(:name)
@@ -21,6 +22,7 @@ class Our::GroupsController < ApplicationController
 
   def new
     @group = Current.user.groups.build
+    load_theme_options
   end
 
   def create
@@ -29,11 +31,13 @@ class Our::GroupsController < ApplicationController
     if @group.save
       redirect_to our_group_path(@group), notice: "Group created."
     else
+      load_theme_options
       render :new, status: :unprocessable_entity
     end
   end
 
   def edit
+    load_theme_options
   end
 
   def update
@@ -44,6 +48,7 @@ class Our::GroupsController < ApplicationController
       if params.dig(:group, :avatar).present?
         @group.avatar.blob&.persisted? ? @group.avatar.purge_later : @group.avatar.detach
       end
+      load_theme_options
       render :edit, status: :unprocessable_entity
     end
   end
@@ -190,8 +195,27 @@ class Our::GroupsController < ApplicationController
     redirect_to group_path(params[:id]) unless @group
   end
 
+  def load_theme_options
+    @personal_themes = Current.user.themes.order(:name)
+    @shared_themes = Theme.shared.order(:name)
+  end
+
+  def validate_theme_choice
+    theme_id = params.dig(:group, :theme_id)
+    return if theme_id.blank?
+
+    allowed_ids = Current.user.theme_ids + Theme.shared.pluck(:id)
+    unless allowed_ids.include?(theme_id.to_i)
+      @group ||= Current.user.groups.build
+      @group.errors.add(:theme, "is not available")
+      load_theme_options
+      template = action_name == "create" ? :new : :edit
+      render template, status: :unprocessable_entity
+    end
+  end
+
   def group_params
-    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at, :labels_text).tap do |p|
+    params.require(:group).permit(:name, :description, :avatar, :avatar_alt_text, :created_at, :labels_text, :theme_id).tap do |p|
       if p[:created_at].blank? ||
           !p[:created_at].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/) ||
           (@group&.created_at && p[:created_at] == @group.created_at.utc.strftime("%Y-%m-%dT%H:%M"))
