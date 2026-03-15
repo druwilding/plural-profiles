@@ -109,7 +109,7 @@ jobs:
         if: always()
         with:
           name: test-reports
-          path: test/reports
+          path: test/reports/index.html
           archive: false
           if-no-files-found: ignore
 
@@ -157,7 +157,7 @@ jobs:
         if: always()
         with:
           name: system-test-reports
-          path: test/reports
+          path: test/reports/system/index.html
           archive: false
           if-no-files-found: ignore
 

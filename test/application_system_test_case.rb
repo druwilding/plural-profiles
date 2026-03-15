@@ -1,5 +1,17 @@
 require "test_helper"
 
+if ENV["CI"].present?
+  require "minitest/reporters"
+  Minitest::Reporters.use!(
+    [
+      Minitest::Reporters::DefaultReporter.new(color: true),
+      Minitest::Reporters::HtmlReporter.new(reports_dir: "test/reports/system")
+    ],
+    ENV,
+    Minitest.backtrace_filter
+  )
+end
+
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   browser = ENV["HEADLESS"] == "false" ? :chrome : :headless_chrome
 
