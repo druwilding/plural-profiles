@@ -5,7 +5,7 @@
       = group.theme.name
     - if group.theme.credit.present?
       %span.theme-credit__by
-        — Made by
+        by
         - if group.theme.credit_url.present?
           = link_to group.theme.credit, group.theme.credit_url, target: "_blank", rel: "noopener noreferrer"
         - else

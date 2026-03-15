@@ -2366,19 +2366,16 @@ input[type="submit"].btn--small,
   padding: 0.75rem 2rem;
   text-align: center;
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--text) 60%, transparent);
+  color: var(--text);
 }
 
 .theme-credit__name {
   font-weight: 600;
 }
 
-.theme-credit__by {
-  margin-left: 0.25em;
-}
-
 .theme-credit a {
   color: var(--link);
+  font-weight: bold;
 }
 
 @media (forced-colors: active) {

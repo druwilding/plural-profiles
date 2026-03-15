@@ -109,7 +109,7 @@ class ThemesTest < ApplicationSystemTestCase
   test "public group page with a theme shows Made by credit" do
     visit group_path(groups(:friends).uuid)
 
-    assert_text "Made by Verdant Studio"
+    assert_text "by Verdant Studio"
   end
 
   test "public group page with a theme links to credit_url" do
