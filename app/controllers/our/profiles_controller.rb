@@ -10,7 +10,11 @@ class Our::ProfilesController < ApplicationController
     if params[:label].present?
       @profiles = @profiles.where("labels @> ?", [ params[:label] ].to_json)
     end
-    @all_labels = Current.user.profiles.pluck(:labels).flatten.uniq.sort
+    @all_labels = Current.user.profiles
+      .joins("CROSS JOIN LATERAL jsonb_array_elements_text(labels) AS label_val")
+      .distinct
+      .order("label_val")
+      .pluck("label_val")
   end
 
   def show

@@ -9,7 +9,11 @@ class Our::GroupsController < ApplicationController
     if params[:label].present?
       @groups = @groups.where("labels @> ?", [ params[:label] ].to_json)
     end
-    @all_labels = Current.user.groups.pluck(:labels).flatten.uniq.sort
+    @all_labels = Current.user.groups
+      .joins("CROSS JOIN LATERAL jsonb_array_elements_text(labels) AS label_val")
+      .distinct
+      .order("label_val")
+      .pluck("label_val")
   end
 
   def show
