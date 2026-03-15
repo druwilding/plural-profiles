@@ -9,7 +9,7 @@
     .card__actions
       = link_to "Preview", our_theme_path(theme), class: "btn btn--small btn--secondary"
       = link_to "Duplicate", duplicate_our_theme_path(theme), data: { turbo_method: :post }, class: "btn btn--small btn--secondary"
-      - if Current.user.admin? && theme.user_id == Current.user.id
+      - if Current.user.admin?
         = link_to "Edit", edit_our_theme_path(theme), class: "btn btn--small btn--secondary"
   - if theme.credit.present? || theme.credit_url.present? || theme.notes.present?
     .card__body
