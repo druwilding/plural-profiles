@@ -38,7 +38,7 @@
           - if @theme.site_default?
             = link_to "Remove default", set_default_our_theme_path(@theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
           - else
-            = link_to "Set as default", set_default_our_theme_path(@theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
+            = link_to "Make default", set_default_our_theme_path(@theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
 
   .theme-designer__preview
     .theme-preview{style: @theme.to_css_properties}

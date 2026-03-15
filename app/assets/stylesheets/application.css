@@ -472,6 +472,7 @@ button,
   line-height: 1.6;
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
   transition: background-color 0.2s;
 }
 
@@ -580,6 +581,7 @@ button:hover,
 .card__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   flex-shrink: 0;
 }
