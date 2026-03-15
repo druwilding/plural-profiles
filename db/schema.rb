@@ -71,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.index ["labels"], name: "index_groups_on_labels", using: :gin
     t.index ["user_id"], name: "index_groups_on_user_id"
     t.index ["uuid"], name: "index_groups_on_uuid", unique: true
   end
@@ -109,6 +110,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_000002) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.index ["labels"], name: "index_profiles_on_labels", using: :gin
     t.index ["user_id"], name: "index_profiles_on_user_id"
     t.index ["uuid"], name: "index_profiles_on_uuid", unique: true
   end
