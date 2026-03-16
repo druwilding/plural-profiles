@@ -3,7 +3,7 @@
 %h1 Themes
 
 - if @active_theme
-  %details.theme-section{open: true, data: { controller: "collapsible", "collapsible-key-value": "active-theme" }}
+  %details.theme-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "active-theme" }}
     %summary.theme-section__summary Active theme
     .card-list
       = render "our/themes/theme_card", theme: @active_theme
@@ -18,7 +18,7 @@
     = link_to "Clear filter", our_themes_path, class: "theme-tag-filter__clear"
 
 
-%details.theme-section{open: true, data: { controller: "collapsible", "collapsible-key-value": "our-themes" }}
+%details.theme-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "our-themes" }}
   %summary.theme-section__summary Our themes
 
   .theme-import{data: { controller: "theme-import", "theme-import-new-url-value": new_our_theme_path }}
@@ -48,7 +48,7 @@
 
 
 - if @any_shared_themes
-  %details.theme-section{open: true, data: { controller: "collapsible", "collapsible-key-value": "shared-themes" }}
+  %details.theme-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "shared-themes" }}
     %summary.theme-section__summary Shared themes
     - if @shared_themes.any?
       .card-list
