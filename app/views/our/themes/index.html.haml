@@ -5,10 +5,7 @@
 - if @active_theme
   %h2 Active theme
   .card-list
-    - if @active_theme.shared?
-      = render "our/themes/shared_theme_card", theme: @active_theme
-    - else
-      = render "our/themes/theme_card", theme: @active_theme
+    = render "our/themes/theme_card", theme: @active_theme
 
 .theme-tag-filter
   %span.theme-tag-filter__label Filter themes by tags:
@@ -51,7 +48,7 @@
   - if @shared_themes.any?
     .card-list
       - @shared_themes.each do |theme|
-        = render "our/themes/shared_theme_card", theme: theme
+        = render "our/themes/theme_card", theme: theme
   - elsif @filter_tags.any?
     .card
       %p No themes match the selected tags.
