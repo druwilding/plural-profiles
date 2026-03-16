@@ -6,7 +6,7 @@
   %details.theme-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "active-theme" }}
     %summary.theme-section__summary Active theme
     .card-list
-      = render "our/themes/theme_card", theme: @active_theme
+      = render "our/themes/theme_card", theme: @active_theme, section: "active"
 
 .theme-tag-filter
   %span.theme-tag-filter__label Filter themes by tags:
@@ -38,7 +38,7 @@
   - if @our_themes.any?
     .card-list
       - @our_themes.each do |theme|
-        = render "our/themes/theme_card", theme: theme
+        = render "our/themes/theme_card", theme: theme, section: "our"
   - elsif @filter_tags.any?
     .card
       %p No themes match the selected tags.
@@ -53,7 +53,7 @@
     - if @shared_themes.any?
       .card-list
         - @shared_themes.each do |theme|
-          = render "our/themes/theme_card", theme: theme
+          = render "our/themes/theme_card", theme: theme, section: "shared"
     - elsif @filter_tags.any?
       .card
         %p No themes match the selected tags.

@@ -7,7 +7,7 @@ class ThemesTest < ApplicationSystemTestCase
     sign_in_via_browser(users(:one))
     visit our_themes_path
 
-    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:ocean_shared).id}']", match: :first) do
+    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:ocean_shared).id}']") do
       assert_link "Make default"
       assert_no_link "Remove default"
     end
@@ -17,7 +17,7 @@ class ThemesTest < ApplicationSystemTestCase
     sign_in_via_browser(users(:one))
     visit our_themes_path
 
-    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:default_shared).id}']", match: :first) do
+    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:default_shared).id}']") do
       assert_link "Remove default"
       assert_no_link "Make default"
     end
@@ -27,13 +27,13 @@ class ThemesTest < ApplicationSystemTestCase
     sign_in_via_browser(users(:one))
     visit our_themes_path
 
-    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:ocean_shared).id}']", match: :first) do
+    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:ocean_shared).id}']") do
       click_link "Make default"
     end
 
     assert_text "'Ocean Shared' is now the default theme"
 
-    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:ocean_shared).id}']", match: :first) do
+    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:ocean_shared).id}']") do
       assert_link "Remove default"
       assert_text "Default theme"
     end
@@ -43,13 +43,13 @@ class ThemesTest < ApplicationSystemTestCase
     sign_in_via_browser(users(:one))
     visit our_themes_path
 
-    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:default_shared).id}']", match: :first) do
+    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:default_shared).id}']") do
       click_link "Remove default"
     end
 
     assert_text "'Default Shared' is no longer the default theme"
 
-    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:default_shared).id}']", match: :first) do
+    within(:css, "[data-theme-section='shared'][data-theme-id='#{themes(:default_shared).id}']") do
       assert_link "Make default"
       assert_no_text "Default theme"
     end
