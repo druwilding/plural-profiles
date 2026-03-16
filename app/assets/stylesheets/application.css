@@ -1371,8 +1371,14 @@ details[open] > .tree-editor__summary::before {
   cursor: pointer;
   font-size: 1.4rem;
   font-weight: bold;
-  margin-block-start: 0.83em;
+  margin-block-start: 0;
   margin-block-end: 0.83em;
+}
+
+@media (forced-colors: active) {
+  .theme-section__summary {
+    color: CanvasText;
+  }
 }
 
 .tree-editor__tag {
