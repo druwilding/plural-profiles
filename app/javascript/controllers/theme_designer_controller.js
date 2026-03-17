@@ -27,7 +27,7 @@ function colorToHex(colorString) {
 }
 
 export default class extends Controller {
-  static targets = ["colorInput", "hexInput", "preview", "cssOutput", "copyLabel"]
+  static targets = ["colorInput", "hexInput", "preview", "cssOutput"]
 
   connect() {
     this.applyAllToPreview()
@@ -102,27 +102,6 @@ export default class extends Controller {
     })
 
     this.cssOutputTarget.value = `:root {\n${lines.join("\n")}\n}`
-  }
-
-  // Copy CSS to clipboard
-  copyCss() {
-    if (!this.hasCssOutputTarget) return
-
-    navigator.clipboard.writeText(this.cssOutputTarget.value).then(() => {
-      if (this.hasCopyLabelTarget) {
-        const label = this.copyLabelTarget
-        const original = label.textContent
-        label.textContent = "Copied!"
-        setTimeout(() => { label.textContent = original }, 2000)
-      }
-    }).catch(() => {
-      if (this.hasCopyLabelTarget) {
-        const label = this.copyLabelTarget
-        const original = label.textContent
-        label.textContent = "Copy failed"
-        setTimeout(() => { label.textContent = original }, 2000)
-      }
-    })
   }
 
 }
