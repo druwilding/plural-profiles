@@ -15,8 +15,8 @@
       .form-group.theme-designer__color-group
         %label{for: "theme_colors_#{prop}"}= meta[:label]
         .theme-designer__color-input
-          %input{type: "color", name: "theme[colors][#{prop}]", value: theme.color_for(prop), id: "theme_colors_#{prop}", data: { "theme-designer-target": "colorInput", property: prop, action: "input->theme-designer#updatePreview" }}
-          %input.theme-designer__hex-input{type: "text", value: theme.color_for(prop), maxlength: 7, pattern: "#[0-9a-fA-F]{6}", aria: { label: "#{meta[:label]} hex" }, data: { "theme-designer-target": "hexInput", property: prop, action: "input->theme-designer#updateFromHex" }}
+          %input{type: "color", alpha: true, name: "theme[colors][#{prop}]", value: theme.color_for(prop), id: "theme_colors_#{prop}", data: { "theme-designer-target": "colorInput", property: prop, action: "input->theme-designer#updatePreview" }}
+          %input.theme-designer__hex-input{type: "text", value: theme.color_for(prop), maxlength: 9, pattern: "#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", aria: { label: "#{meta[:label]} hex" }, data: { "theme-designer-target": "hexInput", property: prop, action: "input->theme-designer#updateFromHex" }}
 
   %hr.form-divider
   %details
