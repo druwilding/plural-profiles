@@ -266,8 +266,8 @@ class ThemesTest < ApplicationSystemTestCase
 
     # Should redirect to new theme page with colors pre-filled
     assert_current_path new_our_theme_path, ignore_query: true
-    assert_match "12345678", page.body
-    assert_match "aabbccdd", page.body
-    assert_match "ff0000ff", page.body
+    assert_equal "#12345678", find("input[name='theme[colors][page_bg]'].theme-designer__hex-input").value
+    assert_equal "#aabbccdd", find("input[name='theme[colors][text]'].theme-designer__hex-input").value
+    assert_equal "#ff0000ff", find("input[name='theme[colors][link]'].theme-designer__hex-input").value
   end
 end
