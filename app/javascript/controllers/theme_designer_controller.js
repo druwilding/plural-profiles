@@ -61,8 +61,13 @@ export default class extends Controller {
 
     // Only apply if it looks like a valid hex colour (6 or 8 digits for alpha)
     if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value)) {
-      // Note: Native color input with alpha may not accept hex directly in all browsers
-      // We update the preview directly without trying to sync back to the color picker
+      // For 6-digit hex (no alpha), sync the color picker
+      if (value.length === 7) {
+        const colorInput = this.colorInputTargets.find(el => el.dataset.property === property)
+        if (colorInput) colorInput.value = value
+      }
+      // For 8-digit hex (with alpha), native color input doesn't support it, so skip syncing
+
       this.applyToPreview(property, value)
       this.updateCssOutput()
     }
