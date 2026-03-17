@@ -38,8 +38,7 @@
 }
 
 html {
-  background-color: var(--pane-bg);
-  overscroll-behavior: none;
+  background-color: #444;
 }
 
 *, *::before, *::after {
