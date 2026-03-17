@@ -1,6 +1,6 @@
 class InviteCode < ApplicationRecord
   CODE_LENGTH = 8
-  MAX_UNUSED_PER_USER = 10
+  MAX_UNUSED_PER_USER = ENV.fetch("MAX_INVITE_CODES_PER_USER", "10").to_i
   # Deliberately excludes '7' — consistent with PluralProfilesUuid.
   CODE_ALPHABET = (("A".."Z").to_a + ("0".."9").to_a - [ "7" ]).freeze
 
