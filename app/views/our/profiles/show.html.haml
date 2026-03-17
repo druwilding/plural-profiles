@@ -29,6 +29,16 @@
     .profile-description{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       = formatted_description(@profile.description)
 
+  - if @profile.groups.any?
+    %h2 In groups
+    %ul
+      - @profile.groups.where(user: Current.user).each do |group|
+        %li
+          = link_to group.name, our_group_path(group)
+          - if group.labels.any?
+            - group.labels.each do |label|
+              %span.label-badge.label-badge--inline= label
+
   .timestamps
     %p
       %strong Created:
@@ -42,16 +52,6 @@
   .profile-actions
     = link_to "Edit", edit_our_profile_path(@profile), class: "btn btn--secondary"
     = link_to "Delete", our_profile_path(@profile), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "btn btn--danger"
-
-  - if @profile.groups.any?
-    %h3 In groups
-    %ul
-      - @profile.groups.where(user: Current.user).each do |group|
-        %li
-          = link_to group.name, our_group_path(group)
-          - if group.labels.any?
-            - group.labels.each do |label|
-              %span.label-badge.label-badge--inline= label
 
 .card
   %h2 Share this profile
