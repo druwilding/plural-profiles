@@ -147,4 +147,10 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     get group_path(uuid: groups(:friends).uuid)
     assert_redirected_to new_session_path
   end
+
+  test "panel requires authentication" do
+    sign_out
+    get panel_group_path(uuid: groups(:friends).uuid)
+    assert_redirected_to new_session_path
+  end
 end
