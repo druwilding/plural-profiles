@@ -15,33 +15,32 @@ class PrivacyRedirectsTest < ApplicationSystemTestCase
 
   # ── Logged-out visitor clicks a private profile URL ───────────────
 
-  test "logged-out visitor on private profile URL sees public profile" do
+  test "logged-out visitor on private profile URL is sent to sign in" do
     visit our_profile_path(@profile)
 
-    # Should land on the public profile page, NOT a sign-in page
-    assert_current_path profile_path(@profile.uuid)
-    assert_text "Alice"
-    assert_text "she/her"
-
-    # Must not see any owner controls
-    assert_no_text "Edit"
-    assert_no_text "Delete"
-    assert_no_text "Share this profile"
-    assert_no_text "Back to our profiles"
+    assert_current_path new_session_path
   end
 
   # ── Logged-out visitor clicks a private group URL ─────────────────
 
-  test "logged-out visitor on private group URL sees public group" do
+  test "logged-out visitor on private group URL is sent to sign in" do
     visit our_group_path(@group)
 
-    assert_current_path group_path(@group.uuid)
-    assert_text "Friends"
+    assert_current_path new_session_path
+  end
 
-    assert_no_text "Edit"
-    assert_no_text "Delete"
-    assert_no_text "Manage profiles"
-    assert_no_text "Share this group"
+  # ── Logged-out visitor on public UUID URLs ────────────────────────
+
+  test "logged-out visitor on public profile UUID URL is sent to sign in" do
+    visit profile_path(@profile.uuid)
+
+    assert_current_path new_session_path
+  end
+
+  test "logged-out visitor on public group UUID URL is sent to sign in" do
+    visit group_path(@group.uuid)
+
+    assert_current_path new_session_path
   end
 
   # ── Logged-out visitor tries private index/new pages ──────────────

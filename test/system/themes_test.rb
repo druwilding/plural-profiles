@@ -101,22 +101,26 @@ class ThemesTest < ApplicationSystemTestCase
   # -- Theme credit footer on public group pages --
 
   test "public group page with a theme shows theme name in footer" do
+    sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
     assert_css ".theme-credit"
     assert_text "Theme: Dark Forest"
   end
 
   test "public group page with a theme shows Made by credit" do
+    sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
     assert_text "by Verdant Studio"
   end
 
   test "public group page with a theme links to credit_url" do
+    sign_in_via_browser(users(:one))
     visit group_path(groups(:friends).uuid)
     assert_link "Verdant Studio", href: "https://example.com/verdant"
   end
 
   test "public group page without a theme shows no theme credit footer" do
+    sign_in_via_browser(users(:one))
     visit group_path(groups(:everyone).uuid)
     assert_no_css ".theme-credit"
   end
@@ -124,6 +128,7 @@ class ThemesTest < ApplicationSystemTestCase
   test "group profile page with a group theme shows theme name in footer" do
     profile = groups(:friends).profiles.first
     skip "friends group has no profiles" if profile.nil?
+    sign_in_via_browser(users(:one))
     visit group_profile_path(groups(:friends).uuid, profile.uuid)
     assert_css ".theme-credit"
     assert_text "Theme: Dark Forest"
@@ -134,6 +139,7 @@ class ThemesTest < ApplicationSystemTestCase
   test "public profile page with a group theme shows theme name in footer" do
     profile = groups(:friends).profiles.first
     skip "friends group has no profiles" if profile.nil?
+    sign_in_via_browser(users(:one))
     visit profile_path(profile.uuid)
     assert_css ".theme-credit"
     assert_text "Theme: Dark Forest"
@@ -142,6 +148,7 @@ class ThemesTest < ApplicationSystemTestCase
   test "public profile page with a group theme shows Made by credit" do
     profile = groups(:friends).profiles.first
     skip "friends group has no profiles" if profile.nil?
+    sign_in_via_browser(users(:one))
     visit profile_path(profile.uuid)
     assert_text "by Verdant Studio"
   end
@@ -149,6 +156,7 @@ class ThemesTest < ApplicationSystemTestCase
   test "public profile page with a group theme links to credit_url" do
     profile = groups(:friends).profiles.first
     skip "friends group has no profiles" if profile.nil?
+    sign_in_via_browser(users(:one))
     visit profile_path(profile.uuid)
     assert_link "Verdant Studio", href: "https://example.com/verdant"
   end
@@ -156,6 +164,7 @@ class ThemesTest < ApplicationSystemTestCase
   test "public profile page without a group theme shows no theme credit footer" do
     profile = groups(:everyone).profiles.first
     skip "everyone group has no profiles" if profile.nil?
+    sign_in_via_browser(users(:one))
     visit profile_path(profile.uuid)
     assert_no_css ".theme-credit"
   end
