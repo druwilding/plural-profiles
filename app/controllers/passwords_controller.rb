@@ -29,8 +29,8 @@ class PasswordsController < ApplicationController
   private
     def set_user_by_token
       @user = User.find_by_password_reset_token!(params[:token])
-      return redirect_to new_password_path, alert: "Password reset link is invalid or has expired." if @user.deactivated?
+      redirect_to new_password_path, alert: "Password reset link is invalid or has expired." if @user.deactivated?
     rescue ActiveSupport::MessageVerifier::InvalidSignature
-      return redirect_to new_password_path, alert: "Password reset link is invalid or has expired."
+      redirect_to new_password_path, alert: "Password reset link is invalid or has expired."
     end
 end
