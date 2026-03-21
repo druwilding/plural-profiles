@@ -6,8 +6,8 @@
 
   = form_with url: session_path do |form|
     .form-group
-      = form.label :email_address, "Email address"
-      = form.email_field :email_address, required: true, autocomplete: "username", value: params[:email_address]
+      = form.label :login, "Email address or account name"
+      = form.text_field :login, required: true, autocomplete: "username", value: params[:login]
 
     .form-group
       = form.label :password

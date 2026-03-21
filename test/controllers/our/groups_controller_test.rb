@@ -860,7 +860,7 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
 
   def sign_in_as(user)
     post session_path, params: {
-      email_address: user.email_address,
+      login: user.email_address,
       password: "Plur4l!Pr0files#2026"
     }
   end

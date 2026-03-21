@@ -3,7 +3,7 @@ require "application_system_test_case"
 class AuthenticationFlowsTest < ApplicationSystemTestCase
   test "sign in and sign out" do
     visit new_session_path
-    fill_in "Email address", with: users(:one).email_address
+    fill_in "Email address or account name", with: users(:one).email_address
     fill_in "Password", with: "Plur4l!Pr0files#2026"
     click_button "Sign in"
     assert_current_path root_path
@@ -14,7 +14,7 @@ class AuthenticationFlowsTest < ApplicationSystemTestCase
 
   test "sign in with wrong password shows error" do
     visit new_session_path
-    fill_in "Email address", with: users(:one).email_address
+    fill_in "Email address or account name", with: users(:one).email_address
     fill_in "Password", with: "Wr0ng!P4ssword#999"
     click_button "Sign in"
 

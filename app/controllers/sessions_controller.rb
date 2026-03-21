@@ -6,13 +6,24 @@ class SessionsController < ApplicationController
   end
 
   def create
-    if user = User.authenticate_by(params.permit(:email_address, :password))
-      if user.deactivated?
-        redirect_to new_session_path, alert: "Try another email address or password."
+    login_param = params[:login].to_s.strip
+    password = params[:password].to_s
+
+    user = if login_param.include?("@")
+      User.authenticate_by(email_address: login_param, password: password)
+    else
+      found = User.where("lower(username) = ?", login_param.downcase).first
+      if found
+        User.authenticate_by(email_address: found.email_address, password: password)
       else
-        start_new_session_for user
-        redirect_to after_authentication_url
+        User.authenticate_by(email_address: "nobody@invalid", password: password)
+        nil
       end
+    end
+
+    if user && !user.deactivated?
+      start_new_session_for user
+      redirect_to after_authentication_url
     else
       redirect_to new_session_path, alert: "Try another email address or password."
     end
