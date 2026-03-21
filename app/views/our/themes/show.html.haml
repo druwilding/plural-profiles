@@ -41,7 +41,8 @@
             = link_to "Make default", set_default_our_theme_path(@theme), data: { turbo_method: :patch }, class: "btn btn--small btn--outline"
 
   .theme-designer__preview
-    .theme-preview{style: @theme.to_css_properties}
+    - bg_style = @theme.background_image.attached? ? " #{@theme.background_css_properties(rails_storage_proxy_url(@theme.background_image))}" : ""
+    .theme-preview{style: "#{@theme.to_css_properties}#{bg_style}"}
       = render "our/themes/preview"
 
 %p= link_to "← Back to themes", our_themes_path

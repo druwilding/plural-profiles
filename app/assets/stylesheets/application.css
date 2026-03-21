@@ -2223,6 +2223,20 @@ input[type="submit"].btn--small,
   font-size: 0.9rem;
 }
 
+.theme-bg-preview {
+  display: block;
+  border-radius: 4px;
+  border: 1px solid var(--pane-border);
+  object-fit: cover;
+  margin-top: 0.5rem;
+}
+
+@media (forced-colors: active) {
+  body {
+    background-image: none !important;
+  }
+}
+
 /* ── Import theme dialog ────────────────────────────────── */
 
 .theme-import {

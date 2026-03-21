@@ -27,10 +27,18 @@ function colorToHex(colorString) {
 }
 
 export default class extends Controller {
-  static targets = ["colorInput", "hexInput", "preview", "cssOutput"]
+  static targets = ["colorInput", "hexInput", "preview", "cssOutput",
+                    "backgroundFileInput", "backgroundRepeat",
+                    "backgroundSize", "backgroundPosition", "backgroundAttachment"]
 
   connect() {
+    this.bgObjectUrl = null
     this.applyAllToPreview()
+    this.applyBackgroundToPreview()
+  }
+
+  disconnect() {
+    if (this.bgObjectUrl) URL.revokeObjectURL(this.bgObjectUrl)
   }
 
   // Called when a colour picker changes
@@ -102,6 +110,40 @@ export default class extends Controller {
     })
 
     this.cssOutputTarget.value = `:root {\n${lines.join("\n")}\n}`
+  }
+
+  // Called when user selects a new background image file
+  previewBackgroundImage(event) {
+    const file = event.target.files[0]
+    if (!file) return
+    if (this.bgObjectUrl) URL.revokeObjectURL(this.bgObjectUrl)
+    this.bgObjectUrl = URL.createObjectURL(file)
+    this.applyBackgroundToPreview()
+  }
+
+  // Called when any background option select changes
+  updateBackgroundPreview() {
+    this.applyBackgroundToPreview()
+  }
+
+  applyBackgroundToPreview() {
+    if (!this.hasPreviewTarget) return
+    const url = this.bgObjectUrl || this.previewTarget.dataset.existingBgUrl
+    if (url) {
+      this.previewTarget.style.backgroundImage = `url('${url}')`
+    }
+    if (this.hasBackgroundRepeatTarget) {
+      this.previewTarget.style.backgroundRepeat = this.backgroundRepeatTarget.value
+    }
+    if (this.hasBackgroundSizeTarget) {
+      this.previewTarget.style.backgroundSize = this.backgroundSizeTarget.value
+    }
+    if (this.hasBackgroundPositionTarget) {
+      this.previewTarget.style.backgroundPosition = this.backgroundPositionTarget.value
+    }
+    if (this.hasBackgroundAttachmentTarget) {
+      this.previewTarget.style.backgroundAttachment = this.backgroundAttachmentTarget.value
+    }
   }
 
 }

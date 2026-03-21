@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_21_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -129,6 +129,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_000002) do
   end
 
   create_table "themes", force: :cascade do |t|
+    t.string "background_attachment", default: "scroll", null: false
+    t.string "background_position", default: "center", null: false
+    t.string "background_repeat", default: "repeat", null: false
+    t.string "background_size", default: "auto", null: false
     t.jsonb "colors", default: {}, null: false
     t.datetime "created_at", null: false
     t.string "credit", limit: 255

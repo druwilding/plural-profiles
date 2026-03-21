@@ -48,6 +48,7 @@ class Our::ThemesController < ApplicationController
   end
 
   def update
+    @theme.background_image.purge if params.dig(:theme, :remove_background_image) == "1"
     if @theme.update(theme_params)
       redirect_to our_themes_path, notice: "Theme saved."
     else
@@ -77,7 +78,12 @@ class Our::ThemesController < ApplicationController
       credit: @theme.credit,
       credit_url: @theme.credit_url,
       notes: @theme.notes,
-      shared: false
+      shared: false,
+      background_repeat: @theme.background_repeat,
+      background_size: @theme.background_size,
+      background_position: @theme.background_position,
+      background_attachment: @theme.background_attachment
+      # background_image intentionally not copied — purging an attachment deletes the underlying blob
     )
     if copy.save
       redirect_to edit_our_theme_path(copy), notice: "Theme duplicated. You're now editing the copy."
@@ -137,7 +143,12 @@ class Our::ThemesController < ApplicationController
   end
 
   def theme_params
-    permitted = params.require(:theme).permit(:name, :credit, :credit_url, :notes, :shared, :site_default, tags: [], colors: {})
+    permitted = params.require(:theme).permit(
+      :name, :credit, :credit_url, :notes, :shared, :site_default,
+      :background_image, :background_repeat, :background_size,
+      :background_position, :background_attachment,
+      tags: [], colors: {}
+    )
     # Strip admin-only params if user is not admin
     permitted.delete(:shared) unless Current.user.admin?
     permitted.delete(:site_default) unless Current.user.admin?

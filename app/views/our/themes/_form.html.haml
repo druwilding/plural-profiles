@@ -20,6 +20,46 @@
 
   %hr.form-divider
   %details
+    %summary Background image
+    .form-group
+      = form.label :background_image, "Background image (JPG, PNG, or WebP, up to 2 MB)"
+      = form.file_field :background_image, accept: "image/jpeg, image/png, image/webp",
+        data: { "theme-designer-target": "backgroundFileInput", action: "change->theme-designer#previewBackgroundImage" }
+      %p.form-hint Choose an image that doesn't reduce text readability with your chosen colours.
+      - if theme.persisted? && theme.background_image.attached?
+        %p.form-hint Current background:
+        = image_tag theme.background_image.variant(resize_to_limit: [ 200, 200 ]),
+          class: "theme-bg-preview", width: 200, alt: "Current background image", loading: "lazy"
+        %label.checkbox-label
+          = check_box_tag "theme[remove_background_image]", "1", false
+          Remove background image
+
+    .form-group
+      = form.label :background_repeat, "Repeat"
+      = form.select :background_repeat,
+        Theme::BACKGROUND_REPEAT_OPTIONS.map { |v| [ v, v ] },
+        {}, { data: { "theme-designer-target": "backgroundRepeat", action: "change->theme-designer#updateBackgroundPreview" } }
+
+    .form-group
+      = form.label :background_size, "Size"
+      = form.select :background_size,
+        Theme::BACKGROUND_SIZE_OPTIONS.map { |v| [ v.capitalize, v ] },
+        {}, { data: { "theme-designer-target": "backgroundSize", action: "change->theme-designer#updateBackgroundPreview" } }
+
+    .form-group
+      = form.label :background_position, "Position"
+      = form.select :background_position,
+        Theme::BACKGROUND_POSITION_OPTIONS.map { |v| [ v.capitalize, v ] },
+        {}, { data: { "theme-designer-target": "backgroundPosition", action: "change->theme-designer#updateBackgroundPreview" } }
+
+    .form-group
+      = form.label :background_attachment, "Scroll behaviour"
+      = form.select :background_attachment,
+        [[ "Scroll (moves with content)", "scroll" ], [ "Fixed (stays in place)", "fixed" ]],
+        {}, { data: { "theme-designer-target": "backgroundAttachment", action: "change->theme-designer#updateBackgroundPreview" } }
+
+  %hr.form-divider
+  %details
     %summary Tags
     = hidden_field_tag "theme[tags][]", ""
     .checkbox-list
