@@ -20,16 +20,6 @@
 
   %hr.form-divider
   %details
-    %summary Tags
-    = hidden_field_tag "theme[tags][]", ""
-    .checkbox-list
-      - Theme::TAGS.each do |value, label|
-        %label.checkbox-label
-          = check_box_tag "theme[tags][]", value, theme.tags.include?(value)
-          = label
-
-  %hr.form-divider
-  %details
     %summary Background image
     .form-group
       = form.label :background_image, "Background image (JPG, PNG, or WebP, up to 2 MB)"
@@ -67,6 +57,16 @@
       = form.select :background_attachment,
         [[ "Scroll (moves with content)", "scroll" ], [ "Fixed (stays in place)", "fixed" ]],
         {}, { data: { "theme-designer-target": "backgroundAttachment", action: "change->theme-designer#updateBackgroundPreview" } }
+
+  %hr.form-divider
+  %details
+    %summary Tags
+    = hidden_field_tag "theme[tags][]", ""
+    .checkbox-list
+      - Theme::TAGS.each do |value, label|
+        %label.checkbox-label
+          = check_box_tag "theme[tags][]", value, theme.tags.include?(value)
+          = label
 
   %hr.form-divider
   %details
