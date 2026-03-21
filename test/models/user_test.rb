@@ -189,4 +189,28 @@ class UserTest < ActiveSupport::TestCase
   test "human_attribute_name returns Account name for username" do
     assert_equal "Account name", User.human_attribute_name(:username)
   end
+
+  # -- Reserved account names --
+
+  test "reserved account names are rejected" do
+    user = users(:two)
+    User::RESERVED_USERNAMES.each do |name|
+      user.username = name
+      assert_not user.valid?, "Expected '#{name}' to be reserved but it was accepted"
+      assert_includes user.errors[:username], "is reserved and cannot be used"
+    end
+  end
+
+  test "reserved account name check is case-insensitive after normalisation" do
+    user = users(:two)
+    user.username = "Admin"
+    assert_not user.valid?
+    assert_includes user.errors[:username], "is reserved and cannot be used"
+  end
+
+  test "non-reserved account name is not affected by reserved check" do
+    user = users(:two)
+    user.username = "adminable"
+    assert user.valid?, "Expected 'adminable' to be valid but got: #{user.errors.full_messages}"
+  end
 end

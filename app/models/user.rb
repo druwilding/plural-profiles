@@ -12,6 +12,13 @@ class User < ApplicationRecord
   normalizes :username, with: ->(u) { value = u.strip.downcase; value.blank? ? nil : value }, apply_to_nil: false
 
   USERNAME_FORMAT = /\A[a-z0-9](?:[a-z0-9]|[_-](?=[a-z0-9]))*[a-z0-9]?\z/
+  RESERVED_USERNAMES = %w[
+    admin api help our support
+    null undefined root www mail ftp
+    account accounts login logout signup
+    register password reset verify
+    profile profiles group groups stats
+  ].freeze
 
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :unverified_email_address, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
@@ -22,6 +29,7 @@ class User < ApplicationRecord
     format: { with: USERNAME_FORMAT, message: "can only contain lowercase letters, numbers, underscores, and hyphens (no leading/trailing/consecutive special characters)" },
     uniqueness: { case_sensitive: false },
     allow_blank: true
+  validate :username_not_reserved
 
   generates_token_for :password_reset, expires_in: 1.hour do
     password_salt&.last(10)
@@ -55,6 +63,13 @@ class User < ApplicationRecord
   end
 
   private
+
+  def username_not_reserved
+    return if username.blank?
+    if RESERVED_USERNAMES.include?(username)
+      errors.add(:username, "is reserved and cannot be used")
+    end
+  end
 
   def unverified_email_not_taken
     if User.where.not(id: id)
