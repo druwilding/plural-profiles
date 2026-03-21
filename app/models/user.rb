@@ -19,6 +19,7 @@ class User < ApplicationRecord
     register password reset verify
     profile profiles group groups stats
     about our contact terms privacy security
+    theme themes docs documentation
   ].freeze
 
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
