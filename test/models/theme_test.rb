@@ -204,6 +204,68 @@ class ThemeTest < ActiveSupport::TestCase
     assert_includes theme.errors[:credit_url], "is too long (maximum is 255 characters)"
   end
 
+  # -- Button border colours --
+
+  test "valid with explicit button border colours" do
+    theme = Theme.new(
+      user: users(:one), name: "Bordered", colors: {
+        primary_button_border: "#58cc9d",
+        secondary_button_border: "#58cc9d",
+        danger_button_border: "#e6c4cf"
+      }
+    )
+    assert theme.valid?, theme.errors.full_messages.inspect
+  end
+
+  test "color_for returns stored primary_button_border" do
+    theme = Theme.new(user: users(:one), name: "B", colors: { "primary_button_border" => "#aabbcc" })
+    assert_equal "#aabbcc", theme.color_for("primary_button_border")
+  end
+
+  test "color_for falls back to default for primary_button_border" do
+    theme = Theme.new(user: users(:one), name: "B", colors: {})
+    assert_equal "#58cc9d", theme.color_for("primary_button_border")
+  end
+
+  test "color_for falls back to default for secondary_button_border" do
+    theme = Theme.new(user: users(:one), name: "B", colors: {})
+    assert_equal "#58cc9d", theme.color_for("secondary_button_border")
+  end
+
+  test "color_for falls back to default for danger_button_border" do
+    theme = Theme.new(user: users(:one), name: "B", colors: {})
+    assert_equal "#e6c4cf", theme.color_for("danger_button_border")
+  end
+
+  test "to_css_properties includes all three button border variables" do
+    theme = themes(:dark_forest)
+    css = theme.to_css_properties
+    assert_includes css, "--primary-button-border:"
+    assert_includes css, "--secondary-button-border:"
+    assert_includes css, "--danger-button-border:"
+  end
+
+  test "to_css includes all three button border variables" do
+    theme = themes(:dark_forest)
+    css = theme.to_css
+    assert_includes css, "  --primary-button-border:"
+    assert_includes css, "  --secondary-button-border:"
+    assert_includes css, "  --danger-button-border:"
+  end
+
+  test "THEMEABLE_PROPERTIES includes button border keys" do
+    keys = Theme::THEMEABLE_PROPERTIES.keys
+    assert_includes keys, "primary_button_border"
+    assert_includes keys, "secondary_button_border"
+    assert_includes keys, "danger_button_border"
+  end
+
+  test "button border properties are in the buttons group" do
+    assert_equal :buttons, Theme::THEMEABLE_PROPERTIES.dig("primary_button_border", :group)
+    assert_equal :buttons, Theme::THEMEABLE_PROPERTIES.dig("secondary_button_border", :group)
+    assert_equal :buttons, Theme::THEMEABLE_PROPERTIES.dig("danger_button_border", :group)
+  end
+
   # -- Shared themes --
 
   test "admin user can create a shared theme" do
