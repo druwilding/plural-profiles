@@ -9,11 +9,19 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   normalizes :unverified_email_address, with: ->(e) { e.strip.downcase }
+  normalizes :username, with: ->(u) { value = u.strip.downcase; value.blank? ? nil : value }, apply_to_nil: false
+
+  USERNAME_FORMAT = /\A[a-z0-9](?:[a-z0-9]|[_-](?=[a-z0-9]))*[a-z0-9]?\z/
 
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :unverified_email_address, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validate :unverified_email_not_taken, if: -> { unverified_email_address.present? }
   validates :password, length: { minimum: 8 }, if: -> { new_record? || password.present? }
+  validates :username,
+    length: { minimum: 2, maximum: 30 },
+    format: { with: USERNAME_FORMAT, message: "can only contain lowercase letters, numbers, underscores, and hyphens (no leading/trailing/consecutive special characters)" },
+    uniqueness: { case_sensitive: false },
+    allow_blank: true
 
   generates_token_for :password_reset, expires_in: 1.hour do
     password_salt&.last(10)
