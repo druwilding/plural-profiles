@@ -19,9 +19,8 @@ class ThemeBackgroundImageTest < ApplicationSystemTestCase
     find("summary", text: "Background image").click
     attach_file "theme[background_image]", file_fixture("avatar.png").to_path
 
-    # Stimulus applies the image to the preview element
-    preview_style = find(".theme-preview")[:style]
-    assert_match(/background-image:\s*url\(/, preview_style)
+    # Stimulus applies the image to the preview element (wait for it)
+    assert_selector ".theme-preview[style*='background-image']"
   end
 
   test "background image thumbnail and remove checkbox appear when an image is attached" do
