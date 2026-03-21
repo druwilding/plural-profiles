@@ -18,8 +18,11 @@
   --primary-button-text: #58cc9d;
   --secondary-button-bg: var(--pane-bg);
   --secondary-button-text: var(--primary-button-text);
+  --primary-button-border: var(--primary-button-text);
+  --secondary-button-border: var(--secondary-button-text);
   --danger-button-bg: #a81d49;
   --danger-button-text: #e6c4cf;
+  --danger-button-border: var(--danger-button-text);
   --input-label: var(--heading);
   --input-bg: #263a2e;
   --input-border: var(--text);
@@ -469,7 +472,7 @@ input[type="file"] {
 input[type="file"]::file-selector-button {
   background-color: var(--primary-button-bg);
   color: var(--primary-button-text);
-  border: 1px solid var(--primary-button-text);
+  border: 1px solid var(--primary-button-border);
   border-radius: 6px;
   padding: 0.4rem 1rem;
   font-size: 0.9rem;
@@ -510,7 +513,7 @@ button,
   padding: 0.6rem 1.5rem;
   background-color: var(--primary-button-bg);
   color: var(--primary-button-text);
-  border: 1px solid var(--primary-button-text);
+  border: 1px solid var(--primary-button-border);
   border-radius: 6px;
   font-size: 0.95rem;
   font-family: inherit;
@@ -535,7 +538,7 @@ button:hover,
 
 .btn--secondary {
   background-color: var(--secondary-button-bg);
-  border: 1px solid var(--secondary-button-text);
+  border: 1px solid var(--secondary-button-border);
   color: var(--secondary-button-text);
 }
 
@@ -637,7 +640,7 @@ button:hover,
 
 .btn--outline {
   background-color: var(--secondary-button-bg);
-  border: 1px solid var(--secondary-button-text);
+  border: 1px solid var(--secondary-button-border);
   color: var(--secondary-button-text);
 }
 
@@ -1543,7 +1546,7 @@ input[type="submit"].btn--small,
 
 .btn--danger {
   background-color: var(--danger-button-bg);
-  border: 1px solid var(--danger-button-text);
+  border: 1px solid var(--danger-button-border);
   color: var(--danger-button-text);
 }
 

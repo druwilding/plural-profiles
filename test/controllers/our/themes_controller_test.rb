@@ -336,6 +336,60 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", copy.credit_url
   end
 
+  # -- Button border colours --
+
+  test "create saves button border colours" do
+    sign_in_as @user
+    post our_themes_path, params: {
+      theme: {
+        name: "Bordered",
+        colors: {
+          primary_button_border: "#ff0000",
+          secondary_button_border: "#00ff00",
+          danger_button_border: "#0000ff"
+        }
+      }
+    }
+    assert_redirected_to our_themes_path
+    theme = Theme.find_by!(name: "Bordered")
+    assert_equal "#ff0000", theme.colors["primary_button_border"]
+    assert_equal "#00ff00", theme.colors["secondary_button_border"]
+    assert_equal "#0000ff", theme.colors["danger_button_border"]
+  end
+
+  test "update saves button border colours" do
+    sign_in_as @user
+    patch our_theme_path(@theme), params: {
+      theme: {
+        name: @theme.name,
+        colors: @theme.colors.merge(
+          "primary_button_border" => "#aaaaaa",
+          "secondary_button_border" => "#bbbbbb",
+          "danger_button_border" => "#cccccc"
+        )
+      }
+    }
+    assert_redirected_to our_themes_path
+    @theme.reload
+    assert_equal "#aaaaaa", @theme.colors["primary_button_border"]
+    assert_equal "#bbbbbb", @theme.colors["secondary_button_border"]
+    assert_equal "#cccccc", @theme.colors["danger_button_border"]
+  end
+
+  test "duplicate copies button border colours" do
+    sign_in_as @user
+    @theme.update_column(:colors, @theme.colors.merge(
+      "primary_button_border" => "#112233",
+      "secondary_button_border" => "#445566",
+      "danger_button_border" => "#778899"
+    ))
+    post duplicate_our_theme_path(@theme)
+    copy = Theme.order(:created_at).last
+    assert_equal "#112233", copy.colors["primary_button_border"]
+    assert_equal "#445566", copy.colors["secondary_button_border"]
+    assert_equal "#778899", copy.colors["danger_button_border"]
+  end
+
   # -- Shared themes --
 
   test "index shows shared themes section to all logged-in users" do
