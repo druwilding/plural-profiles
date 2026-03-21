@@ -80,6 +80,37 @@ class AccountNameTest < ApplicationSystemTestCase
     assert_equal "newhandle", @user.reload.username
   end
 
+  test "old account name no longer works after changing it" do
+    @user.update!(username: "oldhandle")
+    sign_in_via_browser
+    click_link "Account"
+
+    within(".card", text: "Account name") do
+      fill_in "Account name", with: "newhandle"
+      click_button "Change account name"
+    end
+
+    assert_text "Account name updated"
+
+    within(".site-header") { click_link "Sign out" }
+    assert_no_link "Sign out"
+
+    # Old name should no longer work
+    fill_in "Email address or account name", with: "oldhandle"
+    fill_in "Password", with: @password
+    click_button "Sign in"
+
+    assert_text "Try another email address or password"
+    assert_current_path new_session_path
+
+    # New name should work
+    fill_in "Email address or account name", with: "newhandle"
+    fill_in "Password", with: @password
+    click_button "Sign in"
+
+    assert_current_path root_path
+  end
+
   test "account name is displayed in lowercase even when entered in mixed case" do
     @user.update!(username: nil)
     sign_in_via_browser
