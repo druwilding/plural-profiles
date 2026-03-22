@@ -417,15 +417,17 @@ class ThemeTest < ActiveSupport::TestCase
   end
 
   test "import_attributes_from_json raises on invalid JSON" do
-    assert_raises(RuntimeError, match: /Invalid JSON/) do
+    error = assert_raises(RuntimeError) do
       Theme.import_attributes_from_json("not json at all")
     end
+    assert_match(/Invalid JSON/, error.message)
   end
 
   test "import_attributes_from_json raises on missing version marker" do
-    assert_raises(RuntimeError, match: /Not a Plural Profiles theme/) do
+    error = assert_raises(RuntimeError) do
       Theme.import_attributes_from_json('{"name": "No version"}')
     end
+    assert_match(/Not a Plural Profiles theme/, error.message)
   end
 
   test "import_attributes_from_json ignores unknown keys" do
