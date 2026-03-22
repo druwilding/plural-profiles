@@ -186,7 +186,7 @@ class Theme < ApplicationRecord
   # Unknown keys are silently ignored; values are validated against allowed lists.
   def self.import_attributes_from_json(json_string)
     data = JSON.parse(json_string)
-    raise "Not a Plural Profiles theme" unless data["plural_profiles_theme"].is_a?(Integer)
+    raise "Not a Plural Profiles theme" unless data["plural_profiles_theme"] == 1
 
     attrs = {}
     attrs[:name] = data["name"] if data["name"].present?
