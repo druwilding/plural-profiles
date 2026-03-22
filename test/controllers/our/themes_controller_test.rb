@@ -631,6 +631,9 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
       theme: { tags: [ "dark", "cool-colours" ] }
     }
     assert_response :success
+    assert_select "input[type=checkbox][name='theme[tags][]'][value='dark'][checked]"
+    assert_select "input[type=checkbox][name='theme[tags][]'][value='cool-colours'][checked]"
+    assert_select "input[type=checkbox][name='theme[tags][]'][value='light'][checked]", count: 0
   end
 
   test "new with imported background options populates them" do
@@ -639,6 +642,8 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
       theme: { background_repeat: "no-repeat", background_size: "cover" }
     }
     assert_response :success
+    assert_select "select[name='theme[background_repeat]'] option[value='no-repeat'][selected]"
+    assert_select "select[name='theme[background_size]'] option[value='cover'][selected]"
   end
 
   test "new ignores invalid imported background options" do
@@ -647,7 +652,9 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
       theme: { background_repeat: "invalid-value" }
     }
     assert_response :success
-    # Should still render fine; the invalid value is simply ignored
+    # Invalid value is filtered out; the DB default (repeat) should remain selected
+    assert_select "select[name='theme[background_repeat]'] option[value='repeat'][selected]"
+    assert_select "select[name='theme[background_repeat]'] option[value='invalid-value']", count: 0
   end
 
   test "new with legacy CSS colour import still works" do
