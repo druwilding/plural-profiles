@@ -28,8 +28,8 @@
     %dialog.import-dialog{data: { "theme-import-target": "dialog", action: "click->theme-import#backdropClick" }}
       %form{data: { action: "submit->theme-import#import" }}
         %h2 Import theme
-        %p Paste the CSS block copied from the theme editor below.
-        %textarea.import-dialog__textarea{data: { "theme-import-target": "cssInput" }, rows: 12, placeholder: ":root {\n  --page-bg: #123456;\n  ...\n}", spellcheck: false}
+        %p Paste a theme JSON export below (or a legacy CSS block).
+        %textarea.import-dialog__textarea{data: { "theme-import-target": "cssInput" }, rows: 12, placeholder: "{\n  \"plural_profiles_theme\": 1,\n  \"name\": \"My theme\",\n  \"colors\": { ... }\n}", spellcheck: false}
         %p.import-dialog__error{data: { "theme-import-target": "error" }, role: "alert"}
         .import-dialog__actions
           %button.btn{type: "submit"} Import

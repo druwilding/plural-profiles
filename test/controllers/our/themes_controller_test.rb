@@ -592,4 +592,77 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to our_themes_path
     assert_match "site default", flash[:notice]
   end
+
+  # -- Import via JSON query params --
+
+  test "new with JSON-imported colours populates the form" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { colors: { page_bg: "#aabbcc", text: "#112233" } }
+    }
+    assert_response :success
+    assert_match "#aabbcc", response.body
+    assert_match "#112233", response.body
+  end
+
+  test "new with imported name uses it instead of default" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { name: "Imported Theme" }
+    }
+    assert_response :success
+    assert_match "Imported Theme", response.body
+  end
+
+  test "new with imported credit and notes populates them" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { credit: "Dru", credit_url: "https://example.com", notes: "Imported notes" }
+    }
+    assert_response :success
+    assert_match "Dru", response.body
+    assert_match "https://example.com", response.body
+    assert_match "Imported notes", response.body
+  end
+
+  test "new with imported tags populates them" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { tags: [ "dark", "cool-colours" ] }
+    }
+    assert_response :success
+    assert_select "input[type=checkbox][name='theme[tags][]'][value='dark'][checked]"
+    assert_select "input[type=checkbox][name='theme[tags][]'][value='cool-colours'][checked]"
+    assert_select "input[type=checkbox][name='theme[tags][]'][value='light'][checked]", count: 0
+  end
+
+  test "new with imported background options populates them" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { background_repeat: "no-repeat", background_size: "cover" }
+    }
+    assert_response :success
+    assert_select "select[name='theme[background_repeat]'] option[value='no-repeat'][selected]"
+    assert_select "select[name='theme[background_size]'] option[value='cover'][selected]"
+  end
+
+  test "new ignores invalid imported background options" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { background_repeat: "invalid-value" }
+    }
+    assert_response :success
+    # Invalid value is filtered out; the DB default (repeat) should remain selected
+    assert_select "select[name='theme[background_repeat]'] option[value='repeat'][selected]"
+    assert_select "select[name='theme[background_repeat]'] option[value='invalid-value']", count: 0
+  end
+
+  test "new with legacy CSS colour import still works" do
+    sign_in_as @user
+    get new_our_theme_path, params: {
+      theme: { colors: { page_bg: "#112233" } }
+    }
+    assert_response :success
+    assert_match "#112233", response.body
+  end
 end

@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Handles the "Import theme" dialog on the themes index.
-// Parses a pasted :root { --prop: #hex; } block and redirects to the
-// new-theme page with colour values pre-populated as query params.
+// Parses a pasted JSON theme export (or legacy CSS :root { } block) and
+// redirects to the new-theme page with values pre-populated as query params.
 export default class extends Controller {
   static targets = ["dialog", "cssInput", "error"]
   static values  = { newUrl: String }
@@ -26,18 +26,63 @@ export default class extends Controller {
 
   import(event) {
     event.preventDefault()
-    const css    = this.cssInputTarget.value.trim()
-    const colors = this.parseCss(css)
+    const input = this.cssInputTarget.value.trim()
+
+    // Try JSON first
+    if (input.startsWith("{")) {
+      this.importJson(input)
+    } else {
+      // Fallback: try legacy CSS format
+      this.importCss(input)
+    }
+  }
+
+  importJson(input) {
+    try {
+      const data = JSON.parse(input)
+      if (!data.plural_profiles_theme) {
+        this.showError(
+          "This doesn't look like a Plural Profiles theme. " +
+          "Make sure you paste the full JSON export."
+        )
+        return
+      }
+
+      const params = new URLSearchParams()
+      if (data.name) params.append("theme[name]", data.name)
+      if (data.colors && typeof data.colors === "object") {
+        for (const [key, value] of Object.entries(data.colors)) {
+          params.append(`theme[colors][${key}]`, value)
+        }
+      }
+      if (Array.isArray(data.tags)) {
+        data.tags.forEach(tag => params.append("theme[tags][]", tag))
+      }
+      if (data.credit) params.append("theme[credit]", data.credit)
+      if (data.credit_url) params.append("theme[credit_url]", data.credit_url)
+      if (data.notes) params.append("theme[notes]", data.notes)
+      if (data.background_repeat) params.append("theme[background_repeat]", data.background_repeat)
+      if (data.background_size) params.append("theme[background_size]", data.background_size)
+      if (data.background_position) params.append("theme[background_position]", data.background_position)
+      if (data.background_attachment) params.append("theme[background_attachment]", data.background_attachment)
+
+      window.location.href = `${this.newUrlValue}?${params.toString()}`
+    } catch (e) {
+      this.showError("Invalid JSON. Make sure you paste the full export.")
+    }
+  }
+
+  importCss(input) {
+    const colors = this.parseCss(input)
 
     if (Object.keys(colors).length === 0) {
       this.showError(
-        "No valid CSS custom properties found. " +
-        "Make sure you paste a :root { } block containing --property: #RRGGBB or #RRGGBBAA values."
+        "No valid theme data found. " +
+        "Paste either a JSON theme export or a CSS :root { } block."
       )
       return
     }
 
-    // Build query string: theme[colors][page_bg]=#482784 etc.
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(colors)) {
       params.append(`theme[colors][${key}]`, value)

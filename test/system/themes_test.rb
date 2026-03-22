@@ -254,9 +254,9 @@ class ThemesTest < ApplicationSystemTestCase
     assert_includes find("body")[:style], "--page-bg: #2e1a0e"
   end
 
-  # -- Import theme with alpha --
+  # -- Import theme with alpha (legacy CSS) --
 
-  test "import theme accepts 8-digit hex colors with alpha" do
+  test "import legacy CSS theme accepts 8-digit hex colors with alpha" do
     sign_in_via_browser(users(:one))
     visit our_themes_path
 
@@ -278,5 +278,90 @@ class ThemesTest < ApplicationSystemTestCase
     assert_equal "#12345678", find("input[name='theme[colors][page_bg]'].theme-designer__hex-input").value
     assert_equal "#aabbccdd", find("input[name='theme[colors][text]'].theme-designer__hex-input").value
     assert_equal "#ff0000ff", find("input[name='theme[colors][link]'].theme-designer__hex-input").value
+  end
+
+  # -- Import theme via JSON --
+
+  test "import JSON theme populates colours on new theme page" do
+    sign_in_via_browser(users(:one))
+    visit our_themes_path
+
+    click_button "Import theme"
+
+    json_block = {
+      plural_profiles_theme: 1,
+      name: "Imported Forest",
+      colors: { page_bg: "#112233", text: "#aabbcc", link: "#ff0000" }
+    }.to_json
+
+    find("textarea.import-dialog__textarea").set(json_block)
+    click_button "Import"
+
+    assert_current_path new_our_theme_path, ignore_query: true
+    assert_equal "#112233", find("input[name='theme[colors][page_bg]'].theme-designer__hex-input").value
+    assert_equal "#aabbcc", find("input[name='theme[colors][text]'].theme-designer__hex-input").value
+    assert_equal "#ff0000", find("input[name='theme[colors][link]'].theme-designer__hex-input").value
+  end
+
+  test "import JSON theme populates name on new theme page" do
+    sign_in_via_browser(users(:one))
+    visit our_themes_path
+
+    click_button "Import theme"
+
+    json_block = {
+      plural_profiles_theme: 1,
+      name: "My Imported Theme",
+      colors: { page_bg: "#112233" }
+    }.to_json
+
+    find("textarea.import-dialog__textarea").set(json_block)
+    click_button "Import"
+
+    assert_current_path new_our_theme_path, ignore_query: true
+    assert_equal "My Imported Theme", find("input[name='theme[name]']").value
+  end
+
+  test "import JSON theme populates credit and notes on new theme page" do
+    sign_in_via_browser(users(:one))
+    visit our_themes_path
+
+    click_button "Import theme"
+
+    json_block = {
+      plural_profiles_theme: 1,
+      name: "Credited Theme",
+      colors: {},
+      credit: "Test Author",
+      credit_url: "https://example.com",
+      notes: "Some notes about this theme"
+    }.to_json
+
+    find("textarea.import-dialog__textarea").set(json_block)
+    click_button "Import"
+
+    assert_current_path new_our_theme_path, ignore_query: true
+    # Open the Share section to see credit/notes fields
+    find("summary", text: "Share theme").click
+    assert_equal "Test Author", find("input[name='theme[credit]']").value
+    assert_equal "https://example.com", find("input[name='theme[credit_url]']").value
+    assert_equal "Some notes about this theme", find("textarea[name='theme[notes]']").value
+  end
+
+  # -- Export theme as JSON --
+
+  test "edit page shows JSON export with theme data" do
+    sign_in_via_browser(users(:one))
+    visit edit_our_theme_path(themes(:dark_forest))
+
+    find("summary", text: "Export theme").click
+    export_text = find("textarea[data-theme-designer-target='jsonOutput']").value
+    parsed = JSON.parse(export_text)
+
+    assert_equal 1, parsed["plural_profiles_theme"]
+    assert_equal "Dark Forest", parsed["name"]
+    assert_equal "#0e2e24", parsed["colors"]["page_bg"]
+    assert_includes parsed["tags"], "dark"
+    assert_equal "Verdant Studio", parsed["credit"]
   end
 end

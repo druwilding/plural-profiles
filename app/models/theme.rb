@@ -159,6 +159,51 @@ class Theme < ApplicationRecord
     ].join(" ")
   end
 
+  # Returns a hash representation of the theme suitable for JSON export.
+  # Includes all non-image theme data; background image is excluded.
+  def to_export_hash
+    {
+      plural_profiles_theme: 1,
+      name: name,
+      colors: colors,
+      tags: tags,
+      credit: credit,
+      credit_url: credit_url,
+      notes: notes,
+      background_repeat: background_repeat,
+      background_size: background_size,
+      background_position: background_position,
+      background_attachment: background_attachment
+    }.compact
+  end
+
+  # Returns a pretty-printed JSON string for export.
+  def to_export_json
+    JSON.pretty_generate(to_export_hash)
+  end
+
+  # Parses a JSON string and returns a hash of importable attributes.
+  # Unknown keys are silently ignored; values are validated against allowed lists.
+  def self.import_attributes_from_json(json_string)
+    data = JSON.parse(json_string)
+    raise "Not a Plural Profiles theme" unless data.is_a?(Hash) && data["plural_profiles_theme"] == 1
+
+    attrs = {}
+    attrs[:name] = data["name"] if data["name"].present?
+    attrs[:colors] = data["colors"].slice(*THEMEABLE_PROPERTIES.keys) if data["colors"].is_a?(Hash)
+    attrs[:tags] = (data["tags"] & TAGS.keys) if data["tags"].is_a?(Array)
+    attrs[:credit] = data["credit"] if data.key?("credit")
+    attrs[:credit_url] = data["credit_url"] if data.key?("credit_url")
+    attrs[:notes] = data["notes"] if data.key?("notes")
+    attrs[:background_repeat] = data["background_repeat"] if BACKGROUND_REPEAT_OPTIONS.include?(data["background_repeat"])
+    attrs[:background_size] = data["background_size"] if BACKGROUND_SIZE_OPTIONS.include?(data["background_size"])
+    attrs[:background_position] = data["background_position"] if BACKGROUND_POSITION_OPTIONS.include?(data["background_position"])
+    attrs[:background_attachment] = data["background_attachment"] if BACKGROUND_ATTACHMENT_OPTIONS.include?(data["background_attachment"])
+    attrs
+  rescue JSON::ParserError
+    raise "Invalid JSON"
+  end
+
   def self.site_default_theme
     Rails.cache.fetch("site_default_theme", expires_in: 5.minutes) do
       shared.find_by(site_default: true)

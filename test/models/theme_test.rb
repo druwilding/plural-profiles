@@ -339,4 +339,142 @@ class ThemeTest < ActiveSupport::TestCase
     themes(:default_shared).destroy
     assert_nil Theme.site_default_theme
   end
+
+  # -- Export --
+
+  test "to_export_hash includes expected keys" do
+    theme = themes(:dark_forest)
+    hash = theme.to_export_hash
+    assert_equal 1, hash[:plural_profiles_theme]
+    assert_equal "Dark Forest", hash[:name]
+    assert_kind_of Hash, hash[:colors]
+    assert_equal "#0e2e24", hash[:colors]["page_bg"]
+    assert_equal [ "dark", "cool-colours" ], hash[:tags]
+    assert_equal "Verdant Studio", hash[:credit]
+    assert_equal "https://example.com/verdant", hash[:credit_url]
+  end
+
+  test "to_export_hash omits nil values via compact" do
+    theme = Theme.new(user: users(:one), name: "Minimal", colors: { "page_bg" => "#000000" })
+    hash = theme.to_export_hash
+    assert_equal 1, hash[:plural_profiles_theme]
+    assert_equal "Minimal", hash[:name]
+    assert_not hash.key?(:credit)
+    assert_not hash.key?(:credit_url)
+    assert_not hash.key?(:notes)
+  end
+
+  test "to_export_hash includes background options" do
+    theme = themes(:dark_forest)
+    theme.background_repeat = "no-repeat"
+    theme.background_size = "cover"
+    theme.background_position = "top"
+    theme.background_attachment = "fixed"
+    hash = theme.to_export_hash
+    assert_equal "no-repeat", hash[:background_repeat]
+    assert_equal "cover", hash[:background_size]
+    assert_equal "top", hash[:background_position]
+    assert_equal "fixed", hash[:background_attachment]
+  end
+
+  test "to_export_json produces valid JSON" do
+    theme = themes(:dark_forest)
+    json = theme.to_export_json
+    parsed = JSON.parse(json)
+    assert_equal 1, parsed["plural_profiles_theme"]
+    assert_equal "Dark Forest", parsed["name"]
+    assert_equal "#0e2e24", parsed["colors"]["page_bg"]
+  end
+
+  # -- Import --
+
+  test "import_attributes_from_json parses valid JSON correctly" do
+    json = {
+      plural_profiles_theme: 1,
+      name: "Imported",
+      colors: { page_bg: "#112233", text: "#aabbcc" },
+      tags: [ "dark", "cool-colours" ],
+      credit: "Test Author",
+      credit_url: "https://example.com",
+      notes: "Some notes",
+      background_repeat: "no-repeat",
+      background_size: "cover",
+      background_position: "top",
+      background_attachment: "fixed"
+    }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+    assert_equal "Imported", attrs[:name]
+    assert_equal({ "page_bg" => "#112233", "text" => "#aabbcc" }, attrs[:colors])
+    assert_equal [ "dark", "cool-colours" ], attrs[:tags]
+    assert_equal "Test Author", attrs[:credit]
+    assert_equal "https://example.com", attrs[:credit_url]
+    assert_equal "Some notes", attrs[:notes]
+    assert_equal "no-repeat", attrs[:background_repeat]
+    assert_equal "cover", attrs[:background_size]
+    assert_equal "top", attrs[:background_position]
+    assert_equal "fixed", attrs[:background_attachment]
+  end
+
+  test "import_attributes_from_json raises on invalid JSON" do
+    error = assert_raises(RuntimeError) do
+      Theme.import_attributes_from_json("not json at all")
+    end
+    assert_match(/Invalid JSON/, error.message)
+  end
+
+  test "import_attributes_from_json raises on missing version marker" do
+    error = assert_raises(RuntimeError) do
+      Theme.import_attributes_from_json('{"name": "No version"}')
+    end
+    assert_match(/Not a Plural Profiles theme/, error.message)
+  end
+
+  test "import_attributes_from_json ignores unknown keys" do
+    json = { plural_profiles_theme: 1, name: "Valid", unknown_key: "ignored", colors: {} }.to_json
+    attrs = Theme.import_attributes_from_json(json)
+    assert_equal "Valid", attrs[:name]
+    assert_not attrs.key?(:unknown_key)
+  end
+
+  test "import_attributes_from_json filters colours to known keys only" do
+    json = {
+      plural_profiles_theme: 1,
+      colors: { page_bg: "#112233", invented_colour: "#ffffff" }
+    }.to_json
+    attrs = Theme.import_attributes_from_json(json)
+    assert_equal({ "page_bg" => "#112233" }, attrs[:colors])
+  end
+
+  test "import_attributes_from_json filters tags to known values only" do
+    json = { plural_profiles_theme: 1, tags: [ "dark", "invented-tag" ] }.to_json
+    attrs = Theme.import_attributes_from_json(json)
+    assert_equal [ "dark" ], attrs[:tags]
+  end
+
+  test "import_attributes_from_json ignores invalid background options" do
+    json = {
+      plural_profiles_theme: 1,
+      background_repeat: "invalid",
+      background_size: "auto"
+    }.to_json
+    attrs = Theme.import_attributes_from_json(json)
+    assert_not attrs.key?(:background_repeat)
+    assert_equal "auto", attrs[:background_size]
+  end
+
+  test "round-trip export and import preserves data" do
+    theme = themes(:dark_forest)
+    theme.update!(notes: "Round trip test", background_repeat: "no-repeat", background_size: "cover")
+    json = theme.to_export_json
+    attrs = Theme.import_attributes_from_json(json)
+    assert_equal theme.name, attrs[:name]
+    assert_equal theme.colors, attrs[:colors]
+    assert_equal theme.tags, attrs[:tags]
+    assert_equal theme.credit, attrs[:credit]
+    assert_equal theme.credit_url, attrs[:credit_url]
+    assert_equal "Round trip test", attrs[:notes]
+    assert_equal "no-repeat", attrs[:background_repeat]
+    assert_equal "cover", attrs[:background_size]
+  end
 end

@@ -11,11 +11,11 @@
     .card{data: { controller: "clipboard" }}
       %details
         %summary Export theme
-        %p.text-muted Copy this CSS to share your theme with others.
+        %p.text-muted Copy this JSON to share your theme with others.
         .form-group
-          %textarea.theme-designer__css-output{readonly: true, rows: 8, data: { "theme-designer-target": "cssOutput", "clipboard-target": "source" }}= @theme.to_css
+          %textarea.theme-designer__css-output{readonly: true, rows: 12, data: { "theme-designer-target": "jsonOutput", "clipboard-target": "source" }}= @theme.to_export_json
         %button.btn.btn--secondary{data: { action: "click->clipboard#copy" }}
-          %span{data: { "clipboard-target": "label" }} Copy CSS
+          %span{data: { "clipboard-target": "label" }} Copy JSON
           %span{aria: {hidden: "true"}} ⧉
 
   .theme-designer__preview

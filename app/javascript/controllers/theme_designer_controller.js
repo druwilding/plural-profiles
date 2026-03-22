@@ -27,7 +27,8 @@ function colorToHex(colorString) {
 }
 
 export default class extends Controller {
-  static targets = ["colorInput", "hexInput", "preview", "cssOutput",
+  static targets = ["colorInput", "hexInput", "preview", "jsonOutput",
+                    "nameInput", "creditInput", "creditUrlInput", "notesInput", "tagInput",
                     "backgroundFileInput", "backgroundRepeat",
                     "backgroundSize", "backgroundPosition", "backgroundAttachment"]
 
@@ -55,7 +56,7 @@ export default class extends Controller {
     if (hexInput) hexInput.value = hexValue
 
     this.applyToPreview(property, hexValue)
-    this.updateCssOutput()
+    this.updateJsonOutput()
   }
 
   // Called when the hex text input changes
@@ -77,7 +78,7 @@ export default class extends Controller {
       // For 8-digit hex (with alpha), native color input doesn't support it, so skip syncing
 
       this.applyToPreview(property, value)
-      this.updateCssOutput()
+      this.updateJsonOutput()
     }
   }
 
@@ -100,16 +101,43 @@ export default class extends Controller {
     })
   }
 
-  // Regenerate the CSS output textarea
-  updateCssOutput() {
-    if (!this.hasCssOutputTarget) return
+  // Regenerate the JSON export textarea with all current form values
+  updateJsonOutput() {
+    if (!this.hasJsonOutputTarget) return
 
-    const lines = this.hexInputTargets.map(input => {
-      const prop = cssProp(input.dataset.property)
-      return `  ${prop}: ${input.value};`
+    const data = { plural_profiles_theme: 1 }
+
+    if (this.hasNameInputTarget && this.nameInputTarget.value.trim()) {
+      data.name = this.nameInputTarget.value.trim()
+    }
+
+    const colors = {}
+    this.hexInputTargets.forEach(input => {
+      colors[input.dataset.property] = input.value
     })
+    if (Object.keys(colors).length) data.colors = colors
 
-    this.cssOutputTarget.value = `:root {\n${lines.join("\n")}\n}`
+    const tags = this.tagInputTargets
+      .filter(cb => cb.checked && cb.value !== "")
+      .map(cb => cb.value)
+    if (tags.length) data.tags = tags
+
+    if (this.hasCreditInputTarget && this.creditInputTarget.value.trim()) {
+      data.credit = this.creditInputTarget.value.trim()
+    }
+    if (this.hasCreditUrlInputTarget && this.creditUrlInputTarget.value.trim()) {
+      data.credit_url = this.creditUrlInputTarget.value.trim()
+    }
+    if (this.hasNotesInputTarget && this.notesInputTarget.value.trim()) {
+      data.notes = this.notesInputTarget.value.trim()
+    }
+
+    if (this.hasBackgroundRepeatTarget) data.background_repeat = this.backgroundRepeatTarget.value
+    if (this.hasBackgroundSizeTarget) data.background_size = this.backgroundSizeTarget.value
+    if (this.hasBackgroundPositionTarget) data.background_position = this.backgroundPositionTarget.value
+    if (this.hasBackgroundAttachmentTarget) data.background_attachment = this.backgroundAttachmentTarget.value
+
+    this.jsonOutputTarget.value = JSON.stringify(data, null, 2)
   }
 
   // Called when user selects a new background image file
@@ -144,6 +172,7 @@ export default class extends Controller {
     if (this.hasBackgroundAttachmentTarget) {
       this.previewTarget.style.backgroundAttachment = this.backgroundAttachmentTarget.value
     }
+    this.updateJsonOutput()
   }
 
 }

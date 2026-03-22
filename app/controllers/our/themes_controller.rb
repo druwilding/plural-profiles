@@ -25,13 +25,31 @@ class Our::ThemesController < ApplicationController
     colors = Theme::THEMEABLE_PROPERTIES.transform_values { |v| v[:default] }
     default_source = Current.user.active_theme || Theme.site_default_theme
     colors.merge!(default_source.colors) if default_source
-    if params[:theme].present? && params[:theme][:colors].present?
-      imported = params[:theme][:colors].to_unsafe_h.transform_keys(&:to_s).slice(*Theme::THEMEABLE_PROPERTIES.keys)
-      colors.merge!(imported)
+
+    imported = {}
+    if params[:theme].present?
+      raw_colors = params[:theme][:colors]
+      if raw_colors.is_a?(ActionController::Parameters) || raw_colors.is_a?(Hash)
+        imported_colors = raw_colors.to_unsafe_h
+                            .transform_keys(&:to_s)
+                            .slice(*Theme::THEMEABLE_PROPERTIES.keys)
+        colors.merge!(imported_colors)
+      end
+      imported[:name] = params[:theme][:name] if params[:theme][:name].present?
+      imported[:credit] = params[:theme][:credit] if params[:theme][:credit].present?
+      imported[:credit_url] = params[:theme][:credit_url] if params[:theme][:credit_url].present?
+      imported[:notes] = params[:theme][:notes] if params[:theme][:notes].present?
+      imported[:tags] = Array(params[:theme][:tags]).reject(&:blank?) & Theme::TAGS.keys if params[:theme][:tags].present?
+      imported[:background_repeat] = params[:theme][:background_repeat] if Theme::BACKGROUND_REPEAT_OPTIONS.include?(params[:theme][:background_repeat])
+      imported[:background_size] = params[:theme][:background_size] if Theme::BACKGROUND_SIZE_OPTIONS.include?(params[:theme][:background_size])
+      imported[:background_position] = params[:theme][:background_position] if Theme::BACKGROUND_POSITION_OPTIONS.include?(params[:theme][:background_position])
+      imported[:background_attachment] = params[:theme][:background_attachment] if Theme::BACKGROUND_ATTACHMENT_OPTIONS.include?(params[:theme][:background_attachment])
     end
+
     @theme = Current.user.themes.build(
-      name: "New theme",
-      colors: colors
+      name: imported[:name] || "New theme",
+      colors: colors,
+      **imported.except(:name)
     )
   end
 
@@ -155,8 +173,10 @@ class Our::ThemesController < ApplicationController
     # Ensure only known tag values are stored
     permitted[:tags] = (permitted[:tags] || []).reject(&:blank?).uniq & Theme::TAGS.keys
     # Ensure only known colour keys are stored
-    if permitted[:colors].present?
+    if permitted[:colors].is_a?(ActionController::Parameters) || permitted[:colors].is_a?(Hash)
       permitted[:colors] = permitted[:colors].to_h.slice(*Theme::THEMEABLE_PROPERTIES.keys)
+    else
+      permitted.delete(:colors)
     end
     permitted
   end
