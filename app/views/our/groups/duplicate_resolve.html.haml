@@ -36,7 +36,7 @@
         - if @existing_copy.description.present?
           %p.duplicate-comparison__description= truncate(@existing_copy.description, length: 120)
 
-  = form_with url: duplicate_resolve_our_group_path(@source), method: :post do |form|
+  = form_with url: duplicate_resolve_our_group_path(@source), method: :post, data: { turbo: false } do |form|
     .form-group
       .radio-group
         = form.radio_button :resolution, "reuse", id: "resolution_reuse"

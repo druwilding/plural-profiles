@@ -42,15 +42,9 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     assert_text "Conflict 1"
     assert_text prism.name
 
-    # Choose to create a new copy
+    # Choose to create a new copy (only 1 conflict — Prism Circle; Rogue Pack has no copy)
     choose "Create a new copy"
     click_button "Next"
-
-    # May have more conflicts (Rogue Pack) or go to confirm
-    if page.has_text?("Conflict")
-      choose "Create a new copy"
-      click_button "Next"
-    end
 
     assert_text "Confirm duplication"
     click_button "Confirm & duplicate"
