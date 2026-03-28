@@ -22,7 +22,7 @@ class ManageGroupsLabelsTest < ApplicationSystemTestCase
     @profile.update!(labels: %w[helper featured])
     visit manage_groups_our_group_path(@group)
     # Find the profile node by unique name and class
-    within all(".tree-editor__leaf--profile").find { |node| node.has_text?(@profile.name) } do
+    within find(".tree-editor__leaf--profile", text: @profile.name) do
       assert_selector ".label-badges .label-badge", text: "helper"
       assert_selector ".label-badges .label-badge", text: "featured"
     end
@@ -36,7 +36,7 @@ class ManageGroupsLabelsTest < ApplicationSystemTestCase
 
     visit manage_groups_our_group_path(@group)
 
-    within all(".tree-editor__leaf").find { |node| node.has_text?("Leaf Group") } do
+    within find(".tree-editor__leaf", text: "Leaf Group") do
       assert_selector ".label-badges .label-badge", text: "nested"
       assert_selector ".label-badges .label-badge", text: "leaf-label"
     end
