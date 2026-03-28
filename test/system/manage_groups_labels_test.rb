@@ -22,9 +22,23 @@ class ManageGroupsLabelsTest < ApplicationSystemTestCase
     @profile.update!(labels: %w[helper featured])
     visit manage_groups_our_group_path(@group)
     # Find the profile node by unique name and class
-    within all(".tree-editor__leaf--profile").find { |node| node.has_text?(@profile.name) } do
+    within find(".tree-editor__leaf--profile", text: @profile.name, match: :first) do
       assert_selector ".label-badges .label-badge", text: "helper"
       assert_selector ".label-badges .label-badge", text: "featured"
+    end
+  end
+
+  test "labels appear on a child group rendered as a leaf node" do
+    # Create a leaf sub-group (no children, no profiles) with labels.
+    # rogue_pack has a profile, so it renders as a folder - we need a true leaf.
+    leaf = @user.groups.create!(name: "Leaf Group", labels: %w[nested leaf-label])
+    @group.child_groups << leaf
+
+    visit manage_groups_our_group_path(@group)
+
+    within find(".tree-editor__leaf", text: "Leaf Group") do
+      assert_selector ".label-badges .label-badge", text: "nested"
+      assert_selector ".label-badges .label-badge", text: "leaf-label"
     end
   end
 end

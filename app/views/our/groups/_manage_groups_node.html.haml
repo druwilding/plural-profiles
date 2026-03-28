@@ -54,6 +54,10 @@
         %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
           = render "shared/plural_pride_logo"
       %span.tree-editor__name= group.name
+      - if group.labels.any?
+        .label-badges
+          - group.labels.each do |label|
+            %span.label-badge= label
       %span.tree-editor__tag.tree-editor__tag--hidden hidden
       - if is_direct
         = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
