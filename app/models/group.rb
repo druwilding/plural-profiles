@@ -538,13 +538,12 @@ class Group < ApplicationRecord
   # Copy an Active Storage avatar from source to target.
   def duplicate_avatar(source, target)
     return unless source.avatar.attached?
-    source.avatar.blob.open do |tmp|
-      target.avatar.attach(
-        io: tmp,
-        filename: source.avatar.blob.filename,
-        content_type: source.avatar.blob.content_type
-      )
-    end
+    blob = source.avatar.blob
+    target.avatar.attach(
+      io: StringIO.new(blob.download),
+      filename: blob.filename,
+      content_type: blob.content_type
+    )
   end
 
   def generate_uuid
