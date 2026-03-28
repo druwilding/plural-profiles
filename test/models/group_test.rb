@@ -540,4 +540,45 @@ class GroupTest < ActiveSupport::TestCase
     themes(:sunset).destroy
     assert_nil group.reload.theme_id
   end
+
+  # -- Copy lineage (Phase 5) --
+
+  test "copied_from association" do
+    original = users(:one).groups.create!(name: "Original")
+    copy = users(:one).groups.create!(name: "Copy", copied_from: original)
+    assert_equal original, copy.copied_from
+  end
+
+  test "copies association" do
+    original = users(:one).groups.create!(name: "Original")
+    copy1 = users(:one).groups.create!(name: "Copy 1", copied_from: original)
+    copy2 = users(:one).groups.create!(name: "Copy 2", copied_from: original)
+    assert_includes original.copies, copy1
+    assert_includes original.copies, copy2
+  end
+
+  test "copies_with_labels returns copies that have ALL given labels" do
+    original = users(:one).groups.create!(name: "Original")
+    matching = users(:one).groups.create!(name: "Matching", copied_from: original, labels: [ "blue", "safe" ])
+    partial  = users(:one).groups.create!(name: "Partial",  copied_from: original, labels: [ "blue" ])
+    other    = users(:one).groups.create!(name: "Other",    copied_from: original, labels: [ "red" ])
+
+    result = original.copies_with_labels([ "blue", "safe" ])
+    assert_includes result, matching
+    assert_not_includes result, partial
+    assert_not_includes result, other
+  end
+
+  test "copies_with_labels returns empty when no copies match" do
+    original = users(:one).groups.create!(name: "Original")
+    users(:one).groups.create!(name: "Copy", copied_from: original, labels: [ "red" ])
+    assert_empty original.copies_with_labels([ "blue" ])
+  end
+
+  test "deleting the original nullifies copied_from_id on copies" do
+    original = users(:one).groups.create!(name: "Original")
+    copy = users(:one).groups.create!(name: "Copy", copied_from: original)
+    original.destroy
+    assert_nil copy.reload.copied_from_id
+  end
 end
