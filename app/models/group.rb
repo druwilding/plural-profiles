@@ -4,6 +4,8 @@ class Group < ApplicationRecord
 
   belongs_to :user
   belongs_to :theme, optional: true
+  belongs_to :copied_from, class_name: "Group", optional: true
+  has_many :copies, class_name: "Group", foreign_key: :copied_from_id, dependent: :nullify
   has_many :group_profiles, dependent: :destroy
   has_many :profiles, -> { order(:name) }, through: :group_profiles
 
@@ -21,6 +23,11 @@ class Group < ApplicationRecord
 
   def to_param
     uuid
+  end
+
+  # Returns copies of this group that have ALL of the given labels.
+  def copies_with_labels(labels)
+    copies.where("labels @> ?", labels.to_json)
   end
 
   # All group IDs reachable from this group via group_groups edges (recursive).

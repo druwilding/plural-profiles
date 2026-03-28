@@ -56,6 +56,8 @@ class Profile < ApplicationRecord
 
   belongs_to :user
   belongs_to :theme, optional: true
+  belongs_to :copied_from, class_name: "Profile", optional: true
+  has_many :copies, class_name: "Profile", foreign_key: :copied_from_id, dependent: :nullify
   has_many :group_profiles, dependent: :destroy
   has_many :groups, through: :group_profiles
 
@@ -68,6 +70,11 @@ class Profile < ApplicationRecord
 
   def to_param
     uuid
+  end
+
+  # Returns copies of this profile that have ALL of the given labels.
+  def copies_with_labels(labels)
+    copies.where("labels @> ?", labels.to_json)
   end
 
   def self.heart_emoji_display_name(heart)
