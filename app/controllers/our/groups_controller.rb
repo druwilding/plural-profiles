@@ -289,26 +289,14 @@ class Our::GroupsController < ApplicationController
     @resolutions = wizard["resolutions"]
     @source = @group
 
-    # Build lists for the summary
-    all_group_ids = @group.reachable_group_ids
-    reused_ids = @resolutions.select { |_, v| v == "reuse" }.keys.map(&:to_i).to_set
+    # Build the full preview tree with new/reuse annotations
+    @preview_tree = @group.duplication_preview_tree(labels: @labels, resolutions: @resolutions)
 
-    # Groups being reused also implicitly reuse their descendants
-    expanded_reused_ids = Set.new(reused_ids)
-    reused_ids.each do |rid|
-      (Group.find_by(id: rid)&.descendant_group_ids || []).each { |did| expanded_reused_ids << did }
-    end
-
-    copyable_ids = all_group_ids - expanded_reused_ids.to_a
-    @groups_to_copy = Group.where(id: copyable_ids).order(:name)
-
-    @groups_to_reuse = reused_ids.filter_map do |rid|
-      original = Group.find_by(id: rid)
-      next unless original
-      copy = original.copies_with_labels(@labels).first
-      next unless copy
-      [ original, copy ]
-    end
+    # Root-level profiles (always newly created)
+    @root_profiles = @group.profiles
+                           .includes(avatar_attachment: :blob)
+                           .order(:name)
+                           .map { |p| { profile: p, action: "new" } }
   end
 
   # Execute the duplication

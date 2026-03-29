@@ -299,6 +299,31 @@ class Group < ApplicationRecord
     Profile.where(id: visible_profile_ids.to_a)
   end
 
+  # Build a preview tree for the duplication confirmation page.
+  # Shows the full tree annotated with whether each group/profile
+  # will be newly created or reused from an existing copy.
+  # Returns an array of nodes:
+  #   { group:, action: "new"|"reuse", directly_reused:, reuse_target:, profiles:, children: }
+  # Profiles carry:
+  #   { profile:, action: "new"|"reuse" }
+  def duplication_preview_tree(labels:, resolutions:)
+    all_ids = reachable_group_ids
+    groups_by_id = Group.where(id: all_ids)
+                        .includes(:profiles, avatar_attachment: :blob)
+                        .index_by(&:id)
+    children_map = build_children_map(all_ids)
+
+    reused_ids = resolutions.select { |_, v| v == "reuse" }.keys.map(&:to_i).to_set
+    expanded_reused_ids = Set.new(reused_ids)
+    reused_ids.each do |rid|
+      group = groups_by_id[rid]
+      next unless group
+      (group.descendant_group_ids - [ group.id ]).each { |did| expanded_reused_ids << did }
+    end
+
+    build_duplication_preview(id, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids)
+  end
+
   # Build a tree for the management UI. Shows ALL groups and profiles
   # (regardless of overrides), with hidden/cascade-hidden flags and path data
   # so the view can render checkboxes for toggling visibility.
@@ -385,6 +410,33 @@ class Group < ApplicationRecord
           profiles: tag_profiles(visible_profiles, seen_profile_ids),
           children: build_tree(g.id, child_path, children_map, groups_by_id, seen_profile_ids, overrides),
           path: child_path
+        }
+      end
+  end
+
+  # -- Duplication preview tree (duplication_preview_tree) ------------------
+
+  def build_duplication_preview(parent_id, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids)
+    (children_map[parent_id] || [])
+      .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
+      .sort_by { |g, _| g.name }
+      .map do |g, _entry|
+        is_reused = expanded_reused_ids.include?(g.id)
+        is_directly_reused = reused_ids.include?(g.id)
+        action = is_reused ? "reuse" : "new"
+        reuse_target = is_directly_reused ? g.copies_with_labels(labels).first : nil
+
+        profile_entries = g.profiles.map do |profile|
+          { profile: profile, action: action }
+        end
+
+        {
+          group: g,
+          action: action,
+          directly_reused: is_directly_reused,
+          reuse_target: reuse_target,
+          profiles: profile_entries,
+          children: build_duplication_preview(g.id, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids)
         }
       end
   end

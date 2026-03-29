@@ -1406,6 +1406,17 @@ details[open] > .tree-editor__summary::before {
   display: inline-block;
 }
 
+/* Duplication preview tags (new copy / existing copy) */
+.tree-editor__tag--new {
+  background-color: color-mix(in srgb, var(--primary-button-bg) 35%, transparent);
+  color: var(--text);
+}
+
+.tree-editor__tag--reuse {
+  background-color: color-mix(in srgb, var(--input-border) 25%, transparent);
+  color: var(--text);
+}
+
 /* ── Save indicator ──────────────────────────────────── */
 .tree-editor__save-indicator {
   font-size: 0.8rem;
@@ -1454,6 +1465,13 @@ details[open] > .tree-editor__summary::before {
   .tree-editor__tag--hidden {
     background-color: Canvas;
     border-color: CanvasText;
+    color: CanvasText;
+  }
+
+  .tree-editor__tag--new,
+  .tree-editor__tag--reuse {
+    background-color: Canvas;
+    border: 1px solid CanvasText;
     color: CanvasText;
   }
 

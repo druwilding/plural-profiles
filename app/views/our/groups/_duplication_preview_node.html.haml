@@ -1,0 +1,56 @@
+-# Recursive tree node for the duplication preview tree.
+-# Locals: node (hash from Group#duplication_preview_tree), new_labels
+- group = node[:group]
+- action = node[:action]
+- directly_reused = node[:directly_reused]
+- reuse_target = node[:reuse_target]
+- children = node[:children]
+- profiles = node[:profiles]
+- has_children = children.any? || profiles.any?
+
+- if has_children
+  %details.tree-editor__folder{open: true}
+    %summary.tree-editor__summary
+      .tree-editor__item-info
+        - if group.avatar.attached?
+          = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+        - else
+          %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+            = render "shared/plural_pride_logo"
+        %span.tree-editor__name= group.name
+        - if action == "new"
+          .label-badges
+            - new_labels.each do |label|
+              %span.label-badge= label
+          %span.tree-editor__tag.tree-editor__tag--new new copy
+        - else
+          - if directly_reused && reuse_target
+            .label-badges
+              - reuse_target.labels.each do |label|
+                %span.label-badge= label
+          %span.tree-editor__tag.tree-editor__tag--reuse existing copy
+    .tree-editor__children
+      - children.each do |child_node|
+        = render "our/groups/duplication_preview_node", node: child_node, new_labels: new_labels
+      - profiles.each do |entry|
+        = render "our/groups/duplication_preview_profile_node", entry: entry, new_labels: new_labels
+- else
+  .tree-editor__leaf
+    .tree-editor__item-info
+      - if group.avatar.attached?
+        = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+      - else
+        %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+          = render "shared/plural_pride_logo"
+      %span.tree-editor__name= group.name
+      - if action == "new"
+        .label-badges
+          - new_labels.each do |label|
+            %span.label-badge= label
+        %span.tree-editor__tag.tree-editor__tag--new new copy
+      - else
+        - if directly_reused && reuse_target
+          .label-badges
+            - reuse_target.labels.each do |label|
+              %span.label-badge= label
+        %span.tree-editor__tag.tree-editor__tag--reuse existing copy
