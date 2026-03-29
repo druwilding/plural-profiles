@@ -231,29 +231,7 @@ class Our::GroupsController < ApplicationController
       return
     end
 
-    phase = wizard["phase"] || "groups"
-
-    if phase == "groups"
-      index = wizard["current_conflict_index"]
-      @conflict = wizard["group_conflicts"][index]
-      @conflict_number = index + 1
-      @total_conflicts = wizard["group_conflicts"].length
-      @conflict_phase_label = "Group question"
-    else
-      index = wizard["current_profile_conflict_index"]
-      active = wizard["active_profile_conflicts"]
-      @conflict = active[index]
-      @conflict_number = index + 1
-      @total_conflicts = active.length
-      @conflict_phase_label = "Profile question"
-    end
-
-    klass = @conflict["original_type"].constantize
-    @original = klass.find(@conflict["original_id"])
-    @existing_copy = klass.find(@conflict["existing_copy_id"])
-    @labels = wizard["labels"]
-    @source = @group
-    @conflict_type = @conflict["original_type"]
+    load_conflict_view_vars(wizard)
   end
 
   # Process one conflict resolution and advance
@@ -261,6 +239,13 @@ class Our::GroupsController < ApplicationController
     wizard = session[:duplication_wizard]
     unless wizard && wizard["source_group_id"] == @group.id
       redirect_to duplicate_our_group_path(@group), alert: "Please start the duplication process again."
+      return
+    end
+
+    unless %w[reuse copy].include?(params[:resolution])
+      load_conflict_view_vars(wizard)
+      flash.now[:alert] = "Please select an option before continuing."
+      render :duplicate_resolve, status: :unprocessable_entity
       return
     end
 
@@ -441,6 +426,32 @@ class Our::GroupsController < ApplicationController
 
     session[:duplication_wizard] = wizard
     redirect_to duplicate_confirm_our_group_path(@group)
+  end
+
+  def load_conflict_view_vars(wizard)
+    phase = wizard["phase"] || "groups"
+
+    if phase == "groups"
+      index = wizard["current_conflict_index"]
+      @conflict = wizard["group_conflicts"][index]
+      @conflict_number = index + 1
+      @total_conflicts = wizard["group_conflicts"].length
+      @conflict_phase_label = "Group question"
+    else
+      index = wizard["current_profile_conflict_index"]
+      active = wizard["active_profile_conflicts"]
+      @conflict = active[index]
+      @conflict_number = index + 1
+      @total_conflicts = active.length
+      @conflict_phase_label = "Profile question"
+    end
+
+    klass = @conflict["original_type"].constantize
+    @original = klass.find(@conflict["original_id"])
+    @existing_copy = klass.find(@conflict["existing_copy_id"])
+    @labels = wizard["labels"]
+    @source = @group
+    @conflict_type = @conflict["original_type"]
   end
 
   def set_group

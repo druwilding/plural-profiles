@@ -909,6 +909,36 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match prism.name, response.body
   end
 
+  test "duplicate_resolve POST with missing resolution re-renders with alert" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Circle (blue)", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    # Submit without selecting a radio button
+    post duplicate_resolve_our_group_path(group), params: {}
+    assert_response :unprocessable_entity
+    assert_match "Please select an option before continuing.", response.body
+    assert_match "Group question 1", response.body
+  end
+
+  test "duplicate_resolve POST with tampered resolution re-renders with alert" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Circle (blue)", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    post duplicate_resolve_our_group_path(group), params: { resolution: "hacked" }
+    assert_response :unprocessable_entity
+    assert_match "Please select an option before continuing.", response.body
+  end
+
   test "duplicate_resolve POST with reuse skips descendant conflicts" do
     user = users(:three)
     sign_in_as user
