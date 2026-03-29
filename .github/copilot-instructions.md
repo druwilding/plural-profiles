@@ -44,7 +44,7 @@ Always consider `@media (forced-colors: active)` for accessibility when adding i
 ### Naming conventions
 - CSS: BEM-ish (e.g. `.card`, `.card__header`, `.card__actions`, `.btn`, `.btn--outline`, `.avatar--small`)
 - Routes: authenticated actions are namespaced under `our/` (e.g. `Our::ProfilesController`, `Our::GroupsController`)
-- Public controllers are at the root namespace (`ProfilesController`, `GroupsController`)
+- Shared-link controllers are at the root namespace (`ProfilesController`, `GroupsController`)
 - Models use singular names; join tables use both model names (`GroupGroup`, `GroupProfile`)
 
 ### Testing
@@ -95,15 +95,15 @@ Key methods in `Group`:
 - `overrides_index` — loads all `InclusionOverride` records for a root group into a Set of `[path, target_type, target_id]` tuples for O(1) lookups during traversal
 
 ### UUIDs
-All profiles and groups use `SecureRandom.uuid` (stored as `uuid` column) for public URLs. Internal IDs are standard Rails auto-increment integers used only in authenticated routes.
+All profiles and groups use `SecureRandom.uuid` (stored as `uuid` column) for shareable URLs. Internal IDs are standard Rails auto-increment integers used only in authenticated routes.
 
 ## File structure highlights
 
 ```
 app/controllers/our/   — authenticated (profiles, groups CRUD)
-app/controllers/       — public (profiles, groups, group_profiles show)
+app/controllers/       — shareable links (profiles, groups, group_profiles show)
 app/views/our/         — management views (HAML)
-app/views/             — public views (HAML)
+app/views/             — shareable-link views (HAML)
 app/models/            — User, Profile, Group, GroupGroup, GroupProfile
 app/assets/stylesheets/application.css — single CSS file, hand-written
 test/models/           — unit tests

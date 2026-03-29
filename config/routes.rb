@@ -48,7 +48,7 @@ Rails.application.routes.draw do
     end
   end
 
-  # Public shareable URLs (no auth required)
+  # Shareable UUID URLs (require authentication)
   resources :profiles, only: :show, param: :uuid
   resources :groups, only: :show, param: :uuid do
     member do
