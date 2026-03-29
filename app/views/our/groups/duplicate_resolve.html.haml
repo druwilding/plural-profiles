@@ -1,6 +1,6 @@
 - content_for(:title) { "Resolve conflict — Plural Profiles" }
 
-%h1 Conflict #{@conflict_number} of #{@total_conflicts}
+%h1 #{@conflict_phase_label} #{@conflict_number} of #{@total_conflicts}
 
 .card
   %p
@@ -19,6 +19,8 @@
               = image_tag @original.avatar.variant(resize_to_fill: [64, 64]), class: "avatar avatar--small", width: 64, height: 64, alt: @original.avatar_alt_text.presence || "", loading: "lazy"
             .name-with-labels
               %strong= @original.name
+              - if @conflict_type == "Profile" && @original.pronouns.present?
+                %span.pronouns= @original.pronouns
               - if @original.labels.any?
                 .label-badges
                   - @original.labels.each do |l|
@@ -38,6 +40,8 @@
               = image_tag @existing_copy.avatar.variant(resize_to_fill: [64, 64]), class: "avatar avatar--small", width: 64, height: 64, alt: @existing_copy.avatar_alt_text.presence || "", loading: "lazy"
             .name-with-labels
               %strong= @existing_copy.name
+              - if @conflict_type == "Profile" && @existing_copy.pronouns.present?
+                %span.pronouns= @existing_copy.pronouns
               - if @existing_copy.labels.any?
                 .label-badges
                   - @existing_copy.labels.each do |l|
@@ -47,7 +51,10 @@
         .radio-group
           = form.radio_button :resolution, "reuse", id: "resolution_reuse", data: { action: "duplicate-resolution#choose" }
           = form.label :resolution, "Use the existing copy", for: "resolution_reuse"
-          %p.form-hint The existing copy and all its contents will be linked into your new tree as-is.
+          - if @conflict_type == "Group"
+            %p.form-hint The existing copy and all its contents will be linked into your new tree as-is.
+          - else
+            %p.form-hint The existing copy will be used wherever this profile appears in the new tree.
 
     .profile-actions
       = form.submit "Next", class: "btn", data: { duplicate_resolution_target: "submit" }

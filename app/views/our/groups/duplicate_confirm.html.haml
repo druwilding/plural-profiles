@@ -9,7 +9,8 @@
     with label#{@labels.length > 1 ? "s" : ""}:
     - @labels.each do |label|
       %span.label-badge= label
-  - if @resolutions.any? { |_, v| v == "reuse" }
+  - has_reuse = @resolutions.any? { |_, v| v == "reuse" } || (@profile_resolutions || {}).any? { |_, v| v == "reuse" }
+  - if has_reuse
     %p
       Items marked
       %span.tree-editor__tag.tree-editor__tag--reuse existing copy

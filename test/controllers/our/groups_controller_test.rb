@@ -905,7 +905,7 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_response :success
-    assert_match "Conflict 1", response.body
+    assert_match "Group Conflict 1", response.body
     assert_match prism.name, response.body
   end
 
@@ -1059,6 +1059,138 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     group = groups(:echo_shard)
     get duplicate_our_group_path(group)
     assert_redirected_to new_session_path
+  end
+
+  # -- Profile conflict resolution --
+
+  test "duplicate_scan with profile conflicts redirects to resolve" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    assert_redirected_to duplicate_resolve_our_group_path(group)
+  end
+
+  test "duplicate_scan with only profile conflicts goes to profile phase" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Profile Conflict 1", response.body
+    assert_match stray.name, response.body
+  end
+
+  test "duplicate_resolve shows profile conflict with pronouns" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    stray.update!(pronouns: "they/them")
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "they/them", response.body
+  end
+
+  test "duplicate_resolve_post with profile reuse advances to confirm" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Should be on profile conflict phase
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    assert_redirected_to duplicate_confirm_our_group_path(group)
+  end
+
+  test "duplicate_scan with both group and profile conflicts resolves groups first" do
+    user = users(:three)
+    sign_in_as user
+    rogue = groups(:rogue_pack)
+    stray = profiles(:stray)
+    user.groups.create!(name: "Rogue Copy", copied_from: rogue, labels: [ "blue" ])
+    user.profiles.create!(name: "Stray Copy", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Group Conflict 1", response.body
+    assert_match rogue.name, response.body
+  end
+
+  test "duplicate group conflict reuse auto-resolves profile conflicts in reused subtree" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    stray = profiles(:stray)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+    user.profiles.create!(name: "Stray Copy", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    # Resolve prism as reuse — Stray is in prism_circle and rogue_pack which are both
+    # in the reused subtree, but also in echo_shard? No — Stray is not directly in echo_shard.
+    # Stray is in prism_circle and rogue_pack, both descendants of prism, so all reused.
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    # Should go to confirm (profile conflict auto-resolved)
+    assert_redirected_to duplicate_confirm_our_group_path(group)
+  end
+
+  test "duplicate_execute with profile reuse reuses the existing profile copy" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    stray_copy = user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve stray as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+
+    initial_profile_count = Profile.count
+    post duplicate_execute_our_group_path(group)
+
+    # Stray was reused, Mirage and Ember were freshly copied = 2 new profiles
+    assert_equal initial_profile_count + 2, Profile.count
+
+    # The reused stray copy should still be the only one
+    stray_copies = Profile.where(copied_from: stray).where("labels @> ?", [ "blue" ].to_json)
+    assert_equal 1, stray_copies.count
+    assert_equal stray_copy.id, stray_copies.first.id
+  end
+
+  test "duplicate_confirm shows reuse legend when profile resolutions include reuse" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray Copy", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve stray profile as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    follow_redirect!
+    assert_response :success
+
+    assert_match "existing copy", response.body
+    assert_match "will be linked into the new tree", response.body
   end
 
   private

@@ -31,17 +31,46 @@ class Group < ApplicationRecord
   end
 
   # Scans the descendant tree depth-first and returns an array of conflict
-  # hashes for sub-groups that already have copies with ALL of the given labels.
-  # The root group itself is not checked (it's the source being duplicated).
+  # hashes for sub-groups and profiles that already have copies with ALL of
+  # the given labels.
+  # The root group itself is not checked (it's the source being duplicated),
+  # but its profiles are checked.
+  # Group conflicts come first (depth-first order), then profile conflicts.
+  # Profile conflicts include container_group_ids so the wizard can determine
+  # which profile conflicts are still relevant after group resolutions.
   def scan_for_conflicts(labels)
     conflicts = []
     all_ids = reachable_group_ids - [ id ]
-    return conflicts if all_ids.empty?
 
-    children_map = build_children_map([ id ] + all_ids)
-    groups_by_id = Group.where(id: all_ids).index_by(&:id)
+    if all_ids.any?
+      children_map = build_children_map([ id ] + all_ids)
+      groups_by_id = Group.where(id: all_ids).index_by(&:id)
+      walk_tree_for_conflicts(id, children_map, groups_by_id, labels, conflicts)
+    end
 
-    walk_tree_for_conflicts(id, children_map, groups_by_id, labels, conflicts)
+    # Profile conflicts: check all profiles in the full tree (including root)
+    all_tree_ids = [ id ] + all_ids
+    profile_group_pairs = GroupProfile.where(group_id: all_tree_ids).pluck(:profile_id, :group_id)
+    profile_container_map = profile_group_pairs.group_by(&:first)
+                                               .transform_values { |pairs| pairs.map(&:last) }
+
+    if profile_container_map.any?
+      Profile.where(id: profile_container_map.keys, user_id: user_id).order(:name).each do |profile|
+        existing = profile.copies_with_labels(labels).first
+        next unless existing
+
+        conflicts << {
+          original_id: profile.id,
+          original_type: "Profile",
+          name: profile.name,
+          existing_copy_id: existing.id,
+          existing_copy_name: existing.name,
+          existing_copy_labels: existing.labels,
+          container_group_ids: profile_container_map[profile.id]
+        }
+      end
+    end
+
     conflicts
   end
 
@@ -51,21 +80,26 @@ class Group < ApplicationRecord
   #   - "reuse": link the existing copy into the new tree instead of copying
   #   - "copy" (or absent): create a fresh copy
   #
+  # profile_resolutions: a Hash of { original_profile_id (string) => "reuse" | "copy" }
+  #   - "reuse": link the existing copy instead of creating a new one
+  #   - "copy" (or absent): create a fresh copy
+  #
   # For reused groups:
   #   - Their profiles and overrides are left as-is
   #   - They are linked as children in the new tree structure
   #
   # For freshly copied groups:
   #   - New UUID, new labels, avatar copied
-  #   - All profiles inside are freshly copied
+  #   - All profiles inside are freshly copied (unless individually reused)
   #   - Inclusion overrides are recreated with remapped paths
   #   - copied_from_id is set to the original's ID
   #
   # Everything happens in a single transaction.
-  def deep_duplicate(new_labels: [], resolutions: {})
+  def deep_duplicate(new_labels: [], resolutions: {}, profile_resolutions: {})
     group_map = {}   # old_id => new_or_reused_group
     profile_map = {} # old_id => new_or_reused_profile
     reused_group_ids = Set.new
+    reused_profile_ids = Set.new
     skip_ids = Set.new
 
     all_ids = reachable_group_ids
@@ -89,6 +123,15 @@ class Group < ApplicationRecord
                               .includes(avatar_attachment: :blob)
 
     profiles_to_copy.each do |original_profile|
+      if profile_resolutions[original_profile.id.to_s] == "reuse"
+        existing_copy = original_profile.copies_with_labels(new_labels).first
+        if existing_copy
+          profile_map[original_profile.id] = existing_copy
+          reused_profile_ids << original_profile.id
+          next
+        end
+      end
+
       new_profile = original_profile.dup
       new_profile.uuid = PluralProfilesUuid.generate
       new_profile.labels = new_labels
@@ -104,8 +147,10 @@ class Group < ApplicationRecord
         group.save! if group.new_record?
       end
 
-      # Save new profiles
-      profile_map.each_value(&:save!)
+      # Save new profiles (skip reused — they already exist)
+      profile_map.each do |old_id, profile|
+        profile.save! unless reused_profile_ids.include?(old_id)
+      end
 
       # Copy avatars for new groups
       group_map.each do |old_id, new_group|
@@ -114,8 +159,9 @@ class Group < ApplicationRecord
         duplicate_avatar(original, new_group) if original&.avatar&.attached?
       end
 
-      # Copy avatars for new profiles
+      # Copy avatars for new profiles (skip reused)
       profile_map.each do |old_id, new_profile|
+        next if reused_profile_ids.include?(old_id)
         original = profiles_to_copy.find { |p| p.id == old_id }
         duplicate_avatar(original, new_profile) if original&.avatar&.attached?
       end
@@ -307,7 +353,7 @@ class Group < ApplicationRecord
   #   { group:, action:, directly_reused:, reuse_target:, hidden:, cascade_hidden:, profiles:, children: }
   # Profiles carry:
   #   { profile:, action:, hidden:, cascade_hidden: }
-  def duplication_preview_tree(labels:, resolutions:)
+  def duplication_preview_tree(labels:, resolutions:, profile_resolutions: {})
     all_ids = reachable_group_ids
     groups_by_id = Group.where(id: all_ids)
                         .includes(:profiles, avatar_attachment: :blob)
@@ -323,7 +369,7 @@ class Group < ApplicationRecord
       (group.descendant_group_ids - [ group.id ]).each { |did| expanded_reused_ids << did }
     end
 
-    build_duplication_preview(id, [], children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, false)
+    build_duplication_preview(id, [], children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, false, profile_resolutions)
   end
 
   # Build a tree for the management UI. Shows ALL groups and profiles
@@ -418,7 +464,7 @@ class Group < ApplicationRecord
 
   # -- Duplication preview tree (duplication_preview_tree) ------------------
 
-  def build_duplication_preview(parent_id, current_path, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, ancestor_hidden)
+  def build_duplication_preview(parent_id, current_path, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, ancestor_hidden, profile_resolutions = {})
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
       .sort_by { |g, _| g.name_and_label_sort_key }
@@ -432,9 +478,25 @@ class Group < ApplicationRecord
         child_path = current_path + [ g.id ]
 
         profile_entries = g.profiles.map do |profile|
+          if is_reused
+            profile_action = "reuse"
+            directly_reused_profile = false
+            reuse_target_profile = nil
+          elsif profile_resolutions[profile.id.to_s] == "reuse"
+            profile_action = "reuse"
+            directly_reused_profile = true
+            reuse_target_profile = profile.copies_with_labels(labels).first
+          else
+            profile_action = "new"
+            directly_reused_profile = false
+            reuse_target_profile = nil
+          end
+
           {
             profile: profile,
-            action: action,
+            action: profile_action,
+            directly_reused: directly_reused_profile,
+            reuse_target: reuse_target_profile,
             hidden: overrides.include?([ child_path, "Profile", profile.id ]),
             cascade_hidden: effectively_hidden
           }
@@ -448,7 +510,7 @@ class Group < ApplicationRecord
           hidden: hidden,
           cascade_hidden: ancestor_hidden,
           profiles: profile_entries,
-          children: build_duplication_preview(g.id, child_path, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, effectively_hidden)
+          children: build_duplication_preview(g.id, child_path, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, effectively_hidden, profile_resolutions)
         }
       end
   end

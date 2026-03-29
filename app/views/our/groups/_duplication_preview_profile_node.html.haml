@@ -1,10 +1,13 @@
 -# Profile leaf node for the duplication preview tree.
--# Locals: entry (hash with :profile, :action, :hidden, :cascade_hidden), new_labels
+-# Locals: entry (hash with :profile, :action, :hidden, :cascade_hidden,
+-#         optionally :directly_reused, :reuse_target), new_labels
 - profile = entry[:profile]
 - action = entry[:action]
 - hidden = entry[:hidden]
 - cascade_hidden = entry[:cascade_hidden]
 - effectively_hidden = hidden || cascade_hidden
+- directly_reused = entry[:directly_reused]
+- reuse_target = entry[:reuse_target]
 
 .tree-editor__leaf.tree-editor__leaf--profile{class: ("tree-editor__node--hidden" if effectively_hidden)}
   .tree-editor__item-info
@@ -19,7 +22,11 @@
         - new_labels.each do |label|
           %span.label-badge= label
     - else
-      - if profile.labels.any?
+      - if directly_reused && reuse_target
+        .label-badges
+          - reuse_target.labels.each do |label|
+            %span.label-badge= label
+      - elsif profile.labels.any?
         .label-badges
           - profile.labels.each do |label|
             %span.label-badge= label

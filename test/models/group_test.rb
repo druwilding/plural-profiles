@@ -634,7 +634,118 @@ class GroupTest < ActiveSupport::TestCase
 
     echo = groups(:echo_shard)
     conflicts = echo.scan_for_conflicts([ "blue" ])
-    assert_empty conflicts
+    # Only group conflicts — no profile conflicts either
+    group_conflicts = conflicts.select { |c| c[:original_type] == "Group" }
+    assert_empty group_conflicts
+  end
+
+  # -- scan_for_conflicts: profile conflicts --
+
+  test "scan_for_conflicts returns profile conflicts when profiles have matching labeled copies" do
+    user = users(:three)
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    prism = groups(:prism_circle)
+    conflicts = prism.scan_for_conflicts([ "green" ])
+
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+    assert_equal 1, profile_conflicts.length
+    assert_equal stray.id, profile_conflicts.first[:original_id]
+    assert_equal "Stray (green)", profile_conflicts.first[:existing_copy_name]
+  end
+
+  test "scan_for_conflicts includes container_group_ids for profile conflicts" do
+    user = users(:three)
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    # Stray is in both prism_circle and rogue_pack
+    prism = groups(:prism_circle)
+    conflicts = prism.scan_for_conflicts([ "green" ])
+
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+    stray_conflict = profile_conflicts.find { |c| c[:original_id] == stray.id }
+    assert_not_nil stray_conflict
+    assert_includes stray_conflict[:container_group_ids], groups(:prism_circle).id
+    assert_includes stray_conflict[:container_group_ids], groups(:rogue_pack).id
+  end
+
+  test "scan_for_conflicts returns both group and profile conflicts" do
+    user = users(:three)
+    rogue = groups(:rogue_pack)
+    stray = profiles(:stray)
+
+    user.groups.create!(name: "Rogue Pack (green)", copied_from: rogue, labels: [ "green" ])
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    prism = groups(:prism_circle)
+    conflicts = prism.scan_for_conflicts([ "green" ])
+
+    group_conflicts = conflicts.select { |c| c[:original_type] == "Group" }
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+
+    assert_equal 1, group_conflicts.length
+    assert_equal rogue.id, group_conflicts.first[:original_id]
+
+    assert profile_conflicts.any? { |c| c[:original_id] == stray.id }
+  end
+
+  test "scan_for_conflicts group conflicts come before profile conflicts" do
+    user = users(:three)
+    rogue = groups(:rogue_pack)
+    stray = profiles(:stray)
+
+    user.groups.create!(name: "Rogue Pack (green)", copied_from: rogue, labels: [ "green" ])
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    prism = groups(:prism_circle)
+    conflicts = prism.scan_for_conflicts([ "green" ])
+
+    group_index = conflicts.index { |c| c[:original_type] == "Group" }
+    profile_index = conflicts.index { |c| c[:original_type] == "Profile" }
+    assert group_index < profile_index, "Group conflicts should come before profile conflicts"
+  end
+
+  test "scan_for_conflicts deduplicates profile conflicts across groups" do
+    user = users(:three)
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    # Stray is in both prism_circle and rogue_pack within echo_shard's tree
+    echo = groups(:echo_shard)
+    conflicts = echo.scan_for_conflicts([ "green" ])
+
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+    stray_conflicts = profile_conflicts.select { |c| c[:original_id] == stray.id }
+    assert_equal 1, stray_conflicts.length, "Stray should only appear once in profile conflicts"
+  end
+
+  test "scan_for_conflicts includes root group profiles in profile conflicts" do
+    user = users(:three)
+    mirage = profiles(:mirage)
+    user.profiles.create!(name: "Mirage (green)", copied_from: mirage, labels: [ "green" ])
+
+    # Mirage is directly in echo_shard (the root group for this duplication)
+    echo = groups(:echo_shard)
+    conflicts = echo.scan_for_conflicts([ "green" ])
+
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+    assert profile_conflicts.any? { |c| c[:original_id] == mirage.id },
+           "Root group profile Mirage should be detected as a conflict"
+  end
+
+  test "scan_for_conflicts does not flag profiles without matching copies" do
+    user = users(:three)
+    stray = profiles(:stray)
+    # Copy with different label
+    user.profiles.create!(name: "Stray (red)", copied_from: stray, labels: [ "red" ])
+
+    prism = groups(:prism_circle)
+    conflicts = prism.scan_for_conflicts([ "green" ])
+
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+    assert_empty profile_conflicts
   end
 
   # -- deep_duplicate (Phase 6) --
@@ -788,6 +899,84 @@ class GroupTest < ActiveSupport::TestCase
            "Inclusion overrides should be recreated for freshly copied groups"
   end
 
+  # -- deep_duplicate with profile_resolutions --
+
+  test "deep_duplicate with profile reuse resolution links existing profile copy" do
+    user = users(:three)
+    stray = profiles(:stray)
+    stray_copy = user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    prism = groups(:prism_circle)
+    profile_resolutions = { stray.id.to_s => "reuse" }
+
+    initial_profile_count = Profile.count
+    new_root = prism.deep_duplicate(new_labels: [ "green" ], profile_resolutions: profile_resolutions)
+
+    # Stray should be reused, not copied again
+    stray_copies = Profile.where(copied_from: stray).where("labels @> ?", [ "green" ].to_json)
+    assert_equal 1, stray_copies.count, "Stray should not have been duplicated again"
+    assert_equal stray_copy.id, stray_copies.first.id
+
+    # But other profiles (Ember) should be freshly copied
+    ember_copies = Profile.where(copied_from: profiles(:ember)).where("labels @> ?", [ "green" ].to_json)
+    assert_equal 1, ember_copies.count, "Ember should have been freshly copied"
+  end
+
+  test "deep_duplicate with profile reuse links the reused profile in group_profiles" do
+    user = users(:three)
+    stray = profiles(:stray)
+    stray_copy = user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    prism = groups(:prism_circle)
+    profile_resolutions = { stray.id.to_s => "reuse" }
+
+    new_root = prism.deep_duplicate(new_labels: [ "green" ], profile_resolutions: profile_resolutions)
+
+    # The reused stray copy should appear as a profile in the new prism copy
+    assert_includes new_root.profile_ids, stray_copy.id,
+                    "Reused Stray copy should be linked to the new Prism Circle copy"
+  end
+
+  test "deep_duplicate with profile copy resolution creates a fresh copy" do
+    user = users(:three)
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    prism = groups(:prism_circle)
+    profile_resolutions = { stray.id.to_s => "copy" }
+
+    new_root = prism.deep_duplicate(new_labels: [ "green" ], profile_resolutions: profile_resolutions)
+
+    # Stray should have been copied (creating a second copy)
+    stray_copies = Profile.where(copied_from: stray).where("labels @> ?", [ "green" ].to_json)
+    assert_equal 2, stray_copies.count, "A new copy of Stray should have been created"
+
+    # The new copy should be in the new prism group
+    new_stray = new_root.profiles.find { |p| p.copied_from == stray }
+    assert_not_nil new_stray
+  end
+
+  test "deep_duplicate reused profile appears in all fresh groups that contain it" do
+    user = users(:three)
+    stray = profiles(:stray)
+    stray_copy = user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    # Echo Shard -> Prism Circle -> Rogue Pack
+    # Stray is in both prism_circle and rogue_pack
+    echo = groups(:echo_shard)
+    profile_resolutions = { stray.id.to_s => "reuse" }
+
+    new_root = echo.deep_duplicate(new_labels: [ "green" ], profile_resolutions: profile_resolutions)
+
+    # Find the new prism and rogue copies
+    prism_copy = new_root.child_groups.find { |g| g.copied_from == groups(:prism_circle) }
+    rogue_copy = prism_copy.child_groups.find { |g| g.copied_from == groups(:rogue_pack) }
+
+    # The reused stray copy should be in both
+    assert_includes prism_copy.profile_ids, stray_copy.id
+    assert_includes rogue_copy.profile_ids, stray_copy.id
+  end
+
   # -- duplication_preview_tree --
 
   test "duplication_preview_tree returns all child groups with action new when no resolutions" do
@@ -920,5 +1109,55 @@ class GroupTest < ActiveSupport::TestCase
     prism_node = tree.find { |n| n[:group] == groups(:prism_circle) }
     child_names = prism_node[:children].map { |n| n[:group].name }
     assert_includes child_names, "Rogue Pack"
+  end
+
+  # -- duplication_preview_tree with profile_resolutions --
+
+  test "duplication_preview_tree marks profiles as reused when profile_resolutions say reuse" do
+    user = users(:three)
+    stray = profiles(:stray)
+    stray_copy = user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    echo = groups(:echo_shard)
+    profile_resolutions = { stray.id.to_s => "reuse" }
+    tree = echo.duplication_preview_tree(labels: [ "green" ], resolutions: {}, profile_resolutions: profile_resolutions)
+
+    prism_node = tree.find { |n| n[:group] == groups(:prism_circle) }
+    stray_entry = prism_node[:profiles].find { |e| e[:profile] == stray }
+    assert_not_nil stray_entry
+    assert_equal "reuse", stray_entry[:action]
+    assert stray_entry[:directly_reused]
+    assert_equal stray_copy, stray_entry[:reuse_target]
+  end
+
+  test "duplication_preview_tree profiles without resolution are marked new" do
+    echo = groups(:echo_shard)
+    tree = echo.duplication_preview_tree(labels: [ "green" ], resolutions: {}, profile_resolutions: {})
+
+    prism_node = tree.find { |n| n[:group] == groups(:prism_circle) }
+    prism_node[:profiles].each do |entry|
+      assert_equal "new", entry[:action]
+      assert_not entry[:directly_reused]
+      assert_nil entry[:reuse_target]
+    end
+  end
+
+  test "duplication_preview_tree profiles in reused groups stay reuse regardless of profile_resolutions" do
+    user = users(:three)
+    prism = groups(:prism_circle)
+    stray = profiles(:stray)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "green" ])
+    user.profiles.create!(name: "Stray (green)", copied_from: stray, labels: [ "green" ])
+
+    echo = groups(:echo_shard)
+    resolutions = { prism.id.to_s => "reuse" }
+    profile_resolutions = { stray.id.to_s => "copy" }
+    tree = echo.duplication_preview_tree(labels: [ "green" ], resolutions: resolutions, profile_resolutions: profile_resolutions)
+
+    prism_node = tree.find { |n| n[:group] == prism }
+    # Profile in reused group should still be "reuse" (parent group action takes precedence)
+    prism_node[:profiles].each do |entry|
+      assert_equal "reuse", entry[:action], "Profile #{entry[:profile].name} in reused group should be reuse"
+    end
   end
 end

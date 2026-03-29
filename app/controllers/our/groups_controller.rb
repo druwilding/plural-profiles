@@ -202,22 +202,28 @@ class Our::GroupsController < ApplicationController
 
     conflicts = @group.scan_for_conflicts(labels)
 
+    group_conflicts = conflicts.select { |c| c[:original_type] == "Group" }
+    profile_conflicts = conflicts.select { |c| c[:original_type] == "Profile" }
+
     session[:duplication_wizard] = {
       "source_group_id" => @group.id,
       "labels" => labels,
-      "conflicts" => conflicts.map { |c| c.transform_keys(&:to_s) },
+      "group_conflicts" => group_conflicts.map { |c| c.transform_keys(&:to_s) },
+      "profile_conflicts" => profile_conflicts.map { |c| c.transform_keys(&:to_s) },
       "resolutions" => {},
-      "current_conflict_index" => 0
+      "profile_resolutions" => {},
+      "current_conflict_index" => 0,
+      "phase" => "groups"
     }
 
-    if conflicts.empty?
-      redirect_to duplicate_confirm_our_group_path(@group)
-    else
+    if group_conflicts.any?
       redirect_to duplicate_resolve_our_group_path(@group)
+    else
+      advance_to_profile_conflicts_or_confirm(session[:duplication_wizard])
     end
   end
 
-  # Step 2: Show one conflict at a time
+  # Step 2: Show one conflict at a time (group or profile)
   def duplicate_resolve
     wizard = session[:duplication_wizard]
     unless wizard && wizard["source_group_id"] == @group.id
@@ -225,14 +231,29 @@ class Our::GroupsController < ApplicationController
       return
     end
 
-    index = wizard["current_conflict_index"]
-    @conflict = wizard["conflicts"][index]
-    @conflict_number = index + 1
-    @total_conflicts = wizard["conflicts"].length
-    @original = Group.find(@conflict["original_id"])
-    @existing_copy = Group.find(@conflict["existing_copy_id"])
+    phase = wizard["phase"] || "groups"
+
+    if phase == "groups"
+      index = wizard["current_conflict_index"]
+      @conflict = wizard["group_conflicts"][index]
+      @conflict_number = index + 1
+      @total_conflicts = wizard["group_conflicts"].length
+      @conflict_phase_label = "Group Conflict"
+    else
+      index = wizard["current_profile_conflict_index"]
+      active = wizard["active_profile_conflicts"]
+      @conflict = active[index]
+      @conflict_number = index + 1
+      @total_conflicts = active.length
+      @conflict_phase_label = "Profile Conflict"
+    end
+
+    klass = @conflict["original_type"].constantize
+    @original = klass.find(@conflict["original_id"])
+    @existing_copy = klass.find(@conflict["existing_copy_id"])
     @labels = wizard["labels"]
     @source = @group
+    @conflict_type = @conflict["original_type"]
   end
 
   # Process one conflict resolution and advance
@@ -243,37 +264,12 @@ class Our::GroupsController < ApplicationController
       return
     end
 
-    index = wizard["current_conflict_index"]
-    conflict = wizard["conflicts"][index]
+    phase = wizard["phase"] || "groups"
 
-    # Record the user's choice
-    wizard["resolutions"][conflict["original_id"].to_s] = params[:resolution]
-
-    # If user chose "reuse", skip conflicts for descendants of this group
-    if params[:resolution] == "reuse"
-      reused_group = Group.find(conflict["original_id"])
-      descendant_ids = (reused_group.descendant_group_ids - [ reused_group.id ]).map(&:to_s).to_set
-      # Mark descendant conflicts as implicitly resolved
-      wizard["conflicts"].each_with_index do |c, i|
-        next if i <= index
-        if descendant_ids.include?(c["original_id"].to_s)
-          wizard["resolutions"][c["original_id"].to_s] = "reuse"
-        end
-      end
-    end
-
-    # Find next unresolved conflict
-    next_index = ((index + 1)...wizard["conflicts"].length).find do |i|
-      !wizard["resolutions"].key?(wizard["conflicts"][i]["original_id"].to_s)
-    end
-
-    if next_index
-      wizard["current_conflict_index"] = next_index
-      session[:duplication_wizard] = wizard
-      redirect_to duplicate_resolve_our_group_path(@group)
+    if phase == "groups"
+      resolve_group_conflict(wizard)
     else
-      session[:duplication_wizard] = wizard
-      redirect_to duplicate_confirm_our_group_path(@group)
+      resolve_profile_conflict(wizard)
     end
   end
 
@@ -287,23 +283,40 @@ class Our::GroupsController < ApplicationController
 
     @labels = wizard["labels"]
     @resolutions = wizard["resolutions"]
+    @profile_resolutions = wizard["profile_resolutions"] || {}
     @source = @group
 
     # Build the full preview tree with new/reuse annotations
-    @preview_tree = @group.duplication_preview_tree(labels: @labels, resolutions: @resolutions)
+    @preview_tree = @group.duplication_preview_tree(
+      labels: @labels, resolutions: @resolutions, profile_resolutions: @profile_resolutions
+    )
 
-    # Root-level profiles (always newly created), with hidden flags from overrides
+    # Root-level profiles, with hidden flags from overrides
     overrides = @group.send(:overrides_index)
     @root_profiles = @group.profiles
                            .includes(avatar_attachment: :blob)
                            .order(:name)
                            .map do |p|
-                             {
-                               profile: p,
-                               action: "new",
-                               hidden: overrides.include?([ [], "Profile", p.id ]),
-                               cascade_hidden: false
-                             }
+                             if @profile_resolutions[p.id.to_s] == "reuse"
+                               reuse_target = p.copies_with_labels(@labels).first
+                               {
+                                 profile: p,
+                                 action: "reuse",
+                                 directly_reused: true,
+                                 reuse_target: reuse_target,
+                                 hidden: overrides.include?([ [], "Profile", p.id ]),
+                                 cascade_hidden: false
+                               }
+                             else
+                               {
+                                 profile: p,
+                                 action: "new",
+                                 directly_reused: false,
+                                 reuse_target: nil,
+                                 hidden: overrides.include?([ [], "Profile", p.id ]),
+                                 cascade_hidden: false
+                               }
+                             end
                            end
   end
 
@@ -317,8 +330,11 @@ class Our::GroupsController < ApplicationController
 
     labels = wizard["labels"]
     resolutions = wizard["resolutions"]
+    profile_resolutions = wizard["profile_resolutions"] || {}
 
-    new_group = @group.deep_duplicate(new_labels: labels, resolutions: resolutions)
+    new_group = @group.deep_duplicate(
+      new_labels: labels, resolutions: resolutions, profile_resolutions: profile_resolutions
+    )
     session.delete(:duplication_wizard)
     redirect_to our_group_path(new_group), notice: "Group duplicated with all sub-groups and profiles."
   end
@@ -327,6 +343,104 @@ class Our::GroupsController < ApplicationController
 
   def group_management_path
     manage_groups_our_group_path(@group)
+  end
+
+  # -- Duplication wizard helpers ------------------------------------------
+
+  def resolve_group_conflict(wizard)
+    index = wizard["current_conflict_index"]
+    conflict = wizard["group_conflicts"][index]
+
+    # Record the user's choice
+    wizard["resolutions"][conflict["original_id"].to_s] = params[:resolution]
+
+    # If user chose "reuse", skip conflicts for descendants of this group
+    if params[:resolution] == "reuse"
+      reused_group = Group.find(conflict["original_id"])
+      descendant_ids = (reused_group.descendant_group_ids - [ reused_group.id ]).map(&:to_s).to_set
+      # Mark descendant conflicts as implicitly resolved
+      wizard["group_conflicts"].each_with_index do |c, i|
+        next if i <= index
+        if descendant_ids.include?(c["original_id"].to_s)
+          wizard["resolutions"][c["original_id"].to_s] = "reuse"
+        end
+      end
+    end
+
+    # Find next unresolved group conflict
+    next_index = ((index + 1)...wizard["group_conflicts"].length).find do |i|
+      !wizard["resolutions"].key?(wizard["group_conflicts"][i]["original_id"].to_s)
+    end
+
+    if next_index
+      wizard["current_conflict_index"] = next_index
+      session[:duplication_wizard] = wizard
+      redirect_to duplicate_resolve_our_group_path(@group)
+    else
+      # All group conflicts resolved — advance to profile conflicts or confirm
+      session[:duplication_wizard] = wizard
+      advance_to_profile_conflicts_or_confirm(wizard)
+    end
+  end
+
+  def resolve_profile_conflict(wizard)
+    index = wizard["current_profile_conflict_index"]
+    active = wizard["active_profile_conflicts"]
+    conflict = active[index]
+
+    # Record the user's choice
+    wizard["profile_resolutions"][conflict["original_id"].to_s] = params[:resolution]
+
+    # Find next profile conflict
+    next_index = index + 1
+    if next_index < active.length
+      wizard["current_profile_conflict_index"] = next_index
+      session[:duplication_wizard] = wizard
+      redirect_to duplicate_resolve_our_group_path(@group)
+    else
+      session[:duplication_wizard] = wizard
+      redirect_to duplicate_confirm_our_group_path(@group)
+    end
+  end
+
+  # After all group conflicts are resolved, compute which profile conflicts
+  # are still relevant (the profile appears in at least one freshly-copied group)
+  # and either start the profile conflict phase or go to confirm.
+  def advance_to_profile_conflicts_or_confirm(wizard)
+    profile_conflicts = wizard["profile_conflicts"] || []
+
+    if profile_conflicts.any?
+      # Compute all reused + skipped group IDs
+      reused_gids = Set.new
+      wizard["resolutions"].each do |id_str, res|
+        next unless res == "reuse"
+        gid = id_str.to_i
+        reused_gids << gid
+        group = Group.find_by(id: gid)
+        if group
+          (group.descendant_group_ids - [ group.id ]).each { |did| reused_gids << did }
+        end
+      end
+
+      # A profile conflict is relevant if the profile appears in at least one
+      # group that is NOT reused/skipped (root group is always fresh)
+      relevant = profile_conflicts.select do |pc|
+        container_ids = (pc["container_group_ids"] || []).map(&:to_i)
+        container_ids.any? { |gid| !reused_gids.include?(gid) }
+      end
+
+      if relevant.any?
+        wizard["phase"] = "profiles"
+        wizard["active_profile_conflicts"] = relevant
+        wizard["current_profile_conflict_index"] = 0
+        session[:duplication_wizard] = wizard
+        redirect_to duplicate_resolve_our_group_path(@group)
+        return
+      end
+    end
+
+    session[:duplication_wizard] = wizard
+    redirect_to duplicate_confirm_our_group_path(@group)
   end
 
   def set_group
