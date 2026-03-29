@@ -2530,6 +2530,24 @@ input[type="submit"].btn--small,
 
 @media (forced-colors: active) {
   .duplication-progress__bar {
-    forced-color-adjust: auto;
+    forced-color-adjust: none;
+    background: Canvas;
+    border: 1px solid CanvasText;
+    color: CanvasText; /* Firefox fill colour */
+  }
+
+  .duplication-progress__bar::-webkit-progress-bar {
+    background: Canvas;
+    border-radius: 999px;
+  }
+
+  .duplication-progress__bar::-webkit-progress-value {
+    background: CanvasText;
+    border-radius: 999px;
+  }
+
+  .duplication-progress__bar::-moz-progress-bar {
+    background: CanvasText;
+    border-radius: 999px;
   }
 }
