@@ -41,7 +41,7 @@ A web app for pluralfolk to create and share multiple profiles. Each account can
 - **Account name** — optional username (2–30 chars, lowercase letters/numbers/underscores/hyphens) displayed on the account page
 - **Account deactivation** — admin-only action that deactivates an account and terminates all its sessions
 - **Email change** — change email with verification sent to the new address plus notification to the old one; pending changes can be cancelled
-- **Invite-only registration** — new accounts require an invite code. Signed-in users can generate up to 10 unused invite codes from their account page to share with people they trust. Each code is single-use and is marked as redeemed when the new account is created
+- **Invite-only registration** — new accounts require an invite code. Signed-in users can generate up to 10 unused invite codes by default (configurable via the `MAX_INVITE_CODES_PER_USER` environment variable) from their account page to share with people they trust. Each code is single-use and is marked as redeemed when the new account is created
 
 ## Tech stack
 
