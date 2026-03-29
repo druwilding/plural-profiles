@@ -935,6 +935,101 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match group.name, response.body
   end
 
+  test "duplicate_confirm shows tree with group and profile names" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # Root group should appear
+    assert_match group.name, response.body
+    # Child groups should appear in the tree
+    assert_match groups(:prism_circle).name, response.body
+    assert_match groups(:rogue_pack).name, response.body
+    # Profiles should appear
+    assert_match profiles(:mirage).name, response.body
+    assert_match profiles(:ember).name, response.body
+    assert_match profiles(:stray).name, response.body
+  end
+
+  test "duplicate_confirm shows new labels on tree items" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # The label "blue" should appear multiple times (root + tree items)
+    assert response.body.scan("blue").length > 1, "Label 'blue' should appear on tree items"
+  end
+
+  test "duplicate_confirm does not show reuse legend when no resolutions use reuse" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    assert_no_match "existing copy", response.body
+    assert_no_match "will be linked into the new tree", response.body
+  end
+
+  test "duplicate_confirm shows reuse legend and tags when resolutions include reuse" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve prism as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    follow_redirect!
+    assert_response :success
+
+    assert_match "existing copy", response.body
+    assert_match "will be linked into the new tree", response.body
+  end
+
+  test "duplicate_confirm shows hidden tag for items with inclusion overrides" do
+    sign_in_as users(:three)
+    # Castle Clan has overrides: static_burst hidden, drift hidden, ripple hidden
+    group = groups(:castle_clan)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # The "hidden" tag should appear for the overridden items
+    assert_match "hidden", response.body
+    # Should be rendered using the tree-editor structure
+    assert_match "tree-editor__tag--hidden", response.body
+  end
+
+  test "duplicate_confirm renders tree-editor structure" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # Should have tree-editor classes
+    assert_match "tree-editor", response.body
+    assert_match "tree-editor__folder--root", response.body
+    assert_match "tree-editor__name", response.body
+  end
+
+  test "duplicate_confirm shows root profiles" do
+    sign_in_as users(:three)
+    # Echo Shard has mirage as a direct profile
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    assert_match profiles(:mirage).name, response.body
+  end
+
   test "duplicate_execute creates the tree and redirects" do
     sign_in_as users(:three)
     group = groups(:echo_shard)

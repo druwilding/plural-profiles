@@ -787,4 +787,138 @@ class GroupTest < ActiveSupport::TestCase
     assert new_overrides.count > 0 || InclusionOverride.count > initial_override_count,
            "Inclusion overrides should be recreated for freshly copied groups"
   end
+
+  # -- duplication_preview_tree --
+
+  test "duplication_preview_tree returns all child groups with action new when no resolutions" do
+    echo = groups(:echo_shard)
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: {})
+
+    group_names = tree.map { |n| n[:group].name }
+    assert_includes group_names, "Prism Circle"
+
+    tree.each do |node|
+      assert_equal "new", node[:action]
+    end
+  end
+
+  test "duplication_preview_tree includes profiles with action new" do
+    echo = groups(:echo_shard)
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: {})
+
+    prism_node = tree.find { |n| n[:group] == groups(:prism_circle) }
+    assert prism_node, "Prism Circle should be in the tree"
+
+    profile_names = prism_node[:profiles].map { |e| e[:profile].name }
+    assert_includes profile_names, "Ember"
+    assert_includes profile_names, "Stray"
+
+    prism_node[:profiles].each do |entry|
+      assert_equal "new", entry[:action]
+    end
+  end
+
+  test "duplication_preview_tree marks reused groups when resolution is reuse" do
+    user = users(:three)
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+
+    echo = groups(:echo_shard)
+    resolutions = { prism.id.to_s => "reuse" }
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: resolutions)
+
+    prism_node = tree.find { |n| n[:group] == prism }
+    assert prism_node
+    assert_equal "reuse", prism_node[:action]
+    assert prism_node[:directly_reused]
+    assert_not_nil prism_node[:reuse_target]
+    assert_equal "Prism Copy", prism_node[:reuse_target].name
+  end
+
+  test "duplication_preview_tree marks descendants of reused groups as reuse" do
+    user = users(:three)
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+
+    echo = groups(:echo_shard)
+    resolutions = { prism.id.to_s => "reuse" }
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: resolutions)
+
+    prism_node = tree.find { |n| n[:group] == prism }
+    rogue_node = prism_node[:children].find { |n| n[:group] == groups(:rogue_pack) }
+    assert rogue_node
+    assert_equal "reuse", rogue_node[:action]
+    assert_not rogue_node[:directly_reused], "Rogue Pack is inherited reuse, not directly reused"
+    assert_nil rogue_node[:reuse_target]
+  end
+
+  test "duplication_preview_tree profiles inherit reuse action from reused parent" do
+    user = users(:three)
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+
+    echo = groups(:echo_shard)
+    resolutions = { prism.id.to_s => "reuse" }
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: resolutions)
+
+    prism_node = tree.find { |n| n[:group] == prism }
+    prism_node[:profiles].each do |entry|
+      assert_equal "reuse", entry[:action], "Profile #{entry[:profile].name} should inherit reuse action"
+    end
+  end
+
+  test "duplication_preview_tree includes hidden flags from source overrides" do
+    # Castle Clan has overrides: static_burst hidden in flux, drift hidden in flux, ripple hidden in flux
+    castle = groups(:castle_clan)
+    tree = castle.duplication_preview_tree(labels: [ "blue" ], resolutions: {})
+
+    flux_node = tree.find { |n| n[:group] == groups(:flux) }
+    assert flux_node, "Flux should be in the tree"
+
+    # Static Burst is hidden at the flux level
+    static_node = flux_node[:children].find { |n| n[:group] == groups(:static_burst) }
+    assert static_node, "Static Burst should be a child of Flux"
+    assert static_node[:hidden], "Static Burst should be marked hidden"
+
+    # Drift profile is hidden in flux
+    drift_entry = flux_node[:profiles].find { |e| e[:profile] == profiles(:drift) }
+    assert drift_entry, "Drift should be a profile in Flux"
+    assert drift_entry[:hidden], "Drift should be marked hidden"
+
+    # Ripple profile is hidden in flux
+    ripple_entry = flux_node[:profiles].find { |e| e[:profile] == profiles(:ripple) }
+    assert ripple_entry, "Ripple should be a profile in Flux"
+    assert ripple_entry[:hidden], "Ripple should be marked hidden"
+  end
+
+  test "duplication_preview_tree cascade_hidden propagates to children" do
+    castle = groups(:castle_clan)
+    tree = castle.duplication_preview_tree(labels: [ "blue" ], resolutions: {})
+
+    flux_node = tree.find { |n| n[:group] == groups(:flux) }
+    static_node = flux_node[:children].find { |n| n[:group] == groups(:static_burst) }
+
+    # Static Burst itself is hidden, so its profiles should be cascade_hidden
+    static_node[:profiles].each do |entry|
+      assert entry[:cascade_hidden], "Profile #{entry[:profile].name} in Static Burst should be cascade-hidden"
+    end
+  end
+
+  test "duplication_preview_tree non-hidden group has hidden false" do
+    echo = groups(:echo_shard)
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: {})
+
+    prism_node = tree.find { |n| n[:group] == groups(:prism_circle) }
+    assert_not prism_node[:hidden], "Prism Circle should not be hidden in echo_shard tree"
+    assert_not prism_node[:cascade_hidden], "Prism Circle should not be cascade-hidden"
+  end
+
+  test "duplication_preview_tree returns nested children" do
+    echo = groups(:echo_shard)
+    tree = echo.duplication_preview_tree(labels: [ "blue" ], resolutions: {})
+
+    prism_node = tree.find { |n| n[:group] == groups(:prism_circle) }
+    child_names = prism_node[:children].map { |n| n[:group].name }
+    assert_includes child_names, "Rogue Pack"
+  end
 end

@@ -113,4 +113,115 @@ class DuplicateGroupTest < ApplicationSystemTestCase
 
     assert_text "Duplicate group"
   end
+
+  test "confirm page shows full tree with groups and profiles" do
+    group = groups(:echo_shard)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "tree_test"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    # Root group name in tree
+    assert_text group.name
+    # Child groups
+    assert_text groups(:prism_circle).name
+    assert_text groups(:rogue_pack).name
+    # Profiles
+    assert_text profiles(:mirage).name
+    assert_text profiles(:ember).name
+    assert_text profiles(:stray).name
+  end
+
+  test "confirm page shows labels on tree items" do
+    group = groups(:echo_shard)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "labelled"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    # The label should appear on the page (multiple times — root + tree items)
+    assert_selector ".label-badge", text: "labelled", minimum: 2
+  end
+
+  test "confirm page does not show reuse legend when no conflicts exist" do
+    group = groups(:echo_shard)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "no_reuse"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    assert_no_text "existing copy"
+    assert_no_text "will be linked into the new tree"
+  end
+
+  test "confirm page shows existing copy tag and legend for reused groups" do
+    prism = groups(:prism_circle)
+    @user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "reuse_tag" ])
+
+    group = groups(:echo_shard)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "reuse_tag"
+    click_button "Next"
+
+    # Should show conflict — choose reuse
+    assert_text "Conflict 1"
+    choose "Use the existing copy"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    # Legend should be visible
+    assert_text "will be linked into the new tree"
+    # The reused group should show "existing copy" tag
+    assert_selector ".tree-editor__tag--reuse", text: "existing copy"
+  end
+
+  test "confirm page shows hidden tag for items with inclusion overrides" do
+    # Castle Clan has overrides that hide static_burst, drift, and ripple
+    group = groups(:castle_clan)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "hidden_test"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    # Should show "hidden" tags for the overridden items
+    assert_selector ".tree-editor__tag--hidden", text: "hidden", minimum: 1
+  end
+
+  test "confirm page renders collapsible tree structure" do
+    group = groups(:echo_shard)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "tree_ui"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    # Tree structure should be present
+    assert_selector ".tree-editor"
+    assert_selector ".tree-editor__folder--root"
+    assert_selector "details[open]", minimum: 1
+  end
+
+  test "confirm page shows multiple labels when provided" do
+    group = groups(:echo_shard)
+    visit our_group_path(group)
+    click_link "Duplicate"
+
+    fill_in "Labels for all copies", with: "first, second"
+    click_button "Next"
+
+    assert_text "Confirm duplication"
+    assert_selector ".label-badge", text: "first"
+    assert_selector ".label-badge", text: "second"
+  end
 end
