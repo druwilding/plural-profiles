@@ -21,6 +21,12 @@ Rails.application.routes.draw do
       patch :regenerate_uuid
       get :manage_groups
       patch :toggle_visibility
+      get  :duplicate
+      post :duplicate_scan
+      get  :duplicate_resolve
+      post :duplicate_resolve, action: :duplicate_resolve_post
+      get  :duplicate_confirm
+      post :duplicate_execute
     end
   end
   resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do

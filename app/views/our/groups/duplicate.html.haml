@@ -1,0 +1,20 @@
+- content_for(:title) { "Duplicate #{@group.name} — Plural Profiles" }
+
+%h1 Duplicate group
+
+.card
+  %p
+    You are duplicating
+    %strong= @group.name
+    and its entire tree of sub-groups and profiles. Every new copy will be
+    given the labels you specify below.
+
+  = form_with url: duplicate_scan_our_group_path(@group), method: :post do |form|
+    .form-group
+      = form.label :labels_text, "Labels for all copies (private, comma-separated)"
+      = form.text_field :labels_text, placeholder: "e.g. work, public"
+      %p.form-hint At least one label is required so copies can be identified.
+
+    .profile-actions
+      = link_to "Cancel", our_group_path(@group), class: "btn btn--secondary"
+      = form.submit "Next", class: "btn"

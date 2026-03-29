@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_28_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
 
   create_table "groups", force: :cascade do |t|
     t.string "avatar_alt_text"
+    t.bigint "copied_from_id"
     t.datetime "created_at", null: false
     t.text "description"
     t.jsonb "labels", default: [], null: false
@@ -72,6 +73,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.index ["copied_from_id"], name: "index_groups_on_copied_from_id"
     t.index ["labels"], name: "index_groups_on_labels", using: :gin
     t.index ["theme_id"], name: "index_groups_on_theme_id"
     t.index ["user_id"], name: "index_groups_on_user_id"
@@ -103,6 +105,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
 
   create_table "profiles", force: :cascade do |t|
     t.string "avatar_alt_text"
+    t.bigint "copied_from_id"
     t.datetime "created_at", null: false
     t.text "description"
     t.jsonb "heart_emojis", default: [], null: false
@@ -113,6 +116,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.index ["copied_from_id"], name: "index_profiles_on_copied_from_id"
     t.index ["labels"], name: "index_profiles_on_labels", using: :gin
     t.index ["theme_id"], name: "index_profiles_on_theme_id"
     t.index ["user_id"], name: "index_profiles_on_user_id"
@@ -173,11 +177,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_000003) do
   add_foreign_key "group_groups", "groups", column: "parent_group_id"
   add_foreign_key "group_profiles", "groups"
   add_foreign_key "group_profiles", "profiles"
+  add_foreign_key "groups", "groups", column: "copied_from_id"
   add_foreign_key "groups", "themes", on_delete: :nullify
   add_foreign_key "groups", "users"
   add_foreign_key "inclusion_overrides", "groups", on_delete: :cascade
   add_foreign_key "invite_codes", "users"
   add_foreign_key "invite_codes", "users", column: "redeemed_by_id"
+  add_foreign_key "profiles", "profiles", column: "copied_from_id"
   add_foreign_key "profiles", "themes", on_delete: :nullify
   add_foreign_key "profiles", "users"
   add_foreign_key "sessions", "users"

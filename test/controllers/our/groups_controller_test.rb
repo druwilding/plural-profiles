@@ -856,6 +856,403 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "Clear filter", response.body
   end
 
+  # -- Duplication wizard (Phase 6) --
+
+  test "duplicate renders label input form" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    get duplicate_our_group_path(group)
+    assert_response :success
+    assert_match "Duplicate group", response.body
+    assert_match group.name, response.body
+  end
+
+  test "duplicate_scan with empty labels returns error" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "" }
+    assert_response :unprocessable_entity
+    assert_match "at least one label", response.body
+  end
+
+  test "duplicate_scan with no conflicts redirects to confirm" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    assert_redirected_to duplicate_confirm_our_group_path(group)
+  end
+
+  test "duplicate_scan with conflicts redirects to resolve" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Circle (blue)", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    assert_redirected_to duplicate_resolve_our_group_path(group)
+  end
+
+  test "duplicate_resolve shows conflict page" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Circle (blue)", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    # First set up wizard state
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Group question 1", response.body
+    assert_match prism.name, response.body
+  end
+
+  test "duplicate_resolve POST with missing resolution re-renders with alert" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Circle (blue)", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    # Submit without selecting a radio button
+    post duplicate_resolve_our_group_path(group), params: {}
+    assert_response :unprocessable_entity
+    assert_match "Please select an option before continuing.", response.body
+    assert_match "Group question 1", response.body
+  end
+
+  test "duplicate_resolve POST with tampered resolution re-renders with alert" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Circle (blue)", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    post duplicate_resolve_our_group_path(group), params: { resolution: "hacked" }
+    assert_response :unprocessable_entity
+    assert_match "Please select an option before continuing.", response.body
+  end
+
+  test "duplicate_resolve POST with reuse skips descendant conflicts" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    rogue = groups(:rogue_pack)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+    user.groups.create!(name: "Rogue Copy", copied_from: rogue, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve prism as reuse — should skip rogue and go to confirm
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    assert_redirected_to duplicate_confirm_our_group_path(group)
+  end
+
+  test "duplicate_confirm shows summary page" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    # Set up wizard state with no conflicts
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+    assert_match "Confirm duplication", response.body
+    assert_match group.name, response.body
+  end
+
+  test "duplicate_confirm shows tree with group and profile names" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # Root group should appear
+    assert_match group.name, response.body
+    # Child groups should appear in the tree
+    assert_match groups(:prism_circle).name, response.body
+    assert_match groups(:rogue_pack).name, response.body
+    # Profiles should appear
+    assert_match profiles(:mirage).name, response.body
+    assert_match profiles(:ember).name, response.body
+    assert_match profiles(:stray).name, response.body
+  end
+
+  test "duplicate_confirm shows new labels on tree items" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # The label "blue" should appear multiple times (root + tree items)
+    assert response.body.scan("blue").length > 1, "Label 'blue' should appear on tree items"
+  end
+
+  test "duplicate_confirm shows new label on profiles inside directly-reused groups" do
+    # Regression: inherited-reuse profile nodes (action=reuse, directly_reused=false)
+    # were not showing the new label because the partial checked profile.labels
+    # (empty on the original) instead of new_labels.
+    #
+    # Tree: Echo Shard → Prism Circle → Rogue Pack (reused) → Stray (inherited-reuse)
+    # Stray is also a direct profile of Prism Circle (action=new → label shown correctly).
+    # The bug only affected Stray's occurrence inside the reused Rogue Pack.
+    user = users(:three)
+    sign_in_as user
+    rogue = groups(:rogue_pack)
+    user.groups.create!(name: "Rogue Copy", copied_from: rogue, labels: [ "green" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "green" }
+    # Rogue Pack has a conflict — resolve it as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    follow_redirect!
+    assert_response :success
+
+    # "green" badges expected (exact count; off-by-one would indicate the bug):
+    #   intro card (1) + Echo Shard root (1) + Mirage/new (1) +
+    #   Prism Circle/new (1) + Ember/new (1) + Stray-in-prism/new (1) +
+    #   Rogue Pack/reuse via reuse_target (1) + Stray-in-rogue/inherited-reuse (1) = 8
+    # Before the fix, Stray-in-rogue showed nothing → count was 7.
+    badge_count = response.body.scan('<span class="label-badge">green</span>').length
+    assert_equal 8, badge_count,
+      "Expected 'green' label on all tree nodes including inherited-reuse profiles (Stray inside Rogue Pack), got #{badge_count}"
+  end
+
+  test "duplicate_confirm does not show reuse legend when no resolutions use reuse" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    assert_no_match "existing copy", response.body
+    assert_no_match "will be linked into the new tree", response.body
+  end
+
+  test "duplicate_confirm shows reuse legend and tags when resolutions include reuse" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve prism as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    follow_redirect!
+    assert_response :success
+
+    assert_match "existing copy", response.body
+    assert_match "will be linked into the new tree", response.body
+  end
+
+  test "duplicate_confirm shows hidden tag for items with inclusion overrides" do
+    sign_in_as users(:three)
+    # Castle Clan has overrides: static_burst hidden, drift hidden, ripple hidden
+    group = groups(:castle_clan)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # The "hidden" tag should appear for the overridden items
+    assert_match "hidden", response.body
+    # Should be rendered using the tree-editor structure
+    assert_match "tree-editor__tag--hidden", response.body
+  end
+
+  test "duplicate_confirm renders tree-editor structure" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    # Should have tree-editor classes
+    assert_match "tree-editor", response.body
+    assert_match "tree-editor__folder--root", response.body
+    assert_match "tree-editor__name", response.body
+  end
+
+  test "duplicate_confirm shows root profiles" do
+    sign_in_as users(:three)
+    # Echo Shard has mirage as a direct profile
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+    assert_response :success
+
+    assert_match profiles(:mirage).name, response.body
+  end
+
+  test "duplicate_execute creates the tree and redirects" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    assert_difference("Group.count", 3) do
+      post duplicate_execute_our_group_path(group)
+    end
+    # Redirects to the newly created root group (the copy of echo_shard)
+    new_root = Group.where(copied_from: group).where("labels @> ?", [ "blue" ].to_json).first
+    assert_redirected_to our_group_path(new_root)
+    follow_redirect!
+    assert_match "Group duplicated", response.body
+  end
+
+  test "duplicate_execute clears session wizard state" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    post duplicate_execute_our_group_path(group)
+    # Attempting to access confirm after execution should redirect to duplicate start
+    get duplicate_confirm_our_group_path(group)
+    assert_redirected_to duplicate_our_group_path(group)
+  end
+
+  test "duplicate requires authentication" do
+    group = groups(:echo_shard)
+    get duplicate_our_group_path(group)
+    assert_redirected_to new_session_path
+  end
+
+  # -- Profile conflict resolution --
+
+  test "duplicate_scan with profile conflicts redirects to resolve" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    assert_redirected_to duplicate_resolve_our_group_path(group)
+  end
+
+  test "duplicate_scan with only profile conflicts goes to profile phase" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Profile question 1", response.body
+    assert_match stray.name, response.body
+  end
+
+  test "duplicate_resolve shows profile conflict with pronouns" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    stray.update!(pronouns: "they/them")
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "they/them", response.body
+  end
+
+  test "duplicate_resolve_post with profile reuse advances to confirm" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Should be on profile conflict phase
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    assert_redirected_to duplicate_confirm_our_group_path(group)
+  end
+
+  test "duplicate_scan with both group and profile conflicts resolves groups first" do
+    user = users(:three)
+    sign_in_as user
+    rogue = groups(:rogue_pack)
+    stray = profiles(:stray)
+    user.groups.create!(name: "Rogue Copy", copied_from: rogue, labels: [ "blue" ])
+    user.profiles.create!(name: "Stray Copy", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Group question 1", response.body
+    assert_match rogue.name, response.body
+  end
+
+  test "duplicate group conflict reuse auto-resolves profile conflicts in reused subtree" do
+    user = users(:three)
+    sign_in_as user
+    prism = groups(:prism_circle)
+    stray = profiles(:stray)
+    user.groups.create!(name: "Prism Copy", copied_from: prism, labels: [ "blue" ])
+    user.profiles.create!(name: "Stray Copy", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    # Resolve prism as reuse — Stray is in prism_circle and rogue_pack which are both
+    # in the reused subtree, but also in echo_shard? No — Stray is not directly in echo_shard.
+    # Stray is in prism_circle and rogue_pack, both descendants of prism, so all reused.
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    # Should go to confirm (profile conflict auto-resolved)
+    assert_redirected_to duplicate_confirm_our_group_path(group)
+  end
+
+  test "duplicate_execute with profile reuse reuses the existing profile copy" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    stray_copy = user.profiles.create!(name: "Stray (blue)", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve stray as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+
+    initial_profile_count = Profile.count
+    post duplicate_execute_our_group_path(group)
+
+    # Stray was reused, Mirage and Ember were freshly copied = 2 new profiles
+    assert_equal initial_profile_count + 2, Profile.count
+
+    # The reused stray copy should still be the only one
+    stray_copies = Profile.where(copied_from: stray).where("labels @> ?", [ "blue" ].to_json)
+    assert_equal 1, stray_copies.count
+    assert_equal stray_copy.id, stray_copies.first.id
+  end
+
+  test "duplicate_confirm shows reuse legend when profile resolutions include reuse" do
+    user = users(:three)
+    sign_in_as user
+    stray = profiles(:stray)
+    user.profiles.create!(name: "Stray Copy", copied_from: stray, labels: [ "blue" ])
+
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    # Resolve stray profile as reuse
+    post duplicate_resolve_our_group_path(group), params: { resolution: "reuse" }
+    follow_redirect!
+    assert_response :success
+
+    assert_match "existing copy", response.body
+    assert_match "will be linked into the new tree", response.body
+  end
+
   private
 
   def sign_in_as(user)

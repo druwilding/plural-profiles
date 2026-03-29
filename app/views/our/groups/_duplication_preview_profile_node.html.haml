@@ -1,0 +1,34 @@
+-# Profile leaf node for the duplication preview tree.
+-# Locals: entry (hash with :profile, :action, :hidden, :cascade_hidden,
+-#         optionally :directly_reused, :reuse_target), new_labels
+- profile = entry[:profile]
+- action = entry[:action]
+- hidden = entry[:hidden]
+- cascade_hidden = entry[:cascade_hidden]
+- effectively_hidden = hidden || cascade_hidden
+- directly_reused = entry[:directly_reused]
+- reuse_target = entry[:reuse_target]
+
+.tree-editor__leaf.tree-editor__leaf--profile{class: ("tree-editor__node--hidden" if effectively_hidden)}
+  .tree-editor__item-info
+    - if profile.avatar.attached?
+      = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+    - else
+      %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+        = render "shared/plural_pride_logo"
+    %span.tree-editor__name= profile.name
+    - if action == "new"
+      .label-badges
+        - new_labels.each do |label|
+          %span.label-badge= label
+    - else
+      - if directly_reused && reuse_target
+        .label-badges
+          - reuse_target.labels.each do |label|
+            %span.label-badge= label
+      - elsif new_labels.any?
+        .label-badges
+          - new_labels.each do |label|
+            %span.label-badge= label
+      %span.tree-editor__tag.tree-editor__tag--reuse existing copy
+    %span.tree-editor__tag.tree-editor__tag--hidden hidden

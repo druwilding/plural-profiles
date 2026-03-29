@@ -206,4 +206,66 @@ class ProfileTest < ActiveSupport::TestCase
     themes(:sunset).destroy
     assert_nil profile.reload.theme_id
   end
+
+  # -- Copy lineage (Phase 5) --
+
+  test "copied_from association" do
+    original = users(:one).profiles.create!(name: "Original")
+    copy = users(:one).profiles.create!(name: "Copy", copied_from: original)
+    assert_equal original, copy.copied_from
+  end
+
+  test "copies association" do
+    original = users(:one).profiles.create!(name: "Original")
+    copy1 = users(:one).profiles.create!(name: "Copy 1", copied_from: original)
+    copy2 = users(:one).profiles.create!(name: "Copy 2", copied_from: original)
+    assert_includes original.copies, copy1
+    assert_includes original.copies, copy2
+  end
+
+  test "copies_with_labels returns copies that have ALL given labels" do
+    original = users(:one).profiles.create!(name: "Original")
+    matching = users(:one).profiles.create!(name: "Matching", copied_from: original, labels: [ "blue", "safe" ])
+    partial  = users(:one).profiles.create!(name: "Partial",  copied_from: original, labels: [ "blue" ])
+    other    = users(:one).profiles.create!(name: "Other",    copied_from: original, labels: [ "red" ])
+
+    result = original.copies_with_labels([ "blue", "safe" ])
+    assert_includes result, matching
+    assert_not_includes result, partial
+    assert_not_includes result, other
+  end
+
+  test "copies_with_labels returns empty when no copies match" do
+    original = users(:one).profiles.create!(name: "Original")
+    users(:one).profiles.create!(name: "Copy", copied_from: original, labels: [ "red" ])
+    assert_empty original.copies_with_labels([ "blue" ])
+  end
+
+  test "copies_with_labels finds transitive copies (copy of a copy)" do
+    original = users(:one).profiles.create!(name: "Original")
+    copy_purple = users(:one).profiles.create!(name: "Copy (purple)", copied_from: original, labels: [ "purple" ])
+    copy_yellow = users(:one).profiles.create!(name: "Copy (yellow)", copied_from: copy_purple, labels: [ "yellow" ])
+
+    result = original.copies_with_labels([ "yellow" ])
+    assert_includes result, copy_yellow
+    assert_not_includes result, copy_purple
+  end
+
+  test "copies_with_labels finds deeply nested transitive copies" do
+    original = users(:one).profiles.create!(name: "Original")
+    gen1 = users(:one).profiles.create!(name: "Gen 1", copied_from: original, labels: [ "a" ])
+    gen2 = users(:one).profiles.create!(name: "Gen 2", copied_from: gen1, labels: [ "b" ])
+    gen3 = users(:one).profiles.create!(name: "Gen 3", copied_from: gen2, labels: [ "c" ])
+
+    result = original.copies_with_labels([ "c" ])
+    assert_includes result, gen3
+    assert_equal 1, result.count
+  end
+
+  test "deleting the original nullifies copied_from_id on copies" do
+    original = users(:one).profiles.create!(name: "Original")
+    copy = users(:one).profiles.create!(name: "Copy", copied_from: original)
+    original.destroy
+    assert_nil copy.reload.copied_from_id
+  end
 end

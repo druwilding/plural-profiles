@@ -1,0 +1,49 @@
+- content_for(:title) { "Confirm duplication — Plural Profiles" }
+- content_for(:head) { tag.meta name: "turbo-cache-control", content: "no-cache" }
+
+%h1 Confirm duplication
+
+.card
+  %p
+    This will duplicate
+    %strong= @source.name
+    with #{@labels.length > 1 ? "labels" : "label"}
+    - @labels.each do |label|
+      %span.label-badge= label
+  - has_reuse = @resolutions.any? { |_, v| v == "reuse" } || (@profile_resolutions || {}).any? { |_, v| v == "reuse" }
+  - if has_reuse
+    %p
+      Items marked
+      %span.tree-editor__tag.tree-editor__tag--reuse existing copy
+      already exist and will be linked into the new tree.
+      Everything else will be freshly created.
+
+- has_tree = @preview_tree.any?
+- has_root_profiles = @root_profiles.any?
+
+- if has_tree || has_root_profiles
+  .tree-editor
+    %details.tree-editor__folder.tree-editor__folder--root{open: true}
+      %summary.tree-editor__summary
+        .tree-editor__item-info
+          - if @source.avatar.attached?
+            = image_tag @source.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+          - else
+            %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+              = render "shared/plural_pride_logo"
+          %span.tree-editor__name= @source.name
+          .label-badges
+            - @labels.each do |label|
+              %span.label-badge= label
+      .tree-editor__children
+        - if has_tree
+          - @preview_tree.each do |node|
+            = render "our/groups/duplication_preview_node", node: node, new_labels: @labels
+        - if has_root_profiles
+          - @root_profiles.each do |entry|
+            = render "our/groups/duplication_preview_profile_node", entry: entry, new_labels: @labels
+
+.profile-actions
+  = link_to "Cancel", duplicate_our_group_path(@source), class: "btn btn--secondary"
+  = form_with url: duplicate_execute_our_group_path(@source), method: :post do |form|
+    = form.submit "Confirm and duplicate", class: "btn"
