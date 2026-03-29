@@ -1115,6 +1115,59 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to duplicate_our_group_path(group)
   end
 
+  test "duplicate_execute without avatars redirects directly to new group" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+    assert_no_difference("DuplicationTask.count") do
+      post duplicate_execute_our_group_path(group)
+    end
+    new_root = Group.where(copied_from: group).where("labels @> ?", [ "blue" ].to_json).first
+    assert_redirected_to our_group_path(new_root)
+  end
+
+  test "duplicate_progress renders for an in-progress task" do
+    sign_in_as users(:one)
+    task = duplication_tasks(:in_progress_task)
+    get duplicate_progress_our_group_path(task.group, task_id: task.id)
+    assert_response :success
+  end
+
+  test "duplicate_progress redirects and destroys task when completed" do
+    sign_in_as users(:one)
+    task = duplication_tasks(:pending_task)
+    task.update!(status: "completed")
+    assert_difference("DuplicationTask.count", -1) do
+      get duplicate_progress_our_group_path(task.group, task_id: task.id)
+    end
+    assert_redirected_to our_group_path(task.group)
+    follow_redirect!
+    assert_match "Group duplicated", response.body
+  end
+
+  test "duplicate_status returns JSON with progress info" do
+    sign_in_as users(:one)
+    task = duplication_tasks(:in_progress_task)
+    get duplicate_status_our_group_path(task.group, task_id: task.id)
+    assert_response :success
+    data = response.parsed_body
+    assert_equal "in_progress", data["status"]
+    assert_equal task.copied_avatars, data["copied"]
+    assert_equal task.total_avatars, data["total"]
+    assert_nil data["redirect_url"]
+  end
+
+  test "duplicate_status returns redirect_url when task is finished" do
+    sign_in_as users(:one)
+    task = duplication_tasks(:pending_task)
+    task.update!(status: "completed")
+    get duplicate_status_our_group_path(task.group, task_id: task.id)
+    assert_response :success
+    data = response.parsed_body
+    assert_equal "completed", data["status"]
+    assert_not_nil data["redirect_url"]
+  end
+
   test "duplicate requires authentication" do
     group = groups(:echo_shard)
     get duplicate_our_group_path(group)

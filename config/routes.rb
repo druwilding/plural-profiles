@@ -27,6 +27,8 @@ Rails.application.routes.draw do
       post :duplicate_resolve, action: :duplicate_resolve_post
       get  :duplicate_confirm
       post :duplicate_execute
+      get  :duplicate_progress
+      get  :duplicate_status
     end
   end
   resource :our_account, path: "our/account", controller: "our/account", only: %i[show] do

@@ -2,7 +2,7 @@ class Our::GroupsController < ApplicationController
   include OurSidebar
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
-  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group regenerate_uuid manage_groups toggle_visibility duplicate duplicate_scan duplicate_resolve duplicate_resolve_post duplicate_confirm duplicate_execute ]
+  before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group regenerate_uuid manage_groups toggle_visibility duplicate duplicate_scan duplicate_resolve duplicate_resolve_post duplicate_confirm duplicate_execute duplicate_progress duplicate_status ]
   before_action :validate_theme_choice, only: %i[create update]
 
   def index
@@ -321,8 +321,42 @@ class Our::GroupsController < ApplicationController
       new_labels: labels, resolutions: resolutions, profile_resolutions: profile_resolutions
     )
     new_group = result[:group]
+    avatar_mappings = result[:avatar_mappings]
+    total = avatar_mappings["groups"].size + avatar_mappings["profiles"].size
+
     session.delete(:duplication_wizard)
-    redirect_to our_group_path(new_group), notice: "Group duplicated with all sub-groups and profiles."
+
+    if total > 0
+      task = Current.user.duplication_tasks.create!(
+        group: new_group,
+        avatar_mappings: avatar_mappings,
+        total_avatars: total,
+        status: "pending"
+      )
+      DuplicateAvatarsJob.perform_later(task.id)
+      redirect_to duplicate_progress_our_group_path(new_group, task_id: task.id)
+    else
+      redirect_to our_group_path(new_group), notice: "Group duplicated with all sub-groups and profiles."
+    end
+  end
+
+  def duplicate_progress
+    @task = Current.user.duplication_tasks.find(params[:task_id])
+
+    if @task.finished?
+      @task.destroy
+      redirect_to our_group_path(@group), notice: "Group duplicated with all sub-groups and profiles."
+    end
+  end
+
+  def duplicate_status
+    task = Current.user.duplication_tasks.find(params[:task_id])
+    render json: {
+      status: task.status,
+      copied: task.copied_avatars,
+      total: task.total_avatars,
+      redirect_url: task.finished? ? our_group_path(task.group) : nil
+    }
   end
 
   private
