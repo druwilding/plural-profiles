@@ -9,46 +9,45 @@
     - @labels.each do |label|
       %span.label-badge= label
 
-  .duplicate-comparison
-    .duplicate-comparison__card
-      %h3 Original
-      .duplicate-comparison__item
-        - if @original.avatar.attached?
-          = image_tag @original.avatar.variant(resize_to_fill: [64, 64]), class: "avatar avatar--small", width: 64, height: 64, alt: @original.avatar_alt_text.presence || "", loading: "lazy"
-        .name-with-labels
-          %strong= @original.name
-          - if @original.labels.any?
-            .label-badges
-              - @original.labels.each do |l|
-                %span.label-badge= l
-        - if @original.description.present?
-          %p.duplicate-comparison__description= truncate(@original.description, length: 120)
+  = form_with url: duplicate_resolve_our_group_path(@source), method: :post, data: { turbo: false, controller: "duplicate-resolution" } do |form|
+    .duplicate-comparison
+      .duplicate-comparison__column
+        .duplicate-comparison__card
+          %h3 Original
+          .duplicate-comparison__item
+            - if @original.avatar.attached?
+              = image_tag @original.avatar.variant(resize_to_fill: [64, 64]), class: "avatar avatar--small", width: 64, height: 64, alt: @original.avatar_alt_text.presence || "", loading: "lazy"
+            .name-with-labels
+              %strong= @original.name
+              - if @original.labels.any?
+                .label-badges
+                  - @original.labels.each do |l|
+                    %span.label-badge= l
+            - if @original.description.present?
+              %p.duplicate-comparison__description= truncate(@original.description, length: 120)
+        .radio-group
+          = form.radio_button :resolution, "copy", id: "resolution_copy", data: { action: "duplicate-resolution#choose" }
+          = form.label :resolution, "Create a new copy", for: "resolution_copy"
+          %p.form-hint A brand new copy will be made from the original, ignoring the existing copy.
 
-    .duplicate-comparison__card
-      %h3 Existing copy
-      .duplicate-comparison__item
-        - if @existing_copy.avatar.attached?
-          = image_tag @existing_copy.avatar.variant(resize_to_fill: [64, 64]), class: "avatar avatar--small", width: 64, height: 64, alt: @existing_copy.avatar_alt_text.presence || "", loading: "lazy"
-        .name-with-labels
-          %strong= @existing_copy.name
-          - if @existing_copy.labels.any?
-            .label-badges
-              - @existing_copy.labels.each do |l|
-                %span.label-badge= l
-        - if @existing_copy.description.present?
-          %p.duplicate-comparison__description= truncate(@existing_copy.description, length: 120)
-
-  = form_with url: duplicate_resolve_our_group_path(@source), method: :post, data: { turbo: false } do |form|
-    .form-group
-      .radio-group
-        = form.radio_button :resolution, "reuse", id: "resolution_reuse"
-        = form.label :resolution, "Use the existing copy", for: "resolution_reuse"
-        %p.form-hint The existing copy and all its contents will be linked into your new tree as-is.
-
-      .radio-group
-        = form.radio_button :resolution, "copy", id: "resolution_copy"
-        = form.label :resolution, "Create a new copy", for: "resolution_copy"
-        %p.form-hint A brand new copy will be made from the original, ignoring the existing copy.
+      .duplicate-comparison__column
+        .duplicate-comparison__card
+          %h3 Existing copy
+          .duplicate-comparison__item
+            - if @existing_copy.avatar.attached?
+              = image_tag @existing_copy.avatar.variant(resize_to_fill: [64, 64]), class: "avatar avatar--small", width: 64, height: 64, alt: @existing_copy.avatar_alt_text.presence || "", loading: "lazy"
+            .name-with-labels
+              %strong= @existing_copy.name
+              - if @existing_copy.labels.any?
+                .label-badges
+                  - @existing_copy.labels.each do |l|
+                    %span.label-badge= l
+            - if @existing_copy.description.present?
+              %p.duplicate-comparison__description= truncate(@existing_copy.description, length: 120)
+        .radio-group
+          = form.radio_button :resolution, "reuse", id: "resolution_reuse", data: { action: "duplicate-resolution#choose" }
+          = form.label :resolution, "Use the existing copy", for: "resolution_reuse"
+          %p.form-hint The existing copy and all its contents will be linked into your new tree as-is.
 
     .profile-actions
-      = form.submit "Next", class: "btn"
+      = form.submit "Next", class: "btn", data: { duplicate_resolution_target: "submit" }
