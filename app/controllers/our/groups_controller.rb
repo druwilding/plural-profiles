@@ -341,7 +341,11 @@ class Our::GroupsController < ApplicationController
   end
 
   def duplicate_progress
-    @task = Current.user.duplication_tasks.find(params[:task_id])
+    @task = Current.user.duplication_tasks.find_by(id: params[:task_id])
+    unless @task
+      redirect_to our_group_path(@group), alert: "Duplication task not found."
+      return
+    end
 
     if @task.finished?
       @task.destroy
@@ -350,7 +354,11 @@ class Our::GroupsController < ApplicationController
   end
 
   def duplicate_status
-    task = Current.user.duplication_tasks.find(params[:task_id])
+    task = Current.user.duplication_tasks.find_by(id: params[:task_id])
+    unless task
+      render json: { error: "not found" }, status: :not_found
+      return
+    end
     render json: {
       status: task.status,
       copied: task.copied_avatars,
