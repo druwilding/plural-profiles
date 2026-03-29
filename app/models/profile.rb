@@ -78,17 +78,18 @@ class Profile < ApplicationRecord
   def copies_with_labels(labels)
     sql = <<~SQL.squish
       WITH RECURSIVE copy_tree AS (
-        SELECT id FROM profiles WHERE copied_from_id = :root_id
+        SELECT id FROM profiles WHERE copied_from_id = :root_id AND user_id = :user_id
         UNION
         SELECT p.id FROM profiles p
         INNER JOIN copy_tree ct ON p.copied_from_id = ct.id
+        WHERE p.user_id = :user_id
       )
       SELECT id FROM copy_tree
     SQL
     all_copy_ids = Profile.connection.select_values(
-      Profile.sanitize_sql([ sql, root_id: id ])
+      Profile.sanitize_sql([ sql, root_id: id, user_id: user_id ])
     ).map(&:to_i)
-    Profile.where(id: all_copy_ids).where("labels @> ?", labels.to_json)
+    Profile.where(id: all_copy_ids, user_id: user_id).where("labels @> ?", labels.to_json)
   end
 
   def self.heart_emoji_display_name(heart)

@@ -31,17 +31,18 @@ class Group < ApplicationRecord
   def copies_with_labels(labels)
     sql = <<~SQL.squish
       WITH RECURSIVE copy_tree AS (
-        SELECT id FROM groups WHERE copied_from_id = :root_id
+        SELECT id FROM groups WHERE copied_from_id = :root_id AND user_id = :user_id
         UNION
         SELECT g.id FROM groups g
         INNER JOIN copy_tree ct ON g.copied_from_id = ct.id
+        WHERE g.user_id = :user_id
       )
       SELECT id FROM copy_tree
     SQL
     all_copy_ids = Group.connection.select_values(
-      Group.sanitize_sql([ sql, root_id: id ])
+      Group.sanitize_sql([ sql, root_id: id, user_id: user_id ])
     ).map(&:to_i)
-    Group.where(id: all_copy_ids).where("labels @> ?", labels.to_json)
+    Group.where(id: all_copy_ids, user_id: user_id).where("labels @> ?", labels.to_json)
   end
 
   # Scans the descendant tree depth-first and returns an array of conflict
