@@ -144,7 +144,7 @@ class ProfileTest < ActiveSupport::TestCase
   test "labels_text= parses comma-separated string into array" do
     profile = profiles(:alice)
     profile.labels_text = "safe, work, close friends"
-    assert_equal [ "close friends", "safe", "work" ], profile.labels
+    assert_equal [ "safe", "work", "close friends" ], profile.labels
   end
 
   test "labels_text= trims whitespace and rejects blanks" do

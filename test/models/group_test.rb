@@ -478,7 +478,7 @@ class GroupTest < ActiveSupport::TestCase
   test "labels_text= parses comma-separated string into array" do
     group = groups(:friends)
     group.labels_text = "safe, work, close friends"
-    assert_equal [ "close friends", "safe", "work" ], group.labels
+    assert_equal [ "safe", "work", "close friends" ], group.labels
   end
 
   test "labels_text= trims whitespace and rejects blanks" do

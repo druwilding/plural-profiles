@@ -17,7 +17,7 @@ module HasLabels
 
   # Accepts a comma-separated string and populates the labels array.
   def labels_text=(value)
-    self.labels = value.to_s.split(",").map(&:strip).reject(&:blank?).uniq.sort
+    self.labels = value.to_s.split(",").map(&:strip).reject(&:blank?).uniq
   end
 
   # Sort key for in-memory ordering: name first, unlabelled before labelled,
@@ -29,6 +29,6 @@ module HasLabels
   private
 
   def normalize_labels
-    self.labels = Array(labels).map { |l| l.to_s.strip }.reject(&:blank?).uniq.sort
+    self.labels = Array(labels).map { |l| l.to_s.strip }.reject(&:blank?).uniq
   end
 end
