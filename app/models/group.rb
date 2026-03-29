@@ -14,6 +14,7 @@ class Group < ApplicationRecord
   has_many :parent_groups, through: :parent_links, source: :parent_group
   has_many :child_groups, through: :child_links, source: :child_group
   has_many :inclusion_overrides, dependent: :destroy
+  has_many :duplication_tasks, dependent: :destroy
 
   before_create :generate_uuid
 

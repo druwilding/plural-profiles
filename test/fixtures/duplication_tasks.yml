@@ -1,0 +1,39 @@
+pending_task:
+  user: one
+  group: friends
+  avatar_mappings:
+    groups: [[1, 2]]
+    profiles: [[1, 3]]
+  total_avatars: 2
+  copied_avatars: 0
+  status: pending
+
+in_progress_task:
+  user: one
+  group: everyone
+  avatar_mappings:
+    groups: []
+    profiles: [[2, 4]]
+  total_avatars: 1
+  copied_avatars: 0
+  status: in_progress
+
+completed_task:
+  user: two
+  group: family
+  avatar_mappings:
+    groups: []
+    profiles: []
+  total_avatars: 3
+  copied_avatars: 3
+  status: completed
+
+failed_task:
+  user: one
+  group: friends
+  avatar_mappings:
+    groups: []
+    profiles: []
+  total_avatars: 2
+  copied_avatars: 1
+  status: failed

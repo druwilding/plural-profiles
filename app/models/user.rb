@@ -4,6 +4,7 @@ class User < ApplicationRecord
   has_many :profiles, dependent: :destroy
   has_many :groups, dependent: :destroy
   has_many :invite_codes, dependent: :destroy
+  has_many :duplication_tasks, dependent: :destroy
   has_many :themes, dependent: :destroy
   belongs_to :active_theme, class_name: "Theme", optional: true
 
