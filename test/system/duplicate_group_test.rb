@@ -256,6 +256,7 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     click_button "Next"
 
     assert_text "Confirm duplication"
+    assert_current_path duplicate_confirm_our_group_path(echo), ignore_query: true
     assert_selector ".label-badge", text: "black"
     assert_selector ".label-badge", text: "white"
 
@@ -308,6 +309,7 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     click_button "Next"
 
     assert_text "Confirm duplication"
+    assert_current_path duplicate_confirm_our_group_path(echo), ignore_query: true
     click_button "Confirm and duplicate"
     assert_text "Group duplicated"
   end
