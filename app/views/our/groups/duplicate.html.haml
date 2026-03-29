@@ -1,4 +1,5 @@
 - content_for(:title) { "Duplicate #{@group.name} — Plural Profiles" }
+- content_for(:head) { tag.meta name: "turbo-cache-control", content: "no-cache" }
 
 %h1 Duplicate group
 

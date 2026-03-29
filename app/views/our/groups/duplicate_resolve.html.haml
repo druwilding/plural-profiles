@@ -1,4 +1,5 @@
 - content_for(:title) { "Resolve question — Plural Profiles" }
+- content_for(:head) { tag.meta name: "turbo-cache-control", content: "no-cache" }
 
 %h1 #{@conflict_phase_label} #{@conflict_number} of #{@total_conflicts}
 
