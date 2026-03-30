@@ -57,6 +57,7 @@ class ThemeBackgroundImageTest < ApplicationSystemTestCase
     assert_text "Theme saved."
 
     visit edit_our_theme_path(@theme)
+    assert_current_path edit_our_theme_path(@theme)
     find("summary", text: "Background image").click
 
     assert_no_css "img.theme-bg-preview"
