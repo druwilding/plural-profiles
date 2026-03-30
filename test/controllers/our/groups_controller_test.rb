@@ -1168,6 +1168,56 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil data["redirect_url"]
   end
 
+  test "duplicate_execute with avatar creates DuplicationTask and redirects to progress" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    group.avatar.attach(io: file_fixture("avatar.png").open, filename: "avatar.png", content_type: "image/png")
+
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    assert_difference("DuplicationTask.count", 1) do
+      post duplicate_execute_our_group_path(group)
+    end
+
+    task = DuplicationTask.last
+    assert_redirected_to duplicate_progress_our_group_path(task.group, task_id: task.id)
+  end
+
+  test "duplicate_execute with avatar enqueues DuplicateAvatarsJob" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    group.avatar.attach(io: file_fixture("avatar.png").open, filename: "avatar.png", content_type: "image/png")
+
+    post duplicate_scan_our_group_path(group), params: { labels_text: "blue" }
+
+    assert_enqueued_with(job: DuplicateAvatarsJob) do
+      post duplicate_execute_our_group_path(group)
+    end
+  end
+
+  test "duplicate_progress with unknown task_id redirects to group with alert" do
+    sign_in_as users(:three)
+    group = groups(:echo_shard)
+    get duplicate_progress_our_group_path(group, task_id: 999_999)
+    assert_redirected_to our_group_path(group)
+  end
+
+  test "duplicate_progress with failed task redirects and destroys task" do
+    sign_in_as users(:one)
+    task = duplication_tasks(:in_progress_task)
+    task.update!(status: "failed")
+    assert_difference("DuplicationTask.count", -1) do
+      get duplicate_progress_our_group_path(task.group, task_id: task.id)
+    end
+    assert_redirected_to our_group_path(task.group)
+  end
+
+  test "duplicate_status with unknown task_id returns 404" do
+    sign_in_as users(:one)
+    get duplicate_status_our_group_path(groups(:friends), task_id: 999_999)
+    assert_response :not_found
+  end
+
   test "duplicate requires authentication" do
     group = groups(:echo_shard)
     get duplicate_our_group_path(group)

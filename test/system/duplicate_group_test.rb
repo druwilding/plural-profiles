@@ -171,11 +171,14 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     fill_in "Labels for all copies", with: "reuse_tag"
     click_button "Next"
 
-    # Should show conflict — choose reuse
+    # Wait for Turbo to fully commit to the resolve page before interacting with its DOM
+    assert_current_path duplicate_resolve_our_group_path(group)
     assert_text "Group question 1"
     choose "Use the existing copy"
     click_button "Next"
 
+    # Wait for Turbo to fully commit to the confirm page before checking its content
+    assert_current_path duplicate_confirm_our_group_path(group)
     assert_text "Confirm duplication"
     # Legend should be visible
     assert_text "will be linked into the new tree"
@@ -310,5 +313,45 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     assert_text "Confirm duplication"
     click_button "Confirm and duplicate"
     assert_text "Group duplicated"
+  end
+
+  test "progress page shows bar and status text" do
+    # Create a task owned by the signed-in user (users(:three)) so the
+    # controller's scoped look-up succeeds.
+    task = DuplicationTask.create!(
+      user: users(:three),
+      group: groups(:echo_shard),
+      avatar_mappings: { "groups" => [], "profiles" => [] },
+      total_avatars: 5,
+      copied_avatars: 2,
+      status: "in_progress"
+    )
+
+    visit duplicate_progress_our_group_path(task.group, task_id: task.id)
+
+    assert_text "Duplicating group"
+    assert_selector "progress"
+    assert_selector "[data-controller='progress-poll']"
+  end
+
+  test "duplicate with avatar redirects to progress page" do
+    group = groups(:echo_shard)
+    group.avatar.attach(
+      io: file_fixture("avatar.png").open,
+      filename: "avatar.png",
+      content_type: "image/png"
+    )
+
+    visit our_group_path(group)
+    click_link "Duplicate"
+    fill_in "Labels for all copies", with: "avatar_test"
+    click_button "Next"
+    assert_text "Confirm duplication"
+    click_button "Confirm and duplicate"
+
+    # The job is queued but not executed (test adapter), so the task stays
+    # pending and the progress page renders rather than redirecting onward.
+    assert_text "Duplicating group"
+    assert_selector "progress"
   end
 end
