@@ -1184,6 +1184,83 @@ class GroupTest < ActiveSupport::TestCase
 
   # -- stale reuse targets --
 
+  # -- deep_duplicate avatar blob sharing ----------------------------------------
+
+  test "deep_duplicate shares the avatar blob with the new group copy" do
+    source = groups(:echo_shard)
+    source.avatar.attach(
+      io: File.open(file_fixture("avatar.png")),
+      filename: "avatar.png",
+      content_type: "image/png"
+    )
+    assert source.avatar.attached?
+
+    new_root = source.deep_duplicate(new_labels: [ "avatar_blob_test" ])
+
+    assert new_root.avatar.attached?, "duplicated group should have an avatar"
+    assert_equal source.avatar.blob.id, new_root.avatar.blob.id,
+      "duplicated group should share the same blob, not upload a new file"
+  end
+
+  test "deep_duplicate shares avatar blobs with new profile copies" do
+    source_profile = profiles(:mirage)
+    source_profile.avatar.attach(
+      io: File.open(file_fixture("avatar.png")),
+      filename: "avatar.png",
+      content_type: "image/png"
+    )
+    assert source_profile.avatar.attached?
+
+    echo = groups(:echo_shard)
+    echo.deep_duplicate(new_labels: [ "avatar_profile_blob_test" ])
+
+    new_profile = Profile.find_by(copied_from_id: source_profile.id)
+    assert_not_nil new_profile, "a copy of the profile should have been created"
+    assert new_profile.avatar.attached?, "duplicated profile should have an avatar"
+    assert_equal source_profile.avatar.blob.id, new_profile.avatar.blob.id,
+      "duplicated profile should share the same blob"
+  end
+
+  test "detaching avatar on duplicated group does not remove original avatar" do
+    source = groups(:echo_shard)
+    source.avatar.attach(
+      io: File.open(file_fixture("avatar.png")),
+      filename: "avatar.png",
+      content_type: "image/png"
+    )
+
+    new_root = source.deep_duplicate(new_labels: [ "detach_test" ])
+    assert new_root.avatar.attached?
+
+    new_root.avatar.detach
+
+    source.reload
+    assert source.avatar.attached?, "original avatar should be unaffected after detaching the copy's avatar"
+  end
+
+  test "purging avatar on duplicated group does not purge the shared blob while original still references it" do
+    source = groups(:echo_shard)
+    source.avatar.attach(
+      io: File.open(file_fixture("avatar.png")),
+      filename: "avatar.png",
+      content_type: "image/png"
+    )
+    shared_blob_id = source.avatar.blob.id
+
+    new_root = source.deep_duplicate(new_labels: [ "purge_blob_test" ])
+    assert new_root.avatar.attached?
+
+    # Purging the copy's attachment should NOT destroy the blob because the
+    # original attachment still references it.
+    new_root.avatar.purge
+
+    assert source.reload.avatar.attached?, "original avatar should still be attached after purging copy"
+    assert ActiveStorage::Blob.exists?(shared_blob_id),
+      "shared blob should still exist in the database while the original attachment references it"
+  end
+
+  # -- stale reuse targets --
+
   test "duplication_preview_tree downgrades group to new when reuse target no longer exists" do
     user = users(:three)
     prism = groups(:prism_circle)
