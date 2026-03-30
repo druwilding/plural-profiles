@@ -699,8 +699,9 @@ class Group < ApplicationRecord
 
   # Attach an Active Storage avatar blob from source to target by sharing the
   # existing blob reference — no file download or re-upload needed.
-  # Active Storage's FK constraint ensures the blob is only purged when all
-  # attachments referencing it are removed.
+  # Active Storage manages the blob lifecycle: purging an attachment only
+  # deletes the blob when there are no other attachments using that blob, so
+  # shared blobs remain valid for other records.
   def duplicate_avatar(source, target)
     return unless source.avatar.attached?
     target.avatar.attach(source.avatar.blob)
