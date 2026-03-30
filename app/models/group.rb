@@ -218,13 +218,13 @@ class Group < ApplicationRecord
     group_map.each do |old_id, new_group|
       next if reused_group_ids.include?(old_id) || skip_ids.include?(old_id)
       original = groups_by_id[old_id]
-      duplicate_avatar(original, new_group) if original&.avatar&.attached?
+      reattach_avatar(original, new_group) if original&.avatar&.attached?
     end
 
     profile_map.each do |old_id, new_profile|
       next if reused_profile_ids.include?(old_id)
       original = profiles_by_id[old_id]
-      duplicate_avatar(original, new_profile) if original&.avatar&.attached?
+      reattach_avatar(original, new_profile) if original&.avatar&.attached?
     end
 
     group_map[id] # Return the new root group
@@ -702,7 +702,7 @@ class Group < ApplicationRecord
   # Active Storage manages the blob lifecycle: purging an attachment only
   # deletes the blob when there are no other attachments using that blob, so
   # shared blobs remain valid for other records.
-  def duplicate_avatar(source, target)
+  def reattach_avatar(source, target)
     return unless source.avatar.attached?
     target.avatar.attach(source.avatar.blob)
   end
