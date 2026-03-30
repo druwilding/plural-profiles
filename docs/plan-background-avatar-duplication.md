@@ -434,30 +434,30 @@ Add styles for `.duplication-progress` in `application.css`:
 
 ## Phase 6: Cleanup old tasks
 
-Old `DuplicationTask` records are no longer useful once the job finishes. Add a simple cleanup mechanism.
+Old `DuplicationTask` records are no longer useful once the job finishes.
 
-### Option A: TTL-based deletion in a recurring task
+### Background: why eager cleanup isn't reliable
 
-If recurring tasks are ever enabled (Solid Queue), add a daily job to delete tasks older than 7 days.
+The controller's `duplicate_progress` action calls `@task.destroy` when the task is finished. In practice, because avatar copying now uses blob references rather than full file copies, the job completes nearly instantly. This means the Stimulus `progress-poll` controller often gets a `redirect_url` on its very first poll and calls `Turbo.visit` directly — bypassing `duplicate_progress` entirely, so `destroy` is never reached. Rows accumulate.
 
-### Option B: Eager cleanup
+### Implemented: startup cleanup initializer
 
-Delete the task record when the progress page successfully redirects:
+`config/initializers/cleanup_duplication_tasks.rb` runs at boot and deletes any `completed` or `failed` tasks older than 1 day:
 
 ```ruby
-def duplicate_progress
-  @task = current_user.duplication_tasks.find(params[:task_id])
-  @group = @task.group
-
-  if @task.finished?
-    @task.destroy
-    redirect_to our_group_path(@group),
-                notice: "Group duplicated with all sub-groups and profiles."
+Rails.application.config.after_initialize do
+  begin
+    DuplicationTask
+      .where(status: %w[completed failed])
+      .where(updated_at: ..1.day.ago)
+      .delete_all
+  rescue => e
+    Rails.logger.warn("[startup] DuplicationTask cleanup skipped: #{e.message}")
   end
 end
 ```
 
-This is simpler and avoids accumulating rows. **Recommended.**
+The `rescue` handles fresh deployments where the migration hasn't run yet. No Solid Queue or recurring-task infrastructure needed.
 
 ---
 
@@ -508,6 +508,7 @@ If the `:async` adapter's lack of persistence becomes a concern:
 | `app/views/our/groups/duplicate_progress.html.haml`      | New progress page view                                                   |
 | `app/javascript/controllers/progress_poll_controller.js` | New Stimulus controller                                                  |
 | `app/assets/stylesheets/application.css`                 | Progress page styles                                                     |
+| `config/initializers/cleanup_duplication_tasks.rb`       | Startup cleanup — delete finished tasks older than 1 day                |
 | `test/models/duplication_task_test.rb`                   | New model tests                                                          |
 | `test/jobs/duplicate_avatars_job_test.rb`                | New job tests                                                            |
 | `test/controllers/our/groups_controller_test.rb`         | Updated/new controller tests                                             |
