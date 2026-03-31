@@ -60,6 +60,10 @@ class ThemeBackgroundImageTest < ApplicationSystemTestCase
     assert_current_path edit_our_theme_path(@theme)
     find("summary", text: "Background image").click
 
+    # Wait for the section to fully render (not a Turbo snapshot) before
+    # asserting absence — the upload label is always present when there's no image.
+    assert_text "JPG, PNG, or WebP"
+
     assert_no_css "img.theme-bg-preview"
     assert_no_text "Remove background image"
   end
