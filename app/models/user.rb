@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include SidebarTree
+
   has_secure_password
   has_many :sessions, dependent: :destroy
   has_many :profiles, dependent: :destroy
