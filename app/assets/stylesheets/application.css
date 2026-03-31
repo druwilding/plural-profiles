@@ -137,7 +137,7 @@ body {
 /* Layout: sidebar + main */
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 2rem;
 }
 
@@ -368,18 +368,20 @@ body {
 }
 
 .sidebar-tree__row {
-  /* Override .sidebar summary heading styles for tree nodes */
-  font-weight: normal;
-  color: var(--text);
-  font-size: 0.9rem;
-  letter-spacing: normal;
-  padding: 0.3rem 0.4rem;
-  /* Layout */
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.4rem;
   border-radius: 4px;
+}
+
+/* Higher specificity (0,2,0) to beat .sidebar summary (0,1,1) */
+.sidebar .sidebar-tree__row {
+  font-weight: normal;
+  color: var(--text);
+  font-size: 0.9rem;
+  letter-spacing: normal;
+  padding: 0.3rem 0.4rem;
 }
 
 .sidebar-tree__row:hover {
@@ -2013,7 +2015,7 @@ input[type="submit"].btn--small,
 /* Tablet (768px and below) */
 @media (max-width: 768px) {
   .layout {
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 1.5rem;
   }
 
@@ -2614,6 +2616,7 @@ input[type="submit"].btn--small,
 .label-badge--sidebar {
   font-size: 0.65rem;
   padding: 0.1rem 0.35rem;
+  font-weight: normal;
 }
 
 @media (forced-colors: active) {
