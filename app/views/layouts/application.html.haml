@@ -44,7 +44,7 @@
           = link_to "Sign up", new_registration_path
 
     %main{class: "container #{content_for(:container_class)}"}
-      - if @sidebar_profiles
+      - if @sidebar_trees
         .layout
           = render "our/sidebar"
           .main-content
