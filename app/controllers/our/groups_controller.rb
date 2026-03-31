@@ -6,7 +6,7 @@ class Our::GroupsController < ApplicationController
   before_action :validate_theme_choice, only: %i[create update]
 
   def index
-    @groups = Current.user.groups.order(:name)
+    @groups = Current.user.groups.order_by_name_and_labels
     if params[:label].present?
       @groups = @groups.where("labels @> ?", [ params[:label] ].to_json)
     end
@@ -64,7 +64,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def manage_profiles
-    @available_profiles = Current.user.profiles.where.not(id: @group.profile_ids).order(:name)
+    @available_profiles = Current.user.profiles.where.not(id: @group.profile_ids).order_by_name_and_labels
   end
 
   def add_profile
@@ -108,7 +108,7 @@ class Our::GroupsController < ApplicationController
     @available_groups = Current.user.groups
       .where.not(id: excluded_ids)
       .includes(avatar_attachment: :blob)
-      .order(:name)
+      .order_by_name_and_labels
   end
 
   def toggle_visibility

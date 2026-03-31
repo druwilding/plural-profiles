@@ -13,7 +13,7 @@
 
 - if @group.profiles.any?
   .card-list
-    - @group.profiles.order(:name).each do |profile|
+    - @group.profiles.order_by_name_and_labels.each do |profile|
       .card.card--row
         .card__header
           - if profile.avatar.attached?
