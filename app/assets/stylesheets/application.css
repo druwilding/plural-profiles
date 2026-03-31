@@ -293,13 +293,35 @@ body {
   padding: 0;
 }
 
+.sidebar-tree__controls {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  padding-left: 2rem;
+}
+
+.sidebar-tree__control-btn {
+  background: none;
+  border: none;
+  padding: 0 0.2rem;
+  font-size: 0.75rem;
+  color: var(--link);
+  cursor: pointer;
+}
+
+@media (forced-colors: active) {
+  .sidebar-tree__control-btn {
+    color: LinkText;
+  }
+}
+
 .sidebar-tree__folder,
 .sidebar-tree__children {
   --st-indent: 0.875rem;
   --st-arrow-width: 1rem;
   --st-row-center: 0.875rem;
-  --st-guide-inset: -0.25rem;
-  --st-leaf-connector: 1.3rem;
+  --st-guide-inset: 0;
+  --st-leaf-connector: 0.8rem;
 }
 
 .sidebar-tree__children {

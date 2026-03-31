@@ -2,15 +2,15 @@
   %ul.sidebar__list
     %li{class: "sidebar__item sidebar__item--action #{('sidebar__item--active' if current_page?(root_path))}"}
       = link_to "Home", root_path, class: "sidebar__link sidebar__link--action"
-    %li.sidebar__item.sidebar__item--action
-      = link_to "New group", new_our_group_path, class: "sidebar__link sidebar__link--action"
-    %li.sidebar__item.sidebar__item--action
-      = link_to "New profile", new_our_profile_path, class: "sidebar__link sidebar__link--action"
 
   %hr
 
-  %details{open: true, data: { controller: "details-persist", "details-persist-key-value": "sidebar-groups" }}
+  %details{open: true, data: { controller: "details-persist sidebar-tree-controls", "details-persist-key-value": "sidebar-groups" }}
     %summary Groups
+    - if @sidebar_trees.any?
+      .sidebar-tree__controls
+        %button.sidebar-tree__control-btn{type: "button", data: { action: "sidebar-tree-controls#expandAll" }} Expand all
+        %button.sidebar-tree__control-btn{type: "button", data: { action: "sidebar-tree-controls#collapseAll" }} Collapse all
     %ul.sidebar-tree
       - @sidebar_trees.each do |node|
         = render "our/sidebar_tree_node", node: node
