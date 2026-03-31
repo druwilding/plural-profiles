@@ -29,20 +29,22 @@ module SidebarTree
 
     groups_by_id = all_groups.index_by(&:id)
 
+    # Single query for all GroupGroup edges within this user's groups.
+    # Used for both the child-ID set and the parent→children map.
+    all_edges = GroupGroup.where(parent_group_id: groups.select(:id))
+                          .pluck(:parent_group_id, :child_group_id)
+
+    all_child_ids = all_edges.map(&:last).to_set
+
     # Top-level groups: those that are not a child of any other group
     # belonging to this user.
-    all_child_ids = GroupGroup.where(parent_group_id: groups.select(:id))
-                              .pluck(:child_group_id).to_set
-
     top_level = groups_by_id.values
                             .reject { |g| all_child_ids.include?(g.id) }
                             .sort_by(&:name_and_label_sort_key)
 
     # Build a global parent → children map for all of this user's groups.
-    children_map = GroupGroup.where(parent_group_id: groups.select(:id))
-                             .pluck(:parent_group_id, :child_group_id)
-                             .group_by(&:first)
-                             .transform_values { |rows| rows.map(&:last) }
+    children_map = all_edges.group_by(&:first)
+                            .transform_values { |rows| rows.map(&:last) }
 
     seen_profile_ids = Set.new
     seen_group_ids   = Set.new
@@ -58,6 +60,7 @@ module SidebarTree
     orphans = profiles.includes(avatar_attachment: :blob)
                       .where.not(id: grouped_profile_ids)
                       .order_by_name_and_labels
+                      .load
 
     { trees: trees, orphan_profiles: orphans }
   end
