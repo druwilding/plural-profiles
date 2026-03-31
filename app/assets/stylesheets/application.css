@@ -315,6 +315,7 @@ body {
   }
 }
 
+.sidebar-tree,
 .sidebar-tree__folder,
 .sidebar-tree__children {
   --st-indent: 0.875rem;
