@@ -9,6 +9,7 @@
 :root {
   --page-bg: #0e2e24;
   --pane-bg: #133b2f;
+  --header-bg: var(--pane-bg);
   --pane-border: #02120e;
   --heading: #5ea389;
   --text: #5ea389;
@@ -912,7 +913,17 @@ button:hover,
   justify-content: center;
 }
 
-/* Profile header (show pages) */
+/* Profile header (show pages) — edge-to-edge banner inside .card */
+.card > .profile-header {
+  background-color: var(--header-bg);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: -2rem -2rem 1.5rem -2rem;
+  padding: 2rem;
+  border-radius: 7px 7px 0 0;
+}
+
 .profile-header {
   display: flex;
   align-items: center;
@@ -922,6 +933,12 @@ button:hover,
 
 .profile-description {
   margin-bottom: 1.5rem;
+}
+
+@media (forced-colors: active) {
+  .card > .profile-header {
+    border-bottom: 1px solid ButtonText;
+  }
 }
 
 .profile-description details summary,

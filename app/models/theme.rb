@@ -85,6 +85,7 @@ class Theme < ApplicationRecord
   THEMEABLE_PROPERTIES = {
     "page_bg"                 => { label: "Page background",           default: "#0e2e24", group: :base    },
     "pane_bg"                 => { label: "Pane background",           default: "#133b2f", group: :base    },
+    "header_bg"               => { label: "Header background",         default: "#133b2f", group: :base    },
     "pane_border"             => { label: "Pane border",               default: "#02120e", group: :base    },
     "heading"                 => { label: "Headings",                  default: "#5ea389", group: :base    },
     "text"                    => { label: "Text",                      default: "#5ea389", group: :base    },
