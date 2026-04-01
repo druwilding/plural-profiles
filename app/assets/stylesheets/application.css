@@ -914,7 +914,7 @@ button:hover,
 }
 
 /* Profile header (show pages) — edge-to-edge banner inside .card */
-.card > .profile-header {
+.card > .card__header {
   background-color: var(--header-bg);
   display: flex;
   align-items: center;
@@ -924,7 +924,7 @@ button:hover,
   border-radius: 7px 7px 0 0;
 }
 
-.profile-header {
+.card__header {
   display: flex;
   align-items: center;
   gap: 1.25rem;
@@ -936,7 +936,7 @@ button:hover,
 }
 
 @media (forced-colors: active) {
-  .card > .profile-header {
+  .card > .card__header {
     border-bottom: 1px solid ButtonText;
   }
 }
@@ -2122,7 +2122,7 @@ input[type="submit"].btn--small,
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 
-  .profile-header {
+  .card__header {
     flex-direction: column;
     text-align: center;
   }
