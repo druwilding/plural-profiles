@@ -49,25 +49,29 @@ class SidebarTreeTest < ApplicationSystemTestCase
     assert_selector ".sidebar-tree__label--repeated", text: "Stray"
   end
 
-  # ── Orphaned profiles ─────────────────────────────────────────────────────
+  # ── Profiles section ──────────────────────────────────────────────────────
 
-  test "profiles without any group appear in the Ungrouped profiles section" do
+  test "all profiles appear in the Profiles section" do
     @user = users(:one)
     sign_in_via_browser
 
-    # Bob is not in any group for user :one.
-    assert_text "Ungrouped profiles"
-    ungrouped = find("details", text: /Ungrouped profiles/)
-    within(ungrouped) { assert_text "Bob" }
+    # The Profiles section is always visible and contains every profile.
+    assert_text "Profiles"
+    profiles_section = find("details[data-details-persist-key-value='sidebar-profiles']")
+    within(profiles_section) do
+      assert_text "Bob"
+      assert_text "Alice"
+      assert_text "Everyone Profile"
+    end
   end
 
-  test "profiles that belong to a group do not appear in Ungrouped profiles" do
+  test "profiles in a group also appear in the Profiles section" do
     @user = users(:one)
     sign_in_via_browser
 
-    # Alice is in the Friends group so must not appear in the orphans section.
-    ungrouped = find("details", text: /Ungrouped profiles/)
-    within(ungrouped) { assert_no_text "Alice" }
+    # Alice is in the Friends group AND still appears in the Profiles section.
+    profiles_section = find("details[data-details-persist-key-value='sidebar-profiles']")
+    within(profiles_section) { assert_text "Alice" }
   end
 
   # ── Active highlighting ───────────────────────────────────────────────────

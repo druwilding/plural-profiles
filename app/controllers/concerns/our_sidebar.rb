@@ -12,6 +12,6 @@ module OurSidebar
 
     sidebar = Current.user.sidebar_tree
     @sidebar_trees = sidebar[:trees]
-    @sidebar_orphan_profiles = sidebar[:orphan_profiles]
+    @sidebar_all_profiles = sidebar[:all_profiles]
   end
 end

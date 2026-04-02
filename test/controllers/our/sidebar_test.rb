@@ -21,13 +21,14 @@ class Our::SidebarTest < ActionDispatch::IntegrationTest
     assert_match "Friends", response.body
   end
 
-  test "sidebar renders orphaned profiles section for authenticated user" do
+  test "sidebar renders all profiles section for authenticated user" do
     sign_in_as users(:one)
     get our_groups_path
     assert_response :success
-    # Bob is not in any group → appears under "Ungrouped profiles"
-    assert_match "Ungrouped profiles", response.body
+    # All profiles for the account appear in the Profiles section
+    assert_match "Profiles", response.body
     assert_match "Bob", response.body
+    assert_match "Alice", response.body
   end
 
   test "sidebar does not render another user's groups" do

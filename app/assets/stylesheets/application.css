@@ -2628,7 +2628,7 @@ input[type="submit"].btn--small,
 
 @media (forced-colors: active) {
   .duplicate-comparison__card {
-    border-color: ButtonText;
+    border-color: CanvasText;
   }
   .radio-group input[type="radio"] {
     accent-color: Highlight;
