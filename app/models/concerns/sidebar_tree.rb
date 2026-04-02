@@ -5,8 +5,8 @@ module SidebarTree
   #
   # Returns a hash:
   #   {
-  #     trees:           [ node, ... ],      # one node per top-level group
-  #     orphan_profiles: ActiveRecord::Relation  # profiles not in any group
+  #     trees:        [ node, ... ],      # one node per top-level group
+  #     all_profiles: ActiveRecord::Relation  # all profiles, ordered by name and labels
   #   }
   #
   # Each node is a hash:
@@ -53,16 +53,11 @@ module SidebarTree
       build_sidebar_node(root, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
     end
 
-    # Orphaned profiles: profiles not belonging to any group in this account.
-    grouped_profile_ids = GroupProfile.where(group_id: groups.select(:id))
-                                      .pluck(:profile_id).to_set
+    all_profiles = profiles.includes(avatar_attachment: :blob)
+                            .order_by_name_and_labels
+                            .load
 
-    orphans = profiles.includes(avatar_attachment: :blob)
-                      .where.not(id: grouped_profile_ids)
-                      .order_by_name_and_labels
-                      .load
-
-    { trees: trees, orphan_profiles: orphans }
+    { trees: trees, all_profiles: all_profiles }
   end
 
   private

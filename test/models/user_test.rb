@@ -216,7 +216,7 @@ class UserTest < ActiveSupport::TestCase
 
   # -- sidebar_tree --
 
-  test "sidebar_tree returns empty trees and no orphans for a user with no groups or profiles" do
+  test "sidebar_tree returns empty trees and no profiles for a user with no groups or profiles" do
     user = User.create!(
       email_address: "empty_user@example.com",
       password: "Plur4l!Pr0files#2026",
@@ -224,10 +224,10 @@ class UserTest < ActiveSupport::TestCase
     )
     result = user.sidebar_tree
     assert_empty result[:trees]
-    assert_empty result[:orphan_profiles]
+    assert_empty result[:all_profiles]
   end
 
-  test "sidebar_tree places all profiles as orphans when user has no groups" do
+  test "sidebar_tree lists all profiles when user has no groups" do
     user = User.create!(
       email_address: "no_groups@example.com",
       password: "Plur4l!Pr0files#2026",
@@ -237,7 +237,7 @@ class UserTest < ActiveSupport::TestCase
 
     result = user.sidebar_tree
     assert_empty result[:trees]
-    assert_equal [ profile.id ], result[:orphan_profiles].map(&:id)
+    assert_equal [ profile.id ], result[:all_profiles].map(&:id)
   end
 
   test "sidebar_tree returns a single top-level group with its profile (user :two)" do
@@ -252,10 +252,10 @@ class UserTest < ActiveSupport::TestCase
     assert_equal [ profiles(:carol).id ], node[:profiles].map { |e| e[:profile].id }
     assert_equal false, node[:profiles].first[:repeated]
     assert_empty node[:children]
-    assert_empty result[:orphan_profiles]
+    assert_equal [ profiles(:carol).id ], result[:all_profiles].map(&:id)
   end
 
-  test "sidebar_tree nests child groups and identifies orphan profiles (user :one)" do
+  test "sidebar_tree nests child groups and lists all profiles (user :one)" do
     user   = users(:one)
     result = user.sidebar_tree
 
@@ -270,11 +270,11 @@ class UserTest < ActiveSupport::TestCase
     assert_equal groups(:friends).id, friends_node[:group].id
     assert_equal false, friends_node[:repeated]
 
-    # Bob is not in any group and must appear as an orphan.
-    orphan_ids = result[:orphan_profiles].map(&:id)
-    assert_includes orphan_ids, profiles(:bob).id
-    assert_not_includes orphan_ids, profiles(:alice).id
-    assert_not_includes orphan_ids, profiles(:everyone_profile).id
+    # all_profiles includes every profile for this account, regardless of group membership.
+    all_profile_ids = result[:all_profiles].map(&:id)
+    assert_includes all_profile_ids, profiles(:bob).id
+    assert_includes all_profile_ids, profiles(:alice).id
+    assert_includes all_profile_ids, profiles(:everyone_profile).id
   end
 
   test "sidebar_tree marks a profile as repeated on its second appearance (user :three)" do
@@ -309,9 +309,11 @@ class UserTest < ActiveSupport::TestCase
     assert_equal true,  prism_entries.last[:repeated],  "Second prism_circle should be repeated"
   end
 
-  test "sidebar_tree has no orphan profiles for user :three" do
+  test "sidebar_tree all_profiles contains all profiles for user :three" do
     result = users(:three).sidebar_tree
-    assert_empty result[:orphan_profiles]
+    all_profile_ids = result[:all_profiles].map(&:id)
+    assert_includes all_profile_ids, profiles(:stray).id
+    assert_includes all_profile_ids, profiles(:ember).id
   end
 
   private
