@@ -57,7 +57,7 @@ class SidebarTreeTest < ApplicationSystemTestCase
 
     # The Profiles section is always visible and contains every profile.
     assert_text "Profiles"
-    profiles_section = find("details", text: /\AProfiles\z/)
+    profiles_section = find("details[data-details-persist-key-value='sidebar-profiles']")
     within(profiles_section) do
       assert_text "Bob"
       assert_text "Alice"
@@ -70,7 +70,7 @@ class SidebarTreeTest < ApplicationSystemTestCase
     sign_in_via_browser
 
     # Alice is in the Friends group AND still appears in the Profiles section.
-    profiles_section = find("details", text: /\AProfiles\z/)
+    profiles_section = find("details[data-details-persist-key-value='sidebar-profiles']")
     within(profiles_section) { assert_text "Alice" }
   end
 
