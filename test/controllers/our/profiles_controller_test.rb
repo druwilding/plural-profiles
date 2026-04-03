@@ -385,7 +385,7 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     @profile.update!(labels: %w[public])
     get our_profiles_path(label: "nonexistent")
     assert_response :success
-    assert_select ".main-content .card-list", count: 0
+    assert_select ".main-content .profile-grid", count: 0
   end
 
   test "index shows filter bar when labels exist" do

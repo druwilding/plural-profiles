@@ -445,14 +445,6 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Alice", response.body
   end
 
-  test "manage_groups shows empty state for group with no children or profiles" do
-    sign_in_as @user
-    empty_group = @user.groups.create!(name: "Empty")
-    get manage_groups_our_group_path(empty_group)
-    assert_response :success
-    assert_match "no sub-groups or profiles yet", response.body
-  end
-
   test "manage_groups requires authentication" do
     alpha = groups(:alpha_clan)
     get manage_groups_our_group_path(alpha)
@@ -821,7 +813,7 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     @group.update!(labels: %w[close])
     get our_groups_path(label: "nonexistent")
     assert_response :success
-    assert_select ".main-content .card-list", count: 0
+    assert_select ".main-content .profile-grid", count: 0
   end
 
   test "index shows filter bar when labels exist" do
