@@ -128,11 +128,26 @@ class Theme < ApplicationRecord
 
   # Generates a CSS string of custom property overrides
   def to_css_properties
-    THEMEABLE_PROPERTIES.keys.filter_map { |prop|
+    text_color = color_for("text")
+    # These two properties are defined in :root using var(--text), but CSS resolves
+    # var() references in custom properties eagerly at the declaring element. That
+    # means the computed value of --tree-guide etc. on :root has the original --text
+    # baked in, and descendants inherit that already-resolved string even when a
+    # theme overrides --text on body via inline style. We work around this by
+    # including explicitly-computed values here, mirroring what the theme designer
+    # preview JS does in applyToPreview().
+    derived = [
+      "--tree-guide: color-mix(in srgb, #{text_color} 30%, transparent);",
+      "--avatar-placeholder-border: color-mix(in srgb, #{text_color} 50%, transparent);"
+    ]
+
+    props = THEMEABLE_PROPERTIES.keys.filter_map { |prop|
       value = color_for(prop)
       css_prop = "--#{prop.tr('_', '-')}"
       "#{css_prop}: #{value};"
-    }.join(" ")
+    }
+
+    (props + derived).join(" ")
   end
 
   # Generates a full CSS block suitable for copy/paste

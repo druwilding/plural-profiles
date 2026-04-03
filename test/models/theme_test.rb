@@ -36,6 +36,14 @@ class ThemeTest < ActiveSupport::TestCase
     assert_includes css, "--link: #3ab580;"
   end
 
+  test "to_css_properties includes derived tree-guide and avatar-placeholder-border using theme text color" do
+    theme = themes(:dark_forest)
+    text_color = theme.color_for("text")
+    css = theme.to_css_properties
+    assert_includes css, "--tree-guide: color-mix(in srgb, #{text_color} 30%, transparent);"
+    assert_includes css, "--avatar-placeholder-border: color-mix(in srgb, #{text_color} 50%, transparent);"
+  end
+
   test "to_css generates a full root block" do
     theme = themes(:dark_forest)
     css = theme.to_css
