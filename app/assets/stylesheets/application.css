@@ -944,7 +944,7 @@ button:hover,
 
 @media (forced-colors: active) {
   .card > .card__header {
-    border-bottom: 1px solid ButtonText;
+    border-bottom: 1px solid CanvasText;
   }
 }
 
