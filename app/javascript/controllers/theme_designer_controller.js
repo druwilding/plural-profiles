@@ -32,6 +32,10 @@ export default class extends Controller {
                     "backgroundFileInput", "backgroundRepeat",
                     "backgroundSize", "backgroundPosition", "backgroundAttachment"]
 
+  // Derived-text mix percentages, populated from Theme::DERIVED_TEXT_PROPERTIES
+  // via a data attribute so the Ruby and JS definitions stay in sync.
+  static values = { derivedTextProperties: Object }
+
   connect() {
     this.bgObjectUrl = null
     this.applyAllToPreview()
@@ -87,10 +91,14 @@ export default class extends Controller {
     if (!this.hasPreviewTarget) return
     this.previewTarget.style.setProperty(cssProp(property), value)
 
-    // Also update computed properties that depend on text
+    // Also update computed properties that depend on text.
+    // Percentages come from the server via derivedTextPropertiesValue so they
+    // stay in sync with Theme::DERIVED_TEXT_PROPERTIES without duplication.
     if (property === "text") {
-      this.previewTarget.style.setProperty("--tree-guide", `color-mix(in srgb, ${value} 30%, transparent)`)
-      this.previewTarget.style.setProperty("--avatar-placeholder-border", `color-mix(in srgb, ${value} 50%, transparent)`)
+      const derived = this.hasDerivedTextPropertiesValue ? this.derivedTextPropertiesValue : {}
+      Object.entries(derived).forEach(([prop, percent]) => {
+        this.previewTarget.style.setProperty(`--${prop}`, `color-mix(in srgb, ${value} ${percent}%, transparent)`)
+      })
     }
   }
 

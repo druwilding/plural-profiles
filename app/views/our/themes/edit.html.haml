@@ -3,7 +3,7 @@
 
 %h1 Edit theme
 
-.theme-designer{data: { controller: "theme-designer" }}
+.theme-designer{data: { controller: "theme-designer", "theme-designer-derived-text-properties-value": Theme::DERIVED_TEXT_PROPERTIES.to_json }}
   .theme-designer__controls
     .card
       = render "our/themes/form", theme: @theme

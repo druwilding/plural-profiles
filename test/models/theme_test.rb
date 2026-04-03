@@ -36,6 +36,18 @@ class ThemeTest < ActiveSupport::TestCase
     assert_includes css, "--link: #3ab580;"
   end
 
+  test "to_css_properties includes derived tree-guide and avatar-placeholder-border using theme text color" do
+    # Use a text colour that differs from the default (#5ea389) so the test fails
+    # if to_css_properties accidentally falls back to the default instead of the
+    # theme's overridden value.  Expected percentages come from the single source
+    # of truth (DERIVED_TEXT_PROPERTIES) so the test stays in sync automatically.
+    theme = Theme.new(user: users(:one), name: "Custom text", colors: { "text" => "#abcdef" })
+    css = theme.to_css_properties
+    Theme::DERIVED_TEXT_PROPERTIES.each do |css_prop, percent|
+      assert_includes css, "--#{css_prop}: color-mix(in srgb, #abcdef #{percent}%, transparent);"
+    end
+  end
+
   test "to_css generates a full root block" do
     theme = themes(:dark_forest)
     css = theme.to_css
