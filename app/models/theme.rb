@@ -138,13 +138,19 @@ class Theme < ApplicationRecord
   # Generates a CSS string of custom property overrides
   def to_css_properties
     text_color = color_for("text")
-    # These two properties are defined in :root using var(--text), but CSS resolves
-    # var() references in custom properties eagerly at the declaring element. That
-    # means the computed value of --tree-guide etc. on :root has the original --text
-    # baked in, and descendants inherit that already-resolved string even when a
-    # theme overrides --text on body via inline style. We work around this by
-    # including explicitly-computed values here, mirroring what the theme designer
-    # preview JS does in applyToPreview().
+    # --tree-guide and --avatar-placeholder-border are declared on :root as
+    # color-mix(in srgb, var(--text) …).  Per the CSS custom properties spec
+    # (https://www.w3.org/TR/css-variables-1/#syntax), a custom property's value
+    # is inherited as an *unresolved* token sequence, so var(--text) inside the
+    # inherited value ought to re-resolve against each element's own --text.
+    # In practice, in every tested browser (Chromium ≥119, Firefox ≥120,
+    # Safari ≥17) color-mix() containing a var() reference inside a custom
+    # property value is resolved at the element where the property is *declared*
+    # (:root), not re-resolved at each inheriting element.  As a result,
+    # overriding --text on body via inline style does not update the
+    # already-resolved --tree-guide value that descendants inherit from :root.
+    # We work around this by emitting an explicit, pre-resolved value here,
+    # substituting the concrete theme colour in place of var(--text).
     derived = DERIVED_TEXT_PROPERTIES.map { |css_prop, percent|
       "--#{css_prop}: color-mix(in srgb, #{text_color} #{percent}%, transparent);"
     }
