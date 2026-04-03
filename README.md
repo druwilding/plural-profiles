@@ -103,6 +103,10 @@ This allows plural folk to model complex, Venn-diagram-style group arrangements 
   ```sh
   export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
   ```
+- [libvips](https://www.libvips.org/) — required for Active Storage image variants (avatar resizing):
+  ```sh
+  brew install vips
+  ```
 
 ### Setup
 
