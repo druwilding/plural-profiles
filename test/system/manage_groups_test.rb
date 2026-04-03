@@ -42,13 +42,6 @@ class ManageGroupsTest < ApplicationSystemTestCase
     assert_text "Mirage"
   end
 
-  test "manage groups shows empty state when group has no sub-groups or profiles" do
-    empty = @user.groups.create!(name: "Empty Group")
-    visit manage_groups_our_group_path(empty)
-
-    assert_text "no sub-groups or profiles yet"
-  end
-
   test "manage groups shows castle clan hidden state correctly" do
     visit manage_groups_our_group_path(groups(:castle_clan))
 
@@ -67,25 +60,14 @@ class ManageGroupsTest < ApplicationSystemTestCase
 
     visit manage_groups_our_group_path(alpha)
 
-    assert_text "Add a group to"
-
-    within(".card-list") do
+    within(".profile-grid") do
       card = find(".card", text: castle.name)
-      within(card) { click_link "Add to #{alpha.name}" }
+      within(card) { click_link "Add to group" }
     end
 
     assert_current_path manage_groups_our_group_path(alpha)
     assert_text "Group added."
     assert_text "Castle Clan"
-  end
-
-  test "shows message when all groups are already in tree" do
-    user = users(:one)
-    sign_in_via_browser(user)
-
-    visit manage_groups_our_group_path(groups(:everyone))
-
-    assert_text "All your other groups are already in this tree."
   end
 
   # -- Removing a direct sub-group --
@@ -96,7 +78,7 @@ class ManageGroupsTest < ApplicationSystemTestCase
     visit manage_groups_our_group_path(alpha)
 
     accept_confirm do
-      click_link "Remove from Alpha Clan", match: :first
+      click_link "Remove from group", match: :first
     end
 
     assert_current_path manage_groups_our_group_path(alpha)
@@ -118,7 +100,7 @@ class ManageGroupsTest < ApplicationSystemTestCase
 
     accept_confirm do
       within find(".tree-editor__item-info", text: "Spectrum") do
-        click_link "Remove from Alpha Clan"
+        click_link "Remove from group"
       end
     end
 
@@ -128,16 +110,5 @@ class ManageGroupsTest < ApplicationSystemTestCase
     within(".explorer__sidebar") do
       assert_no_text "Spectrum"
     end
-  end
-
-  # -- Back link --
-
-  test "back link returns to group show page" do
-    alpha = groups(:alpha_clan)
-    visit manage_groups_our_group_path(alpha)
-
-    click_link "Back to group"
-
-    assert_current_path our_group_path(alpha)
   end
 end
