@@ -1,17 +1,17 @@
 - content_for(:title) { @group.name + " — Plural Profiles" }
 
-.profile-title
-  %h1= @group.name
-  - if @group.labels.any?
-    .label-badges
-      - @group.labels.each do |label|
-        %span.label-badge= label
-
 .card
-  .profile-header
+  .card__header
     - if @group.avatar.attached?
       = link_to rails_blob_path(@group.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
         = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @group.avatar_alt_text.presence || "", loading: "lazy"
+
+    .name-with-labels
+      %h1= @group.name
+      - if @group.labels.any?
+        .label-badges
+          - @group.labels.each do |label|
+            %span.label-badge= label
 
   %div
     - if @group.description.present?
@@ -36,7 +36,9 @@
     = link_to "Delete", our_group_path(@group), data: { turbo_method: :delete, turbo_confirm: "Are you sure? This will only delete the group and its relationships, not the profiles or child groups themselves." }, class: "btn btn--danger"
 
 .card
-  %h2 Share this group
+  .card__header
+    %h2 Share this group
+
   .share-url{data: {controller: "clipboard"}}
     %input{type: "text", value: group_url(@group.uuid), readonly: true, id: "group-share-url", data: {"clipboard-target": "source"}}
     %button.btn{data: {action: "click->clipboard#copy"}}
@@ -50,42 +52,11 @@
     = link_to "Regenerate URL", regenerate_uuid_our_group_path(@group), data: { turbo_method: :patch, turbo_confirm: "This will break any existing links to this group. Are you sure?" }, class: "btn btn--outline btn--small btn--danger"
 
 - if @group.child_groups.any?
-  %h2 Groups
   .profile-grid
     - @group.child_groups.order(:name).each do |child|
-      .card.profile-card
-        - if child.avatar.attached?
-          = image_tag child.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: child.avatar_alt_text.presence || "", loading: "lazy"
-        - else
-          .avatar.avatar--placeholder
-            = render "shared/plural_pride_logo"
-        %h3= link_to child.name, our_group_path(child)
-        - if child.labels.any?
-          .label-badges
-            - child.labels.each do |label|
-              %span.label-badge= label
+      = render "group_card", group: child
 
-%h2 Profiles
 - if @group.profiles.any?
   .profile-grid
     - @group.profiles.order(:name).each do |profile|
-      .card.profile-card
-        - if profile.avatar.attached?
-          = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
-        - else
-          .avatar.avatar--placeholder
-            = render "shared/plural_pride_logo"
-        %h3= link_to profile.name, our_profile_path(profile)
-        - if profile.labels.any?
-          .label-badges
-            - profile.labels.each do |label|
-              %span.label-badge= label
-        - if profile.pronouns.present?
-          %span.pronouns= profile.pronouns
-- else
-  .card
-    %p
-      No profiles in this group yet.
-      = link_to "Add some!", manage_profiles_our_group_path(@group)
-
-%p= link_to "← Back to our groups", our_groups_path
+      = render "our/profiles/profile_card", profile: profile

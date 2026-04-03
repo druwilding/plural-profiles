@@ -2,7 +2,8 @@
 - content_for(:title) { "Sign in — Plural Profiles" }
 
 .card
-  %h1 Sign in
+  .card__header
+    %h1 Sign in
 
   = form_with url: session_path do |form|
     .form-group

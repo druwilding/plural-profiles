@@ -1,0 +1,16 @@
+.card.profile-card
+  - if profile.avatar.attached?
+    = image_tag profile.avatar.variant(resize_to_fill: [64, 64]), class: "avatar", width: 64, height: 64, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
+  - else
+    .avatar.avatar--placeholder
+      = render "shared/plural_pride_logo"
+  %h3= link_to profile.name, our_profile_path(profile)
+  - if profile.labels.any?
+    .label-badges
+      - profile.labels.each do |label|
+        %span.label-badge= label
+  - if profile.pronouns.present?
+    %span.pronouns= profile.pronouns
+  - if local_assigns[:action_label]
+    .profile-card__action-spacer
+    = link_to action_label, action_path, data: ({ turbo_method: action_method } if local_assigns[:action_method]), class: local_assigns.fetch(:action_class, "btn btn--small")

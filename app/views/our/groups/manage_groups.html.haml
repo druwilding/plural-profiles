@@ -1,80 +1,59 @@
 - content_for(:title) { "Manage groups in #{@group.name} — Plural Profiles" }
 
-.profile-title
-  %h1
-    Manage groups in
-    = @group.name
-  - if @group.labels.any?
-    .label-badges
-      - @group.labels.each do |label|
-        %span.label-badge= label
-
 - has_tree = @management_tree.any?
 - has_root_profiles = @root_profiles.any?
 
-- if has_tree || has_root_profiles
-  .tree-editor{"data-controller": "visibility-toggle"}
-    %p.tree-editor__hint
-      Use the
-      %strong Hide
-      checkboxes to determine what can be seen when viewing
-      %strong= link_to @group.name, group_path(@group.uuid), target: "_blank", rel: "noopener noreferrer"
-      publicly.
-      Hiding a group also hides everything inside it.
+.card
+  .card__header
+    .name-with-labels
+      %h1
+        Manage groups in
+        = @group.name
+      - if @group.labels.any?
+        .label-badges
+          - @group.labels.each do |label|
+            %span.label-badge= label
 
-    -# Root group node (collapsible, no Hide/Remove)
-    %details.tree-editor__folder.tree-editor__folder--root{open: true}
-      %summary.tree-editor__summary
-        .tree-editor__item-info
-          - if @group.avatar.attached?
-            = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
-          - else
-            %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
-              = render "shared/plural_pride_logo"
-          %span.tree-editor__name= @group.name
-          - if @group.labels.any?
-            .label-badges
-              - @group.labels.each do |label|
-                %span.label-badge= label
-      .tree-editor__children
-        - if has_tree
-          - @management_tree.each do |node|
-            = render "our/groups/manage_groups_node", node: node, root_group: @group
-        - if has_root_profiles
-          - @root_profiles.each do |entry|
-            = render "our/groups/manage_groups_profile_node", entry: entry, root_group: @group
-- else
-  .card
-    %p This group has no sub-groups or profiles yet. Add a group below.
+  %p Choose which groups are nested inside this one. Use the Hide checkboxes to control what's visible on the page that other people see.
 
-%h2
-  Add a group to
-  = @group.name
+  - if has_tree || has_root_profiles
+    .tree-editor{"data-controller": "visibility-toggle"}
+
+      -# Root group node (collapsible, no Hide/Remove)
+      %details.tree-editor__folder.tree-editor__folder--root{open: true}
+        %summary.tree-editor__summary
+          .tree-editor__item-info
+            - if @group.avatar.attached?
+              = image_tag @group.avatar.variant(resize_to_fill: [24, 24]), class: "tree__avatar", width: 24, height: 24, alt: ""
+            - else
+              %span.tree__avatar.tree__avatar--placeholder{"aria-hidden": "true"}
+                = render "shared/plural_pride_logo"
+            %span.tree-editor__name= @group.name
+            - if @group.labels.any?
+              .label-badges
+                - @group.labels.each do |label|
+                  %span.label-badge= label
+        .tree-editor__children
+          - if has_tree
+            - @management_tree.each do |node|
+              = render "our/groups/manage_groups_node", node: node, root_group: @group
+          - if has_root_profiles
+            - @root_profiles.each do |entry|
+              = render "our/groups/manage_groups_profile_node", entry: entry, root_group: @group
 
 - if @available_groups.any?
-  .card-list
+  .profile-grid
     - @available_groups.each do |group|
-      .card.card--row
-        .card__header
-          - if group.avatar.attached?
-            = image_tag group.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: group.avatar_alt_text.presence || "", loading: "lazy"
-          - else
-            .avatar.avatar--small.avatar--placeholder
-              = render "shared/plural_pride_logo"
-          %span= group.name
-          - if group.labels.any?
-            .label-badges
-              - group.labels.each do |label|
-                %span.label-badge= label
-        = link_to "Add to #{@group.name}", add_group_our_group_path(@group, group_id: group.id), data: { turbo_method: :post }, class: "btn btn--small"
-- else
-  .card
-    %p
-      - if Current.user.groups.count > 1
-        All your other groups are already in this tree.
-      - else
-        You need to
-        = link_to "create more groups", new_our_group_path
-        first.
+      = render "group_card", group: group,
+          action_label: "Add to group",
+          action_path: add_group_our_group_path(@group, group_id: group.id),
+          action_method: :post,
+          action_class: "btn btn--small"
 
-%p= link_to "← Back to group", our_group_path(@group)
+- if @available_groups.empty? && !has_tree
+  .card
+    %p There are no groups available to add here right now.
+    %p
+      You can
+      = link_to "create a group", new_our_group_path
+      first, then come back to add it to this group.

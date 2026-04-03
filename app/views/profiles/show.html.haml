@@ -12,7 +12,7 @@
     %meta{property: "og:image:height", content: "512"}
 
 .card.profile-public
-  .profile-header
+  .card__header
     - if @profile.avatar.attached?
       = link_to rails_blob_path(@profile.avatar, disposition: "inline"), target: "_blank", rel: "noopener", title: "Click to see full size" do
         = image_tag @profile.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large", width: 96, height: 96, alt: @profile.avatar_alt_text.presence || "", loading: "lazy"
@@ -21,14 +21,15 @@
         = render "shared/plural_pride_logo"
     %div
       %h1= @profile.name
-      - if @profile.pronouns.present?
-        %p.pronouns= @profile.pronouns
-      - if @profile.heart_emojis.any?
-        .heart-display
-          .heart-display__grid
-            - @profile.heart_emojis.each do |heart|
-              .heart-display__heart
-                = image_tag "/images/hearts/#{heart}.webp", width: 24, height: 24, alt: @profile.heart_emoji_display_name(heart), title: @profile.heart_emoji_display_name(heart), loading: "lazy"
+      - if @profile.pronouns.present? || @profile.heart_emojis.any?
+        .pronouns
+          - if @profile.pronouns.present?
+            %span= @profile.pronouns
+          - if @profile.heart_emojis.any?
+            .heart-display__grid
+              - @profile.heart_emojis.each do |heart|
+                .heart-display__heart
+                  = image_tag "/images/hearts/#{heart}.webp", width: 24, height: 24, alt: @profile.heart_emoji_display_name(heart), title: @profile.heart_emoji_display_name(heart), loading: "lazy"
 
   - if @profile.description.present?
     .profile-description{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}

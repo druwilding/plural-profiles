@@ -11,7 +11,7 @@ class ManageProfilesLabelsTest < ApplicationSystemTestCase
   test "group labels appear in manage profiles title" do
     @group.update!(labels: %w[core trusted])
     visit manage_profiles_our_group_path(@group)
-    within ".profile-title" do
+    within ".card .card__header" do
       assert_text "core"
       assert_text "trusted"
     end
@@ -21,7 +21,7 @@ class ManageProfilesLabelsTest < ApplicationSystemTestCase
     @profile.update!(labels: %w[helper visible])
     @group.profiles << @profile unless @group.profiles.include?(@profile)
     visit manage_profiles_our_group_path(@group)
-    within all(".card--row").find { |card| card.has_text?(@profile.name) } do
+    within all(".profile-card").find { |card| card.has_text?(@profile.name) } do
       assert_selector ".label-badges .label-badge", text: "helper"
       assert_selector ".label-badges .label-badge", text: "visible"
     end

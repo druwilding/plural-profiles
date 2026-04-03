@@ -445,14 +445,6 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Alice", response.body
   end
 
-  test "manage_groups shows empty state for group with no children or profiles" do
-    sign_in_as @user
-    empty_group = @user.groups.create!(name: "Empty")
-    get manage_groups_our_group_path(empty_group)
-    assert_response :success
-    assert_match "no sub-groups or profiles yet", response.body
-  end
-
   test "manage_groups requires authentication" do
     alpha = groups(:alpha_clan)
     get manage_groups_our_group_path(alpha)
@@ -763,8 +755,8 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     everyone.update!(labels: %w[public])
     get our_groups_path(label: "close")
     assert_response :success
-    assert_select ".main-content h2 a", text: "Friends"
-    assert_select ".main-content h2 a", text: "Everyone", count: 0
+    assert_select ".main-content h3 a", text: "Friends"
+    assert_select ".main-content h3 a", text: "Everyone", count: 0
   end
 
   # -- Theme dropdown --
@@ -821,7 +813,7 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     @group.update!(labels: %w[close])
     get our_groups_path(label: "nonexistent")
     assert_response :success
-    assert_select ".main-content .card-list", count: 0
+    assert_select ".main-content .profile-grid", count: 0
   end
 
   test "index shows filter bar when labels exist" do
@@ -863,7 +855,7 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     group = groups(:echo_shard)
     get duplicate_our_group_path(group)
     assert_response :success
-    assert_match "Duplicate group", response.body
+    assert_match "Duplicate #{group.name}", response.body
     assert_match group.name, response.body
   end
 

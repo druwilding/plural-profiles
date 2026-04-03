@@ -63,14 +63,14 @@ class LabelsTest < ApplicationSystemTestCase
     profiles(:bob).update!(labels: %w[private])
     visit our_profiles_path
 
-    within(".card-list") do
+    within(".profile-grid") do
       assert_text "Alice"
       assert_text "Bob"
     end
 
     click_link "public"
 
-    within(".card-list") do
+    within(".profile-grid") do
       assert_text "Alice"
       assert_no_text "Bob"
     end
@@ -81,10 +81,10 @@ class LabelsTest < ApplicationSystemTestCase
     profiles(:bob).update!(labels: %w[private])
     visit our_profiles_path(label: "public")
 
-    within(".card-list") { assert_no_text "Bob" }
+    within(".profile-grid") { assert_no_text "Bob" }
     click_link "Clear filter"
 
-    within(".card-list") do
+    within(".profile-grid") do
       assert_text "Alice"
       assert_text "Bob"
     end
@@ -97,14 +97,14 @@ class LabelsTest < ApplicationSystemTestCase
     groups(:everyone).update!(labels: %w[private])
     visit our_groups_path
 
-    within(".card-list") do
+    within(".profile-grid") do
       assert_text "Friends"
       assert_text "Everyone"
     end
 
     click_link "public"
 
-    within(".card-list") do
+    within(".profile-grid") do
       assert_text "Friends"
       assert_no_text "Everyone"
     end
@@ -115,10 +115,10 @@ class LabelsTest < ApplicationSystemTestCase
     groups(:everyone).update!(labels: %w[private])
     visit our_groups_path(label: "public")
 
-    within(".card-list") { assert_no_text "Everyone" }
+    within(".profile-grid") { assert_no_text "Everyone" }
     click_link "Clear filter"
 
-    within(".card-list") do
+    within(".profile-grid") do
       assert_text "Friends"
       assert_text "Everyone"
     end

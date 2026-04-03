@@ -1,8 +1,9 @@
 - content_for(:title) { "Resolve question — Plural Profiles" }
 
-%h1 #{@conflict_phase_label} #{@conflict_number} of #{@total_conflicts}
-
 .card
+  .card__header
+    %h1 #{@conflict_phase_label} #{@conflict_number} of #{@total_conflicts}
+
   %p
     %strong= @original.name
     already has a copy with #{@labels.length > 1 ? "labels" : "label"}

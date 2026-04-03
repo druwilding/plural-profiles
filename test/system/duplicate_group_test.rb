@@ -11,7 +11,7 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     visit our_group_path(group)
     click_link "Duplicate"
 
-    assert_text "Duplicate group"
+    assert_text "Duplicate #{group.name}"
     assert_text group.name
 
     fill_in "Labels for all copies", with: "blue"
@@ -111,7 +111,7 @@ class DuplicateGroupTest < ApplicationSystemTestCase
     assert_text "Confirm duplication"
     click_link "Cancel"
 
-    assert_text "Duplicate group"
+    assert_text "Duplicate #{group.name}"
   end
 
   test "confirm page shows full tree with groups and profiles" do

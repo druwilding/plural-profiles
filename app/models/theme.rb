@@ -84,6 +84,7 @@ class Theme < ApplicationRecord
   # starts with a hex value.
   THEMEABLE_PROPERTIES = {
     "page_bg"                 => { label: "Page background",           default: "#0e2e24", group: :base    },
+    "header_bg"               => { label: "Pane header background",    default: "#133b2f", group: :base    },
     "pane_bg"                 => { label: "Pane background",           default: "#133b2f", group: :base    },
     "pane_border"             => { label: "Pane border",               default: "#02120e", group: :base    },
     "heading"                 => { label: "Headings",                  default: "#5ea389", group: :base    },

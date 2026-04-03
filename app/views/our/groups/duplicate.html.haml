@@ -1,10 +1,18 @@
 - content_for(:title) { "Duplicate #{@group.name} — Plural Profiles" }
 
-%h1 Duplicate group
-
 .card
+  .card__header
+    .name-with-labels
+      %h1
+        Duplicate
+        = @group.name
+      - if @group.labels.any?
+        .label-badges
+          - @group.labels.each do |label|
+            %span.label-badge= label
+
   %p
-    You are duplicating
+    Duplicate
     %strong= @group.name
     and its entire tree of sub-groups and profiles. Every new copy will be
     given the labels you specify below.

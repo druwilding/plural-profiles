@@ -1,34 +1,24 @@
 - content_for(:title) { "Our profiles — Plural Profiles" }
 
-%h1 Our profiles
+.card
+  .card__header
+    %h1 Our profiles
 
-- if @all_labels.any?
-  .filter-bar
-    %span.filter-bar__label Filter by label:
-    - @all_labels.each do |label|
-      = link_to label, our_profiles_path(label: label), class: "btn btn--small #{' btn--secondary' if params[:label] != label}"
-    - if params[:label]
-      = link_to "Clear filter", our_profiles_path, class: "filter-bar__clear"
+  - if @profiles.any?
+    %p= "You have #{pluralize(@profiles.count, "profile")}."
+
+    - if @all_labels.any?
+      .filter-bar
+        %span.filter-bar__label Filter by label:
+        - @all_labels.each do |label|
+          = link_to label, our_profiles_path(label: label), class: "btn btn--small #{' btn--secondary' if params[:label] != label}"
+        - if params[:label]
+          = link_to "Clear filter", our_profiles_path, class: "filter-bar__clear"
+
+  - else
+    %p You haven't created any profiles yet.
 
 - if @profiles.any?
-  .card-list
+  .profile-grid
     - @profiles.each do |profile|
-      .card
-        .card__header
-          - if profile.avatar.attached?
-            = image_tag profile.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
-          - else
-            .avatar.avatar--small.avatar--placeholder
-              = render "shared/plural_pride_logo"
-          %div
-            .name-with-labels
-              %h2= link_to profile.name, our_profile_path(profile)
-              - if profile.labels.any?
-                .label-badges
-                  - profile.labels.each do |label|
-                    %span.label-badge= label
-            - if profile.pronouns.present?
-              %span.pronouns= profile.pronouns
-- else
-  .card
-    %p You haven't created any profiles yet.
+      = render "profile_card", profile: profile

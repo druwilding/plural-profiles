@@ -1,7 +1,5 @@
 - content_for(:title) { "Home — Plural Profiles" }
 
-%h1 Welcome!
-
 - unless Current.user.email_verified?
   .flash.flash--warning
     ⚠️ Your email is not yet verified. Please check your inbox.
@@ -10,6 +8,9 @@
 - group_count = Current.user.groups.count
 
 .card
+  .card__header
+    %h1 Welcome!
+
   %h2 At a glance
 
   - if profile_count.zero? && group_count.zero?

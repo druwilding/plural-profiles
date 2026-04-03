@@ -8,7 +8,12 @@
 
 .theme-preview__section
   .card
-    %h3 Pane
+    .card__header
+      .avatar.avatar--placeholder{aria: {hidden: "true"}}
+        = render "shared/plural_pride_logo"
+      %div
+        %h2 Heading
+        %p.pronouns example text
     %p This is a pane with background and border. Here is a #{link_to "sample link", "#"} in a sentence.
     %p{data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       Here is some text with a
@@ -60,3 +65,5 @@
         = render "shared/plural_pride_logo"
       %h3 Example Profile
       %span.pronouns they/them
+
+

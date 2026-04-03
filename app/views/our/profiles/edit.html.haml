@@ -1,9 +1,8 @@
 - content_for(:container_class)
 - content_for(:title) { "Edit #{@profile.name} — Plural Profiles" }
 
-%h1 Edit profile
-
 .card
-  = render "our/profiles/form", profile: @profile
+  .card__header
+    %h2 Edit profile
 
-%p= link_to "← Back to profile", our_profile_path(@profile)
+  = render "our/profiles/form", profile: @profile

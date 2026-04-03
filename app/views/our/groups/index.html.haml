@@ -1,30 +1,24 @@
 - content_for(:title) { "Our groups — Plural Profiles" }
 
-%h1 Our groups
+.card
+  .card__header
+    %h1 Our groups
 
-- if @all_labels.any?
-  .filter-bar
-    %span.filter-bar__label Filter by label:
-    - @all_labels.each do |label|
-      = link_to label, our_groups_path(label: label), class: "btn btn--small #{' btn--secondary' if params[:label] != label}"
-    - if params[:label]
-      = link_to "Clear filter", our_groups_path, class: "filter-bar__clear"
+  - if @groups.any?
+    %p= "You have #{pluralize(@groups.count, "group")}."
+
+    - if @all_labels.any?
+      .filter-bar
+        %span.filter-bar__label Filter by label:
+        - @all_labels.each do |label|
+          = link_to label, our_groups_path(label: label), class: "btn btn--small #{' btn--secondary' if params[:label] != label}"
+        - if params[:label]
+          = link_to "Clear filter", our_groups_path, class: "filter-bar__clear"
+
+  - else
+    %p You haven't created any groups yet.
 
 - if @groups.any?
-  .card-list
+  .profile-grid
     - @groups.each do |group|
-      .card.card--row
-        .card__header
-          - if group.avatar.attached?
-            = image_tag group.avatar.variant(resize_to_fill: [48, 48]), class: "avatar avatar--small", width: 48, height: 48, alt: group.avatar_alt_text.presence || "", loading: "lazy"
-          %div
-            .name-with-labels
-              %h2= link_to group.name, our_group_path(group)
-              - if group.labels.any?
-                .label-badges
-                  - group.labels.each do |label|
-                    %span.label-badge= label
-            %p.text-muted= pluralize(group.profiles.count, "profile")
-- else
-  .card
-    %p You haven't created any groups yet.
+      = render "group_card", group: group

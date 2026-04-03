@@ -1,64 +1,40 @@
 - content_for(:title) { "Manage profiles in #{@group.name} — Plural Profiles" }
 
-.profile-title
-  %h1
-    Manage profiles in
-    = @group.name
-  - if @group.labels.any?
-    .label-badges
-      - @group.labels.each do |label|
-        %span.label-badge= label
+.card
+  .card__header
+    .name-with-labels
+      %h1
+        Manage profiles in
+        = @group.name
+      - if @group.labels.any?
+        .label-badges
+          - @group.labels.each do |label|
+            %span.label-badge= label
 
-%h2 Current profiles
+  %p Choose which profiles belong to this group. Profiles can belong to more than one group.
 
 - if @group.profiles.any?
-  .card-list
+  .profile-grid
     - @group.profiles.order_by_name_and_labels.each do |profile|
-      .card.card--row
-        .card__header
-          - if profile.avatar.attached?
-            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
-          - else
-            .avatar.avatar--small.avatar--placeholder
-              = render "shared/plural_pride_logo"
-          %span= profile.name
-          - if profile.labels.any?
-            .label-badges
-              - profile.labels.each do |label|
-                %span.label-badge= label
-        = link_to "Remove from #{@group.name}", remove_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :delete }, class: "btn btn--danger btn--small"
-- else
-  .card
-    %p No profiles in this group yet.
-
-%h2
-  Add a profile to
-  = @group.name
+      = render "our/profiles/profile_card", profile: profile,
+          action_label: "Remove from group",
+          action_path: remove_profile_our_group_path(@group, profile_id: profile.id),
+          action_method: :delete,
+          action_class: "btn btn--small btn--danger"
 
 - if @available_profiles.any?
-  .card-list
+  .profile-grid
     - @available_profiles.each do |profile|
-      .card.card--row
-        .card__header
-          - if profile.avatar.attached?
-            = image_tag profile.avatar.variant(resize_to_fill: [40, 40]), class: "avatar avatar--small", width: 40, height: 40, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
-          - else
-            .avatar.avatar--small.avatar--placeholder
-              = render "shared/plural_pride_logo"
-          %span= profile.name
-          - if profile.labels.any?
-            .label-badges
-              - profile.labels.each do |label|
-                %span.label-badge= label
-        = link_to "Add to #{@group.name}", add_profile_our_group_path(@group, profile_id: profile.id), data: { turbo_method: :post }, class: "btn btn--small"
-- else
-  .card
-    %p
-      - if Current.user.profiles.any?
-        All your profiles are already in this group.
-      - else
-        You need to
-        = link_to "create some profiles", new_our_profile_path
-        first.
+      = render "our/profiles/profile_card", profile: profile,
+          action_label: "Add to group",
+          action_path: add_profile_our_group_path(@group, profile_id: profile.id),
+          action_method: :post,
+          action_class: "btn btn--small"
 
-%p= link_to "← Back to group", our_group_path(@group)
+- if @available_profiles.empty? && @group.profiles.empty?
+  .card
+    %p There are no profiles available to add here right now.
+    %p
+      You can
+      = link_to "create a profile", new_our_profile_path
+      first, then come back to add it to this group.

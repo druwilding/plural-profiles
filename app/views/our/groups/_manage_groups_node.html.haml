@@ -26,7 +26,7 @@
               %span.label-badge= label
         %span.tree-editor__tag.tree-editor__tag--hidden hidden
         - if is_direct
-          = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
+          = link_to "Remove from group", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
       .tree-editor__actions
         .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
         = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do
@@ -60,7 +60,7 @@
             %span.label-badge= label
       %span.tree-editor__tag.tree-editor__tag--hidden hidden
       - if is_direct
-        = link_to "Remove from #{root_group.name}", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
+        = link_to "Remove from group", remove_group_our_group_path(root_group, group_id: group.id), data: { turbo_method: :delete, turbo_confirm: "Remove #{group.name} from #{root_group.name}?" }, class: "btn btn--small btn--danger"
     .tree-editor__actions
       .tree-editor__save-indicator{data: { visibility_toggle_target: "indicator" }}
       = form_with url: toggle_visibility_our_group_path(root_group), method: :patch, class: "tree-editor__toggle-form", data: { visibility_toggle_target: "form" } do

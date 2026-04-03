@@ -70,3 +70,9 @@ castle_flux:
   uuid: def10000-0000-0000-0000-000000000009
   name: Castle Flux
   description: Flux section specific to Castle Clan.
+
+solo_group:
+  user: four
+  uuid: def40000-0000-0000-0000-000000000001
+  name: Solo Group
+  description: A group belonging to a user with no profiles.
