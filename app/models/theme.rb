@@ -121,6 +121,15 @@ class Theme < ApplicationRecord
     flash:   "Flash messages"
   }.freeze
 
+  # CSS custom properties that are derived from the theme's text colour at render
+  # time, mapped to their color-mix percentage.  Both to_css_properties (Ruby) and
+  # the theme-designer Stimulus controller (JS, via a data attribute) read from
+  # this single source so the formulas stay in sync.
+  DERIVED_TEXT_PROPERTIES = {
+    "tree-guide"                => 30,
+    "avatar-placeholder-border" => 50
+  }.freeze
+
   # Returns the colour for a property, falling back to the default
   def color_for(property)
     colors&.dig(property.to_s) || THEMEABLE_PROPERTIES.dig(property.to_s, :default)
@@ -136,10 +145,9 @@ class Theme < ApplicationRecord
     # theme overrides --text on body via inline style. We work around this by
     # including explicitly-computed values here, mirroring what the theme designer
     # preview JS does in applyToPreview().
-    derived = [
-      "--tree-guide: color-mix(in srgb, #{text_color} 30%, transparent);",
-      "--avatar-placeholder-border: color-mix(in srgb, #{text_color} 50%, transparent);"
-    ]
+    derived = DERIVED_TEXT_PROPERTIES.map { |css_prop, percent|
+      "--#{css_prop}: color-mix(in srgb, #{text_color} #{percent}%, transparent);"
+    }
 
     props = THEMEABLE_PROPERTIES.keys.filter_map { |prop|
       value = color_for(prop)
