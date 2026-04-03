@@ -1,9 +1,8 @@
 - content_for(:title) { "Account — Plural Profiles" }
 
-%h1 Account
-
 .card
-  %h2 Invite codes
+  .card__header
+    %h2 Invite codes
   %p Generate codes to invite others to Plural Profiles. You can have up to #{InviteCode::MAX_UNUSED_PER_USER} codes at a time.
 
   - unused_codes = Current.user.invite_codes.unused.order(created_at: :asc)
@@ -19,7 +18,8 @@
   = button_to "Generate invite code", our_invite_codes_path, method: :post, class: "btn"
 
 .card
-  %h2 Display preferences
+  .card__header
+    %h2 Display preferences
   = form_with url: update_preferences_our_account_path, method: :patch do |form|
     .form-group
       %label.checkbox-label
@@ -31,7 +31,8 @@
       = form.submit "Save preferences"
 
 .card
-  %h2 Account name
+  .card__header
+    %h2 Account name
   %p An account name lets others find and connect with you without sharing your email address.
   - if Current.user.username_in_database.present?
     %p
@@ -53,7 +54,8 @@
       = form.submit Current.user.username_in_database.present? ? "Change account name" : "Set account name"
 
 .card
-  %h2 Change email
+  .card__header
+    %h2 Change email
   %p
     Current email:
     %strong= Current.user.email_address
@@ -73,7 +75,8 @@
       = form.submit "Send verification email"
 
 .card
-  %h2 Change password
+  .card__header
+    %h2 Change password
   = form_with url: update_password_our_account_path, method: :patch do |form|
     .form-group
       = form.label :current_password, "Current password"
