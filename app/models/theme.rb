@@ -24,6 +24,7 @@ class Theme < ApplicationRecord
   validate :tags_are_known
   validate :background_image_content_type_allowed
   validate :background_image_size_allowed
+  validate :background_image_dimensions_allowed
 
   before_validation :normalize_colors_keys
   before_validation :normalize_tags
@@ -36,6 +37,7 @@ class Theme < ApplicationRecord
 
   BACKGROUND_IMAGE_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
   BACKGROUND_IMAGE_MAX_SIZE = 2.megabytes
+  BACKGROUND_IMAGE_MAX_DIMENSION = 4000
 
   BACKGROUND_REPEAT_OPTIONS = %w[repeat repeat-x repeat-y no-repeat].freeze
   BACKGROUND_SIZE_OPTIONS = %w[auto cover contain].freeze
@@ -370,6 +372,15 @@ class Theme < ApplicationRecord
       return unless background_image.attached?
       if background_image.blob.byte_size > BACKGROUND_IMAGE_MAX_SIZE
         errors.add(:background_image, "must be 2 MB or less")
+      end
+    end
+
+    def background_image_dimensions_allowed
+      return unless background_image.attached?
+      width, height = ImageDimensions.for(background_image.blob)
+      return if width.nil?
+      if width > BACKGROUND_IMAGE_MAX_DIMENSION || height > BACKGROUND_IMAGE_MAX_DIMENSION
+        errors.add(:background_image, "must be #{BACKGROUND_IMAGE_MAX_DIMENSION}×#{BACKGROUND_IMAGE_MAX_DIMENSION} pixels or smaller")
       end
     end
 end

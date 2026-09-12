@@ -56,5 +56,9 @@ module ChatIdentity
     if mini_profile_avatar.blob.byte_size > HasAvatar::AVATAR_MAX_SIZE
       errors.add(:mini_profile_avatar, "must be 2 MB or less")
     end
+    width, height = ImageDimensions.for(mini_profile_avatar.blob)
+    if width && (width > HasAvatar::AVATAR_MAX_DIMENSION || height > HasAvatar::AVATAR_MAX_DIMENSION)
+      errors.add(:mini_profile_avatar, "must be #{HasAvatar::AVATAR_MAX_DIMENSION}×#{HasAvatar::AVATAR_MAX_DIMENSION} pixels or smaller")
+    end
   end
 end
