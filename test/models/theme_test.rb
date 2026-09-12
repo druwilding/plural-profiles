@@ -18,6 +18,59 @@ class ThemeTest < ActiveSupport::TestCase
     assert_equal users(:one), themes(:dark_forest).user
   end
 
+  test "accepts background image within size, type, and dimension limits" do
+    theme = themes(:dark_forest)
+    theme.background_image.attach(
+      io: File.open(file_fixture("avatar.png")),
+      filename: "background.png",
+      content_type: "image/png"
+    )
+    assert theme.valid?
+  end
+
+  test "rejects non-image background image" do
+    theme = themes(:dark_forest)
+    theme.background_image.attach(
+      io: StringIO.new("<script>alert('xss')</script>"),
+      filename: "evil.html",
+      content_type: "text/html"
+    )
+    assert_not theme.valid?
+    assert_includes theme.errors[:background_image], "must be a JPG/JPEG, PNG, or WebP image"
+  end
+
+  test "rejects background image over 2 MB" do
+    theme = themes(:dark_forest)
+    theme.background_image.attach(
+      io: StringIO.new("a" * (Theme::BACKGROUND_IMAGE_MAX_SIZE + 1)),
+      filename: "toobig.png",
+      content_type: "image/png"
+    )
+    assert_not theme.valid?
+    assert_includes theme.errors[:background_image], "must be 2 MB or less"
+  end
+
+  test "accepts background image at exactly 4000x4000 pixels" do
+    theme = themes(:dark_forest)
+    theme.background_image.attach(
+      io: StringIO.new(png_bytes(4000, 4000)),
+      filename: "big.png",
+      content_type: "image/png"
+    )
+    assert theme.valid?
+  end
+
+  test "rejects background image over 4000x4000 pixels" do
+    theme = themes(:dark_forest)
+    theme.background_image.attach(
+      io: StringIO.new(png_bytes(100, 4001)),
+      filename: "toohuge.png",
+      content_type: "image/png"
+    )
+    assert_not theme.valid?
+    assert_includes theme.errors[:background_image], "must be 4000×4000 pixels or smaller"
+  end
+
   test "color_for returns stored colour" do
     theme = themes(:dark_forest)
     assert_equal "#0e2e24", theme.color_for("page_bg")

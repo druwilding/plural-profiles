@@ -65,6 +65,43 @@ class ProfileTest < ActiveSupport::TestCase
     assert_includes profile.errors[:avatar], "must be 2 MB or less"
   end
 
+  test "accepts avatar at exactly 4000x4000 pixels" do
+    profile = profiles(:alice)
+    profile.avatar.attach(
+      io: StringIO.new(png_bytes(4000, 4000)),
+      filename: "big.png",
+      content_type: "image/png"
+    )
+    assert profile.valid?
+  end
+
+  test "rejects avatar over 4000x4000 pixels" do
+    profile = profiles(:alice)
+    profile.avatar.attach(
+      io: StringIO.new(png_bytes(4001, 100)),
+      filename: "toohuge.png",
+      content_type: "image/png"
+    )
+    assert_not profile.valid?
+    assert_includes profile.errors[:avatar], "must be 4000×4000 pixels or smaller"
+  end
+
+  test "does not re-check dimensions of an avatar that isn't changing" do
+    profile = profiles(:alice)
+    profile.avatar.attach(
+      io: File.open(file_fixture("avatar.png")),
+      filename: "avatar.png",
+      content_type: "image/png"
+    )
+    assert profile.save
+
+    profile.reload
+    assert_nil ImageDimensions.for(profile.avatar)
+
+    profile.name = "Alice updated"
+    assert profile.valid?
+  end
+
   # Timestamp validations
 
   test "created_at in the past is valid" do
@@ -298,6 +335,17 @@ class ProfileTest < ActiveSupport::TestCase
     )
     assert_not profile.valid?
     assert_includes profile.errors[:mini_profile_avatar], "must be 2 MB or less"
+  end
+
+  test "rejects mini_profile_avatar over 4000x4000 pixels" do
+    profile = profiles(:alice)
+    profile.mini_profile_avatar.attach(
+      io: StringIO.new(png_bytes(4001, 4001)),
+      filename: "toohuge.png",
+      content_type: "image/png"
+    )
+    assert_not profile.valid?
+    assert_includes profile.errors[:mini_profile_avatar], "must be 4000×4000 pixels or smaller"
   end
 
   test "mini_profile_avatar_shape defaults to rounded" do

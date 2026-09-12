@@ -32,7 +32,7 @@ module HasAvatar
 
   def avatar_dimensions_allowed
     return unless avatar.attached?
-    width, height = ImageDimensions.for(avatar.blob)
+    width, height = ImageDimensions.for(avatar)
     return if width.nil?
     if width > AVATAR_MAX_DIMENSION || height > AVATAR_MAX_DIMENSION
       errors.add(:avatar, "must be #{AVATAR_MAX_DIMENSION}×#{AVATAR_MAX_DIMENSION} pixels or smaller")

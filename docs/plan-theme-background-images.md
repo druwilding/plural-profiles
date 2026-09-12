@@ -299,6 +299,7 @@ This ensures background images don't interfere with forced-colours/high-contrast
 - Theme with background image attached is valid
 - Background image with disallowed content type is invalid
 - Background image over 2 MB is invalid
+- Background image over 4000x4000 pixels is invalid
 - Background repeat/size/position/attachment validate inclusion
 - `background_css_properties` returns correct CSS string
 - `background_css_properties` returns empty string when no URL given

@@ -377,7 +377,7 @@ class Theme < ApplicationRecord
 
     def background_image_dimensions_allowed
       return unless background_image.attached?
-      width, height = ImageDimensions.for(background_image.blob)
+      width, height = ImageDimensions.for(background_image)
       return if width.nil?
       if width > BACKGROUND_IMAGE_MAX_DIMENSION || height > BACKGROUND_IMAGE_MAX_DIMENSION
         errors.add(:background_image, "must be #{BACKGROUND_IMAGE_MAX_DIMENSION}×#{BACKGROUND_IMAGE_MAX_DIMENSION} pixels or smaller")
