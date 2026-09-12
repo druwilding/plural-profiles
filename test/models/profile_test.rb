@@ -173,7 +173,12 @@ class ProfileTest < ActiveSupport::TestCase
   test "HEART_EMOJIS constant contains expected hearts" do
     assert_includes Profile::HEART_EMOJIS, "dewdrop_heart"
     assert_includes Profile::HEART_EMOJIS, "red_heart"
-    assert_equal 46, Profile::HEART_EMOJIS.size
+  end
+
+  test "HEART_EMOJIS constant has no duplicates and is well-formed" do
+    assert_equal Profile::HEART_EMOJIS.uniq, Profile::HEART_EMOJIS
+    assert Profile::HEART_EMOJIS.all? { |heart| heart.match?(/\A[a-z]+_heart\z/) },
+      "expected every entry to be a lowercase name ending in _heart"
   end
 
   test "resolve_heart_emoji returns canonical name for bare name" do
