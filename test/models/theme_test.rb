@@ -688,4 +688,87 @@ class ThemeTest < ActiveSupport::TestCase
     assert_equal "no-repeat", attrs[:background_repeat]
     assert_equal "cover", attrs[:background_size]
   end
+  # ── Chat colours in import/export ───────────────────────────────────────
+
+  test "a theme with no chat overrides exports no chat keys" do
+    theme = Theme.new(user: users(:one), name: "Profile only", colors: { "pane_bg" => "#112233" })
+    exported = theme.to_export_hash
+
+    assert_equal Theme::CURRENT_EXPORT_VERSION, exported[:plural_profiles_theme]
+    assert_empty exported[:colors].keys.select { |key| key.start_with?("chat_") }
+  end
+
+  test "a theme with chat overrides exports only the ones that were set" do
+    theme = Theme.new(user: users(:one), name: "Half designed",
+                      colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })
+    exported = theme.to_export_hash
+
+    assert_equal "#ff0000", exported[:colors]["chat_rail_bg"]
+    assert_not exported[:colors].key?("chat_pane_bg")
+  end
+
+  test "importing a v2 export leaves every chat colour inherited" do
+    # The reason no v2 -> v3 upgrade step exists: "absent" already means the
+    # right thing, so an older export arrives as a fully-inherited chat palette.
+    json = {
+      plural_profiles_theme: 2,
+      name: "Old export",
+      colors: { pane_bg: "#112233", pane_text: "#445566" }
+    }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+
+    assert_empty attrs[:colors].keys.select { |key| key.start_with?("chat_") }
+
+    theme = Theme.new(user: users(:one), **attrs)
+    assert_equal "#112233", theme.color_for("chat_pane_bg"), "chat should follow the imported profile colour"
+  end
+
+  test "importing a v3 export keeps its chat overrides" do
+    json = {
+      plural_profiles_theme: 3,
+      name: "New export",
+      colors: { pane_bg: "#112233", chat_rail_bg: "#ff0000" }
+    }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+    theme = Theme.new(user: users(:one), **attrs)
+
+    assert_equal "#ff0000", theme.color_for("chat_rail_bg")
+    assert_equal "#112233", theme.color_for("chat_pane_bg")
+  end
+
+  test "importing a v1 export upgrades through both splits at once" do
+    # v1 keys land on the v2 header/pane keys, which the chat keys then inherit
+    # from — the two upgrades compose without a v1 -> v3 path of their own.
+    json = { plural_profiles_theme: 1, name: "Ancient", colors: { text: "#445566" } }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+    theme = Theme.new(user: users(:one), **attrs)
+
+    assert_equal "#445566", theme.color_for("pane_text")
+    assert_equal "#445566", theme.color_for("chat_pane_text")
+  end
+
+  test "a version above the current one is still rejected" do
+    json = { plural_profiles_theme: Theme::CURRENT_EXPORT_VERSION + 1, name: "Future" }.to_json
+    error = assert_raises(RuntimeError) { Theme.import_attributes_from_json(json) }
+    assert_match "Unsupported theme version", error.message
+  end
+
+  test "overridden? distinguishes a set colour from an inherited one" do
+    theme = Theme.new(user: users(:one), name: "Mixed",
+                      colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })
+
+    assert theme.overridden?("chat_rail_bg")
+    assert_not theme.overridden?("chat_pane_bg")
+  end
+
+  test "FALLBACK_CHAIN matches the fallbacks declared on the properties" do
+    # The editor resolves inherited colours in JS from this map, so it drifting
+    # from THEMEABLE_PROPERTIES would show up as the wrong swatch rather than
+    # as an error.
+    expected = Theme::THEMEABLE_PROPERTIES.filter_map { |key, meta| [ key, meta[:fallback] ] if meta[:fallback] }.to_h
+    assert_equal expected, Theme::FALLBACK_CHAIN
+  end
 end

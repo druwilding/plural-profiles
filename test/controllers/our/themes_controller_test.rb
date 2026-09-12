@@ -695,4 +695,64 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "#112233", response.body
   end
+  # ── Chat colour inheritance ─────────────────────────────────────────────
+
+  test "a chat colour absent from the params is not stored" do
+    sign_in_as @user
+    theme = @user.themes.create!(name: "Inherit", colors: { "pane_bg" => "#112233" })
+
+    patch our_theme_path(theme), params: { theme: { name: "Inherit", colors: { pane_bg: "#112233" } } }
+
+    assert_not theme.reload.colors.key?("chat_pane_bg")
+    assert_equal "#112233", theme.color_for("chat_pane_bg")
+  end
+
+  test "a chat colour present in the params is stored" do
+    sign_in_as @user
+    theme = @user.themes.create!(name: "Override", colors: { "pane_bg" => "#112233" })
+
+    patch our_theme_path(theme), params: {
+      theme: { name: "Override", colors: { pane_bg: "#112233", chat_pane_bg: "#ff0000" } }
+    }
+
+    assert_equal "#ff0000", theme.reload.colors["chat_pane_bg"]
+  end
+
+  test "dropping a chat colour from the params removes a previously stored override" do
+    # How "Use profile colour" actually takes effect: the inputs are disabled,
+    # so the key simply stops being submitted and update replaces the whole
+    # colours hash without it.
+    sign_in_as @user
+    theme = @user.themes.create!(name: "Back to inherit",
+                                 colors: { "pane_bg" => "#112233", "chat_pane_bg" => "#ff0000" })
+
+    patch our_theme_path(theme), params: { theme: { name: "Back to inherit", colors: { pane_bg: "#112233" } } }
+
+    assert_not theme.reload.colors.key?("chat_pane_bg")
+    assert_equal "#112233", theme.color_for("chat_pane_bg")
+  end
+
+  test "new seeds the profile colours but leaves every chat colour inherited" do
+    sign_in_as @user
+    get new_our_theme_path
+    assert_response :success
+
+    # Inherited is rendered as a disabled input (that's what keeps the key out
+    # of the params on save), so the markup is the observable form of "a new
+    # theme starts fully inherited on the chat side".
+    assert_select "input.theme-designer__hex-input[name=?][disabled]", "theme[colors][chat_pane_bg]"
+    assert_select "input.theme-designer__hex-input[name=?]:not([disabled])", "theme[colors][pane_bg]"
+  end
+
+  test "duplicate carries over chat overrides and leaves inherited colours inherited" do
+    sign_in_as @user
+    original = @user.themes.create!(name: "Original",
+                                    colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })
+
+    post duplicate_our_theme_path(original)
+    copy = @user.themes.order(:created_at).last
+
+    assert_equal "#ff0000", copy.colors["chat_rail_bg"]
+    assert_not copy.colors.key?("chat_pane_bg")
+  end
 end
