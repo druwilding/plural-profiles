@@ -11,5 +11,7 @@
       = formatted_inline(group.name)
   - if group.subtitle.present?
     %p.subtitle= formatted_inline(group.subtitle)
+  - if group.pronouns.present?
+    %span.pronouns= formatted_inline(group.pronouns)
   - if group.tag_line.present?
     %p.tag-line= formatted_inline(group.tag_line)

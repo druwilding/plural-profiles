@@ -8,7 +8,7 @@ class Our::SearchController < ApplicationController
   # never matches anything extra, so this is a pure addition, not a
   # behavior change for anyone who hasn't set up chat overrides.
   GROUP_CONDITIONS = <<~SQL.squish.freeze
-    name ILIKE :term OR subtitle ILIKE :term OR tag_line ILIKE :term OR description ILIKE :term
+    name ILIKE :term OR subtitle ILIKE :term OR tag_line ILIKE :term OR description ILIKE :term OR pronouns ILIKE :term
     OR mini_profile_name ILIKE :term OR mini_profile_subtitle ILIKE :term OR mini_profile_tag_line ILIKE :term OR mini_profile_description ILIKE :term
     OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(labels) AS label_val WHERE label_val ILIKE :term)
   SQL

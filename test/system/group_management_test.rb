@@ -27,6 +27,30 @@ class GroupManagementTest < ApplicationSystemTestCase
     assert_text "Best Friends"
   end
 
+  test "create a new group with pronouns" do
+    within(".site-header") { click_link "New group" }
+    fill_in "Name", with: "Colleagues"
+    fill_in "Pronouns", with: "they/them"
+    click_button "Create group"
+
+    assert_text "Group created."
+    assert_text "they/them"
+  end
+
+  test "pronouns appear on group show page" do
+    groups(:friends).update!(pronouns: "she/they")
+    visit our_group_path(groups(:friends))
+    assert_text "she/they"
+  end
+
+  test "editing pronouns updates group show page" do
+    visit our_group_path(groups(:friends))
+    click_link "Edit"
+    fill_in "Pronouns", with: "xe/xem"
+    click_button "Update group"
+    assert_text "xe/xem"
+  end
+
   test "tag line appears on group show page" do
     groups(:friends).update!(tag_line: "the best of us")
     visit our_group_path(groups(:friends))
