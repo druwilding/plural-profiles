@@ -4544,13 +4544,13 @@ button.profile-picker__option {
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--pane-text) 70%, transparent);
+  color: color-mix(in srgb, var(--input-text) 70%, transparent);
   white-space: nowrap;
   transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .chat-identity-toggle__option-label:hover {
-  color: var(--pane-title-text);
+  color: var(--input-label);
 }
 
 .chat-identity-toggle__input:checked + .chat-identity-toggle__option-label {
