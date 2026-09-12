@@ -109,4 +109,59 @@ class ThemeHelperTest < ActionView::TestCase
     @profile_theme = themes(:dark_forest)
     assert_equal themes(:sunset).to_css_properties, active_theme_style
   end
+
+  # -- background_image: false (the chat layout) --
+
+  test "background image is included by default" do
+    Current.session = nil
+    @group_theme = theme_with_background_image
+    style = active_theme_style
+    assert_includes style, "background-image: url("
+    assert_includes style, "background-repeat: repeat;"
+  end
+
+  test "background_image: false omits the image but keeps the colours" do
+    Current.session = nil
+    @group_theme = theme_with_background_image
+    style = active_theme_style(background_image: false)
+
+    assert_equal @group_theme.to_css_properties, style
+    %w[background-image background-repeat background-size background-position background-attachment].each do |prop|
+      assert_not_includes style, "#{prop}:", "expected no #{prop} declaration in chat's theme style"
+    end
+  end
+
+  test "background_image: false is a no-op for a theme with no image attached" do
+    Current.session = nil
+    @group_theme = themes(:dark_forest)
+    assert_not @group_theme.background_image.attached?
+    assert_equal active_theme_style, active_theme_style(background_image: false)
+  end
+
+  test "background_image: false applies to the user's own theme too" do
+    user = users(:two)
+    user.update!(active_theme: theme_with_background_image, override_themes: true)
+    Current.session = user.sessions.create!
+    assert_not_includes active_theme_style(background_image: false), "background-image:"
+  end
+
+  test "background_image: false applies to the site default theme too" do
+    Current.session = nil
+    themes(:default_shared).background_image.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/avatar.png")),
+      filename: "bg.png", content_type: "image/png"
+    )
+    assert_not_includes active_theme_style(background_image: false), "background-image:"
+  end
+
+  private
+
+    def theme_with_background_image
+      themes(:dark_forest).tap do |theme|
+        theme.background_image.attach(
+          io: File.open(Rails.root.join("test/fixtures/files/avatar.png")),
+          filename: "bg.png", content_type: "image/png"
+        )
+      end
+    end
 end

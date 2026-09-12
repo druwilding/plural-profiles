@@ -2,7 +2,7 @@
 %html{lang: "en-GB"}
   = render "layouts/head"
 
-  %body.chat-body{style: active_theme_style, data: {controller: "timezone"}}
+  %body.chat-body{style: active_theme_style(background_image: false), data: {controller: "timezone"}}
     %header.site-header
       .site-header__brand
         = link_to chat_root_path, class: "logo" do

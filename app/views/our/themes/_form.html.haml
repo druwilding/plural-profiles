@@ -32,6 +32,7 @@
       = form.file_field :background_image, accept: "image/jpeg, image/png, image/webp",
         data: { "theme-designer-target": "backgroundFileInput", action: "change->theme-designer#previewBackgroundImage" }
       %p.form-hint Choose an image that doesn't reduce text readability with your chosen colours.
+      %p.form-hint Background images show on profile pages only. Chat uses its own flat page background instead.
       - if theme.persisted? && theme.background_image.attached?
         %p.form-hint Current background:
         = image_tag theme.background_image.variant(resize_to_limit: [ 200, 200 ]),
