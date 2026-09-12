@@ -3108,6 +3108,9 @@ h1 .heart-inline {
 .theme-designer__preview-tabs {
   display: flex;
   gap: 0.35rem;
+  /* Inset past the panel's 8px corner radius, so the first tab meets a
+     straight edge rather than sitting on the curve. */
+  padding-left: 0.85rem;
   /* Flush against the preview below: the tabs have a top-only radius and read
      as tabs *of* the panel, so any gap leaves them floating above nothing. */
   margin-bottom: -1px;
@@ -3179,7 +3182,7 @@ h1 .heart-inline {
 }
 
 .theme-preview__chat .site-header {
-  padding: 0.4rem 0.75rem;
+  padding: 0.5rem 0.9rem;
   font-size: 0.8rem;
   flex-shrink: 0;
 }
@@ -3204,8 +3207,8 @@ h1 .heart-inline {
    they'd leave almost nothing for the messages. */
 .theme-preview__chat .server-rail {
   width: 44px;
-  gap: 0.4rem;
-  padding: 0.5rem 0;
+  gap: 0.5rem;
+  padding: 0.85rem 0;
 }
 
 .theme-preview__chat .server-rail__icon,
@@ -3218,8 +3221,10 @@ h1 .heart-inline {
 }
 
 .theme-preview__chat .channel-pane {
-  width: 150px;
-  padding: 0.6rem 0.5rem;
+  /* Wide enough that the mock's longest channel name stays on one line — a
+     wrapped row misreads as a styling bug rather than a narrow column. */
+  width: 168px;
+  padding: 0.85rem 0.6rem;
   overflow: hidden;
 }
 
@@ -3229,7 +3234,7 @@ h1 .heart-inline {
 }
 
 .theme-preview__chat .chat-channel-header {
-  padding: 0.4rem 0.7rem 0.5rem;
+  padding: 0.55rem 0.9rem 0.65rem;
 }
 
 .theme-preview__chat .chat-channel-header h1 {
@@ -3240,8 +3245,11 @@ h1 .heart-inline {
    a floor here the mock packs the composer right up against it and reads as
    cramped. */
 .theme-preview__chat .chat-messages-scroll {
-  padding: 0.6rem 0.7rem;
-  min-height: 130px;
+  padding: 0.8rem 0.9rem;
+  /* Comfortably taller than the mock's own content (~127px with the date
+     divider), so the empty space below the last message is real rather than a
+     rounding error. */
+  min-height: 190px;
   overflow: hidden;
 }
 
@@ -3254,7 +3262,7 @@ h1 .heart-inline {
 }
 
 .theme-preview__chat .composer {
-  padding: 0.4rem 0.7rem 0.5rem;
+  padding: 0.6rem 0.9rem 0.75rem;
 }
 
 .theme-preview__chat .composer-input-row textarea {

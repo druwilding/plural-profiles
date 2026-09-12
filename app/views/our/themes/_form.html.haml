@@ -19,7 +19,7 @@
       %summary.form-section-summary= section[:label]
 
       - if section_key == :chat
-        %p.form-hint Chat follows your profile colours. Tick Override to change one just for chat.
+        %p.form-hint Chat follows profile colours. Tick Override to change.
 
       - section[:groups].each do |group_key|
         %details.theme-designer__group{open: [:page, :header, :pane, :chat_header].include?(group_key) || nil}
