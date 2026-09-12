@@ -13,6 +13,8 @@
     .label-badges
       - group.labels.each do |label|
         %span.label-badge= label
+  - if group.pronouns.present?
+    %span.pronouns= formatted_inline(group.pronouns)
   - if group.tag_line.present?
     %p.tag-line= formatted_inline(group.tag_line)
   - if local_assigns[:action_label]

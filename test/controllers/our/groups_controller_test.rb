@@ -81,6 +81,14 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Group created.", response.body
   end
 
+  test "create saves pronouns" do
+    sign_in_as @user
+    post our_groups_path, params: {
+      group: { name: "Coworkers", pronouns: "they/them" }
+    }
+    assert_equal "they/them", Group.last.pronouns
+  end
+
   test "create rejects blank name" do
     sign_in_as @user
     assert_no_difference("Group.count") do

@@ -117,6 +117,14 @@ class Our::SearchControllerTest < ActionDispatch::IntegrationTest
     assert_match "Friends", main_content
   end
 
+  test "show matches group by pronouns" do
+    groups(:friends).update!(pronouns: "they/them")
+    sign_in_as @user
+    get our_search_path, params: { q: "they/them" }
+    assert_response :success
+    assert_match "Friends", main_content
+  end
+
   test "show matches by label" do
     sign_in_as @user
     profiles(:alice).update!(labels: [ "close-friends-only" ])

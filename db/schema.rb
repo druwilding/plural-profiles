@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_29_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -185,6 +185,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_090000) do
     t.string "mini_profile_tag_line"
     t.boolean "mini_profile_tag_line_inherited", default: true, null: false
     t.string "name", null: false
+    t.string "pronouns"
     t.string "subtitle"
     t.string "tag_line"
     t.bigint "theme_id"

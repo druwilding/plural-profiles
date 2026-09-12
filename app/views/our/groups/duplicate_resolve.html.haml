@@ -37,7 +37,7 @@
                     %span.label-badge= l
             - if @original.subtitle.present?
               %p.subtitle= @original.subtitle
-            - if @conflict_type == "Profile" && @original.pronouns.present?
+            - if @original.pronouns.present?
               %span.pronouns= @original.pronouns
           - if @original.description.present?
             %p.duplicate-comparison__description= truncate(@original.description, length: 500)
@@ -55,7 +55,7 @@
                     %span.label-badge= l
             - if @existing_copy.subtitle.present?
               %p.subtitle= @existing_copy.subtitle
-            - if @conflict_type == "Profile" && @existing_copy.pronouns.present?
+            - if @existing_copy.pronouns.present?
               %span.pronouns= @existing_copy.pronouns
           - if @existing_copy.description.present?
             %p.duplicate-comparison__description= truncate(@existing_copy.description, length: 500)
