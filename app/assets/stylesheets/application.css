@@ -4063,12 +4063,12 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   gap: 0.6rem;
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  color: var(--chat-pane-text);
+  color: var(--pane-text);
   text-decoration: none;
 }
 
 .server-list__link:hover {
-  background-color: color-mix(in srgb, var(--chat-pane-text) 8%, transparent);
+  background-color: color-mix(in srgb, var(--pane-text) 8%, transparent);
 }
 
 .server-list__link .avatar {
@@ -4100,7 +4100,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 
 .server-list__description {
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 80%, transparent);
   min-width: 0;
   flex: 1 1 auto;
   overflow: hidden;
@@ -4110,7 +4110,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 
 .server-list__subtitle {
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 80%, transparent);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -4638,12 +4638,8 @@ turbo-frame {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  /* Was a color-mix of the pane and page backgrounds; now a themeable colour
-     of its own, defaulting to the composer background. Themes that never set
-     it lose the old 15% page-colour tint — the one intentional (and slight)
-     appearance change in the chat palette. */
-  background-color: var(--chat-composer-highlight);
-  border: 1px solid color-mix(in srgb, var(--chat-composer-text) 35%, transparent);
+  background-color: color-mix(in srgb, var(--pane-bg) 85%, var(--page-bg) 15%);
+  border: 1px solid color-mix(in srgb, var(--pane-text) 35%, transparent);
   border-radius: 7px;
   padding: 0.3rem 0.6rem 0.3rem 0.4rem;
   font-size: 0.82rem;
@@ -4688,7 +4684,7 @@ turbo-frame {
   margin-left: 0.3rem;
   font-size: 0.78rem;
   font-style: italic;
-  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
 }
 
 .profile-picker__trigger::-webkit-details-marker,
@@ -4730,13 +4726,9 @@ turbo-frame {
   width: 100%;
   padding: 0.4rem 0.6rem;
   border-radius: 5px;
-  border: 1px solid var(--chat-divider);
-  /* Was --page-bg before chat had a palette of its own. Now that there's no
-     chat page colour, it follows the composer's input background — it is a
-     text input in the composer, after all — rather than being the one profile
-     variable left inside a chat-themed control. */
-  background-color: var(--chat-input-bg);
-  color: var(--chat-composer-text);
+  border: 1px solid var(--pane-border);
+  background-color: var(--page-bg);
+  color: var(--pane-text);
   font-size: 0.85rem;
 }
 
@@ -4765,7 +4757,7 @@ turbo-frame {
    visible system color regardless of focus state, which would otherwise put
    a box around every option, focused or not. */
 .profile-picker__option:focus-visible {
-  outline: 2px solid var(--chat-pane-link);
+  outline: 2px solid var(--pane-link);
   outline-offset: -2px;
 }
 
@@ -4794,7 +4786,7 @@ button.profile-picker__option {
 }
 
 .profile-picker__option--current {
-  background-color: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
+  background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
 .profile-picker__option-info {
@@ -4816,20 +4808,20 @@ button.profile-picker__option {
 .profile-picker__option-pronouns {
   font-size: 0.78rem;
   font-style: italic;
-  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
 }
 
 .profile-picker__option-subtitle {
   display: block;
   font-size: 0.78rem;
-  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
 }
 
 .profile-picker__empty {
   padding: 0.5rem 0.75rem;
   margin: 0;
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--chat-composer-text) 65%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
 }
 
 /* Separates the profile options from the group options within the same
@@ -4843,11 +4835,64 @@ button.profile-picker__option {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: color-mix(in srgb, var(--chat-composer-text) 60%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 60%, transparent);
 }
 
 .profile-picker__group-label:first-child {
   margin-top: 0;
+}
+
+/* The composer's "posting as" picker takes the chat palette. The same
+   .profile-picker markup is also used as a plain form field on the server
+   create, join and membership pages, which are ordinary pages and keep the
+   profile colours in the base rules above. Only the copy inside .composer is
+   chat chrome, so the chat colours hang off that ancestor. */
+.composer .profile-picker {
+  background-color: var(--chat-composer-highlight);
+  border: 1px solid color-mix(in srgb, var(--chat-composer-text) 35%, transparent);
+}
+
+.composer .profile-picker__trigger-pronouns {
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+}
+
+.composer .profile-picker__search {
+  border: 1px solid var(--chat-divider);
+  background-color: var(--chat-input-bg);
+  color: var(--chat-composer-text);
+}
+
+.composer .profile-picker__option:focus-visible {
+  outline: 2px solid var(--chat-pane-link);
+}
+
+.composer .profile-picker__option--current {
+  background-color: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
+}
+
+.composer .profile-picker__option-pronouns {
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+}
+
+.composer .profile-picker__option-subtitle {
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+}
+
+.composer .profile-picker__empty {
+  color: color-mix(in srgb, var(--chat-composer-text) 65%, transparent);
+}
+
+.composer .profile-picker__group-label {
+  color: color-mix(in srgb, var(--chat-composer-text) 60%, transparent);
+}
+
+/* The override above is (0,3,0), which beats the base forced-colors rule
+   for this selector (0,2,0) regardless of the media query, so it needs its
+   own. Same trap as the chat-scoped Sign out link. */
+@media (forced-colors: active) {
+  .composer .profile-picker__option:focus-visible {
+    outline-color: CanvasText;
+  }
 }
 
 .composer-input-row {
@@ -4910,7 +4955,7 @@ button.profile-picker__option {
 .invite-card__description {
   margin: 0;
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
+  color: color-mix(in srgb, var(--pane-text) 80%, transparent);
 }
 
 .invite-card__description {

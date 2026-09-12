@@ -58,8 +58,8 @@ export default class extends Controller {
 
   // Reverse index of the fallback map: profile property -> the chat properties
   // that follow it. Changing a profile colour has to repaint every chat colour
-  // currently following it, and scanning all 27 keys on every keystroke would
-  // be wasteful.
+  // currently following it, and scanning every chat key on every keystroke
+  // would be wasteful.
   buildDependents() {
     this.dependents = {}
     const chain = this.hasFallbackChainValue ? this.fallbackChainValue : {}

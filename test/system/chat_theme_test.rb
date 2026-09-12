@@ -251,6 +251,49 @@ class ChatThemeTest < ApplicationSystemTestCase
     assert_equal rgb("#ff8800"), style_of(".chat-message__body", "color")
   end
 
+  test "the server list keeps the profile text colour" do
+    # /servers is an ordinary page inside the chat layout; the original
+    # conversion of the chat stylesheet had pointed its links at the
+    # message-pane colour.
+    @theme.update!(colors: base_colors.merge("chat_pane_text" => "#ff0000"))
+
+    sign_in_via_browser
+    visit chat_url("/servers")
+    assert_text "Your servers"
+
+    assert_equal rgb("#0a0b0c"), style_of(".server-list__link", "color")
+  end
+
+  test "the invite card's description keeps the profile text colour" do
+    @server.update!(description: "A quiet place")
+    @theme.update!(colors: base_colors.merge("chat_pane_text" => "#ff0000"))
+
+    sign_in_via_browser
+    visit chat_url("/servers/#{@server.uuid}/invite")
+    assert_text "A quiet place"
+
+    # An 80% mix, so the browser reports color(srgb r g b / 0.8): pane_text
+    # (#0a0b0c) gives ~0.039 per channel, where the chat red would give 1 0 0.
+    color = style_of(".invite-card__description", "color")
+    assert_match(/srgb 0\.039/, color, "expected the profile text colour, got #{color}")
+  end
+
+  test "the composer's identity picker takes chat colours but the plain-form picker keeps profile colours" do
+    # Same .profile-picker markup in both places; only the composer's copy is
+    # chat chrome. The server create form's picker is an ordinary form field.
+    @theme.update!(colors: base_colors.merge("chat_composer_highlight" => "#ff0000"))
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_text "No messages yet. Say hello!"
+    assert_equal rgb("#ff0000"), style_of(".composer .profile-picker", "background-color")
+
+    visit chat_url("/servers/new")
+    assert_selector ".profile-picker", visible: :all
+    assert_not_equal rgb("#ff0000"), style_of(".profile-picker", "background-color"),
+      "the plain-form picker must not take the composer highlight"
+  end
+
   test "the header bar stays chat-coloured on the ordinary chat pages too" do
     # It's chat chrome, visible on every page in the layout, so unlike the
     # cards below it, it does follow the chat palette throughout.
