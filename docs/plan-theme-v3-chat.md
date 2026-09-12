@@ -25,7 +25,7 @@ appearing on chat pages (see Phase 2).
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
 | Data migration         | **None.** Fallbacks make every existing theme render identically today (bar the background-image change below), and keep chat tracking later profile edits. A migration would freeze current values and defeat the feature |
-| Editor UX              | Per-property **"Override" checkbox** that enables the picker; unticked, the colour follows its profile counterpart                                                                                                       |
+| Editor UX              | Per-property **"Override" checkbox** that enables the picker; unticked, the colour follows its profile counterpart                                                                                                         |
 | Export version         | Bump `CURRENT_EXPORT_VERSION` to `3`; keep accepting 1–3                                                                                                                                                                   |
 | Preview                | Tabbed preview pane: **Profile** (today's preview) / **Chat** (new mock)                                                                                                                                                   |
 | Background images      | **Never shown in chat.** Chat pages get flat `chat_page_bg` only — see [Phase 2](#phase-2-drop-background-images-from-chat)                                                                                                |
@@ -221,11 +221,11 @@ chat and on profile pages.
 
 #### Chat · Chat header (3)
 
-| Key                      | Falls back to          | Paints                                                                                     |
-| ------------------------ | ---------------------- | ------------------------------------------------------------------------------------------ |
-| `chat_topbar_bg`         | `pane_bg`              | `.chat-channel-header` (today it has no background of its own — it shows the pane through) |
-| `chat_topbar_text`       | `pane_text`            | channel description, subtitle                                                              |
-| `chat_topbar_title_text` | `pane_title_text`      | the `# channel-name` `h1`                                                                  |
+| Key                      | Falls back to     | Paints                                                                                     |
+| ------------------------ | ----------------- | ------------------------------------------------------------------------------------------ |
+| `chat_topbar_bg`         | `pane_bg`         | `.chat-channel-header` (today it has no background of its own — it shows the pane through) |
+| `chat_topbar_text`       | `pane_text`       | channel description, subtitle                                                              |
+| `chat_topbar_title_text` | `pane_title_text` | the `# channel-name` `h1`                                                                  |
 
 Every fallback points **straight at a profile key** — no chat colour follows
 another chat colour. An earlier draft chained the header through
@@ -246,14 +246,14 @@ profile colour and nothing else, enforced by a model test.
 
 #### Chat · Composer bar (6)
 
-| Key                       | Falls back to      | Paints                                       |
-| ------------------------- | ------------------ | -------------------------------------------- |
-| `chat_composer_bg`        | `pane_bg`          | `.composer`                                  |
-| `chat_composer_text`      | `pane_text`        | composer text and its `color-mix` tints      |
-| `chat_composer_highlight` | `pane_bg`          | `.profile-picker` pill background and border |
-| `chat_input_bg`           | `input_bg`         | composer textarea, `.profile-picker__search` |
-| `chat_input_border`       | `input_border`     | composer textarea border                     |
-| `chat_input_text`         | `input_text`       | composer textarea text                       |
+| Key                       | Falls back to  | Paints                                       |
+| ------------------------- | -------------- | -------------------------------------------- |
+| `chat_composer_bg`        | `pane_bg`      | `.composer`                                  |
+| `chat_composer_text`      | `pane_text`    | composer text and its `color-mix` tints      |
+| `chat_composer_highlight` | `pane_bg`      | `.profile-picker` pill background and border |
+| `chat_input_bg`           | `input_bg`     | composer textarea, `.profile-picker__search` |
+| `chat_input_border`       | `input_border` | composer textarea border                     |
+| `chat_input_text`         | `input_text`   | composer textarea text                       |
 
 `chat_composer_highlight` is the one property with no exact current equivalent:
 `.profile-picker` is `color-mix(in srgb, var(--pane-bg) 85%, var(--page-bg) 15%)`
