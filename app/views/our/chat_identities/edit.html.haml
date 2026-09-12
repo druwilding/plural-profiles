@@ -60,8 +60,7 @@
           inherited_value: formatted_inline(@postable.subtitle)
 
       = render "field_toggle", form: form, field: :pronouns, label: "Pronouns",
-          inherited_value: formatted_inline(@postable.pronouns),
-          placeholder: "e.g. they/them, she/her, he/him"
+          inherited_value: formatted_inline(@postable.pronouns)
 
       - if @postable.is_a?(Profile)
         - hearts_title_id = "chat-identity-field-hearts-title"
