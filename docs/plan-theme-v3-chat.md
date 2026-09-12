@@ -542,6 +542,24 @@ follows `chat_page_bg` / `chat_divider` / `chat_composer_text` instead, all
 exact-fidelity matches, and `chat_input_*` drives the composer textarea, which
 is what actually took `--input-*` before.
 
+**`:root` chat colours are generated, not duplicated.** They started as
+literal hexes hand-copied from each profile counterpart — the drift hazard the
+Current state section warns about in reverse. They mostly matched, but
+`chat_composer_highlight` carried its own default (`#12372c`, the old
+colour-mix) that differed from the `pane_bg` it follows. Every `:root` chat
+variable is now `var(--<fallback>)`, generated from the model, and the
+highlight's default matches its fallback. A model test enforces both. `var()`
+is safe here despite the `:root`-resolution caveat: a themed page emits every
+chat colour concretely next to its profile counterpart, and an un-themed page
+overrides nothing, so each reference resolves against `:root`'s own values.
+
+**Inherited swatches are shown at full strength.** An inheriting row used to be
+dimmed as a whole, which dimmed the colour swatch inside it — so a near-black
+inherited rail showed as washed-out grey in the form while the preview rendered
+the true near-black, and "Following Pane border" appeared to be lying.
+Inheritance is signalled by the dimmed hex text, the unticked Override box and
+the hint instead; the swatch always shows the colour in effect.
+
 **There is no `chat_header_text`.** The bar has no body text to colour — the
 logo, the domain switcher and Sign out each set their own — so the key only
 ever painted the secondary text in the message-author popover's banner. That
