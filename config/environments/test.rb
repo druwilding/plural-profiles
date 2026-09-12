@@ -31,6 +31,15 @@ Rails.application.configure do
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
 
+  # Variant tracking writes a row to active_storage_variant_records the first
+  # time a lazily-referenced variant (e.g. an <img> thumbnail) is actually
+  # fetched and processed. In system tests that fetch happens as a real,
+  # separate browser request that can still be in flight when the test's own
+  # request purges the attachment, racing a variant-tracking INSERT against
+  # the blob DELETE and raising a foreign key violation. It's a pure caching
+  # optimization, not needed in tests, so disable it here.
+  config.active_storage.track_variants = false
+
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the
   # ActionMailer::Base.deliveries array.

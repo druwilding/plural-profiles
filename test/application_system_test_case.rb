@@ -34,11 +34,38 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     end
   end
 
-  # Wrap Capybara session methods to inject a pause between actions
-  %i[visit click_link click_button fill_in].each do |method_name|
+  # Chrome's DevTools Protocol occasionally raises this exact, unclassified
+  # error when Capybara tries to resolve a node reference at the moment a
+  # Turbo Drive navigation swaps the document out from under it (typically
+  # right after submitting a form, while polling an `assert_text`/`choose`
+  # on the page it navigates to). It's genuinely transient — the same call
+  # against the now-settled page always succeeds — but Capybara only
+  # auto-retries a fixed list of recognized "stale element" exception
+  # classes (see Capybara::Selenium::Driver#invalid_element_errors), and
+  # Selenium::WebDriver::Error::UnknownError isn't one of them, so this
+  # specific CDP inspector error otherwise surfaces as a hard failure.
+  STALE_CDP_NODE_ERROR = /Node with given id does not belong to the document/
+
+  def retrying_stale_cdp_node
+    yield
+  rescue Selenium::WebDriver::Error::UnknownError => e
+    raise unless e.message.match?(STALE_CDP_NODE_ERROR)
+    yield
+  end
+
+  # Wrap Capybara session methods to inject a pause between actions and to
+  # retry once on the transient stale-node CDP error described above.
+  %i[visit click_link click_button fill_in choose check uncheck].each do |method_name|
     define_method(method_name) do |*args, **kwargs, &block|
       sleep(@slowmo) if @slowmo
-      super(*args, **kwargs, &block)
+      retrying_stale_cdp_node { super(*args, **kwargs, &block) }
+    end
+  end
+
+  # Same retry for the wait-based assertions used right after navigations.
+  %i[assert_text assert_no_text assert_selector assert_no_selector].each do |method_name|
+    define_method(method_name) do |*args, **kwargs, &block|
+      retrying_stale_cdp_node { super(*args, **kwargs, &block) }
     end
   end
 
