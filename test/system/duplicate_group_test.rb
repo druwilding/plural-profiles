@@ -226,17 +226,13 @@ class DuplicateGroupTest < ApplicationSystemTestCase
   end
 
   test "multi-label duplicate then higher-level duplicate triggers conflict resolution" do
-    # Step 1: Duplicate Prism Circle with "black, white" — no conflicts, straight to confirm.
+    # Step 1: Create a copy of Prism Circle with "black, white" directly via Ruby
+    # instead of through the browser. Two full browser duplication flows back-to-back
+    # accumulate Chrome CDP stale state and intermittently raise
+    # "Node with given id does not belong to the document" (see the
+    # "reversed label order" test below, which uses the same workaround).
     prism = groups(:prism_circle)
-    visit our_group_path(prism)
-    click_link "Duplicate"
-
-    fill_in "Labels for all copies", with: "black, white"
-    click_button "Next"
-
-    assert_text "Confirm duplication"
-    click_button "Confirm and duplicate"
-    assert_text "Group duplicated"
+    prism.deep_duplicate(new_labels: [ "black", "white" ])
 
     # Step 2: Duplicate Echo Shard (which contains Prism Circle) with the same labels.
     # Because a copy of Prism Circle with BOTH "black" and "white" now exists,
