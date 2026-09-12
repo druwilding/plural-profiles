@@ -219,7 +219,6 @@ class ThemeTest < ActiveSupport::TestCase
     # existing theme looks.
     Theme::THEMEABLE_PROPERTIES.each do |key, meta|
       next unless meta[:fallback]
-      next if key == "chat_composer_highlight" # deliberately a colour of its own; see the model
       assert_equal Theme::THEMEABLE_PROPERTIES.dig(meta[:fallback], :default), meta[:default],
         "#{key} should default to the same colour as #{meta[:fallback]}"
     end
@@ -790,6 +789,23 @@ class ThemeTest < ActiveSupport::TestCase
 
     assert theme.overridden?("chat_rail_bg")
     assert_not theme.overridden?("chat_pane_bg")
+  end
+
+  test "every :root chat variable points at the profile variable it follows" do
+    # They used to be literal hexes duplicated by hand, which drifted: an
+    # un-themed page could show a chat colour different from the profile colour
+    # the editor said it was following. Referencing the fallback makes that
+    # impossible, and this keeps it from quietly reverting to a literal.
+    css = Rails.root.join("app/assets/stylesheets/application.css").read
+    root = css[/:root\s*\{(.*?)\}/m, 1]
+
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      var = "--#{key.tr('_', '-')}"
+      expected = "var(--#{meta[:fallback].tr('_', '-')})"
+      declared = root[/#{Regexp.escape(var)}:\s*([^;]+);/, 1]
+      assert_equal expected, declared&.strip, "#{var} in :root should be #{expected}"
+    end
   end
 
   test "FALLBACK_CHAIN matches the fallbacks declared on the properties" do

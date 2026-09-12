@@ -185,11 +185,11 @@ class Theme < ApplicationRecord
 
     "chat_composer_bg"         => { label: "Chat footer background",    default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
     "chat_composer_text"       => { label: "Chat footer text",          default: "#5ea389", group: :chat_composer, fallback: "pane_text" },
-    # The one key with no real profile counterpart: .profile-picker was a
-    # color-mix of --pane-bg and --page-bg before the split, so its default is
-    # that mix resolved against the stock theme. It follows pane_bg, the nearer
-    # half of that mix.
-    "chat_composer_highlight"  => { label: "Posting-as highlight",      default: "#12372c", group: :chat_composer, fallback: "pane_bg" },
+    # Follows pane_bg like every other chat colour follows its counterpart, with
+    # the same default — no special-case value of its own, so what the editor
+    # says it's following is what it actually shows. (.profile-picker used to be
+    # a color-mix of --pane-bg and --page-bg before the split.)
+    "chat_composer_highlight"  => { label: "Posting-as highlight",      default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
     "chat_input_bg"            => { label: "Input background",          default: "#263a2e", group: :chat_composer, fallback: "input_bg" },
     "chat_input_border"        => { label: "Input border",              default: "#3c6f5f", group: :chat_composer, fallback: "input_border" },
     "chat_input_text"          => { label: "Input text",                default: "#5ea389", group: :chat_composer, fallback: "input_text" }

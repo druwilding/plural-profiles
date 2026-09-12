@@ -154,6 +154,28 @@ class ChatThemeDesignerTest < ApplicationSystemTestCase
     assert_equal "rgba(0, 255, 0, 1)", link.native.style("color")
   end
 
+  # The editor says an inherited colour is "Following X", so its swatch has to
+  # show exactly the colour in effect. Dimming the inheriting row used to dim
+  # the swatch too: a near-black inherited rail rendered as washed-out grey in
+  # the form while the preview showed the true near-black, so the form
+  # contradicted the preview it sits beside.
+  test "an inherited colour's swatch shows the true colour, matching the preview" do
+    @theme.update!(colors: { "pane_bg" => "#112233", "pane_border" => "#0a0a14" })
+    visit edit_our_theme_path(@theme)
+    open_all_sections
+
+    assert hex_field("chat_rail_bg").disabled?, "chat_rail_bg should be inheriting"
+    assert_equal "#0a0a14", hex_field("chat_rail_bg").value
+
+    swatch = group_for("chat_rail_bg").find(".clr-field button", visible: :all)
+    assert_equal "1", swatch.native.style("opacity"), "an inherited swatch must not be dimmed"
+
+    click_button "Chat"
+    rail = find(".theme-preview__chat .server-rail", visible: :all)
+    assert_equal "rgba(10, 10, 20, 1)", rail.native.style("background-color"),
+      "the preview rail should match the pane border it follows"
+  end
+
   test "the chat preview tab shows a chat mock that responds to chat colours" do
     visit edit_our_theme_path(@theme)
     assert_selector ".theme-preview__panel[data-preview-panel='profile']", visible: true
