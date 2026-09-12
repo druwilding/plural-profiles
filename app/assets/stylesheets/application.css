@@ -42,6 +42,44 @@
   --warning-text: var(--warning-border);
   --tree-guide: color-mix(in srgb, var(--pane-text) 30%, transparent);
   --avatar-placeholder-border: color-mix(in srgb, var(--pane-text) 50%, transparent);
+
+  /* Chat's own palette. Every value here is a literal hex duplicating its
+     profile-page counterpart above, deliberately *not* a var() reference:
+     a var() inside a custom property declared on :root resolves here, at
+     :root, and does not re-resolve when a theme overrides the referenced
+     property on body — see Theme#to_css_properties for the full story. A
+     themed page overrides all of these concretely anyway; these are the
+     un-themed defaults (logged-out visitors, or before the style attribute
+     is parsed), so they must stand on their own. */
+  --chat-page-bg: #0b221b;
+  --chat-header-bg: #0e2e24;
+  --chat-header-title-text: #5ea389;
+  --chat-header-text: #5ea389;
+  --chat-header-link: #3ab580;
+  --chat-rail-bg: #02120e;
+  --chat-rail-text: #5ea389;
+  --chat-rail-active: #5ea389;
+  --chat-divider: #02120e;
+  --chat-sidebar-bg: #133b2f;
+  --chat-sidebar-text: #5ea389;
+  --chat-sidebar-title-text: #5ea389;
+  --chat-sidebar-link: #3ab580;
+  --chat-topbar-bg: #133b2f;
+  --chat-topbar-text: #5ea389;
+  --chat-topbar-title-text: #5ea389;
+  --chat-pane-bg: #133b2f;
+  --chat-pane-text: #5ea389;
+  --chat-pane-title-text: #5ea389;
+  --chat-pane-link: #3ab580;
+  --chat-spoiler: #3A3A3A;
+  --chat-composer-bg: #133b2f;
+  --chat-composer-text: #5ea389;
+  --chat-composer-highlight: #12372c;
+  --chat-input-bg: #263a2e;
+  --chat-input-border: #3c6f5f;
+  --chat-input-text: #5ea389;
+  --chat-tree-guide: color-mix(in srgb, var(--chat-pane-text) 30%, transparent);
+  --chat-avatar-placeholder-border: color-mix(in srgb, var(--chat-pane-text) 50%, transparent);
 }
 
 html {
@@ -3626,6 +3664,144 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-body {
   height: 100vh;
   height: 100dvh;
+  background-color: var(--chat-page-bg);
+  color: var(--chat-pane-text);
+}
+
+/* The site header is the same markup in both layouts, so chat's version of it
+   is a scoped override rather than a separate component. Specificity (0,2,0)
+   beats the base .site-header rules (0,1,0) without !important; the nav rules
+   below match the base selectors' shape for the same reason. */
+.chat-body .site-header {
+  background-color: var(--chat-header-bg);
+  color: var(--chat-header-text);
+  border-bottom-color: var(--chat-divider);
+}
+
+.chat-body .site-header .logo {
+  color: var(--chat-header-title-text);
+}
+
+.chat-body .site-header nav a,
+.chat-body .site-header nav .link-button {
+  color: var(--chat-header-link);
+}
+
+/* The other two header_bg banners — .card > .card__header (server list, server
+   and channel settings, invites) and .mini-profile__header (the popover you
+   get by clicking a message author) — also render inside chat, so they follow
+   the chat header colours too. Leaving them on --header-* would strand them on
+   the profile palette in the middle of a chat-themed page, which is the exact
+   cross-over this feature exists to fix. Each selector mirrors its base rule's
+   shape one level deeper. */
+.chat-body .card > .card__header,
+.chat-body .mini-profile-popover > .mini-profile > .mini-profile__header,
+.chat-body .preview-block__body > .mini-profile > .mini-profile__header {
+  background-color: var(--chat-header-bg);
+}
+
+.chat-body .card > .card__header {
+  color: var(--chat-header-text);
+}
+
+.chat-body .card > .card__header h1,
+.chat-body .card > .card__header h2,
+.chat-body .card > .card__header h3,
+.chat-body .mini-profile__header .mini-profile__name {
+  color: var(--chat-header-title-text);
+}
+
+.chat-body .card > .card__header .subtitle,
+.chat-body .card > .card__header .tag-line,
+.chat-body .card > .card__header .pronouns,
+.chat-body .mini-profile__header .subtitle,
+.chat-body .mini-profile__header .tag-line,
+.chat-body .mini-profile__header .pronouns {
+  color: color-mix(in srgb, var(--chat-header-text) 80%, transparent);
+}
+
+.chat-body .card > .card__header a,
+.chat-body .mini-profile__header a {
+  color: var(--chat-header-link);
+}
+
+/* Placeholder avatars inside those banners, mirroring the base rule's 50% mix
+   against the header's own text colour. */
+.chat-body .card > .card__header .avatar--placeholder,
+.chat-body .mini-profile__header .avatar--placeholder {
+  color: var(--chat-header-text);
+  border-color: color-mix(in srgb, var(--chat-header-text) 50%, transparent);
+}
+
+/* Shared components that the chat layout also renders — cards on the server
+   list and settings pages, headings, links, spoilers in messages, the
+   dropdown menu behind the "posting as" picker. Each defaults to the profile
+   value it replaces, so this re-points them at the chat palette without
+   changing how any existing theme looks. Elements whose colours aren't part
+   of the chat palette (buttons, flash messages, form labels) are deliberately
+   left shared. */
+.chat-body .card {
+  background-color: var(--chat-pane-bg);
+  border-color: var(--chat-divider);
+}
+
+.chat-body h1,
+.chat-body h2,
+.chat-body h3 {
+  color: var(--chat-pane-title-text);
+}
+
+.chat-body .subtitle {
+  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
+}
+
+/* :where() keeps this at the base `a` rule's specificity (0,0,1) rather than
+   (0,1,1). At (0,1,1) it would outrank every single-class rule that colours a
+   link in chat — .channel-pane__server-name, .channel-pane__add-channel,
+   .server-rail__icon, .chat-channel-back — and flatten them all to the link
+   colour. This way it only replaces the global default, exactly as intended. */
+:where(.chat-body) a {
+  color: var(--chat-pane-link);
+}
+
+.chat-body .spoiler {
+  background-color: var(--chat-spoiler);
+  border-color: var(--chat-spoiler);
+}
+
+.chat-body .spoiler:focus-visible {
+  outline-color: var(--chat-spoiler);
+}
+
+.chat-body .spoiler--revealed {
+  background-color: color-mix(in srgb, var(--chat-spoiler) 10%, transparent);
+}
+
+.chat-body .avatar--placeholder,
+.chat-body .sidebar__avatar--placeholder,
+.chat-body .sidebar-tree__avatar--placeholder,
+.chat-body .tree__avatar--placeholder {
+  color: var(--chat-pane-text);
+  border-color: var(--chat-avatar-placeholder-border);
+}
+
+.chat-body .action-dropdown__menu {
+  background-color: var(--chat-pane-bg);
+  border-color: var(--chat-divider);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--chat-divider) 25%, transparent);
+}
+
+.chat-body .action-dropdown__item,
+.chat-body .action-dropdown__item:hover {
+  color: var(--chat-pane-text);
+}
+
+.chat-body .action-dropdown__item:hover {
+  background-color: color-mix(in srgb, var(--chat-pane-text) 8%, transparent);
+}
+
+.chat-body .action-dropdown__divider {
+  border-top-color: var(--chat-divider);
 }
 
 .server-list {
@@ -3643,12 +3819,12 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   gap: 0.6rem;
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  color: var(--pane-text);
+  color: var(--chat-pane-text);
   text-decoration: none;
 }
 
 .server-list__link:hover {
-  background-color: color-mix(in srgb, var(--pane-text) 8%, transparent);
+  background-color: color-mix(in srgb, var(--chat-pane-text) 8%, transparent);
 }
 
 .server-list__link .avatar {
@@ -3680,7 +3856,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 
 .server-list__description {
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--pane-text) 80%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
   min-width: 0;
   flex: 1 1 auto;
   overflow: hidden;
@@ -3690,7 +3866,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 
 .server-list__subtitle {
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--pane-text) 80%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -3705,7 +3881,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .server-rail {
   width: 72px;
   flex-shrink: 0;
-  background-color: var(--pane-border);
+  background-color: var(--chat-rail-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3723,7 +3899,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   height: 42px;
   flex-shrink: 0;
   border-radius: 25%;
-  color: var(--pane-text);
+  color: var(--chat-rail-text);
   text-decoration: none;
   border: 2px solid transparent;
 }
@@ -3748,17 +3924,17 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 }
 
 .server-rail__icon:hover {
-  border-color: color-mix(in srgb, var(--pane-text) 40%, transparent);
+  border-color: color-mix(in srgb, var(--chat-rail-text) 40%, transparent);
 }
 
 .server-rail__icon--active {
   border-color: transparent;
-  box-shadow: 0 0 0 2px var(--pane-border), 0 0 0 4px var(--pane-title-text);
+  box-shadow: 0 0 0 2px var(--chat-rail-bg), 0 0 0 4px var(--chat-rail-active);
 }
 
 .server-rail__icon--add {
-  border: 1px dashed color-mix(in srgb, var(--pane-text) 40%, transparent);
-  color: var(--pane-link);
+  border: 1px dashed color-mix(in srgb, var(--chat-rail-text) 40%, transparent);
+  color: var(--chat-rail-link);
   font-size: 1.3rem;
   text-decoration: none;
 }
@@ -3777,7 +3953,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   position: absolute;
   top: 0;
   right: 0;
-  border: 2px solid var(--pane-border);
+  border: 2px solid var(--chat-rail-bg);
 }
 
 @media (forced-colors: active) {
@@ -3808,8 +3984,8 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .channel-pane {
   width: 200px;
   flex-shrink: 0;
-  background-color: var(--pane-bg);
-  border-right: 1px solid var(--pane-border);
+  background-color: var(--chat-sidebar-bg);
+  border-right: 1px solid var(--chat-divider);
   padding: 1rem 0.75rem;
   overflow-y: auto;
 }
@@ -3829,10 +4005,28 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   padding-left: 0;
 }
 
+/* The channel rows reuse .sidebar-tree__leaf, which lives with the profile
+   sidebar styles and so wasn't caught by the chat palette conversion. Channel
+   names have always been link-coloured (they're bare <a>s with no colour rule
+   of their own), so they follow --chat-sidebar-link to keep that; the hover
+   and active tints follow --chat-sidebar-text. Both defaults match what the
+   profile variables gave them before. */
+.channel-pane .sidebar-tree__leaf {
+  color: var(--chat-sidebar-link);
+}
+
+.channel-pane .sidebar-tree__leaf:hover {
+  background-color: color-mix(in srgb, var(--chat-sidebar-text) 10%, transparent);
+}
+
+.channel-pane .sidebar-tree__leaf--active {
+  background-color: color-mix(in srgb, var(--chat-sidebar-text) 20%, transparent);
+}
+
 .channel-pane__server-name {
   display: block;
   font-weight: 700;
-  color: var(--pane-title-text);
+  color: var(--chat-sidebar-title-text);
   text-decoration: none;
   margin-bottom: 0.75rem;
 }
@@ -3846,7 +4040,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   margin-top: 0.6rem;
   padding-left: 1.1rem;
   font-size: 0.85rem;
-  color: var(--pane-link);
+  color: var(--chat-sidebar-link);
   text-decoration: none;
 }
 
@@ -3882,7 +4076,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-main:has(.chat-channel) {
   padding: 0;
   overflow-y: hidden;
-  background-color: var(--pane-bg);
+  background-color: var(--chat-pane-bg);
 }
 
 /* Wraps the header, the scrollable history, and the composer for a single
@@ -3901,8 +4095,19 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.6rem 1.25rem 0.9rem;
-  border-bottom: 1px solid var(--pane-border);
+  /* Defaults to the message pane's own colour, so this reads as one surface
+     with the history below it until a designer parts the two. */
+  background-color: var(--chat-topbar-bg);
+  /* Inherited by the channel description, which has no colour rule of its own. */
+  color: var(--chat-topbar-text);
+  border-bottom: 1px solid var(--chat-divider);
   flex-shrink: 0;
+}
+
+/* Beats .chat-body h1 (0,1,1), which would otherwise paint this the message
+   pane's title colour — the header is its own surface with its own keys. */
+.chat-body .chat-channel-header h1 {
+  color: var(--chat-topbar-title-text);
 }
 
 .chat-channel-header h1 {
@@ -3957,6 +4162,10 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   margin: 0.15rem 0 0;
 }
 
+.chat-body .chat-channel-header .subtitle {
+  color: color-mix(in srgb, var(--chat-topbar-text) 80%, transparent);
+}
+
 /* Hidden by default — only shown at the small-screen breakpoint below,
    where the server rail and channel list collapse away and this is the
    only way back to them. */
@@ -3968,14 +4177,14 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   height: 32px;
   flex-shrink: 0;
   border-radius: 6px;
-  color: var(--pane-text);
+  color: var(--chat-topbar-text);
   text-decoration: none;
   font-size: 1.5rem;
   line-height: 1;
 }
 
 .chat-channel-back:hover {
-  background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
+  background-color: color-mix(in srgb, var(--chat-topbar-text) 10%, transparent);
 }
 
 /* Mobile (600px and below): collapse to a single pane at a time, matching
@@ -4040,7 +4249,7 @@ turbo-frame {
   align-items: center;
   gap: 0.75rem;
   padding-top: 1.5rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -4055,7 +4264,7 @@ turbo-frame {
      than the harder --pane-border — and a border (not a background bar) so
      the same CanvasText override used for tree-guide lines elsewhere in
      forced-colors mode applies here too. */
-  border-top: 1px solid var(--tree-guide);
+  border-top: 1px solid var(--chat-tree-guide);
 }
 
 @media (forced-colors: active) {
@@ -4120,7 +4329,7 @@ turbo-frame {
 .chat-message__name {
   font-weight: 700;
   font-size: 0.9rem;
-  color: var(--pane-title-text);
+  color: var(--chat-pane-title-text);
 }
 
 /* Same forced-colors issue as .link-button above: the name is a <button>
@@ -4136,13 +4345,13 @@ turbo-frame {
   font-style: italic;
   font-weight: 500;
   font-size: 0.9rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
 }
 
 .chat-message__pronouns,
 .chat-message__time {
   font-size: 0.76rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
 }
 
 .chat-message__pronouns {
@@ -4152,7 +4361,7 @@ turbo-frame {
 .chat-message__subtitle {
   display: block;
   font-size: 0.78rem;
-  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 75%, transparent);
 }
 
 .chat-message__body {
@@ -4162,7 +4371,8 @@ turbo-frame {
 
 .composer {
   flex-shrink: 0;
-  border-top: 1px solid var(--pane-border);
+  background-color: var(--chat-composer-bg);
+  border-top: 1px solid var(--chat-divider);
   padding: 0.5rem 1.25rem 0.75rem;
 }
 
@@ -4176,8 +4386,12 @@ turbo-frame {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background-color: color-mix(in srgb, var(--pane-bg) 85%, var(--page-bg) 15%);
-  border: 1px solid color-mix(in srgb, var(--pane-text) 35%, transparent);
+  /* Was a color-mix of the pane and page backgrounds; now a themeable colour
+     of its own, defaulting to the composer background. Themes that never set
+     it lose the old 15% page-colour tint — the one intentional (and slight)
+     appearance change in the chat palette. */
+  background-color: var(--chat-composer-highlight);
+  border: 1px solid color-mix(in srgb, var(--chat-composer-text) 35%, transparent);
   border-radius: 7px;
   padding: 0.3rem 0.6rem 0.3rem 0.4rem;
   font-size: 0.82rem;
@@ -4222,7 +4436,7 @@ turbo-frame {
   margin-left: 0.3rem;
   font-size: 0.78rem;
   font-style: italic;
-  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
 }
 
 .profile-picker__trigger::-webkit-details-marker,
@@ -4264,9 +4478,9 @@ turbo-frame {
   width: 100%;
   padding: 0.4rem 0.6rem;
   border-radius: 5px;
-  border: 1px solid var(--pane-border);
-  background-color: var(--page-bg);
-  color: var(--pane-text);
+  border: 1px solid var(--chat-divider);
+  background-color: var(--chat-page-bg);
+  color: var(--chat-composer-text);
   font-size: 0.85rem;
 }
 
@@ -4295,7 +4509,7 @@ turbo-frame {
    visible system color regardless of focus state, which would otherwise put
    a box around every option, focused or not. */
 .profile-picker__option:focus-visible {
-  outline: 2px solid var(--pane-link);
+  outline: 2px solid var(--chat-pane-link);
   outline-offset: -2px;
 }
 
@@ -4324,7 +4538,7 @@ button.profile-picker__option {
 }
 
 .profile-picker__option--current {
-  background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
+  background-color: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
 }
 
 .profile-picker__option-info {
@@ -4346,20 +4560,20 @@ button.profile-picker__option {
 .profile-picker__option-pronouns {
   font-size: 0.78rem;
   font-style: italic;
-  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
 }
 
 .profile-picker__option-subtitle {
   display: block;
   font-size: 0.78rem;
-  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
 }
 
 .profile-picker__empty {
   padding: 0.5rem 0.75rem;
   margin: 0;
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-composer-text) 65%, transparent);
 }
 
 /* Separates the profile options from the group options within the same
@@ -4373,7 +4587,7 @@ button.profile-picker__option {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: color-mix(in srgb, var(--pane-text) 60%, transparent);
+  color: color-mix(in srgb, var(--chat-composer-text) 60%, transparent);
 }
 
 .profile-picker__group-label:first-child {
@@ -4386,7 +4600,14 @@ button.profile-picker__option {
   align-items: flex-end;
 }
 
+/* The message box follows the chat input colours rather than the shared form
+   ones, so a chat theme can size its composer to the pane behind it. Each
+   defaults to the matching --input-* value, so this changes nothing until a
+   designer sets them. */
 .composer-input-row textarea {
+  background-color: var(--chat-input-bg);
+  border-color: var(--chat-input-border);
+  color: var(--chat-input-text);
   flex: 1;
   line-height: 1.4;
   /* The shared textarea rule sets a 100px min-height sized for full-page
@@ -4433,7 +4654,7 @@ button.profile-picker__option {
 .invite-card__description {
   margin: 0;
   font-size: 0.85rem;
-  color: color-mix(in srgb, var(--pane-text) 80%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
 }
 
 .invite-card__description {

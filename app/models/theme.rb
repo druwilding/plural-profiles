@@ -157,13 +157,16 @@ class Theme < ApplicationRecord
     "chat_rail_bg"             => { label: "Server sidebar background", default: "#02120e", group: :chat_rail,    fallback: "pane_border" },
     "chat_rail_text"           => { label: "Server sidebar text",      default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
     "chat_rail_active"         => { label: "Active server ring",       default: "#5ea389", group: :chat_rail,     fallback: "pane_title_text" },
+    "chat_rail_link"           => { label: "Add server button",        default: "#3ab580", group: :chat_rail,     fallback: "pane_link" },
 
     "chat_divider"             => { label: "Divider bars",             default: "#02120e", group: :chat_dividers, fallback: "pane_border" },
 
     "chat_sidebar_bg"          => { label: "Channel list background",  default: "#133b2f", group: :chat_sidebar,  fallback: "pane_bg" },
     "chat_sidebar_text"        => { label: "Channel list text",        default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
     "chat_sidebar_title_text"  => { label: "Channel list title text",  default: "#5ea389", group: :chat_sidebar,  fallback: "pane_title_text" },
-    "chat_sidebar_link"        => { label: "Channel list links",       default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
+    # Channel names are bare links with no colour rule of their own, so they
+    # have always taken the link colour rather than the pane text colour.
+    "chat_sidebar_link"        => { label: "Channel names & links",    default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
 
     "chat_topbar_bg"           => { label: "Chat header background",   default: "#133b2f", group: :chat_topbar,   fallback: "chat_pane_bg" },
     "chat_topbar_text"         => { label: "Chat header text",         default: "#5ea389", group: :chat_topbar,   fallback: "chat_pane_text" },
