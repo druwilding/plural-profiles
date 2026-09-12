@@ -149,7 +149,6 @@ class Theme < ApplicationRecord
     # *within* a single theme: color_for never consults another Theme row.
     "chat_header_bg"           => { label: "Header background",        default: "#0e2e24", group: :chat_header,   fallback: "header_bg" },
     "chat_header_title_text"   => { label: "Header title text",        default: "#5ea389", group: :chat_header,   fallback: "header_title_text" },
-    "chat_header_text"         => { label: "Header text",              default: "#5ea389", group: :chat_header,   fallback: "header_text" },
     "chat_header_link"         => { label: "Header links",             default: "#3ab580", group: :chat_header,   fallback: "header_link" },
 
     "chat_rail_bg"             => { label: "Server sidebar background", default: "#02120e", group: :chat_rail,    fallback: "pane_border" },

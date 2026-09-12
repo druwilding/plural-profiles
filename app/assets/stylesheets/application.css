@@ -53,7 +53,6 @@
      is parsed), so they must stand on their own. */
   --chat-header-bg: #0e2e24;
   --chat-header-title-text: #5ea389;
-  --chat-header-text: #5ea389;
   --chat-header-link: #3ab580;
   --chat-rail-bg: #02120e;
   --chat-rail-text: #5ea389;
@@ -3895,12 +3894,13 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    below match the base selectors' shape for the same reason. */
 .chat-body .site-header {
   background-color: var(--chat-header-bg);
-  /* Nothing in the bar currently falls back to this — the logo, the domain
-     switcher and Sign out all set their own colour — but it's the right
-     inherited base for the surface, and without it anything added to the bar
-     later would pick up the message-pane colour instead. The visible uses of
-     --chat-header-text are the card-header and mini-profile banners below. */
-  color: var(--chat-header-text);
+  /* Nothing in the bar falls back to this — the logo, the domain switcher and
+     Sign out all set their own colour — but without it anything added later
+     would inherit a profile colour into chat chrome. There's no separate
+     "header body text" key: the bar has no body text to colour, so this and
+     the popover banner below reuse the title colour, which is the one already
+     known to read against --chat-header-bg. */
+  color: var(--chat-header-title-text);
   border-bottom-color: var(--chat-divider);
 }
 
@@ -4000,7 +4000,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-body .mini-profile__header .subtitle,
 .chat-body .mini-profile__header .tag-line,
 .chat-body .mini-profile__header .pronouns {
-  color: color-mix(in srgb, var(--chat-header-text) 80%, transparent);
+  color: color-mix(in srgb, var(--chat-header-title-text) 80%, transparent);
 }
 
 .chat-body .mini-profile__header a {
@@ -4008,8 +4008,8 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 }
 
 .chat-body .mini-profile__header .avatar--placeholder {
-  color: var(--chat-header-text);
-  border-color: color-mix(in srgb, var(--chat-header-text) 50%, transparent);
+  color: var(--chat-header-title-text);
+  border-color: color-mix(in srgb, var(--chat-header-title-text) 50%, transparent);
 }
 
 /* The two dropdowns that belong to chat chrome: the header's domain switcher

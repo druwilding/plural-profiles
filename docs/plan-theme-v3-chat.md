@@ -20,7 +20,7 @@ appearing on chat pages (see Phase 2).
 
 | Question               | Decision                                                                                                                                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New properties         | 29 `chat_*` keys across 6 regions (full table below)                                                                                                                                                                       |
+| New properties         | 28 `chat_*` keys across 6 regions (full table below)                                                                                                                                                                       |
 | Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional)                                 |
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
@@ -184,7 +184,7 @@ theme, so `:root` and the model defaults agree with current appearance.
 | -------------- | ------------- | ---------------------------------------------------------- |
 | `chat_page_bg` | `page_bg`     | `.chat-body` — visible behind server list / settings cards |
 
-#### Chat · Page header bar (4)
+#### Chat · Header bar (3)
 
 Scoped `.chat-body .site-header …`, so the same markup renders differently in
 chat and on profile pages.
@@ -193,7 +193,6 @@ chat and on profile pages.
 | ------------------------ | ------------------- | --------------------------------- |
 | `chat_header_bg`         | `header_bg`         | `.site-header` background         |
 | `chat_header_title_text` | `header_title_text` | the "Plural Profiles" logo text   |
-| `chat_header_text`       | `header_text`       | header body text, domain switcher |
 | `chat_header_link`       | `header_link`       | "Sign out", nav links             |
 
 #### Chat · Server sidebar (3)
@@ -542,6 +541,12 @@ today, and `chat_input_bg` defaults to `input_bg` — a different colour. It
 follows `chat_page_bg` / `chat_divider` / `chat_composer_text` instead, all
 exact-fidelity matches, and `chat_input_*` drives the composer textarea, which
 is what actually took `--input-*` before.
+
+**There is no `chat_header_text`.** The bar has no body text to colour — the
+logo, the domain switcher and Sign out each set their own — so the key only
+ever painted the secondary text in the message-author popover's banner. That
+now reuses `chat_header_title_text` at 80%, which is the colour already known
+to read against `chat_header_bg`, and the control is gone from the editor.
 
 **The chat palette stops at the chat view, not the chat layout.** An early
 version scoped the shared components (cards, headings, links, spoilers) to
