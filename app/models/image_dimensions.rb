@@ -29,7 +29,7 @@ module ImageDimensions
     return nil if data.nil?
 
     image = Vips::Image.new_from_buffer(data, "", access: :sequential)
-    [image.width, image.height]
+    [ image.width, image.height ]
   rescue Vips::Error
     nil
   end

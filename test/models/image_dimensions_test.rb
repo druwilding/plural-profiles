@@ -10,7 +10,7 @@ class ImageDimensionsTest < ActiveSupport::TestCase
       filename: "avatar.png",
       content_type: "image/png"
     )
-    assert_equal [120, 80], ImageDimensions.for(profile.avatar)
+    assert_equal [ 120, 80 ], ImageDimensions.for(profile.avatar)
   end
 
   test "returns nil when nothing is attached" do
