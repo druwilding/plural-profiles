@@ -233,7 +233,7 @@ header along with it; in practice that made "what is this actually following?"
 something you had to trace instead of read. Each chat colour now follows one
 profile colour and nothing else, enforced by a model test.
 
-#### Chat · Message pane (5)
+#### Chat · Chat pane (5)
 
 | Key                    | Falls back to     | Paints                                                                              |
 | ---------------------- | ----------------- | ----------------------------------------------------------------------------------- |
@@ -243,7 +243,7 @@ profile colour and nothing else, enforced by a model test.
 | `chat_pane_link`       | `pane_link`       | links inside messages, `.profile-picker__option:focus-visible`                      |
 | `chat_spoiler`         | `spoiler`         | spoilers in messages                                                                |
 
-#### Chat · Composer bar (6)
+#### Chat · Chat footer (6)
 
 | Key                       | Falls back to  | Paints                                       |
 | ------------------------- | -------------- | -------------------------------------------- |

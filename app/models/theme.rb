@@ -91,42 +91,42 @@ class Theme < ApplicationRecord
   # other. See LEGACY_COLOR_ALIASES for the pre-split heading/text/link keys
   # this replaced.
   THEMEABLE_PROPERTIES = {
-    "page_bg"                 => { label: "Page background",           default: "#0b221b", group: :page    },
+    "page_bg"                 => { label: "Page background",            default: "#0b221b", group: :page    },
 
-    "header_bg"               => { label: "Header background",         default: "#0e2e24", group: :header  },
-    "header_title_text"       => { label: "Header title text",         default: "#5ea389", group: :header  },
-    "header_text"             => { label: "Header text",               default: "#5ea389", group: :header  },
-    "header_link"             => { label: "Header links",              default: "#3ab580", group: :header  },
+    "header_bg"               => { label: "Header background",          default: "#0e2e24", group: :header  },
+    "header_title_text"       => { label: "Header title text",          default: "#5ea389", group: :header  },
+    "header_text"             => { label: "Header text",                default: "#5ea389", group: :header  },
+    "header_link"             => { label: "Header links",               default: "#3ab580", group: :header  },
 
-    "pane_bg"                 => { label: "Pane background",           default: "#133b2f", group: :pane    },
-    "pane_border"             => { label: "Pane border",               default: "#02120e", group: :pane    },
-    "pane_title_text"         => { label: "Pane title text",           default: "#5ea389", group: :pane    },
-    "pane_text"               => { label: "Pane text",                 default: "#5ea389", group: :pane    },
-    "pane_link"               => { label: "Pane links",                default: "#3ab580", group: :pane    },
-    "spoiler"                 => { label: "Spoiler background",        default: "#3A3A3A", group: :pane    },
+    "pane_bg"                 => { label: "Pane background",            default: "#133b2f", group: :pane    },
+    "pane_border"             => { label: "Pane border",                default: "#02120e", group: :pane    },
+    "pane_title_text"         => { label: "Pane title text",            default: "#5ea389", group: :pane    },
+    "pane_text"               => { label: "Pane text",                  default: "#5ea389", group: :pane    },
+    "pane_link"               => { label: "Pane links",                 default: "#3ab580", group: :pane    },
+    "spoiler"                 => { label: "Spoiler background",         default: "#3A3A3A", group: :pane    },
 
-    "primary_button_bg"       => { label: "Main button background",    default: "#12684e", group: :buttons },
-    "primary_button_text"     => { label: "Main button text",          default: "#4ec59a", group: :buttons },
-    "primary_button_border"   => { label: "Main button border",        default: "#4ec59a", group: :buttons },
-    "secondary_button_bg"     => { label: "Default button background", default: "#155642", group: :buttons },
-    "secondary_button_text"   => { label: "Default button text",       default: "#4dbb8f", group: :buttons },
-    "secondary_button_border" => { label: "Default button border",     default: "#4dbb8f", group: :buttons },
-    "danger_button_bg"        => { label: "Danger button background",  default: "#9d1d46", group: :buttons },
-    "danger_button_text"      => { label: "Danger button text",        default: "#d8b5c0", group: :buttons },
-    "danger_button_border"    => { label: "Danger button border",      default: "#d8b5c0", group: :buttons },
-    "input_label"             => { label: "Input labels",              default: "#599981", group: :forms   },
-    "input_bg"                => { label: "Input background",          default: "#263a2e", group: :forms   },
-    "input_border"            => { label: "Input border",              default: "#3c6f5f", group: :forms   },
-    "input_text"              => { label: "Input text",                default: "#5ea389", group: :forms   },
-    "notice_bg"               => { label: "Notice background",         default: "#133b2f", group: :flash   },
-    "notice_border"           => { label: "Notice border",             default: "#5ea389", group: :flash   },
-    "notice_text"             => { label: "Notice text",               default: "#5ea389", group: :flash   },
-    "alert_bg"                => { label: "Alert background",          default: "#11694a", group: :flash   },
-    "alert_border"            => { label: "Alert border",              default: "#58cc9d", group: :flash   },
-    "alert_text"              => { label: "Alert text",                default: "#58cc9d", group: :flash   },
-    "warning_bg"              => { label: "Warning background",        default: "#a81d49", group: :flash   },
-    "warning_border"          => { label: "Warning border",            default: "#e6c4cf", group: :flash   },
-    "warning_text"            => { label: "Warning text",              default: "#e6c4cf", group: :flash   },
+    "primary_button_bg"       => { label: "Main button background",     default: "#12684e", group: :buttons },
+    "primary_button_text"     => { label: "Main button text",           default: "#4ec59a", group: :buttons },
+    "primary_button_border"   => { label: "Main button border",         default: "#4ec59a", group: :buttons },
+    "secondary_button_bg"     => { label: "Default button background",  default: "#155642", group: :buttons },
+    "secondary_button_text"   => { label: "Default button text",        default: "#4dbb8f", group: :buttons },
+    "secondary_button_border" => { label: "Default button border",      default: "#4dbb8f", group: :buttons },
+    "danger_button_bg"        => { label: "Danger button background",   default: "#9d1d46", group: :buttons },
+    "danger_button_text"      => { label: "Danger button text",         default: "#d8b5c0", group: :buttons },
+    "danger_button_border"    => { label: "Danger button border",       default: "#d8b5c0", group: :buttons },
+    "input_label"             => { label: "Input labels",               default: "#599981", group: :forms   },
+    "input_bg"                => { label: "Input background",           default: "#263a2e", group: :forms   },
+    "input_border"            => { label: "Input border",               default: "#3c6f5f", group: :forms   },
+    "input_text"              => { label: "Input text",                 default: "#5ea389", group: :forms   },
+    "notice_bg"               => { label: "Notice background",          default: "#133b2f", group: :flash   },
+    "notice_border"           => { label: "Notice border",              default: "#5ea389", group: :flash   },
+    "notice_text"             => { label: "Notice text",                default: "#5ea389", group: :flash   },
+    "alert_bg"                => { label: "Alert background",           default: "#11694a", group: :flash   },
+    "alert_border"            => { label: "Alert border",               default: "#58cc9d", group: :flash   },
+    "alert_text"              => { label: "Alert text",                 default: "#58cc9d", group: :flash   },
+    "warning_bg"              => { label: "Warning background",         default: "#a81d49", group: :flash   },
+    "warning_border"          => { label: "Warning border",             default: "#e6c4cf", group: :flash   },
+    "warning_text"            => { label: "Warning text",               default: "#e6c4cf", group: :flash   },
 
     # ── Chat ────────────────────────────────────────────────────────────────
     # Chat has its own palette because its regions don't map onto the profile
@@ -147,52 +147,52 @@ class Theme < ApplicationRecord
     # `fallback:` appears on chat keys only. Inheritance runs one way —
     # profile is always set, chat inherits or overrides — and it resolves
     # *within* a single theme: color_for never consults another Theme row.
-    "chat_header_bg"           => { label: "Header background",        default: "#0e2e24", group: :chat_header,   fallback: "header_bg" },
-    "chat_header_title_text"   => { label: "Header title text",        default: "#5ea389", group: :chat_header,   fallback: "header_title_text" },
-    "chat_header_link"         => { label: "Header links",             default: "#3ab580", group: :chat_header,   fallback: "header_link" },
+    "chat_header_bg"           => { label: "Header background",         default: "#0e2e24", group: :chat_header,   fallback: "header_bg" },
+    "chat_header_title_text"   => { label: "Header title text",         default: "#5ea389", group: :chat_header,   fallback: "header_title_text" },
+    "chat_header_link"         => { label: "Header links",              default: "#3ab580", group: :chat_header,   fallback: "header_link" },
 
     "chat_rail_bg"             => { label: "Server sidebar background", default: "#02120e", group: :chat_rail,    fallback: "pane_border" },
-    "chat_rail_text"           => { label: "Server sidebar text",      default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
-    "chat_rail_active"         => { label: "Active server ring",       default: "#5ea389", group: :chat_rail,     fallback: "pane_title_text" },
-    "chat_rail_link"           => { label: "Add server button",        default: "#3ab580", group: :chat_rail,     fallback: "pane_link" },
+    "chat_rail_text"           => { label: "Server sidebar text",       default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
+    "chat_rail_active"         => { label: "Active server ring",        default: "#5ea389", group: :chat_rail,     fallback: "pane_title_text" },
+    "chat_rail_link"           => { label: "Add server button",         default: "#3ab580", group: :chat_rail,     fallback: "pane_link" },
     # One per surface: the rail dot sits on chat_rail_bg and the channel-list
     # dot on chat_sidebar_bg, which a designer may well have coloured very
     # differently, so a single key would force a compromise on one of them.
     # They follow pane_text rather than the primary button's text colour they
     # used to borrow — button text is often near-black, which left the dots
     # invisible, whereas a theme's pane text is by definition legible.
-    "chat_rail_unread_dot"     => { label: "Unread dots",              default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
+    "chat_rail_unread_dot"     => { label: "Unread dots",               default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
 
-    "chat_divider"             => { label: "Divider bars",             default: "#02120e", group: :chat_dividers, fallback: "pane_border" },
+    "chat_divider"             => { label: "Divider bars",              default: "#02120e", group: :chat_dividers, fallback: "pane_border" },
 
-    "chat_sidebar_bg"          => { label: "Channel list background",  default: "#133b2f", group: :chat_sidebar,  fallback: "pane_bg" },
-    "chat_sidebar_text"        => { label: "Channel list text",        default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
-    "chat_sidebar_title_text"  => { label: "Channel list title text",  default: "#5ea389", group: :chat_sidebar,  fallback: "pane_title_text" },
+    "chat_sidebar_bg"          => { label: "Channel list background",   default: "#133b2f", group: :chat_sidebar,  fallback: "pane_bg" },
+    "chat_sidebar_text"        => { label: "Channel list text",         default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
+    "chat_sidebar_title_text"  => { label: "Channel list title text",   default: "#5ea389", group: :chat_sidebar,  fallback: "pane_title_text" },
     # Channel names are bare links with no colour rule of their own, so they
     # have always taken the link colour rather than the pane text colour.
-    "chat_sidebar_link"        => { label: "Channel names & links",    default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
-    "chat_sidebar_unread_dot"  => { label: "Unread dots",              default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
+    "chat_sidebar_link"        => { label: "Channel names & links",     default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
+    "chat_sidebar_unread_dot"  => { label: "Unread dots",               default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
 
-    "chat_topbar_bg"           => { label: "Chat header background",   default: "#133b2f", group: :chat_topbar,   fallback: "pane_bg" },
-    "chat_topbar_text"         => { label: "Chat header text",         default: "#5ea389", group: :chat_topbar,   fallback: "pane_text" },
-    "chat_topbar_title_text"   => { label: "Chat header title text",   default: "#5ea389", group: :chat_topbar,   fallback: "pane_title_text" },
+    "chat_topbar_bg"           => { label: "Chat header background",    default: "#133b2f", group: :chat_topbar,   fallback: "pane_bg" },
+    "chat_topbar_text"         => { label: "Chat header text",          default: "#5ea389", group: :chat_topbar,   fallback: "pane_text" },
+    "chat_topbar_title_text"   => { label: "Chat header title text",    default: "#5ea389", group: :chat_topbar,   fallback: "pane_title_text" },
 
-    "chat_pane_bg"             => { label: "Message pane background",  default: "#133b2f", group: :chat_pane,     fallback: "pane_bg" },
-    "chat_pane_text"           => { label: "Message pane text",        default: "#5ea389", group: :chat_pane,     fallback: "pane_text" },
-    "chat_pane_title_text"     => { label: "Message author names",     default: "#5ea389", group: :chat_pane,     fallback: "pane_title_text" },
-    "chat_pane_link"           => { label: "Message links",            default: "#3ab580", group: :chat_pane,     fallback: "pane_link" },
-    "chat_spoiler"             => { label: "Spoiler background",       default: "#3A3A3A", group: :chat_pane,     fallback: "spoiler" },
+    "chat_pane_bg"             => { label: "Chat pane background",      default: "#133b2f", group: :chat_pane,     fallback: "pane_bg" },
+    "chat_pane_text"           => { label: "Chat pane text",            default: "#5ea389", group: :chat_pane,     fallback: "pane_text" },
+    "chat_pane_title_text"     => { label: "Message author names",      default: "#5ea389", group: :chat_pane,     fallback: "pane_title_text" },
+    "chat_pane_link"           => { label: "Message links",             default: "#3ab580", group: :chat_pane,     fallback: "pane_link" },
+    "chat_spoiler"             => { label: "Spoiler background",        default: "#3A3A3A", group: :chat_pane,     fallback: "spoiler" },
 
-    "chat_composer_bg"         => { label: "Composer background",      default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
-    "chat_composer_text"       => { label: "Composer text",            default: "#5ea389", group: :chat_composer, fallback: "pane_text" },
+    "chat_composer_bg"         => { label: "Chat footer background",    default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
+    "chat_composer_text"       => { label: "Chat footer text",          default: "#5ea389", group: :chat_composer, fallback: "pane_text" },
     # The one key with no real profile counterpart: .profile-picker was a
     # color-mix of --pane-bg and --page-bg before the split, so its default is
     # that mix resolved against the stock theme. It follows pane_bg, the nearer
     # half of that mix.
-    "chat_composer_highlight"  => { label: "Posting-as highlight",     default: "#12372c", group: :chat_composer, fallback: "pane_bg" },
-    "chat_input_bg"            => { label: "Composer input background", default: "#263a2e", group: :chat_composer, fallback: "input_bg" },
-    "chat_input_border"        => { label: "Composer input border",    default: "#3c6f5f", group: :chat_composer, fallback: "input_border" },
-    "chat_input_text"          => { label: "Composer input text",      default: "#5ea389", group: :chat_composer, fallback: "input_text" }
+    "chat_composer_highlight"  => { label: "Posting-as highlight",      default: "#12372c", group: :chat_composer, fallback: "pane_bg" },
+    "chat_input_bg"            => { label: "Input background",          default: "#263a2e", group: :chat_composer, fallback: "input_bg" },
+    "chat_input_border"        => { label: "Input border",              default: "#3c6f5f", group: :chat_composer, fallback: "input_border" },
+    "chat_input_text"          => { label: "Input text",                default: "#5ea389", group: :chat_composer, fallback: "input_text" }
   }.freeze
 
   PROPERTY_GROUPS = {
@@ -207,8 +207,8 @@ class Theme < ApplicationRecord
     chat_dividers: "Divider bars",
     chat_sidebar:  "Channel sidebar",
     chat_topbar:   "Chat header",
-    chat_pane:     "Message pane",
-    chat_composer: "Composer bar"
+    chat_pane:     "Chat pane",
+    chat_composer: "Chat footer"
   }.freeze
 
   # The two top-level halves of the theme designer. Profile is primary (every
