@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -180,6 +180,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_000000) do
     t.boolean "mini_profile_link_enabled", default: false, null: false
     t.string "mini_profile_name"
     t.boolean "mini_profile_name_inherited", default: true, null: false
+    t.string "mini_profile_pronouns"
+    t.boolean "mini_profile_pronouns_inherited", default: true, null: false
     t.string "mini_profile_subtitle"
     t.boolean "mini_profile_subtitle_inherited", default: true, null: false
     t.string "mini_profile_tag_line"

@@ -125,6 +125,14 @@ class Our::SearchControllerTest < ActionDispatch::IntegrationTest
     assert_match "Friends", main_content
   end
 
+  test "show matches a group by its chat-only overridden pronouns" do
+    groups(:friends).update!(mini_profile_pronouns_inherited: false, mini_profile_pronouns: "xe/xem")
+    sign_in_as @user
+    get our_search_path, params: { q: "xe/xem" }
+    assert_response :success
+    assert_match "Friends", main_content
+  end
+
   test "show matches by label" do
     sign_in_as @user
     profiles(:alice).update!(labels: [ "close-friends-only" ])

@@ -49,6 +49,16 @@ class Chat::ChannelsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/data-search="[^"]*\balice\b[^"]*chatalice/, response.body)
   end
 
+  test "show's posting-as picker includes a group's resolved chat pronouns" do
+    groups(:friends).update!(
+      mini_profile_pronouns_inherited: false, mini_profile_pronouns: "they/them"
+    )
+    sign_in_as @owner
+    get chat_server_channel_path(@server, @channel)
+    assert_response :success
+    assert_match "they/them", response.body
+  end
+
   test "show is blocked for a non-member" do
     sign_in_as @outsider
     get chat_server_channel_path(@server, @channel)
