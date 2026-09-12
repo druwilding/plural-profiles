@@ -1064,6 +1064,10 @@ button:hover,
   font-size: 1rem;
 }
 
+.profile-card h3 a {
+  color: inherit;
+}
+
 .profile-card h3 a:hover {
   text-decoration: none;
 }
