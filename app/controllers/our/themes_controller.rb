@@ -22,7 +22,11 @@ class Our::ThemesController < ApplicationController
   end
 
   def new
-    colors = Theme::THEMEABLE_PROPERTIES.transform_values { |v| v[:default] }
+    # Seed the profile keys only. Chat keys are left unset so a new theme starts
+    # fully inherited rather than pinning every chat colour to the stock green —
+    # a starting point nobody chose and which would stop tracking the profile
+    # colours the moment the designer edited them.
+    colors = Theme::THEMEABLE_PROPERTIES.reject { |_, v| v[:fallback] }.transform_values { |v| v[:default] }
     default_source = Current.user.active_theme || Theme.site_default_theme
     colors.merge!(default_source.colors) if default_source
 
