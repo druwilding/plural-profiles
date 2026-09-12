@@ -25,7 +25,7 @@ appearing on chat pages (see Phase 2).
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
 | Data migration         | **None.** Fallbacks make every existing theme render identically today (bar the background-image change below), and keep chat tracking later profile edits. A migration would freeze current values and defeat the feature |
-| Editor UX              | Per-property **"Use profile colour" / "Set for chat"** radio pair, mirroring the existing chat-identity field toggle                                                                                                       |
+| Editor UX              | Per-property **"Override" checkbox** that enables the picker; unticked, the colour follows its profile counterpart                                                                                                       |
 | Export version         | Bump `CURRENT_EXPORT_VERSION` to `3`; keep accepting 1–3                                                                                                                                                                   |
 | Preview                | Tabbed preview pane: **Profile** (today's preview) / **Chat** (new mock)                                                                                                                                                   |
 | Background images      | **Never shown in chat.** Chat pages get flat `chat_page_bg` only — see [Phase 2](#phase-2-drop-background-images-from-chat)                                                                                                |
@@ -410,10 +410,6 @@ Three details that will bite otherwise:
   every property that inherits from it" — build a reverse index of the chain
   once at `connect()`.
 
-Add section-level **"Set all for chat"** / **"Use profile colours for all"**
-buttons at the top of the Chat accordion — designing a chat theme from scratch
-otherwise means 27 radio clicks before you can pick a single colour.
-
 ### Preview
 
 Add a tab strip above the preview pane: **Profile** (today's `_preview`) /
@@ -553,6 +549,13 @@ channel names, "+ Add channel", the rail icons and the back arrow to one
 colour. `:where()` contributes no specificity, so it lands at `(0,0,1)` —
 identical to the base `a` rule it replaces, and beaten by every class selector,
 which is what it needs to be. There's a system test for this specifically.
+
+**The editor toggle is a checkbox, not a radio pair.** The plan copied the
+chat-identity field cards' "Use main / Set for chat" control, but at one row
+per colour and 28 of them it was far too heavy. A single `[ ] Override` sitting
+on the label's line says the same thing in a fraction of the space. The bulk
+"set all / inherit all" buttons went the same way — dropped as clutter, easy to
+add back if anyone misses them.
 
 **Two extra chat header keys got used.** `.chat-channel-header` needed an
 explicit `color`, since the channel description has no colour rule of its own

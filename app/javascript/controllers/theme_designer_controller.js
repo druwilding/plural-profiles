@@ -109,10 +109,11 @@ export default class extends Controller {
     if (colorInput) colorInput.value = value.slice(0, 7)
   }
 
-  // "Use profile colour" / "Set for chat" on one colour.
+  // The per-colour "Override" checkbox. Ticked means the colour is set for
+  // chat; unticked means it follows its profile counterpart.
   toggleInherit(event) {
     const property = event.currentTarget.dataset.property
-    this.setInherit(property, event.currentTarget.value === "1")
+    this.setInherit(property, !event.currentTarget.checked)
     this.updateJsonOutput()
   }
 
@@ -138,8 +139,8 @@ export default class extends Controller {
       group.classList.toggle("theme-designer__color-group--inheriting", inheriting)
       const hint = group.querySelector(".theme-designer__inherit-hint")
       if (hint) hint.hidden = !inheriting
-      const radio = group.querySelector(`input[type="radio"][value="${inheriting ? "1" : "0"}"]`)
-      if (radio) radio.checked = true
+      const checkbox = group.querySelector('input[type="checkbox"]')
+      if (checkbox) checkbox.checked = !inheriting
     }
 
     // Switching back to inheriting snaps the swatch to whatever it's now
@@ -155,19 +156,6 @@ export default class extends Controller {
     this.refreshDependents(property)
   }
 
-  overrideAllChat() {
-    this.chatProperties().forEach(property => this.setInherit(property, false))
-    this.updateJsonOutput()
-  }
-
-  inheritAllChat() {
-    this.chatProperties().forEach(property => this.setInherit(property, true))
-    this.updateJsonOutput()
-  }
-
-  chatProperties() {
-    return this.inheritGroupTargets.map(el => el.dataset.property)
-  }
 
   // Preview tabs: the profile mock and the chat mock share one themed
   // container, so switching is just which panel is visible.

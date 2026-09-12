@@ -5,9 +5,9 @@
 -#   prop  — the property key, e.g. "chat_pane_bg"
 -#   meta  — its THEMEABLE_PROPERTIES entry
 -#
--# Chat properties (the ones with a `fallback:`) get an inherit/override toggle
--# modelled on the chat-identity field cards, because it's the same idea applied
--# to colour: chat uses the profile value unless you deliberately set one.
+-# Chat properties (the ones with a `fallback:`) get an "Override" checkbox:
+-# unticked, the colour follows its profile counterpart; ticked, the picker
+-# becomes editable and the colour is stored.
 -#
 -# "Inherited" is stored as the *absence* of a value, so inheriting is achieved
 -# by disabling both inputs — a disabled control submits nothing, and update
@@ -25,15 +25,10 @@
   .theme-designer__color-head
     %label{for: "theme_colors_#{prop}"}= meta[:label]
     - if inheritable
-      .chat-identity-toggle.theme-designer__inherit-toggle
-        %label.chat-identity-toggle__option
-          %input.chat-identity-toggle__input{type: "radio", name: "inherit_#{prop}", value: "1",
-            checked: !overridden, data: { property: prop, action: "change->theme-designer#toggleInherit" }}
-          %span.chat-identity-toggle__option-label Use profile colour
-        %label.chat-identity-toggle__option
-          %input.chat-identity-toggle__input{type: "radio", name: "inherit_#{prop}", value: "0",
-            checked: overridden, data: { property: prop, action: "change->theme-designer#toggleInherit" }}
-          %span.chat-identity-toggle__option-label Set for chat
+      %label.checkbox-label.theme-designer__override-label
+        %input{type: "checkbox", checked: overridden,
+          data: { property: prop, action: "change->theme-designer#toggleInherit" }}
+        Override
 
   .theme-designer__color-input
     %input{type: "color", alpha: true, name: "theme[colors][#{prop}]", value: theme.color_for(prop),

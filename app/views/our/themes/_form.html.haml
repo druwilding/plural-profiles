@@ -19,11 +19,7 @@
       %summary.form-section-summary= section[:label]
 
       - if section_key == :chat
-        %p.form-hint
-          Chat colours follow the profile ones unless you set them. Design only the profile side and chat will match it; change a chat colour here and only chat changes.
-        .theme-designer__bulk-actions
-          %button.btn.btn--small.btn--secondary{type: "button", data: { action: "theme-designer#overrideAllChat" }} Set all for chat
-          %button.btn.btn--small.btn--secondary{type: "button", data: { action: "theme-designer#inheritAllChat" }} Use profile colours for all
+        %p.form-hint Chat follows your profile colours. Tick Override to change one just for chat.
 
       - section[:groups].each do |group_key|
         %details.theme-designer__group{open: [:page, :header, :pane, :chat_page].include?(group_key) || nil}

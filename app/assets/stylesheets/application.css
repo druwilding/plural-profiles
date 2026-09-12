@@ -3083,8 +3083,10 @@ h1 .heart-inline {
   flex-wrap: wrap;
 }
 
-.theme-designer__inherit-toggle {
+.theme-designer__override-label {
   font-size: 0.78rem;
+  margin: 0;
+  white-space: nowrap;
 }
 
 /* An inheriting row is showing a colour it doesn't own, so it reads as
@@ -3098,13 +3100,6 @@ h1 .heart-inline {
   font-size: 0.78rem;
 }
 
-.theme-designer__bulk-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
 .theme-designer__group {
   margin-left: 0.25rem;
 }
@@ -3114,7 +3109,9 @@ h1 .heart-inline {
 .theme-designer__preview-tabs {
   display: flex;
   gap: 0.35rem;
-  margin-bottom: 0.75rem;
+  /* Flush against the preview below: the tabs have a top-only radius and read
+     as tabs *of* the panel, so any gap leaves them floating above nothing. */
+  margin-bottom: -1px;
 }
 
 .theme-designer__preview-tab {
@@ -3132,6 +3129,9 @@ h1 .heart-inline {
   background-color: var(--pane-bg);
   color: var(--pane-title-text);
   font-weight: 600;
+  /* Hides the panel's own top border behind the selected tab, joining the two
+     into one shape. */
+  border-bottom-color: var(--pane-bg);
 }
 
 @media (forced-colors: active) {
@@ -3148,12 +3148,19 @@ h1 .heart-inline {
    either collapse to nothing or run off the page. Everything below cancels
    layout only — no colours — so the mock can't drift from what chat actually
    looks like. */
-.theme-preview__chat {
-  /* Overrides .chat-body's 100dvh — same specificity (0,1,0), declared later.
+/* .theme-preview scopes this to (0,2,0) so it beats .chat-body's
+   `height: 100dvh` (0,1,0). Matching the single-class specificity wouldn't be
+   enough: .chat-body is declared several hundred lines further down, so on a
+   tie it wins and the mock fills the viewport. */
+.theme-preview .theme-preview__chat {
+  /* Height comes from the contents (see .chat-shell's min-height below) so the
+     mock is just tall enough to show every element rather than running off the
+     bottom of the screen.
+
      The profile preview paints the theme's background image on .theme-preview
      itself, so the opaque page colour here also keeps the image out of a chat
      mock that should never show one. */
-  height: 420px;
+  height: auto;
   background-color: var(--chat-page-bg);
   display: flex;
   flex-direction: column;
@@ -3176,9 +3183,12 @@ h1 .heart-inline {
   margin-left: 0;
 }
 
+/* Enough room for the rail's icons, the channel list, and a date divider plus
+   one message — the shortest the mock can be and still show everything that
+   can be themed. */
 .theme-preview__chat .chat-shell {
   flex: 1;
-  min-height: 0;
+  min-height: 190px;
 }
 
 /* The real rail and channel list are sized for a full window; at preview width
