@@ -695,6 +695,19 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "#112233", response.body
   end
+  test "the import dialog's example names the current export version" do
+    # It said 2 for a while after the format moved to 3 — driving it from the
+    # constant is what stops that recurring.
+    sign_in_as @user
+    get our_themes_path
+    assert_response :success
+
+    assert_select "textarea.import-dialog__textarea" do |textarea|
+      placeholder = textarea.first["placeholder"]
+      assert_includes placeholder, %("plural_profiles_theme": #{Theme::CURRENT_EXPORT_VERSION})
+    end
+  end
+
   # ── Chat colour inheritance ─────────────────────────────────────────────
 
   test "a chat colour absent from the params is not stored" do

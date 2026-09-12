@@ -22,7 +22,10 @@
         %form{data: { action: "submit->theme-import#import" }}
           %h2 Import theme
           %p Paste a theme JSON export below (or a legacy CSS block).
-          %textarea.import-dialog__textarea{data: { "theme-import-target": "cssInput" }, rows: 12, placeholder: "{\n  \"plural_profiles_theme\": 2,\n  \"name\": \"My theme\",\n  \"colors\": { ... }\n}", spellcheck: false}
+          -# Version comes from the constant so the example can't go stale the next
+          -# time the export format is bumped. Older exports still import fine.
+          - import_example = "{\n  \"plural_profiles_theme\": #{Theme::CURRENT_EXPORT_VERSION},\n  \"name\": \"My theme\",\n  \"colors\": { ... }\n}"
+          %textarea.import-dialog__textarea{data: { "theme-import-target": "cssInput" }, rows: 12, placeholder: import_example, spellcheck: false}
           %p.import-dialog__error{data: { "theme-import-target": "error" }, role: "alert"}
           .import-dialog__actions
             %button.btn{type: "submit"} Import

@@ -281,7 +281,10 @@ export default class extends Controller {
   updateJsonOutput() {
     if (!this.hasJsonOutputTarget) return
 
-    const data = { plural_profiles_theme: this.hasExportVersionValue ? this.exportVersionValue : 2 }
+    // No literal fallback: a hardcoded version here would quietly go stale the
+    // next time the format is bumped, and every view carrying the export
+    // textarea passes the value from Theme::CURRENT_EXPORT_VERSION.
+    const data = { plural_profiles_theme: this.exportVersionValue }
 
     if (this.hasNameInputTarget && this.nameInputTarget.value.trim()) {
       data.name = this.nameInputTarget.value.trim()
