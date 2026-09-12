@@ -773,6 +773,47 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input.theme-designer__hex-input[name=?][disabled]", "theme[colors][chat_pane_bg]"
   end
 
+  # An import is the imported theme and nothing else. It used to be layered
+  # over the user's *active* theme, so an older export with no chat keys came
+  # in carrying whatever chat overrides the user happened to be using — shown
+  # in the preview as though they belonged to it, and saved into it on Create.
+  test "new from an import does not pull in the active theme's chat overrides" do
+    active = @user.themes.create!(name: "Current",
+                                  colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000",
+                                            "chat_rail_unread_dot" => "#ffffaa" })
+    @user.update!(active_theme: active)
+
+    sign_in_as @user
+    # A v2 export: profile colours only, no chat keys at all.
+    get new_our_theme_path, params: { theme: { name: "Imported", colors: { pane_bg: "#445566" } } }
+    assert_response :success
+
+    assert_select "input.theme-designer__hex-input[name=?][disabled]", "theme[colors][chat_rail_bg]"
+    assert_select "input.theme-designer__hex-input[name=?][disabled]", "theme[colors][chat_rail_unread_dot]"
+
+    # Scoped to the preview, not the whole page: the designer page itself is
+    # still styled with the active theme (its <body> style carries these same
+    # colours, correctly). What must not carry them is the preview of the theme
+    # being edited.
+    assert_select ".theme-preview[style*=?]", "--chat-rail-bg: #ff0000", count: 0
+    assert_select ".theme-preview[style*=?]", "--chat-rail-unread-dot: #ffffaa", count: 0
+  end
+
+  test "new from an import does not pull in active-theme profile colours the import left out" do
+    # Same bug on the profile side: anything the import didn't specify should
+    # fall to the stock default, not to whichever theme is active.
+    active = @user.themes.create!(name: "Current", colors: { "spoiler" => "#abcdef" })
+    @user.update!(active_theme: active)
+
+    sign_in_as @user
+    get new_our_theme_path, params: { theme: { name: "Partial", colors: { pane_bg: "#445566" } } }
+    assert_response :success
+
+    assert_select "input.theme-designer__hex-input[name=?][value=?]",
+                  "theme[colors][spoiler]", Theme::THEMEABLE_PROPERTIES.dig("spoiler", :default)
+    assert_select ".theme-preview[style*=?]", "--spoiler: #abcdef", count: 0
+  end
+
   test "new from an import keeps the imported chat colours set" do
     sign_in_as @user
     get new_our_theme_path, params: { theme: { colors: { chat_rail_bg: "#abcdef" } } }
