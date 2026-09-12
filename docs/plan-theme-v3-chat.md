@@ -20,7 +20,7 @@ appearing on chat pages (see Phase 2).
 
 | Question               | Decision                                                                                                                                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New properties         | 27 `chat_*` keys across 7 regions (full table below)                                                                                                                                                                       |
+| New properties         | 28 `chat_*` keys across 7 regions (full table below)                                                                                                                                                                       |
 | Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional)                                 |
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
@@ -515,6 +515,61 @@ in which each `--chat-*` value equals its profile-side parent. That is the
 Phases 1, 2, 3 and 5 could ship as one PR and would already be useful via pasted
 JSON import, with the editor following — but the editor is the whole point for
 the users who asked, so shipping them together is probably kinder.
+
+---
+
+## As built
+
+Shipped across six commits on `themes-v3-chat`. Where the implementation
+departed from the plan above:
+
+**28 chat keys, not 27.** The plan missed the server rail's "+" button, which
+took `--pane-link`. No existing chat key had a matching default, so mapping it
+to one of them would have silently recoloured it on every theme. Added
+`chat_rail_link` (fallback `pane_link`) instead.
+
+**`chat_sidebar_link` covers channel names.** Channel rows are bare `<a>`s with
+no colour rule of their own, so they have always taken the link colour rather
+than the pane text colour. The key is labelled "Channel names & links" so
+that's findable; `chat_sidebar_text` drives the hover and active tints.
+
+**The picker's search field kept the page colour.** The plan had
+`.profile-picker__search` following `chat_input_bg`, but it uses `--page-bg`
+today, and `chat_input_bg` defaults to `input_bg` — a different colour. It
+follows `chat_page_bg` / `chat_divider` / `chat_composer_text` instead, all
+exact-fidelity matches, and `chat_input_*` drives the composer textarea, which
+is what actually took `--input-*` before.
+
+**Chat scoping reached further than `.chat-main .card`.** `.card > .card__header`
+and `.mini-profile__header` are `--header-bg` banners, and both render inside
+chat (settings pages, and the popover behind a message author's name). Left
+alone they'd sit on the *profile* header colour in the middle of a chat-themed
+page — the exact cross-over this feature exists to fix — so they follow the
+chat header keys too.
+
+**`:where(.chat-body) a`, not `.chat-body a`.** At `(0,1,1)` the plain form
+outranks every single-class rule colouring a link in chat, flattening the
+channel names, "+ Add channel", the rail icons and the back arrow to one
+colour. `:where()` contributes no specificity, so it lands at `(0,0,1)` —
+identical to the base `a` rule it replaces, and beaten by every class selector,
+which is what it needs to be. There's a system test for this specifically.
+
+**Two extra chat header keys got used.** `.chat-channel-header` needed an
+explicit `color`, since the channel description has no colour rule of its own
+and would otherwise inherit the pane text colour, leaving `chat_topbar_text`
+driving nothing visible.
+
+### Verification
+
+`chat_theme_test.rb` asserts computed colours in a real browser — including
+that an untouched theme still renders every region exactly as it did before the
+split, which is the no-migration promise checked against pixels rather than
+against the constant. `chat_theme_designer_test.rb` covers the editor: the
+toggle, live inherited swatches down a two-hop chain, the bulk actions, the
+export skipping inherited colours, and the chat preview tab.
+
+Full suite: 1148 unit/integration + 265 system tests green, RuboCop clean,
+Brakeman clean.
 
 ---
 
