@@ -120,6 +120,40 @@ class ChatThemeDesignerTest < ApplicationSystemTestCase
     assert_not exported["colors"].key?("chat_pane_bg"), "an inherited colour must not export as an override"
   end
 
+  # The mock is meant to be governed entirely by the real chat rules. A
+  # preview-chrome rule scoped to the whole .theme-preview outranks them —
+  # `.theme-preview a` (0,1,1) beats `:where(.chat-body) a` (0,0,1) — and
+  # silently repainted every link in the mock with the profile link colour.
+  test "each region's link colour applies inside the chat mock" do
+    @theme.update!(colors: {
+      "pane_bg" => "#112233", "pane_link" => "#00ff00",
+      "chat_pane_link" => "#ff0000", "chat_sidebar_link" => "#0000ff",
+      "chat_header_link" => "#ffff00", "chat_rail_link" => "#00ffff"
+    })
+    visit edit_our_theme_path(@theme)
+    click_button "Chat"
+    assert_selector ".theme-preview__chat"
+
+    {
+      ".chat-message__body a"                 => "rgba(255, 0, 0, 1)",
+      ".channel-pane .sidebar-tree__leaf"     => "rgba(0, 0, 255, 1)",
+      ".channel-pane__add-channel"            => "rgba(0, 0, 255, 1)",
+      ".site-header nav a"                    => "rgba(255, 255, 0, 1)",
+      ".server-rail__icon--add"               => "rgba(0, 255, 255, 1)"
+    }.each do |selector, expected|
+      actual = find(".theme-preview__chat #{selector}", match: :first, visible: :all).native.style("color")
+      assert_equal expected, actual, "#{selector} in the chat mock"
+    end
+  end
+
+  test "the profile mock keeps the profile link colour" do
+    @theme.update!(colors: { "pane_link" => "#00ff00", "chat_pane_link" => "#ff0000" })
+    visit edit_our_theme_path(@theme)
+
+    link = find(".theme-preview__panel[data-preview-panel='profile'] a", match: :first)
+    assert_equal "rgba(0, 255, 0, 1)", link.native.style("color")
+  end
+
   test "the chat preview tab shows a chat mock that responds to chat colours" do
     visit edit_our_theme_path(@theme)
     assert_selector ".theme-preview__panel[data-preview-panel='profile']", visible: true

@@ -3062,12 +3062,18 @@ h1 .heart-inline {
   border: 1px solid var(--pane-border);
 }
 
-.theme-preview a {
+/* Scoped to the profile panel rather than the whole preview. At
+   `.theme-preview a` this is (0,1,1), which outranks the chat mock's own
+   `:where(.chat-body) a` (0,0,1) and painted every link in the mock — message
+   links included — with the *profile* link colour. The mock is meant to be
+   governed entirely by the real chat rules; this rule is profile-preview
+   chrome and has no business reaching into it. */
+.theme-preview__panel[data-preview-panel="profile"] a {
   color: var(--pane-link);
 }
 
-.theme-preview h2,
-.theme-preview h3 {
+.theme-preview__panel[data-preview-panel="profile"] h2,
+.theme-preview__panel[data-preview-panel="profile"] h3 {
   color: var(--pane-title-text);
 }
 

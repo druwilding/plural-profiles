@@ -222,8 +222,10 @@ class Theme < ApplicationRecord
     # only ever visible behind the cards on the plain chat pages (server list,
     # settings, invites), which use the profile page background like every
     # other page in the app.
-    chat:    { label: "Chat",          groups: %i[chat_header chat_rail chat_dividers
-                                                  chat_sidebar chat_topbar chat_pane chat_composer] }
+    # Dividers last: they're the seams between the other regions, so they're
+    # the thing you reach for once those are settled.
+    chat:    { label: "Chat",          groups: %i[chat_header chat_rail chat_sidebar chat_topbar
+                                                  chat_pane chat_composer chat_dividers] }
   }.freeze
 
   # Maps each pre-location-split colour key to the new key(s) it was folded
