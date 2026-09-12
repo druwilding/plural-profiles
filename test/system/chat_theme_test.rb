@@ -139,14 +139,25 @@ class ChatThemeTest < ApplicationSystemTestCase
       "the server name should keep its title colour, not the pane link colour"
   end
 
+  test "chat pages fall back to the profile page background behind their cards" do
+    # Chat has no page colour of its own — the panes fill the window, and the
+    # only place body shows through is behind the cards on the plain chat
+    # pages, which keep --page-bg like every other page in the app.
+    sign_in_via_browser
+    visit chat_url("/servers")
+
+    assert_equal rgb("#010203"), style_of("body", "background-color")
+  end
+
   test "chat colours do not leak onto profile pages" do
-    @theme.update!(colors: base_colors.merge("chat_page_bg" => "#ff0000", "chat_header_bg" => "#00ff00"))
+    @theme.update!(colors: base_colors.merge("chat_pane_bg" => "#ff0000", "chat_header_bg" => "#00ff00"))
 
     sign_in_via_browser
     visit root_path
 
     assert_equal rgb("#010203"), style_of("body", "background-color"), "profile pages keep page_bg"
     assert_equal rgb("#131415"), style_of(".site-header", "background-color"), "profile pages keep header_bg"
+    assert_equal rgb("#040506"), style_of(".card", "background-color"), "profile cards keep pane_bg"
   end
 
   test "profile colours still drive chat for keys the designer left alone" do

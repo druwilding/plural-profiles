@@ -147,8 +147,6 @@ class Theme < ApplicationRecord
     # `fallback:` appears on chat keys only. Inheritance runs one way —
     # profile is always set, chat inherits or overrides — and it resolves
     # *within* a single theme: color_for never consults another Theme row.
-    "chat_page_bg"             => { label: "Page background",          default: "#0b221b", group: :chat_page,     fallback: "page_bg" },
-
     "chat_header_bg"           => { label: "Header background",        default: "#0e2e24", group: :chat_header,   fallback: "header_bg" },
     "chat_header_title_text"   => { label: "Header title text",        default: "#5ea389", group: :chat_header,   fallback: "header_title_text" },
     "chat_header_text"         => { label: "Header text",              default: "#5ea389", group: :chat_header,   fallback: "header_text" },
@@ -196,7 +194,6 @@ class Theme < ApplicationRecord
     forms:         "Form controls",
     buttons:       "Buttons",
     flash:         "Flash messages",
-    chat_page:     "Page",
     chat_header:   "Page header bar",
     chat_rail:     "Server sidebar",
     chat_dividers: "Divider bars",
@@ -212,7 +209,11 @@ class Theme < ApplicationRecord
   # its groups in this order.
   PROPERTY_SECTIONS = {
     profile: { label: "Profile pages", groups: %i[page header pane forms buttons flash] },
-    chat:    { label: "Chat",          groups: %i[chat_page chat_header chat_rail chat_dividers
+    # No chat page background: chat fills the window, so the body colour is
+    # only ever visible behind the cards on the plain chat pages (server list,
+    # settings, invites), which use the profile page background like every
+    # other page in the app.
+    chat:    { label: "Chat",          groups: %i[chat_header chat_rail chat_dividers
                                                   chat_sidebar chat_topbar chat_pane chat_composer] }
   }.freeze
 

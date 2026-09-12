@@ -20,7 +20,7 @@ appearing on chat pages (see Phase 2).
 
 | Question               | Decision                                                                                                                                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New properties         | 28 `chat_*` keys across 7 regions (full table below)                                                                                                                                                                       |
+| New properties         | 27 `chat_*` keys across 6 regions (full table below)                                                                                                                                                                       |
 | Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional)                                 |
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
@@ -549,6 +549,16 @@ channel names, "+ Add channel", the rail icons and the back arrow to one
 colour. `:where()` contributes no specificity, so it lands at `(0,0,1)` —
 identical to the base `a` rule it replaces, and beaten by every class selector,
 which is what it needs to be. There's a system test for this specifically.
+
+**No chat page background.** `chat_page_bg` was dropped after review: chat's
+panes fill the window, so the body colour is only ever visible behind the cards
+on the plain chat pages (server list, settings, invites), and those keep the
+profile `--page-bg` like every other page in the app — which is exactly what
+they did before this feature. The `.profile-picker__search` field, which had
+been the one other consumer, follows `chat_input_bg` instead; it's a text input
+in the composer, and leaving it on `--page-bg` would have made it the only
+profile variable inside a chat-themed control. That's a small colour change for
+existing themes on one search field inside a dropdown.
 
 **The editor toggle is a checkbox, not a radio pair.** The plan copied the
 chat-identity field cards' "Use main / Set for chat" control, but at one row

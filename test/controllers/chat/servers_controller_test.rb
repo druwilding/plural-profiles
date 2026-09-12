@@ -286,7 +286,7 @@ class Chat::ServersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to chat_root_path
   end
   # Phase 2 of themes v3: chat is the one layout that drops the theme's
-  # background image, showing flat --chat-page-bg instead. Guarded here rather
+  # background image, showing a flat colour instead. Guarded here rather
   # than only in the helper test, because the regression that matters is the
   # chat layout forgetting to pass background_image: false.
   test "chat pages render the theme colours but never its background image" do
@@ -300,7 +300,7 @@ class Chat::ServersControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @owner
     get chat_servers_path
     assert_response :success
-    assert_match "--chat-page-bg:", response.body
+    assert_match "--chat-pane-bg:", response.body
     assert_no_match(/background-image:/, response.body)
   end
 end

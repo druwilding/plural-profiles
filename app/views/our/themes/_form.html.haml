@@ -22,7 +22,7 @@
         %p.form-hint Chat follows your profile colours. Tick Override to change one just for chat.
 
       - section[:groups].each do |group_key|
-        %details.theme-designer__group{open: [:page, :header, :pane, :chat_page].include?(group_key) || nil}
+        %details.theme-designer__group{open: [:page, :header, :pane, :chat_header].include?(group_key) || nil}
           %summary.form-section-summary= Theme::PROPERTY_GROUPS[group_key]
           - Theme::THEMEABLE_PROPERTIES.select { |_, v| v[:group] == group_key }.each do |prop, meta|
             = render "our/themes/color_field", theme: theme, prop: prop, meta: meta

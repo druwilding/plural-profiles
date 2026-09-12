@@ -4,7 +4,7 @@ module ThemeHelper
   # app-like surface where a tiling or fixed-position image reads as noise
   # behind the server list and settings pages, and never shows behind the
   # messages themselves anyway (.chat-main paints an opaque background over
-  # it). Chat uses the flat --chat-page-bg instead.
+  # it). Chat shows a flat colour behind its cards instead.
   def active_theme_style(background_image: true)
     override = authenticated? && Current.user&.override_themes?
     public_theme = @channel_theme || @server_theme || @group_theme || @profile_theme

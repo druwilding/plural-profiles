@@ -51,7 +51,6 @@
      themed page overrides all of these concretely anyway; these are the
      un-themed defaults (logged-out visitors, or before the style attribute
      is parsed), so they must stand on their own. */
-  --chat-page-bg: #0b221b;
   --chat-header-bg: #0e2e24;
   --chat-header-title-text: #5ea389;
   --chat-header-text: #5ea389;
@@ -3148,6 +3147,14 @@ h1 .heart-inline {
    either collapse to nothing or run off the page. Everything below cancels
    layout only — no colours — so the mock can't drift from what chat actually
    looks like. */
+/* Chat fills the whole window, so its mock bleeds to the edges of the preview
+   panel rather than floating in the middle of it — cancelling .theme-preview's
+   1.5rem padding, which would otherwise frame the mock in the *profile* page
+   colour and imply a chat page background that no longer exists. */
+.theme-preview__panel[data-preview-panel="chat"] {
+  margin: -1.5rem;
+}
+
 /* .theme-preview scopes this to (0,2,0) so it beats .chat-body's
    `height: 100dvh` (0,1,0). Matching the single-class specificity wouldn't be
    enough: .chat-body is declared several hundred lines further down, so on a
@@ -3158,13 +3165,15 @@ h1 .heart-inline {
      bottom of the screen.
 
      The profile preview paints the theme's background image on .theme-preview
-     itself, so the opaque page colour here also keeps the image out of a chat
-     mock that should never show one. */
+     itself, so an opaque colour here keeps the image out of a chat mock that
+     should never show one. Nothing of it is actually visible — the header and
+     the shell cover it entirely. */
   height: auto;
-  background-color: var(--chat-page-bg);
+  background-color: var(--chat-pane-bg);
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  /* Matches .theme-preview's own radius, less its 1px border. */
+  border-radius: 7px;
   overflow: hidden;
   font-size: 0.85rem;
 }
@@ -3227,8 +3236,12 @@ h1 .heart-inline {
   font-size: 0.95rem;
 }
 
+/* Real chat has a screenful of empty space under the newest message; without
+   a floor here the mock packs the composer right up against it and reads as
+   cramped. */
 .theme-preview__chat .chat-messages-scroll {
   padding: 0.6rem 0.7rem;
+  min-height: 130px;
   overflow: hidden;
 }
 
@@ -3851,7 +3864,10 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-body {
   height: 100vh;
   height: 100dvh;
-  background-color: var(--chat-page-bg);
+  /* No chat-specific page background: the panes fill the window, so body is
+     only visible behind the cards on the plain chat pages (server list,
+     settings, invites), where it keeps the profile --page-bg that every other
+     page in the app uses. */
   color: var(--chat-pane-text);
 }
 
@@ -4666,7 +4682,11 @@ turbo-frame {
   padding: 0.4rem 0.6rem;
   border-radius: 5px;
   border: 1px solid var(--chat-divider);
-  background-color: var(--chat-page-bg);
+  /* Was --page-bg before chat had a palette of its own. Now that there's no
+     chat page colour, it follows the composer's input background — it is a
+     text input in the composer, after all — rather than being the one profile
+     variable left inside a chat-themed control. */
+  background-color: var(--chat-input-bg);
   color: var(--chat-composer-text);
   font-size: 0.85rem;
 }
