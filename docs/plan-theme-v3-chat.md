@@ -20,7 +20,7 @@ appearing on chat pages (see Phase 2).
 
 | Question               | Decision                                                                                                                                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New properties         | 28 `chat_*` keys across 6 regions (full table below)                                                                                                                                                                       |
+| New properties         | 28 `chat_*` keys across 7 groups (full table below)                                                                                                                                                                        |
 | Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional)                                 |
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
@@ -28,7 +28,7 @@ appearing on chat pages (see Phase 2).
 | Editor UX              | Per-property **"Override" checkbox** that enables the picker; unticked, the colour follows its profile counterpart                                                                                                         |
 | Export version         | Bump `CURRENT_EXPORT_VERSION` to `3`; keep accepting 1–3                                                                                                                                                                   |
 | Preview                | Tabbed preview pane: **Profile** (today's preview) / **Chat** (new mock)                                                                                                                                                   |
-| Background images      | **Never shown in chat.** Chat pages get flat `chat_page_bg` only — see [Phase 2](#phase-2-drop-background-images-from-chat)                                                                                                |
+| Background images      | **Never shown in chat.** The chat view is covered edge to edge by its panes; the plain chat pages show the profile page background — see [Phase 2](#phase-2-drop-background-images-from-chat)                              |
 | Theme swatches         | **Unchanged.** `SWATCH_PROPERTIES` stays profile-only; no chat swatch row on theme cards                                                                                                                                   |
 | Theme resolution       | **Unchanged.** The most relevant theme wins whether or not it defines chat colours — inheritance is always *within* one theme, never across themes                                                                         |
 
@@ -189,11 +189,11 @@ theme, so `:root` and the model defaults agree with current appearance.
 Scoped `.chat-body .site-header …`, so the same markup renders differently in
 chat and on profile pages.
 
-| Key                      | Falls back to       | Paints                            |
-| ------------------------ | ------------------- | --------------------------------- |
-| `chat_header_bg`         | `header_bg`         | `.site-header` background         |
-| `chat_header_title_text` | `header_title_text` | the "Plural Profiles" logo text   |
-| `chat_header_link`       | `header_link`       | "Sign out", nav links             |
+| Key                      | Falls back to       | Paints                          |
+| ------------------------ | ------------------- | ------------------------------- |
+| `chat_header_bg`         | `header_bg`         | `.site-header` background       |
+| `chat_header_title_text` | `header_title_text` | the "Plural Profiles" logo text |
+| `chat_header_link`       | `header_link`       | "Sign out", nav links           |
 
 #### Chat · Server sidebar (3)
 
@@ -535,12 +535,15 @@ no colour rule of their own, so they have always taken the link colour rather
 than the pane text colour. The key is labelled "Channel names & links" so
 that's findable; `chat_sidebar_text` drives the hover and active tints.
 
-**The picker's search field kept the page colour.** The plan had
-`.profile-picker__search` following `chat_input_bg`, but it uses `--page-bg`
-today, and `chat_input_bg` defaults to `input_bg` — a different colour. It
-follows `chat_page_bg` / `chat_divider` / `chat_composer_text` instead, all
-exact-fidelity matches, and `chat_input_*` drives the composer textarea, which
-is what actually took `--input-*` before.
+**The picker only takes chat colours inside the composer.** `.profile-picker` is
+one piece of markup used twice: as the composer's "posting as" switcher, and as
+a plain form field on the server create, join and membership pages. The base
+rules keep the profile colours they had before this feature — including the
+search field's `--page-bg` / `--pane-border` / `--pane-text` — so those ordinary
+pages are untouched. A `.composer`-scoped block applies the chat palette
+(`chat_composer_highlight`, `chat_composer_text`, `chat_input_bg`, `chat_divider`,
+`chat_pane_link`) to the composer's copy only, with its own forced-colours
+override since it outranks the base one.
 
 **`:root` chat colours are generated, not duplicated.** They started as
 literal hexes hand-copied from each profile counterpart — the drift hazard the
@@ -575,7 +578,9 @@ picked to read well on the message pane reads badly there (a message-author
 colour chosen against a light chat pane landing on an invite card's heading was
 the case that surfaced it). Those now keep the profile palette; only
 `.chat-channel` and the chat chrome — the header bar, rail, channel sidebar and
-the message-author popover — take the chat colours.
+the message-author popover — take the chat colours. The same boundary covers the server list's links and the invite card's
+subtitle and description, which the original conversion of the chat stylesheet
+had pointed at the message-pane colours.
 
 **`:where(.chat-body) a`, not `.chat-body a`.** At `(0,1,1)` the plain form
 outranks every single-class rule colouring a link in chat, flattening the
