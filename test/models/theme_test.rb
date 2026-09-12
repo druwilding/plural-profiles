@@ -161,16 +161,23 @@ class ThemeTest < ActiveSupport::TestCase
     refute_equal Theme::THEMEABLE_PROPERTIES.dig("chat_pane_bg", :default), theme.color_for("chat_pane_bg")
   end
 
-  test "color_for walks a two-hop chain to the profile side" do
-    # chat_topbar_bg -> chat_pane_bg -> pane_bg, with only the far end set.
-    theme = Theme.new(user: users(:one), name: "Two hop", colors: { "pane_bg" => "#111111" })
+  test "every chat colour follows its profile colour directly" do
+    # chat_topbar_bg follows pane_bg, not chat_pane_bg — chat colours never
+    # chain through other chat colours.
+    theme = Theme.new(user: users(:one), name: "Direct", colors: { "pane_bg" => "#111111" })
     assert_equal "#111111", theme.color_for("chat_topbar_bg")
+    assert_equal "#111111", theme.color_for("chat_composer_bg")
   end
 
-  test "color_for stops at the nearest set link in a chain" do
-    theme = Theme.new(user: users(:one), name: "Mid chain",
+  test "overriding one chat colour does not move another that follows the same profile colour" do
+    # chat_pane_bg and chat_topbar_bg both follow pane_bg independently, so
+    # setting one leaves the other where it was.
+    theme = Theme.new(user: users(:one), name: "Independent",
                       colors: { "pane_bg" => "#111111", "chat_pane_bg" => "#222222" })
-    assert_equal "#222222", theme.color_for("chat_topbar_bg")
+
+    assert_equal "#222222", theme.color_for("chat_pane_bg")
+    assert_equal "#111111", theme.color_for("chat_topbar_bg")
+    assert_equal "#111111", theme.color_for("chat_composer_bg")
   end
 
   test "color_for falls back to the default when nothing in the chain is set" do
@@ -195,16 +202,26 @@ class ThemeTest < ActiveSupport::TestCase
     assert_empty non_chat, "non-chat properties must not declare a fallback"
   end
 
-  test "no fallback chain cycles, and every chain ends on a profile key" do
-    Theme::THEMEABLE_PROPERTIES.each_key do |key|
-      seen = []
-      current = key
-      while (parent = Theme::THEMEABLE_PROPERTIES.dig(current, :fallback))
-        assert_not_includes seen, parent, "fallback chain from #{key} cycles at #{parent}"
-        seen << parent
-        current = parent
-      end
-      assert_not current.start_with?("chat_"), "chain from #{key} ends on chat key #{current}"
+  # This is what keeps "what is this following?" answerable by reading one
+  # line rather than tracing a chain — and what lets color_for be a single
+  # lookup instead of a walk.
+  test "no chat colour follows another chat colour" do
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      assert_not meta[:fallback].start_with?("chat_"),
+        "#{key} follows #{meta[:fallback]}; chat colours must follow a profile colour directly"
+    end
+  end
+
+  test "every chat colour defaults to the same value as the profile colour it follows" do
+    # The defaults are what an untouched theme renders, so a chat key whose
+    # default drifted from its counterpart's would silently change how an
+    # existing theme looks.
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      next if key == "chat_composer_highlight" # deliberately a colour of its own; see the model
+      assert_equal Theme::THEMEABLE_PROPERTIES.dig(meta[:fallback], :default), meta[:default],
+        "#{key} should default to the same colour as #{meta[:fallback]}"
     end
   end
 

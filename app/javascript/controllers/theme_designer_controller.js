@@ -47,11 +47,10 @@ export default class extends Controller {
     this.applyBackgroundToPreview()
   }
 
-  // Reverse index of the fallback chain: property -> the properties that
-  // inherit from it. Changing a profile colour has to repaint every chat
-  // colour currently following it (and anything following those in turn), and
-  // walking the forward chain for all 28 keys on every keystroke would be
-  // wasteful.
+  // Reverse index of the fallback map: profile property -> the chat properties
+  // that follow it. Changing a profile colour has to repaint every chat colour
+  // currently following it, and scanning all 27 keys on every keystroke would
+  // be wasteful.
   buildDependents() {
     this.dependents = {}
     const chain = this.hasFallbackChainValue ? this.fallbackChainValue : {}
@@ -71,26 +70,19 @@ export default class extends Controller {
     return hexInput ? hexInput.disabled : false
   }
 
-  // Resolves what a property shows when it isn't set, by walking up to the
-  // first ancestor that is — the same rule Theme#color_for applies server-side.
+  // What a property shows when it isn't set: the value of the profile colour
+  // it follows — the same rule Theme#color_for applies server-side. Every
+  // fallback points straight at a profile key (enforced by a model test), so
+  // this is one lookup, never a walk.
   inheritedValue(property) {
     const chain = this.hasFallbackChainValue ? this.fallbackChainValue : {}
-    const seen = new Set()
-    let current = chain[property]
-    while (current && !seen.has(current)) {
-      seen.add(current)
-      if (!this.isInheriting(current)) {
-        const input = this.hexInputTargets.find(el => el.dataset.property === current)
-        if (input) return input.value
-      }
-      current = chain[current]
-    }
-    return null
+    const parent = chain[property]
+    if (!parent) return null
+    const input = this.hexInputTargets.find(el => el.dataset.property === parent)
+    return input ? input.value : null
   }
 
-  // Repaints every property inheriting from `property`, recursively, so a
-  // two-hop chain (chat_topbar_bg -> chat_pane_bg -> pane_bg) updates all the
-  // way down from a single edit.
+  // Repaints every chat colour currently following `property`.
   refreshDependents(property) {
     (this.dependents[property] || []).forEach(child => {
       if (!this.isInheriting(child)) return
@@ -98,7 +90,6 @@ export default class extends Controller {
       if (!value) return
       this.setInputs(child, value)
       this.applyToPreview(child, value)
-      this.refreshDependents(child)
     })
   }
 

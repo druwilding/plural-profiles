@@ -223,13 +223,16 @@ chat and on profile pages.
 
 | Key                      | Falls back to          | Paints                                                                                     |
 | ------------------------ | ---------------------- | ------------------------------------------------------------------------------------------ |
-| `chat_topbar_bg`         | `chat_pane_bg`         | `.chat-channel-header` (today it has no background of its own — it shows the pane through) |
-| `chat_topbar_text`       | `chat_pane_text`       | channel description, subtitle                                                              |
-| `chat_topbar_title_text` | `chat_pane_title_text` | the `# channel-name` `h1`                                                                  |
+| `chat_topbar_bg`         | `pane_bg`              | `.chat-channel-header` (today it has no background of its own — it shows the pane through) |
+| `chat_topbar_text`       | `pane_text`            | channel description, subtitle                                                              |
+| `chat_topbar_title_text` | `pane_title_text`      | the `# channel-name` `h1`                                                                  |
 
-Note the **two-hop chains** here: `chat_topbar_bg → chat_pane_bg → pane_bg`.
-Setting the message pane alone re-tints the header with it, which is almost
-always what someone wants; overriding the header on top of that still works.
+Every fallback points **straight at a profile key** — no chat colour follows
+another chat colour. An earlier draft chained the header through
+`chat_pane_bg`, on the theory that re-tinting the message pane should drag the
+header along with it; in practice that made "what is this actually following?"
+something you had to trace instead of read. Each chat colour now follows one
+profile colour and nothing else, enforced by a model test.
 
 #### Chat · Message pane (5)
 
@@ -245,9 +248,9 @@ always what someone wants; overriding the header on top of that still works.
 
 | Key                       | Falls back to      | Paints                                       |
 | ------------------------- | ------------------ | -------------------------------------------- |
-| `chat_composer_bg`        | `chat_pane_bg`     | `.composer`                                  |
-| `chat_composer_text`      | `chat_pane_text`   | composer text and its `color-mix` tints      |
-| `chat_composer_highlight` | `chat_composer_bg` | `.profile-picker` pill background and border |
+| `chat_composer_bg`        | `pane_bg`          | `.composer`                                  |
+| `chat_composer_text`      | `pane_text`        | composer text and its `color-mix` tints      |
+| `chat_composer_highlight` | `pane_bg`          | `.profile-picker` pill background and border |
 | `chat_input_bg`           | `input_bg`         | composer textarea, `.profile-picker__search` |
 | `chat_input_border`       | `input_border`     | composer textarea border                     |
 | `chat_input_text`         | `input_text`       | composer textarea text                       |
@@ -460,7 +463,11 @@ or reuse them for the chat mock's header bar; don't leave them orphaned.
 **Model** (`test/models/theme_test.rb`)
 - `color_for` returns the stored value when set.
 - `color_for` returns the parent's *stored* value when unset (not the parent's default).
-- Two-hop chain: `chat_topbar_bg` with only `pane_bg` set resolves to `pane_bg`.
+- `chat_topbar_bg` with only `pane_bg` set resolves to `pane_bg`.
+- **No chat key's fallback is another chat key** — the invariant that keeps
+  resolution one hop deep, and `color_for` a lookup rather than a walk.
+- Every chat key's default matches its counterpart's, so an untouched theme
+  can't drift.
 - Every `fallback:` names a real key, and no chain cycles (iterate the constant).
 - **Only `chat_*` keys carry a `fallback:`** — this is what pins the inheritance
   to one direction, and it's a one-line assertion over the constant that fails
@@ -549,6 +556,13 @@ channel names, "+ Add channel", the rail icons and the back arrow to one
 colour. `:where()` contributes no specificity, so it lands at `(0,0,1)` —
 identical to the base `a` rule it replaces, and beaten by every class selector,
 which is what it needs to be. There's a system test for this specifically.
+
+**No chat colour follows another chat colour.** The plan had the chat header
+and composer chaining through `chat_pane_*`. Flattened after review: each chat
+key now names one profile key directly. That makes `color_for` a single lookup
+rather than a walk, drops the cycle guard entirely, and means the editor's
+"Following X" hint always names a colour you can actually see in the Profile
+pages section. A model test enforces it.
 
 **No chat page background.** `chat_page_bg` was dropped after review: chat's
 panes fill the window, so the body colour is only ever visible behind the cards

@@ -79,13 +79,13 @@ class ChatThemeDesignerTest < ApplicationSystemTestCase
 
     hex_field("pane_bg").set("#00ff00")
 
-    # Both the direct child and the two-hop grandchild
-    # (chat_topbar_bg -> chat_pane_bg -> pane_bg) should follow along.
+    # Every chat colour following pane_bg moves, each one independently.
     assert_equal "#00ff00", hex_field("chat_pane_bg").value
     assert_equal "#00ff00", hex_field("chat_topbar_bg").value
+    assert_equal "#00ff00", hex_field("chat_composer_bg").value
   end
 
-  test "an overridden chat colour stops following its profile colour" do
+  test "an overridden chat colour stops following its profile colour, and only it" do
     visit edit_our_theme_path(@theme)
     open_all_sections
     set_override("chat_pane_bg", true)
@@ -94,7 +94,8 @@ class ChatThemeDesignerTest < ApplicationSystemTestCase
     hex_field("pane_bg").set("#00ff00")
 
     assert_equal "#ff0000", hex_field("chat_pane_bg").value, "an override should not be overwritten"
-    assert_equal "#ff0000", hex_field("chat_topbar_bg").value, "the topbar should follow its nearest set ancestor"
+    assert_equal "#00ff00", hex_field("chat_topbar_bg").value,
+      "the chat header follows pane_bg directly, not the overridden chat pane"
   end
 
   test "the override checkbox reflects the stored state on load" do

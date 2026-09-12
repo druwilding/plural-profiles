@@ -166,9 +166,9 @@ class Theme < ApplicationRecord
     # have always taken the link colour rather than the pane text colour.
     "chat_sidebar_link"        => { label: "Channel names & links",    default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
 
-    "chat_topbar_bg"           => { label: "Chat header background",   default: "#133b2f", group: :chat_topbar,   fallback: "chat_pane_bg" },
-    "chat_topbar_text"         => { label: "Chat header text",         default: "#5ea389", group: :chat_topbar,   fallback: "chat_pane_text" },
-    "chat_topbar_title_text"   => { label: "Chat header title text",   default: "#5ea389", group: :chat_topbar,   fallback: "chat_pane_title_text" },
+    "chat_topbar_bg"           => { label: "Chat header background",   default: "#133b2f", group: :chat_topbar,   fallback: "pane_bg" },
+    "chat_topbar_text"         => { label: "Chat header text",         default: "#5ea389", group: :chat_topbar,   fallback: "pane_text" },
+    "chat_topbar_title_text"   => { label: "Chat header title text",   default: "#5ea389", group: :chat_topbar,   fallback: "pane_title_text" },
 
     "chat_pane_bg"             => { label: "Message pane background",  default: "#133b2f", group: :chat_pane,     fallback: "pane_bg" },
     "chat_pane_text"           => { label: "Message pane text",        default: "#5ea389", group: :chat_pane,     fallback: "pane_text" },
@@ -176,12 +176,13 @@ class Theme < ApplicationRecord
     "chat_pane_link"           => { label: "Message links",            default: "#3ab580", group: :chat_pane,     fallback: "pane_link" },
     "chat_spoiler"             => { label: "Spoiler background",       default: "#3A3A3A", group: :chat_pane,     fallback: "spoiler" },
 
-    "chat_composer_bg"         => { label: "Composer background",      default: "#133b2f", group: :chat_composer, fallback: "chat_pane_bg" },
-    "chat_composer_text"       => { label: "Composer text",            default: "#5ea389", group: :chat_composer, fallback: "chat_pane_text" },
-    # No profile-page equivalent: .profile-picker was a color-mix of --pane-bg
-    # and --page-bg before the split, so this default is that mix resolved
-    # against the stock theme rather than a colour copied from another key.
-    "chat_composer_highlight"  => { label: "Posting-as highlight",     default: "#12372c", group: :chat_composer, fallback: "chat_composer_bg" },
+    "chat_composer_bg"         => { label: "Composer background",      default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
+    "chat_composer_text"       => { label: "Composer text",            default: "#5ea389", group: :chat_composer, fallback: "pane_text" },
+    # The one key with no real profile counterpart: .profile-picker was a
+    # color-mix of --pane-bg and --page-bg before the split, so its default is
+    # that mix resolved against the stock theme. It follows pane_bg, the nearer
+    # half of that mix.
+    "chat_composer_highlight"  => { label: "Posting-as highlight",     default: "#12372c", group: :chat_composer, fallback: "pane_bg" },
     "chat_input_bg"            => { label: "Composer input background", default: "#263a2e", group: :chat_composer, fallback: "input_bg" },
     "chat_input_border"        => { label: "Composer input border",    default: "#3c6f5f", group: :chat_composer, fallback: "input_border" },
     "chat_input_text"          => { label: "Composer input text",      default: "#5ea389", group: :chat_composer, fallback: "input_text" }
@@ -265,16 +266,18 @@ class Theme < ApplicationRecord
   end
 
   # Returns the colour for a property: the stored value if the designer set
-  # one, else the value inherited through its `fallback:` chain, else the
+  # one, else the stored value of the profile colour it follows, else the
   # property's own default.
   #
-  # Only chat keys declare a fallback, so a chain is at most chat -> chat ->
-  # profile (e.g. chat_topbar_bg -> chat_pane_bg -> pane_bg) and always ends
-  # on a profile key, which always resolves. Resolution stays inside this
-  # theme — a fallback never reads another Theme row, so a server or channel
-  # theme with no chat colours of its own inherits from *its own* profile
-  # colours rather than deferring to some other theme.
-  def color_for(property, seen = nil)
+  # Every fallback points straight at a profile key — chat colours never follow
+  # other chat colours, which would make "what is this actually following?" a
+  # question you had to trace rather than read. A test enforces that, which is
+  # what lets this be a single lookup rather than a walk.
+  #
+  # Resolution stays inside this theme: a fallback never reads another Theme
+  # row, so a server or channel theme with no chat colours of its own inherits
+  # from *its own* profile colours rather than deferring to another theme.
+  def color_for(property)
     key = property.to_s
     stored = colors&.dig(key)
     return stored if stored.present?
@@ -283,11 +286,8 @@ class Theme < ApplicationRecord
     return nil unless meta
 
     if (parent = meta[:fallback])
-      # Cycle guard: the chains are hand-written above, and a typo pointing one
-      # at itself would otherwise hang the request rather than fail visibly.
-      seen ||= Set.new
-      return meta[:default] unless seen.add?(key)
-      return color_for(parent, seen)
+      inherited = colors&.dig(parent)
+      return inherited if inherited.present?
     end
 
     meta[:default]
