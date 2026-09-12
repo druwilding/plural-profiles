@@ -12,21 +12,25 @@ colour from the channel list.
 This plan adds a **chat colour set**: a second group of themeable properties,
 prefixed `chat_`, consumed only by chat-scoped CSS. Any chat property that the
 designer hasn't explicitly set **inherits** from its profile-page equivalent, so
-every existing theme keeps its exact current appearance with no migration and no
-action from its author.
+every existing theme keeps its current appearance with no migration and no action
+from its author. The one deliberate exception is background images, which stop
+appearing on chat pages (see Phase 2).
 
 ## Decisions
 
-| Question               | Decision                                                                                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| New properties         | 27 `chat_*` keys across 7 regions (full table below)                                                                                                                                       |
-| Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional) |
-| Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                          |
-| Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                     |
-| Data migration         | **None.** Fallbacks make every existing theme render byte-identically today, and keep chat tracking later profile edits. A migration would freeze current values and defeat the feature    |
-| Editor UX              | Per-property **"Use profile colour" / "Set for chat"** radio pair, mirroring the existing chat-identity field toggle                                                                       |
-| Export version         | Bump `CURRENT_EXPORT_VERSION` to `3`; keep accepting 1–3                                                                                                                                   |
-| Preview                | Tabbed preview pane: **Profile** (today's preview) / **Chat** (new mock)                                                                                                                   |
+| Question               | Decision                                                                                                                                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New properties         | 27 `chat_*` keys across 7 regions (full table below)                                                                                                                                                                       |
+| Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional)                                 |
+| Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
+| Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
+| Data migration         | **None.** Fallbacks make every existing theme render identically today (bar the background-image change below), and keep chat tracking later profile edits. A migration would freeze current values and defeat the feature |
+| Editor UX              | Per-property **"Use profile colour" / "Set for chat"** radio pair, mirroring the existing chat-identity field toggle                                                                                                       |
+| Export version         | Bump `CURRENT_EXPORT_VERSION` to `3`; keep accepting 1–3                                                                                                                                                                   |
+| Preview                | Tabbed preview pane: **Profile** (today's preview) / **Chat** (new mock)                                                                                                                                                   |
+| Background images      | **Never shown in chat.** Chat pages get flat `chat_page_bg` only — see [Phase 2](#phase-2-drop-background-images-from-chat)                                                                                                |
+| Theme swatches         | **Unchanged.** `SWATCH_PROPERTIES` stays profile-only; no chat swatch row on theme cards                                                                                                                                   |
+| Theme resolution       | **Unchanged.** The most relevant theme wins whether or not it defines chat colours — inheritance is always *within* one theme, never across themes                                                                         |
 
 ### Why one-directional
 
@@ -45,7 +49,7 @@ for a state no theme is currently in.
 The practical consequence: **`fallback:` only ever appears on `chat_*` keys.**
 Profile keys keep their current behaviour exactly — stored value, else default —
 so the chain always terminates on the profile side. That's worth asserting in a
-test (see Phase 5).
+test (see Phase 6).
 
 ---
 
@@ -286,7 +290,59 @@ constant, so it keeps passing.
 
 ---
 
-## Phase 2: CSS
+## Phase 2: Drop background images from chat
+
+**This is the one place the plan deliberately changes how an existing theme
+renders.** Today `ThemeHelper#theme_style_string` appends
+`background_css_properties` to the body style for *every* layout, chat included
+— so a theme with a background image currently shows it behind the server list,
+the server/channel settings pages and the invite pages. (Not behind the messages
+themselves: `.chat-main:has(.chat-channel)` paints an opaque `--pane-bg` over
+it.) Chat should have no background image at all; `chat_page_bg` is the flat
+colour behind those pages instead.
+
+Implement it in the helper rather than the stylesheet:
+
+```ruby
+def active_theme_style(background_image: true)
+  # … unchanged resolution …
+  theme_style_string(theme, background_image: background_image)
+end
+
+def theme_style_string(theme, background_image: true)
+  return unless theme
+  style = theme.to_css_properties
+  if background_image && theme.background_image.attached?
+    url = rails_storage_proxy_url(theme.background_image)
+    style += " #{theme.background_css_properties(url)}"
+  end
+  style
+end
+```
+
+with `layouts/chat.html.haml` passing `active_theme_style(background_image: false)`.
+
+A `.chat-body { background-image: none !important }` rule in the stylesheet would
+also work — `!important` in a stylesheet does beat a non-important inline
+declaration — but it's worse on three counts: it leaves four orphaned
+`background-repeat/size/position/attachment` declarations that no longer mean
+anything, it hides the intent somewhere nobody reading `ThemeHelper` will find
+it, and it still calls `rails_storage_proxy_url` on every chat page, minting a
+signed URL for an image that is never fetched.
+
+Two follow-ons:
+
+- The **Background image** section of the theme form should say it applies to
+  profile pages only, so nobody spends an afternoon wondering why their tiled
+  texture never reaches chat.
+- The **chat preview mock** must not paint the background image, even though the
+  profile preview does. Since both live inside the same `.theme-preview`
+  element, the chat tab needs its own opaque `chat_page_bg` layer rather than
+  inheriting the preview container's background.
+
+---
+
+## Phase 3: CSS
 
 Add the chat keys to `:root` as **literal hexes** (not `var()` references — see
 the constraint above; the existing `--input-text: var(--pane-text)` line is a
@@ -317,7 +373,7 @@ colours with system keywords, which is orthogonal to which variable was there.
 
 ---
 
-## Phase 3: Editor
+## Phase 4: Editor
 
 ### Section structure
 
@@ -382,7 +438,7 @@ or reuse them for the chat mock's header bar; don't leave them orphaned.
 
 ---
 
-## Phase 4: Import / export
+## Phase 5: Import / export
 
 - Bump `CURRENT_EXPORT_VERSION` to `3`; keep `version.between?(1, 3)`.
 - `LEGACY_COLOR_ALIASES` (v1 → v2) is untouched. **There is no v2 → v3 upgrade
@@ -403,7 +459,7 @@ or reuse them for the chat mock's header bar; don't leave them orphaned.
 
 ---
 
-## Phase 5: Tests
+## Phase 6: Tests
 
 **Model** (`test/models/theme_test.rb`)
 - `color_for` returns the stored value when set.
@@ -418,10 +474,19 @@ or reuse them for the chat mock's header bar; don't leave them orphaned.
 - Export is version 3; a chat-free theme exports no `chat_*` keys.
 - Import of a v2 fixture succeeds and stores no chat keys.
 
+**Helper** (`test/helpers/theme_helper_test.rb`)
+- `active_theme_style` includes the background-image declarations by default.
+- `active_theme_style(background_image: false)` includes the colour custom
+  properties but **no** `background-image` / `background-repeat` / `-size` /
+  `-position` / `-attachment`.
+- A theme with no attachment behaves identically either way.
+
 **Controller** (`test/controllers/our/themes_controller_test.rb`)
 - Posting without a `chat_*` key leaves it unstored.
 - Posting a `chat_*` key stores it; re-posting without it removes it.
 - `#new` seeds no chat keys.
+- A chat page rendered with a background-image theme active emits no
+  `background-image` in the body style — the regression guard for Phase 2.
 
 **System** (`test/system/themes_test.rb`)
 - Switching a chat property to "Set for chat" enables its picker and changes
@@ -441,32 +506,46 @@ in which each `--chat-*` value equals its profile-side parent. That is the
 | Phase                  | Risk     | Notes                                                                                       |
 | ---------------------- | -------- | ------------------------------------------------------------------------------------------- |
 | 1 · Schema + fallbacks | Low      | Additive; `color_for` is the single chokepoint                                              |
-| 2 · CSS                | Medium   | ~46 mechanical edits, but the rail-ring and divider spacers are easy to get subtly wrong    |
-| 3 · Editor             | **High** | The bulk of the work. Coloris + disabled state + live inherited swatches is the fiddly part |
-| 4 · Import/export      | Low      | Mostly a version bump                                                                       |
-| 5 · Tests              | Low      |                                                                                             |
+| 2 · No chat bg image   | Low      | Small, but the only user-visible regression — worth a changelog line                        |
+| 3 · CSS                | Medium   | ~46 mechanical edits, but the rail-ring and divider spacers are easy to get subtly wrong    |
+| 4 · Editor             | **High** | The bulk of the work. Coloris + disabled state + live inherited swatches is the fiddly part |
+| 5 · Import/export      | Low      | Mostly a version bump                                                                       |
+| 6 · Tests              | Low      |                                                                                             |
 
-Phases 1, 2 and 4 could ship as one PR and would already be useful via pasted
+Phases 1, 2, 3 and 5 could ship as one PR and would already be useful via pasted
 JSON import, with the editor following — but the editor is the whole point for
 the users who asked, so shipping them together is probably kinder.
 
 ---
 
-## Open questions
+## Resolved
 
-1. **Should `chat_page_bg` carry its own background image?** This plan keeps one
-   background image per theme, shared by both sides. A chat-specific image is a
-   larger change (second attachment, second set of repeat/size/position/
-   attachment columns) and nobody asked for it — but it's the obvious next
-   request once chat has its own colours.
+All three questions raised in the first draft are settled:
 
-2. **Should theme cards show a chat swatch row?**
-   `SWATCH_PROPERTIES` is profile-only. A second row of chat swatches on
-   `_theme_row` would make chat-designed themes findable on the index.
-   Nice-to-have, cheap, easy to defer.
+1. **Background images in chat** — not wanted at all. Chat pages show flat
+   `chat_page_bg`. This became [Phase 2](#phase-2-drop-background-images-from-chat),
+   and it is the only change in the plan that alters how an existing theme
+   renders.
 
-3. **Do group/server/channel themes need anything here?** `@channel_theme` and
-   `@server_theme` already exist and already win over the user's own theme, so
-   chat colours flow through the existing resolution in `ThemeHelper` with no
-   change. Flagging only to confirm no one expects a *separate* assignment
-   (e.g. "use theme A's profile colours with theme B's chat colours").
+2. **Chat swatches on theme cards** — no. `SWATCH_PROPERTIES` stays exactly as
+   it is, profile-only. Nothing to build.
+
+3. **Theme resolution** — unchanged. If a channel or server theme is set, the
+   most relevant one wins whether or not it happens to define chat colours; a
+   theme is never passed over because another one further down the chain has a
+   chat palette. `ThemeHelper#active_theme_style` needs no change for this,
+   because inheritance resolves **within** the chosen theme: `color_for` reads
+   only its own `colors` hash and its own defaults, and never consults another
+   theme. Worth stating plainly in a comment on `color_for`, since "falls back
+   to the profile colours" could otherwise be misread as "falls back to the
+   profile's *theme*".
+
+---
+
+## Possible follow-ups
+
+Not planned, not blocking — noted only so they aren't rediscovered later:
+
+- A chat-specific background image, if the no-images decision is ever revisited.
+- Per-message-author accent colours, which several chat themes will want once
+  they can control the pane behind the names.
