@@ -156,11 +156,12 @@ class Theme < ApplicationRecord
     "chat_rail_text"           => { label: "Server sidebar text",      default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
     "chat_rail_active"         => { label: "Active server ring",       default: "#5ea389", group: :chat_rail,     fallback: "pane_title_text" },
     "chat_rail_link"           => { label: "Add server button",        default: "#3ab580", group: :chat_rail,     fallback: "pane_link" },
-    # Shown on both the server rail and the channel list. Grouped with the rail
-    # because that's where you notice it first; it had no key of its own before
-    # and borrowed the primary button's text colour, which on a theme with dark
-    # button text left it invisible against the rail.
-    "chat_unread_dot"          => { label: "Unread dots",              default: "#4ec59a", group: :chat_rail,     fallback: "primary_button_text" },
+    # One per surface: the rail dot sits on chat_rail_bg and the channel-list
+    # dot on chat_sidebar_bg, which a designer may well have coloured very
+    # differently, so a single key would force a compromise on one of them.
+    # Both borrowed the primary button's text colour before, which on a theme
+    # with dark button text left them invisible.
+    "chat_rail_unread_dot"     => { label: "Unread dots",              default: "#4ec59a", group: :chat_rail,     fallback: "primary_button_text" },
 
     "chat_divider"             => { label: "Divider bars",             default: "#02120e", group: :chat_dividers, fallback: "pane_border" },
 
@@ -170,6 +171,7 @@ class Theme < ApplicationRecord
     # Channel names are bare links with no colour rule of their own, so they
     # have always taken the link colour rather than the pane text colour.
     "chat_sidebar_link"        => { label: "Channel names & links",    default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
+    "chat_sidebar_unread_dot"  => { label: "Unread dots",              default: "#4ec59a", group: :chat_sidebar,  fallback: "primary_button_text" },
 
     "chat_topbar_bg"           => { label: "Chat header background",   default: "#133b2f", group: :chat_topbar,   fallback: "pane_bg" },
     "chat_topbar_text"         => { label: "Chat header text",         default: "#5ea389", group: :chat_topbar,   fallback: "pane_text" },

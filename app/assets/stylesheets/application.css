@@ -59,12 +59,13 @@
   --chat-rail-text: #5ea389;
   --chat-rail-active: #5ea389;
   --chat-rail-link: #3ab580;
-  --chat-unread-dot: #4ec59a;
+  --chat-rail-unread-dot: #4ec59a;
   --chat-divider: #02120e;
   --chat-sidebar-bg: #133b2f;
   --chat-sidebar-text: #5ea389;
   --chat-sidebar-title-text: #5ea389;
   --chat-sidebar-link: #3ab580;
+  --chat-sidebar-unread-dot: #4ec59a;
   --chat-topbar-bg: #133b2f;
   --chat-topbar-text: #5ea389;
   --chat-topbar-title-text: #5ea389;
@@ -4186,14 +4187,18 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--chat-unread-dot);
+  background-color: var(--chat-sidebar-unread-dot);
   flex-shrink: 0;
 }
 
+/* Same specificity as .unread-dot above and declared after it, so the rail's
+   own colour wins. The two sit on different surfaces — chat_rail_bg and
+   chat_sidebar_bg — which a theme may colour very differently. */
 .unread-dot--rail {
   position: absolute;
   top: 0;
   right: 0;
+  background-color: var(--chat-rail-unread-dot);
   border: 2px solid var(--chat-rail-bg);
 }
 

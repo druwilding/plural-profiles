@@ -139,39 +139,52 @@ class ChatThemeTest < ApplicationSystemTestCase
       "the server name should keep its title colour, not the pane link colour"
   end
 
-  test "the unread dot has its own colour, independent of the button text it used to borrow" do
-    # It borrowed --primary-button-text, so a theme with dark button text left
-    # unread dots invisible against the rail.
-    @theme.update!(colors: base_colors.merge(
-      "primary_button_text" => "#010101", "chat_unread_dot" => "#ff0000"
-    ))
+  # An unread channel in *this* server puts a dot in the channel list; an
+  # unread channel in another server puts one on the rail. Both at once, so a
+  # single page shows the two surfaces together.
+  def seed_unread_dots
     other = @user.owned_chat_servers.create!(name: "Unread Server")
     other.memberships.create!(user: @user, role: "owner", default_postable: profiles(:alice))
-    unread = other.channels.create!(name: "noisy")
-    unread.messages.create!(user: users(:two), postable: profiles(:carol), body: "hello there")
-
-    sign_in_via_browser
-    visit chat_url(channel_path)
-    assert_selector ".unread-dot--rail"
-
-    assert_equal rgb("#ff0000"), style_of(".unread-dot--rail", "background-color")
-    assert_equal rgb("#070809"), style_of(".unread-dot--rail", "border-top-color"),
-      "the dot's ring should match the rail background it sits on"
-  end
-
-  test "the unread dot follows the primary button text until overridden" do
-    @theme.update!(colors: base_colors.merge("primary_button_text" => "#ff0000"))
-    other = @user.owned_chat_servers.create!(name: "Unread Server")
-    other.memberships.create!(user: @user, role: "owner", default_postable: profiles(:alice))
-    other.channels.create!(name: "noisy").messages.create!(
+    other.channels.create!(name: "elsewhere").messages.create!(
+      user: users(:two), postable: profiles(:carol), body: "over here"
+    )
+    @server.channels.create!(name: "noisy").messages.create!(
       user: users(:two), postable: profiles(:carol), body: "hello there"
     )
+  end
+
+  test "the rail and channel-list unread dots can be coloured apart" do
+    # They sit on different surfaces, so one key would force a compromise on
+    # whichever surface lost.
+    @theme.update!(colors: base_colors.merge(
+      "primary_button_text" => "#010101",
+      "chat_rail_unread_dot" => "#ff0000",
+      "chat_sidebar_unread_dot" => "#0000ff"
+    ))
+    seed_unread_dots
 
     sign_in_via_browser
     visit chat_url(channel_path)
     assert_selector ".unread-dot--rail"
+    assert_selector ".channel-pane .unread-dot"
 
     assert_equal rgb("#ff0000"), style_of(".unread-dot--rail", "background-color")
+    assert_equal rgb("#0000ff"), style_of(".channel-pane .unread-dot", "background-color")
+    assert_equal rgb("#070809"), style_of(".unread-dot--rail", "border-top-color"),
+      "the rail dot's ring should match the rail background it sits on"
+  end
+
+  test "both unread dots follow the primary button text until overridden" do
+    @theme.update!(colors: base_colors.merge("primary_button_text" => "#ff0000"))
+    seed_unread_dots
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_selector ".unread-dot--rail"
+    assert_selector ".channel-pane .unread-dot"
+
+    assert_equal rgb("#ff0000"), style_of(".unread-dot--rail", "background-color")
+    assert_equal rgb("#ff0000"), style_of(".channel-pane .unread-dot", "background-color")
   end
 
   test "a placeholder avatar takes the colour of the region it sits in" do
