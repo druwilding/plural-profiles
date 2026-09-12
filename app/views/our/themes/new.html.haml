@@ -3,13 +3,16 @@
 
 %h1.visually-hidden New theme
 
-.theme-designer{data: { controller: "theme-designer", "theme-designer-derived-text-properties-value": Theme::DERIVED_TEXT_PROPERTIES.to_json }}
+.theme-designer{data: { controller: "theme-designer",
+  "theme-designer-derived-text-properties-value": Theme::DERIVED_TEXT_PROPERTIES.to_json,
+  "theme-designer-fallback-chain-value": Theme::FALLBACK_CHAIN.to_json,
+  "theme-designer-export-version-value": Theme::CURRENT_EXPORT_VERSION }}
   .theme-designer__controls
     .card
       = render "our/themes/form", theme: @theme
 
   .theme-designer__preview
-    .theme-preview{data: { "theme-designer-target": "preview" }}
-      = render "our/themes/preview"
+    = render "our/themes/preview_panels", theme: @theme,
+      preview_style: @theme.to_css_properties, existing_bg_url: nil
 
 %p= link_to "← Back to themes", our_themes_path

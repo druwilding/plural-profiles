@@ -13,16 +13,23 @@
     = form.text_field :name, required: true, maxlength: 255,
       data: { "theme-designer-target": "nameInput", action: "input->theme-designer#updateJsonOutput", "1p-ignore": "true" }
 
-  - Theme::PROPERTY_GROUPS.each do |group_key, group_label|
+  - Theme::PROPERTY_SECTIONS.each do |section_key, section|
     %hr.form-divider
-    %details{open: [:page, :header, :pane].include?(group_key) || nil}
-      %summary.form-section-summary= group_label
-      - Theme::THEMEABLE_PROPERTIES.select { |_, v| v[:group] == group_key }.each do |prop, meta|
-        .form-group.theme-designer__color-group
-          %label{for: "theme_colors_#{prop}"}= meta[:label]
-          .theme-designer__color-input
-            %input{type: "color", alpha: true, name: "theme[colors][#{prop}]", value: theme.color_for(prop), id: "theme_colors_#{prop}", data: { "theme-designer-target": "colorInput", property: prop, action: "input->theme-designer#updatePreview" }}
-            %input.theme-designer__hex-input{type: "text", name: "theme[colors][#{prop}]", value: theme.color_for(prop), maxlength: 9, pattern: "#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", aria: { label: "#{meta[:label]} hex" }, data: { "theme-designer-target": "hexInput", property: prop, action: "input->theme-designer#updateFromHex", coloris: "" }}
+    %details.theme-designer__section{open: (section_key == :profile || nil)}
+      %summary.form-section-summary= section[:label]
+
+      - if section_key == :chat
+        %p.form-hint
+          Chat colours follow the profile ones unless you set them. Design only the profile side and chat will match it; change a chat colour here and only chat changes.
+        .theme-designer__bulk-actions
+          %button.btn.btn--small.btn--secondary{type: "button", data: { action: "theme-designer#overrideAllChat" }} Set all for chat
+          %button.btn.btn--small.btn--secondary{type: "button", data: { action: "theme-designer#inheritAllChat" }} Use profile colours for all
+
+      - section[:groups].each do |group_key|
+        %details.theme-designer__group{open: [:page, :header, :pane, :chat_page].include?(group_key) || nil}
+          %summary.form-section-summary= Theme::PROPERTY_GROUPS[group_key]
+          - Theme::THEMEABLE_PROPERTIES.select { |_, v| v[:group] == group_key }.each do |prop, meta|
+            = render "our/themes/color_field", theme: theme, prop: prop, meta: meta
 
   %hr.form-divider
   %details

@@ -248,6 +248,21 @@ class Theme < ApplicationRecord
 
   SWATCH_PROPERTIES = %w[page_bg pane_bg pane_title_text pane_link primary_button_bg].freeze
 
+  # property => the property it inherits from, for every key that has one.
+  # Handed to the theme designer as JSON so the JS can resolve an inherited
+  # colour by walking the same chain color_for walks, rather than keeping a
+  # second copy of the relationships.
+  FALLBACK_CHAIN = THEMEABLE_PROPERTIES.filter_map { |key, meta|
+    [ key, meta[:fallback] ] if meta[:fallback]
+  }.to_h.freeze
+
+  # Whether the designer explicitly set this property, as opposed to leaving it
+  # to inherit. The editor uses this to pick each chat colour's initial
+  # inherit/override state; "inherited" is simply the absence of a stored value.
+  def overridden?(property)
+    colors&.dig(property.to_s).present?
+  end
+
   # Returns the colour for a property: the stored value if the designer set
   # one, else the value inherited through its `fallback:` chain, else the
   # property's own default.
@@ -353,7 +368,12 @@ class Theme < ApplicationRecord
   # whenever THEMEABLE_PROPERTIES keys are renamed or restructured, and add
   # the old shape to import_attributes_from_json's upgrade path (see
   # LEGACY_COLOR_ALIASES for the v1 -> v2 header/pane text-colour split).
-  CURRENT_EXPORT_VERSION = 2
+  #
+  # v3 added the chat_* keys. There is deliberately no v2 -> v3 upgrade step:
+  # the keys are purely additive, and "absent" already means the right thing
+  # for a v2 export — inherit from the profile colour — so an older theme
+  # imports as a fully-inherited chat palette with no conversion at all.
+  CURRENT_EXPORT_VERSION = 3
 
   # Returns a hash representation of the theme suitable for JSON export.
   # Includes all non-image theme data; background image is excluded.

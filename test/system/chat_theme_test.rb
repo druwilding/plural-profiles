@@ -106,10 +106,13 @@ class ChatThemeTest < ApplicationSystemTestCase
       "chat_pane_title_text" => "#0000ff"
     ))
 
+    # Seeded rather than typed: posting through the composer triggers a Turbo
+    # broadcast that re-renders the message list, and the replaced node goes
+    # stale between finding it and reading its computed style.
+    @channel.messages.create!(user: @user, postable: profiles(:alice), body: "hello")
+
     sign_in_via_browser
     visit chat_url(channel_path)
-    fill_in placeholder: "Message ##{@channel.name} (Enter to send, Shift+Enter for a new line)", with: "hello"
-    find(".composer-input-row textarea").native.send_keys(:enter)
     assert_text "hello"
 
     assert_equal rgb("#ff0000"), style_of(".chat-channel-header h1", "color")

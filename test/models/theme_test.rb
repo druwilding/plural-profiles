@@ -523,7 +523,7 @@ class ThemeTest < ActiveSupport::TestCase
   test "to_export_hash includes expected keys" do
     theme = themes(:dark_forest)
     hash = theme.to_export_hash
-    assert_equal 2, hash[:plural_profiles_theme]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, hash[:plural_profiles_theme]
     assert_equal "Dark Forest", hash[:name]
     assert_kind_of Hash, hash[:colors]
     assert_equal "#0e2e24", hash[:colors]["page_bg"]
@@ -535,7 +535,7 @@ class ThemeTest < ActiveSupport::TestCase
   test "to_export_hash omits nil values via compact" do
     theme = Theme.new(user: users(:one), name: "Minimal", colors: { "page_bg" => "#000000" })
     hash = theme.to_export_hash
-    assert_equal 2, hash[:plural_profiles_theme]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, hash[:plural_profiles_theme]
     assert_equal "Minimal", hash[:name]
     assert_not hash.key?(:credit)
     assert_not hash.key?(:credit_url)
@@ -559,7 +559,7 @@ class ThemeTest < ActiveSupport::TestCase
     theme = themes(:dark_forest)
     json = theme.to_export_json
     parsed = JSON.parse(json)
-    assert_equal 2, parsed["plural_profiles_theme"]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, parsed["plural_profiles_theme"]
     assert_equal "Dark Forest", parsed["name"]
     assert_equal "#0e2e24", parsed["colors"]["page_bg"]
   end

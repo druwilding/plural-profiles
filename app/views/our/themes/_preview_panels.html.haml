@@ -1,0 +1,26 @@
+-# The preview pane: a tab strip over the profile and chat mock-ups.
+-#
+-# Locals:
+-#   theme          — the theme being previewed
+-#   preview_style  — inline custom properties (plus background image, if any)
+-#   existing_bg_url — URL of the saved background image, or nil
+-#
+-# Both mock-ups sit inside one themed .theme-preview container, so the Stimulus
+-# controller only ever has to write custom properties to a single element.
+-# Switching tabs just changes which panel is hidden.
+
+.theme-designer__preview-tabs{role: "tablist", aria: { label: "Preview" }}
+  %button.theme-designer__preview-tab.theme-designer__preview-tab--active{type: "button", role: "tab",
+    aria: { selected: "true" }, data: { "preview-panel": "profile", "theme-designer-target": "previewTab",
+    action: "theme-designer#showPreview" }}
+    Profile pages
+  %button.theme-designer__preview-tab{type: "button", role: "tab", aria: { selected: "false" },
+    data: { "preview-panel": "chat", "theme-designer-target": "previewTab", action: "theme-designer#showPreview" }}
+    Chat
+
+.theme-preview{style: preview_style,
+  data: { "theme-designer-target": "preview", "existing-bg-url": existing_bg_url }}
+  .theme-preview__panel{data: { "preview-panel": "profile", "theme-designer-target": "previewPanel" }}
+    = render "our/themes/preview"
+  .theme-preview__panel{hidden: true, data: { "preview-panel": "chat", "theme-designer-target": "previewPanel" }}
+    = render "our/themes/chat_preview"

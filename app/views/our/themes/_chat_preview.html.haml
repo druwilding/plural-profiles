@@ -1,0 +1,85 @@
+-# Chat half of the theme preview.
+-#
+-# Deliberately built from the *real* chat class names rather than
+-# preview-only ones, so every colour rule in the stylesheet applies here
+-# unchanged and the preview can't drift from the real thing. Only the layout
+-# rules are neutralised, in .theme-preview__chat (see application.css) —
+-# the viewport-height flex chain, the fixed rail/sidebar widths and the
+-# scroll containers, none of which make sense inside a preview panel.
+-#
+-# It's wrapped in .chat-body because that's the selector every chat-scoped
+-# override hangs off; without it the header bar and the shared components
+-# would render in the profile colours.
+
+.theme-preview__chat.chat-body
+  %header.site-header
+    .site-header__brand
+      %span.logo
+        = render "shared/plural_pride_logo"
+        Plural Profiles
+    %nav
+      %a{href: "#"} Sign out
+
+  .chat-shell
+    .server-rail
+      %span.server-rail__icon.server-rail__icon--active
+        .avatar.avatar--placeholder
+          = render "shared/plural_pride_logo"
+      %span.server-rail__icon
+        .avatar.avatar--placeholder
+          = render "shared/plural_pride_logo"
+      %span.server-rail__icon.server-rail__icon--add +
+
+    .channel-pane
+      %span.channel-pane__server-name Server name
+      %ul.sidebar-tree__children
+        %li
+          %span.sidebar-tree__leaf.sidebar-tree__leaf--active # active channel
+        %li
+          %span.sidebar-tree__leaf # another channel
+      %span.channel-pane__add-channel + Add channel
+
+    .chat-main
+      .chat-channel
+        .chat-channel-header
+          .chat-channel-header__title
+            .chat-channel-header__title-column
+              .chat-channel-header__title-text
+                %h1 # active channel
+                %p.description Chat header text
+          .chat-channel-header__actions
+            %span.btn.btn--secondary.btn--small Channel settings
+
+        .chat-messages-scroll
+          .chat-messages
+            .chat-date-divider Today
+            .chat-message
+              .chat-message__avatar
+                .avatar.avatar--placeholder
+                  = render "shared/plural_pride_logo"
+              .chat-message__content
+                .chat-message__who
+                  %span.chat-message__name Message author
+                  %span.chat-message__pronouns they/them
+                  %span.chat-message__time 09:24
+                .chat-message__body
+                  Message pane text, with a
+                  = succeed "," do
+                    %a{href: "#"} message link
+                  and a
+                  %span.spoiler.spoiler--revealed{aria: {expanded: "true"}} revealed spoiler
+                  next to a
+                  %span.spoiler{role: "button", aria: {expanded: "false", label: "Hidden content"}} hidden spoiler
+                  element.
+
+        .composer
+          .composer-posting-as
+            %span.profile-picker
+              %span.profile-picker__trigger-avatar
+                .avatar.avatar--placeholder
+                  = render "shared/plural_pride_logo"
+              %span
+                Posting as
+                %strong Example Profile
+          .composer-input-row
+            %textarea{rows: 1, placeholder: "Message #active channel"}

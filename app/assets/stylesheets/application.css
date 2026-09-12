@@ -3073,6 +3073,183 @@ h1 .heart-inline {
   margin-bottom: 1.5rem;
 }
 
+/* ── Theme designer: inherit toggles ─────────────────────── */
+
+.theme-designer__color-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.theme-designer__inherit-toggle {
+  font-size: 0.78rem;
+}
+
+/* An inheriting row is showing a colour it doesn't own, so it reads as
+   disabled without actually hiding which colour is in effect. */
+.theme-designer__color-group--inheriting .theme-designer__color-input {
+  opacity: 0.55;
+}
+
+.theme-designer__inherit-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+}
+
+.theme-designer__bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.theme-designer__group {
+  margin-left: 0.25rem;
+}
+
+/* ── Theme designer: preview tabs ────────────────────────── */
+
+.theme-designer__preview-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.theme-designer__preview-tab {
+  background: none;
+  border: 1px solid var(--pane-border);
+  border-radius: 6px 6px 0 0;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--pane-text);
+  cursor: pointer;
+}
+
+.theme-designer__preview-tab--active {
+  background-color: var(--pane-bg);
+  color: var(--pane-title-text);
+  font-weight: 600;
+}
+
+@media (forced-colors: active) {
+  .theme-designer__preview-tab--active {
+    border-width: 2px;
+  }
+}
+
+/* ── Theme designer: chat preview mock ───────────────────── */
+
+/* The chat mock reuses the real chat class names so every colour rule applies
+   to it unchanged. What doesn't transfer is the layout: the real thing fills
+   the viewport and scrolls internally, which inside a preview panel would
+   either collapse to nothing or run off the page. Everything below cancels
+   layout only — no colours — so the mock can't drift from what chat actually
+   looks like. */
+.theme-preview__chat {
+  /* Overrides .chat-body's 100dvh — same specificity (0,1,0), declared later.
+     The profile preview paints the theme's background image on .theme-preview
+     itself, so the opaque page colour here also keeps the image out of a chat
+     mock that should never show one. */
+  height: 420px;
+  background-color: var(--chat-page-bg);
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+.theme-preview__chat .site-header {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.theme-preview__chat .site-header .logo {
+  font-size: 0.85rem;
+}
+
+.theme-preview__chat .site-header nav a {
+  margin-left: 0;
+}
+
+.theme-preview__chat .chat-shell {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The real rail and channel list are sized for a full window; at preview width
+   they'd leave almost nothing for the messages. */
+.theme-preview__chat .server-rail {
+  width: 44px;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+}
+
+.theme-preview__chat .server-rail__icon,
+.theme-preview__chat .server-rail__icon .avatar,
+.theme-preview__chat .server-rail__icon .avatar--placeholder {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.theme-preview__chat .channel-pane {
+  width: 150px;
+  padding: 0.6rem 0.5rem;
+  overflow: hidden;
+}
+
+.theme-preview__chat .chat-main {
+  padding: 0;
+  overflow: hidden;
+}
+
+.theme-preview__chat .chat-channel-header {
+  padding: 0.4rem 0.7rem 0.5rem;
+}
+
+.theme-preview__chat .chat-channel-header h1 {
+  font-size: 0.95rem;
+}
+
+.theme-preview__chat .chat-messages-scroll {
+  padding: 0.6rem 0.7rem;
+  overflow: hidden;
+}
+
+.theme-preview__chat .chat-message__avatar .avatar,
+.theme-preview__chat .chat-message__avatar .avatar--placeholder {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+}
+
+.theme-preview__chat .composer {
+  padding: 0.4rem 0.7rem 0.5rem;
+}
+
+.theme-preview__chat .composer-input-row textarea {
+  min-height: 2rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* The mock is inert — nothing in it navigates or submits. */
+.theme-preview__chat a,
+.theme-preview__chat .server-rail__icon,
+.theme-preview__chat .sidebar-tree__leaf,
+.theme-preview__chat textarea,
+.theme-preview__chat .btn {
+  pointer-events: none;
+}
+
+
 .theme-preview__section:last-child {
   margin-bottom: 0;
 }
