@@ -12,6 +12,12 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+
+    # Builds a tiny, valid PNG of the given pixel dimensions, for exercising
+    # dimension validations without needing fixture files for every size.
+    def png_bytes(width, height)
+      Vips::Image.black(width, height).write_to_buffer(".png")
+    end
   end
 end
 

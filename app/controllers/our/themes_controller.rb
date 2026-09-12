@@ -69,6 +69,11 @@ class Our::ThemesController < ApplicationController
     if @theme.update(theme_params)
       redirect_to edit_our_theme_path(@theme), notice: "Changes saved."
     else
+      # A rejected background_image stays attached in memory (has_one_attached
+      # only persists it on a successful save), so the edit form would try to
+      # render a variant of a blob that was never uploaded. Drop the pending
+      # change so the form falls back to the theme's actual saved image.
+      @theme.attachment_changes.delete("background_image")
       render :edit, status: :unprocessable_entity
     end
   end
