@@ -20,7 +20,7 @@ appearing on chat pages (see Phase 2).
 
 | Question               | Decision                                                                                                                                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New properties         | 27 `chat_*` keys across 6 regions (full table below)                                                                                                                                                                       |
+| New properties         | 28 `chat_*` keys across 6 regions (full table below)                                                                                                                                                                       |
 | Inheritance model      | **One-directional**: profile is primary and always set; chat is secondary and either inherits or overrides. Confirmed, not bidirectional — see [Why one-directional](#why-one-directional)                                 |
 | Storage of "inherited" | **Key absent from `colors`** — no extra column, no sentinel value                                                                                                                                                          |
 | Fallback resolution    | **In Ruby**, inside `Theme#color_for`, which walks a `fallback:` chain                                                                                                                                                     |
@@ -556,6 +556,12 @@ channel names, "+ Add channel", the rail icons and the back arrow to one
 colour. `:where()` contributes no specificity, so it lands at `(0,0,1)` —
 identical to the base `a` rule it replaces, and beaten by every class selector,
 which is what it needs to be. There's a system test for this specifically.
+
+**`chat_unread_dot` was added after review.** The unread dot had no key of its
+own and borrowed `--primary-button-text`; on a theme with dark button text
+(drurple's is `#1b0436`) that left it invisible against the rail. It follows
+`primary_button_text`, so nothing changes until it's set, and it appears in the
+chat preview mock on both the rail and the channel list.
 
 **No chat colour follows another chat colour.** The plan had the chat header
 and composer chaining through `chat_pane_*`. Flattened after review: each chat

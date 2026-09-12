@@ -58,6 +58,8 @@
   --chat-rail-bg: #02120e;
   --chat-rail-text: #5ea389;
   --chat-rail-active: #5ea389;
+  --chat-rail-link: #3ab580;
+  --chat-unread-dot: #4ec59a;
   --chat-divider: #02120e;
   --chat-sidebar-bg: #133b2f;
   --chat-sidebar-text: #5ea389;
@@ -3221,9 +3223,10 @@ h1 .heart-inline {
 }
 
 .theme-preview__chat .channel-pane {
-  /* Wide enough that the mock's longest channel name stays on one line — a
-     wrapped row misreads as a styling bug rather than a narrow column. */
-  width: 168px;
+  /* Close to the real 200px, and wide enough that the mock's longest channel
+     name plus its unread dot stays on one line — a wrapped row misreads as a
+     styling bug rather than a narrow column. */
+  width: 186px;
   padding: 0.85rem 0.6rem;
   overflow: hidden;
 }
@@ -3898,6 +3901,16 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   color: var(--chat-header-link);
 }
 
+/* Media queries don't add specificity, so the rule above (0,3,1) outranks the
+   base forced-colors override on .site-header nav .link-button (0,2,1) and
+   would keep Sign out in the themed colour even in forced-colors mode. Same
+   fix as the base rule, one level deeper. */
+@media (forced-colors: active) {
+  .chat-body .site-header nav .link-button {
+    color: CanvasText;
+  }
+}
+
 /* The other two header_bg banners — .card > .card__header (server list, server
    and channel settings, invites) and .mini-profile__header (the popover you
    get by clicking a message author) — also render inside chat, so they follow
@@ -3988,12 +4001,28 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   background-color: color-mix(in srgb, var(--chat-spoiler) 10%, transparent);
 }
 
+/* `inherit` rather than a fixed colour: this selector (0,2,0) outranks the
+   per-region rules that set `color` on .server-rail, .channel-pane and
+   .composer, so pinning it to the pane colour left a server with no avatar
+   drawing its placeholder logo in the message-pane colour while sitting on the
+   rail. Inheriting means each placeholder picks up the surface it's actually
+   on, and the header banners below still override it explicitly. */
 .chat-body .avatar--placeholder,
 .chat-body .sidebar__avatar--placeholder,
 .chat-body .sidebar-tree__avatar--placeholder,
 .chat-body .tree__avatar--placeholder {
-  color: var(--chat-pane-text);
+  color: inherit;
   border-color: var(--chat-avatar-placeholder-border);
+}
+
+/* The popover you get by clicking a message author. Its header already follows
+   the chat header colours; without this its body, border and shadow stayed on
+   the profile palette. */
+.chat-body .mini-profile-popover {
+  background-color: var(--chat-pane-bg);
+  color: var(--chat-pane-text);
+  border-color: var(--chat-divider);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--chat-divider) 60%, transparent);
 }
 
 .chat-body .action-dropdown__menu {
@@ -4093,6 +4122,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   width: 72px;
   flex-shrink: 0;
   background-color: var(--chat-rail-bg);
+  color: var(--chat-rail-text);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4156,7 +4186,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--primary-button-text);
+  background-color: var(--chat-unread-dot);
   flex-shrink: 0;
 }
 
@@ -4196,6 +4226,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   width: 200px;
   flex-shrink: 0;
   background-color: var(--chat-sidebar-bg);
+  color: var(--chat-sidebar-text);
   border-right: 1px solid var(--chat-divider);
   padding: 1rem 0.75rem;
   overflow-y: auto;
@@ -4583,6 +4614,7 @@ turbo-frame {
 .composer {
   flex-shrink: 0;
   background-color: var(--chat-composer-bg);
+  color: var(--chat-composer-text);
   border-top: 1px solid var(--chat-divider);
   padding: 0.5rem 1.25rem 0.75rem;
 }

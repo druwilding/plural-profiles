@@ -22,10 +22,16 @@ class Our::ThemesController < ApplicationController
   end
 
   def new
-    # Seed the profile keys only. Chat keys are left unset so a new theme starts
-    # fully inherited rather than pinning every chat colour to the stock green —
-    # a starting point nobody chose and which would stop tracking the profile
-    # colours the moment the designer edited them.
+    # Seed *defaults* for the profile keys only. Chat keys get no default, so a
+    # theme started from scratch is fully inherited on the chat side rather than
+    # pinning every chat colour to the stock green — a starting point nobody
+    # chose, which would stop tracking the profile colours the moment the
+    # designer edited them.
+    #
+    # Chat colours the source theme (or an import) explicitly set are merged in
+    # below and stay set: "new theme" means "start from what I'm using", and
+    # silently dropping a chat palette the designer had built would be worse
+    # than carrying it.
     colors = Theme::THEMEABLE_PROPERTIES.reject { |_, v| v[:fallback] }.transform_values { |v| v[:default] }
     default_source = Current.user.active_theme || Theme.site_default_theme
     colors.merge!(default_source.colors) if default_source

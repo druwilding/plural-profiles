@@ -773,6 +773,14 @@ class ThemeTest < ActiveSupport::TestCase
     assert_match "Unsupported theme version", error.message
   end
 
+  test "the unread dot follows the primary button text until set" do
+    theme = Theme.new(user: users(:one), name: "Dots", colors: { "primary_button_text" => "#111111" })
+    assert_equal "#111111", theme.color_for("chat_unread_dot")
+
+    theme.colors = theme.colors.merge("chat_unread_dot" => "#ff0000")
+    assert_equal "#ff0000", theme.color_for("chat_unread_dot")
+  end
+
   test "overridden? distinguishes a set colour from an inherited one" do
     theme = Theme.new(user: users(:one), name: "Mixed",
                       colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })

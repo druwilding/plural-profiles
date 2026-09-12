@@ -139,6 +139,56 @@ class ChatThemeTest < ApplicationSystemTestCase
       "the server name should keep its title colour, not the pane link colour"
   end
 
+  test "the unread dot has its own colour, independent of the button text it used to borrow" do
+    # It borrowed --primary-button-text, so a theme with dark button text left
+    # unread dots invisible against the rail.
+    @theme.update!(colors: base_colors.merge(
+      "primary_button_text" => "#010101", "chat_unread_dot" => "#ff0000"
+    ))
+    other = @user.owned_chat_servers.create!(name: "Unread Server")
+    other.memberships.create!(user: @user, role: "owner", default_postable: profiles(:alice))
+    unread = other.channels.create!(name: "noisy")
+    unread.messages.create!(user: users(:two), postable: profiles(:carol), body: "hello there")
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_selector ".unread-dot--rail"
+
+    assert_equal rgb("#ff0000"), style_of(".unread-dot--rail", "background-color")
+    assert_equal rgb("#070809"), style_of(".unread-dot--rail", "border-top-color"),
+      "the dot's ring should match the rail background it sits on"
+  end
+
+  test "the unread dot follows the primary button text until overridden" do
+    @theme.update!(colors: base_colors.merge("primary_button_text" => "#ff0000"))
+    other = @user.owned_chat_servers.create!(name: "Unread Server")
+    other.memberships.create!(user: @user, role: "owner", default_postable: profiles(:alice))
+    other.channels.create!(name: "noisy").messages.create!(
+      user: users(:two), postable: profiles(:carol), body: "hello there"
+    )
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_selector ".unread-dot--rail"
+
+    assert_equal rgb("#ff0000"), style_of(".unread-dot--rail", "background-color")
+  end
+
+  test "a placeholder avatar takes the colour of the region it sits in" do
+    # The chat-wide placeholder rule outranks the per-region colours, so
+    # pinning it to the pane colour drew rail placeholders in message-pane text.
+    @theme.update!(colors: base_colors.merge(
+      "chat_rail_text" => "#ff0000", "chat_pane_text" => "#00ff00"
+    ))
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_text "No messages yet. Say hello!"
+
+    assert_equal rgb("#ff0000"), style_of(".server-rail .avatar--placeholder", "color"),
+      "a rail placeholder should use the rail text colour"
+  end
+
   test "chat pages fall back to the profile page background behind their cards" do
     # Chat has no page colour of its own — the panes fill the window, and the
     # only place body shows through is behind the cards on the plain chat

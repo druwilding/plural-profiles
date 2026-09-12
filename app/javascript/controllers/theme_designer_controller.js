@@ -1,6 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 import Coloris from "@melloware/coloris"
 
+// Accepts what someone may have typed so far ("ff0000", " #ff0000") and
+// returns a usable #RRGGBB(AA), or null if it isn't a colour yet.
+function normalizeHex(raw) {
+  let value = (raw || "").trim()
+  if (value.length && value[0] !== "#") value = `#${value}`
+  return /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value) ? value : null
+}
+
 // Maps theme property names (underscore) to CSS custom property names (hyphen)
 function cssProp(property) {
   return `--${property.replace(/_/g, "-")}`
@@ -43,6 +51,7 @@ export default class extends Controller {
     this.bgObjectUrl = null
     this.buildDependents()
     this.initColoris()
+    this.initInheritStates()
     this.applyAllToPreview()
     this.applyBackgroundToPreview()
   }
@@ -57,6 +66,17 @@ export default class extends Controller {
     for (const [property, parent] of Object.entries(chain)) {
       (this.dependents[parent] ||= []).push(property)
     }
+  }
+
+  // The server renders an inheriting colour's input already disabled, but the
+  // presentation that hangs off that state is applied by setInherit — so
+  // without this, a freshly-loaded page shows inherited rows undimmed and,
+  // more to the point, leaves Coloris's trigger button live on a field that
+  // can't be edited. Presentation only: values are left exactly as rendered.
+  initInheritStates() {
+    this.inheritGroupTargets.forEach(group => {
+      this.syncInheritPresentation(group.dataset.property, this.isInheriting(group.dataset.property))
+    })
   }
 
   // The group element wrapping one colour row, or null for a property that
@@ -79,7 +99,8 @@ export default class extends Controller {
     const parent = chain[property]
     if (!parent) return null
     const input = this.hexInputTargets.find(el => el.dataset.property === parent)
-    return input ? input.value : null
+    // Normalized, because the parent's input may hold a half-typed value.
+    return input ? normalizeHex(input.value) : null
   }
 
   // Repaints every chat colour currently following `property`.
@@ -118,21 +139,7 @@ export default class extends Controller {
     // alongside the hex input under the same name.
     hexInput.disabled = inheriting
 
-    // Coloris replaces the hex input with its own wrapper and trigger button;
-    // disabling the input alone still leaves that button clickable, so the
-    // picker would open for a field that can't be edited.
-    const field = hexInput.closest(".clr-field")
-    const trigger = field && field.querySelector("button")
-    if (trigger) trigger.disabled = inheriting
-
-    const group = this.groupFor(property)
-    if (group) {
-      group.classList.toggle("theme-designer__color-group--inheriting", inheriting)
-      const hint = group.querySelector(".theme-designer__inherit-hint")
-      if (hint) hint.hidden = !inheriting
-      const checkbox = group.querySelector('input[type="checkbox"]')
-      if (checkbox) checkbox.checked = !inheriting
-    }
+    this.syncInheritPresentation(property, inheriting)
 
     // Switching back to inheriting snaps the swatch to whatever it's now
     // following; switching to overriding keeps the colour it was showing, so
@@ -147,6 +154,26 @@ export default class extends Controller {
     this.refreshDependents(property)
   }
 
+
+  syncInheritPresentation(property, inheriting) {
+    const hexInput = this.hexInputTargets.find(el => el.dataset.property === property)
+    if (!hexInput) return
+
+    // Coloris replaces the hex input with its own wrapper and trigger button;
+    // disabling the input alone still leaves that button clickable, so the
+    // picker would open for a field that can't be edited.
+    const field = hexInput.closest(".clr-field")
+    const trigger = field && field.querySelector("button")
+    if (trigger) trigger.disabled = inheriting
+
+    const group = this.groupFor(property)
+    if (!group) return
+    group.classList.toggle("theme-designer__color-group--inheriting", inheriting)
+    const hint = group.querySelector(".theme-designer__inherit-hint")
+    if (hint) hint.hidden = !inheriting
+    const checkbox = group.querySelector('input[type="checkbox"]')
+    if (checkbox) checkbox.checked = !inheriting
+  }
 
   // Preview tabs: the profile mock and the chat mock share one themed
   // container, so switching is just which panel is visible.
@@ -220,17 +247,12 @@ export default class extends Controller {
   updateFromHex(event) {
     const input = event.currentTarget
     const property = input.dataset.property
-    let value = input.value.trim()
+    const value = normalizeHex(input.value)
+    if (!value) return
 
-    // Auto-add # prefix
-    if (value.length && value[0] !== "#") value = `#${value}`
-
-    // Only apply if it looks like a valid hex colour (6 or 8 digits for alpha)
-    if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value)) {
-      this.applyToPreview(property, value)
-      this.refreshDependents(property)
-      this.updateJsonOutput()
-    }
+    this.applyToPreview(property, value)
+    this.refreshDependents(property)
+    this.updateJsonOutput()
   }
 
   // Apply a single property to the preview container

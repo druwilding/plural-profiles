@@ -28,6 +28,7 @@
       %span.server-rail__icon
         .avatar.avatar--placeholder
           = render "shared/plural_pride_logo"
+        %span.unread-dot.unread-dot--rail
       %span.server-rail__icon.server-rail__icon--add +
 
     .channel-pane
@@ -36,7 +37,9 @@
         %li
           %span.sidebar-tree__leaf.sidebar-tree__leaf--active # active channel
         %li
-          %span.sidebar-tree__leaf # another channel
+          %span.sidebar-tree__leaf
+            &#35; another channel
+            %span.unread-dot
       %span.channel-pane__add-channel + Add channel
 
     .chat-main

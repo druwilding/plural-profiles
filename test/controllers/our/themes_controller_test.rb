@@ -744,6 +744,30 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input.theme-designer__hex-input[name=?]:not([disabled])", "theme[colors][pane_bg]"
   end
 
+  test "new carries over chat overrides from the theme it seeds from" do
+    # Only the *defaults* are profile-only. A source theme's explicit chat
+    # colours come along, so "New theme" starts from what you're actually using.
+    source = @user.themes.create!(name: "Source",
+                                  colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })
+    @user.update!(active_theme: source)
+
+    sign_in_as @user
+    get new_our_theme_path
+    assert_response :success
+
+    assert_select "input.theme-designer__hex-input[name=?]:not([disabled])", "theme[colors][chat_rail_bg]"
+    assert_select "input.theme-designer__hex-input[name=?][value=?]", "theme[colors][chat_rail_bg]", "#ff0000"
+    assert_select "input.theme-designer__hex-input[name=?][disabled]", "theme[colors][chat_pane_bg]"
+  end
+
+  test "new from an import keeps the imported chat colours set" do
+    sign_in_as @user
+    get new_our_theme_path, params: { theme: { colors: { chat_rail_bg: "#abcdef" } } }
+    assert_response :success
+
+    assert_select "input.theme-designer__hex-input[name=?]:not([disabled])", "theme[colors][chat_rail_bg]"
+  end
+
   test "duplicate carries over chat overrides and leaves inherited colours inherited" do
     sign_in_as @user
     original = @user.themes.create!(name: "Original",
