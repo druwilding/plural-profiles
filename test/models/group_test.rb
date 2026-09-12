@@ -521,6 +521,7 @@ class GroupTest < ActiveSupport::TestCase
     group.update!(tag_line: "Rally around")
     assert_equal group.name, group.chat_name
     assert_equal group.tag_line, group.chat_tag_line
+    assert_equal group.pronouns, group.chat_pronouns
   end
 
   # Description is the one exception: it defaults to NOT inherited (and
@@ -584,10 +585,16 @@ class GroupTest < ActiveSupport::TestCase
     assert_equal "Nickname", group.chat_name
   end
 
-  test "does not respond to pronouns or hearts chat fields" do
+  test "does not respond to the hearts chat field" do
     group = groups(:friends)
-    assert_not group.respond_to?(:chat_pronouns)
     assert_not group.respond_to?(:chat_heart_emojis)
+  end
+
+  test "chat_pronouns uses the independent value once set" do
+    group = groups(:friends)
+    group.update!(mini_profile_pronouns_inherited: false, mini_profile_pronouns: "they/them")
+    assert_equal "they/them", group.chat_pronouns
+    assert_not_equal group.pronouns, group.chat_pronouns
   end
 
   test "can attach a mini_profile_avatar independently of the main avatar" do

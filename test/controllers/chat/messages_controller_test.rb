@@ -126,6 +126,17 @@ class Chat::MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".chat-message__subtitle", text: "A Close Circle"
   end
 
+  test "a message shows the posting group's pronouns under its name" do
+    groups(:friends).update!(pronouns: "they/them")
+    @channel.messages.create!(user: @owner, postable: groups(:friends), body: "hello")
+
+    sign_in_as @owner
+    get chat_server_channel_messages_path(@server, @channel, before_id: 0, before_created_at: Time.current.iso8601(6))
+
+    assert_response :success
+    assert_select ".chat-message__pronouns", text: "they/them"
+  end
+
   test "a message from a postable without a subtitle renders no subtitle element" do
     profiles(:alice).update!(subtitle: nil)
     @channel.messages.create!(user: @owner, postable: profiles(:alice), body: "hello")

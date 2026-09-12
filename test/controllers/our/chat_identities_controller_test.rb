@@ -91,9 +91,21 @@ class Our::ChatIdentitiesControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[aqua_heart moss_heart], @profile.mini_profile_heart_emojis
   end
 
-  test "update ignores pronouns/heart_emojis params for a group" do
+  test "update persists pronouns override for a group" do
     sign_in_as @user
-    # Group has neither column at all — permitting mini_profile_heart_emojis
+    patch our_chat_identity_path("Group", @group.uuid), params: {
+      chat_identity: {
+        mini_profile_pronouns_inherited: "false",
+        mini_profile_pronouns: "they/them"
+      }
+    }
+    @group.reload
+    assert_equal "they/them", @group.mini_profile_pronouns
+  end
+
+  test "update ignores heart_emojis params for a group" do
+    sign_in_as @user
+    # Group has no such column at all — permitting mini_profile_heart_emojis
     # unconditionally (rather than only for Profile) previously let this
     # sail through Strong Parameters and then raise UnknownAttributeError
     # (a 500) on #update, instead of being silently dropped like any other
@@ -102,13 +114,11 @@ class Our::ChatIdentitiesControllerTest < ActionDispatch::IntegrationTest
       chat_identity: {
         mini_profile_subtitle_inherited: "false",
         mini_profile_subtitle: "Group chat subtitle",
-        mini_profile_pronouns: "it/its",
         mini_profile_heart_emojis: [ "aqua_heart" ]
       }
     }
     assert_response :redirect
     assert_equal "Group chat subtitle", @group.reload.mini_profile_subtitle
-    assert_not @group.respond_to?(:mini_profile_pronouns)
     assert_not @group.respond_to?(:mini_profile_heart_emojis)
   end
 
