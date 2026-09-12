@@ -213,6 +213,56 @@ class ChatThemeTest < ApplicationSystemTestCase
     assert_equal rgb("#010203"), style_of("body", "background-color")
   end
 
+  test "chat colours do not reach the ordinary pages inside the chat layout" do
+    # The server list, settings and invite pages are plain profile-page
+    # furniture that happens to render inside the chat layout. A colour chosen
+    # to look right on the message pane looks wrong on them — a message-author
+    # colour landing on an invite card's heading, say — so they keep the
+    # profile palette and only the chat view proper is repainted.
+    @theme.update!(colors: base_colors.merge(
+      "chat_pane_bg" => "#ff0000", "chat_pane_title_text" => "#ff00ff",
+      "chat_pane_text" => "#ff8800", "chat_divider" => "#00ff00"
+    ))
+
+    sign_in_via_browser
+    visit chat_url("/servers/#{@server.uuid}/invite")
+    assert_text "Invite people"
+
+    assert_equal rgb("#040506"), style_of(".card", "background-color"), "cards keep pane_bg"
+    assert_equal rgb("#070809"), style_of(".card", "border-top-color"), "cards keep pane_border"
+    assert_equal rgb("#131415"), style_of(".card > .card__header", "background-color"), "card banners keep header_bg"
+    assert_equal rgb("#191a1b"), style_of(".card > .card__header h2", "color"), "banner titles keep header_title_text"
+    assert_equal rgb("#0d0e0f"), style_of(".invite-card__title", "color"), "headings keep pane_title_text"
+    assert_equal rgb("#0a0b0c"), style_of(".invite-generator", "color"), "body text keeps pane_text"
+  end
+
+  test "the chat view itself still takes the chat colours" do
+    @theme.update!(colors: base_colors.merge(
+      "chat_pane_bg" => "#ff0000", "chat_pane_title_text" => "#ff00ff", "chat_pane_text" => "#ff8800"
+    ))
+    @channel.messages.create!(user: @user, postable: profiles(:alice), body: "hello")
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_text "hello"
+
+    assert_equal rgb("#ff0000"), style_of(".chat-main", "background-color")
+    assert_equal rgb("#ff00ff"), style_of(".chat-message__name", "color")
+    assert_equal rgb("#ff8800"), style_of(".chat-message__body", "color")
+  end
+
+  test "the header bar stays chat-coloured on the ordinary chat pages too" do
+    # It's chat chrome, visible on every page in the layout, so unlike the
+    # cards below it, it does follow the chat palette throughout.
+    @theme.update!(colors: base_colors.merge("chat_header_bg" => "#ff0000"))
+
+    sign_in_via_browser
+    visit chat_url("/servers")
+    assert_text "Your servers"
+
+    assert_equal rgb("#ff0000"), style_of(".site-header", "background-color")
+  end
+
   test "chat colours do not leak onto profile pages" do
     @theme.update!(colors: base_colors.merge("chat_pane_bg" => "#ff0000", "chat_header_bg" => "#00ff00"))
 

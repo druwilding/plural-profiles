@@ -543,12 +543,16 @@ follows `chat_page_bg` / `chat_divider` / `chat_composer_text` instead, all
 exact-fidelity matches, and `chat_input_*` drives the composer textarea, which
 is what actually took `--input-*` before.
 
-**Chat scoping reached further than `.chat-main .card`.** `.card > .card__header`
-and `.mini-profile__header` are `--header-bg` banners, and both render inside
-chat (settings pages, and the popover behind a message author's name). Left
-alone they'd sit on the *profile* header colour in the middle of a chat-themed
-page — the exact cross-over this feature exists to fix — so they follow the
-chat header keys too.
+**The chat palette stops at the chat view, not the chat layout.** An early
+version scoped the shared components (cards, headings, links, spoilers) to
+`.chat-body`, so they were repainted on every page in the layout. But
+`.chat-body` also wraps the server list, the server and channel settings pages
+and the invite page, which are plain profile-page furniture — and a colour
+picked to read well on the message pane reads badly there (a message-author
+colour chosen against a light chat pane landing on an invite card's heading was
+the case that surfaced it). Those now keep the profile palette; only
+`.chat-channel` and the chat chrome — the header bar, rail, channel sidebar and
+the message-author popover — take the chat colours.
 
 **`:where(.chat-body) a`, not `.chat-body a`.** At `(0,1,1)` the plain form
 outranks every single-class rule colouring a link in chat, flattening the

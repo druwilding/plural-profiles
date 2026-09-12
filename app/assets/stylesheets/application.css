@@ -3882,11 +3882,11 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-body {
   height: 100vh;
   height: 100dvh;
-  /* No chat-specific page background: the panes fill the window, so body is
-     only visible behind the cards on the plain chat pages (server list,
-     settings, invites), where it keeps the profile --page-bg that every other
-     page in the app uses. */
-  color: var(--chat-pane-text);
+  /* No chat-specific page background or text colour: the panes fill the
+     window, so body is only visible behind the cards on the plain chat pages
+     (server list, settings, invites), which keep the profile --page-bg and
+     --pane-text that every other page in the app uses. The chat view sets its
+     own text colour below. */
 }
 
 /* The site header is the same markup in both layouts, so chat's version of it
@@ -3923,71 +3923,23 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   }
 }
 
-/* The other two header_bg banners — .card > .card__header (server list, server
-   and channel settings, invites) and .mini-profile__header (the popover you
-   get by clicking a message author) — also render inside chat, so they follow
-   the chat header colours too. Leaving them on --header-* would strand them on
-   the profile palette in the middle of a chat-themed page, which is the exact
-   cross-over this feature exists to fix. Each selector mirrors its base rule's
-   shape one level deeper. */
-.chat-body .card > .card__header,
-.chat-body .mini-profile-popover > .mini-profile > .mini-profile__header,
-.chat-body .preview-block__body > .mini-profile > .mini-profile__header {
-  background-color: var(--chat-header-bg);
-}
+/* Shared components, scoped to the chat *view* rather than the chat layout.
+   .chat-body also wraps ordinary pages — the server list, server and channel
+   settings, the invite page — whose cards, headings and links are plain
+   profile-page furniture. Colours picked to look right on the message pane
+   look wrong there (a message-author colour chosen against a light chat pane
+   landing on an invite card's heading, say), so those pages keep the profile
+   palette and only the chat view proper is repainted.
 
-.chat-body .card > .card__header {
-  color: var(--chat-header-text);
-}
-
-.chat-body .card > .card__header h1,
-.chat-body .card > .card__header h2,
-.chat-body .card > .card__header h3,
-.chat-body .mini-profile__header .mini-profile__name {
-  color: var(--chat-header-title-text);
-}
-
-.chat-body .card > .card__header .subtitle,
-.chat-body .card > .card__header .tag-line,
-.chat-body .card > .card__header .pronouns,
-.chat-body .mini-profile__header .subtitle,
-.chat-body .mini-profile__header .tag-line,
-.chat-body .mini-profile__header .pronouns {
-  color: color-mix(in srgb, var(--chat-header-text) 80%, transparent);
-}
-
-.chat-body .card > .card__header a,
-.chat-body .mini-profile__header a {
-  color: var(--chat-header-link);
-}
-
-/* Placeholder avatars inside those banners, mirroring the base rule's 50% mix
-   against the header's own text colour. */
-.chat-body .card > .card__header .avatar--placeholder,
-.chat-body .mini-profile__header .avatar--placeholder {
-  color: var(--chat-header-text);
-  border-color: color-mix(in srgb, var(--chat-header-text) 50%, transparent);
-}
-
-/* Shared components that the chat layout also renders — cards on the server
-   list and settings pages, headings, links, spoilers in messages, the
-   dropdown menu behind the "posting as" picker. Each defaults to the profile
-   value it replaces, so this re-points them at the chat palette without
-   changing how any existing theme looks. Elements whose colours aren't part
-   of the chat palette (buttons, flash messages, form labels) are deliberately
-   left shared. */
-.chat-body .card {
-  background-color: var(--chat-pane-bg);
-  border-color: var(--chat-divider);
-}
-
-.chat-body h1,
-.chat-body h2,
-.chat-body h3 {
+   Elements whose colours aren't part of the chat palette (buttons, flash
+   messages, form labels) stay shared everywhere. */
+.chat-channel h1,
+.chat-channel h2,
+.chat-channel h3 {
   color: var(--chat-pane-title-text);
 }
 
-.chat-body .subtitle {
+.chat-channel .subtitle {
   color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
 }
 
@@ -3996,40 +3948,40 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    link in chat — .channel-pane__server-name, .channel-pane__add-channel,
    .server-rail__icon, .chat-channel-back — and flatten them all to the link
    colour. This way it only replaces the global default, exactly as intended. */
-:where(.chat-body) a {
+:where(.chat-channel) a {
   color: var(--chat-pane-link);
 }
 
-.chat-body .spoiler {
+.chat-channel .spoiler {
   background-color: var(--chat-spoiler);
   border-color: var(--chat-spoiler);
 }
 
-.chat-body .spoiler:focus-visible {
+.chat-channel .spoiler:focus-visible {
   outline-color: var(--chat-spoiler);
 }
 
-.chat-body .spoiler--revealed {
+.chat-channel .spoiler--revealed {
   background-color: color-mix(in srgb, var(--chat-spoiler) 10%, transparent);
 }
 
-/* `inherit` rather than a fixed colour: this selector (0,2,0) outranks the
-   per-region rules that set `color` on .server-rail, .channel-pane and
-   .composer, so pinning it to the pane colour left a server with no avatar
-   drawing its placeholder logo in the message-pane colour while sitting on the
-   rail. Inheriting means each placeholder picks up the surface it's actually
-   on, and the header banners below still override it explicitly. */
-.chat-body .avatar--placeholder,
-.chat-body .sidebar__avatar--placeholder,
-.chat-body .sidebar-tree__avatar--placeholder,
-.chat-body .tree__avatar--placeholder {
+/* `inherit` rather than a fixed colour: this outranks the per-region rules
+   that set `color` on .server-rail, .channel-pane and .composer, so pinning it
+   to the pane colour left a server with no avatar drawing its placeholder logo
+   in the message-pane colour while sitting on the rail. Inheriting means each
+   placeholder picks up the surface it's actually on, and the mini-profile
+   header below still overrides it explicitly. */
+.chat-body .server-rail .avatar--placeholder,
+.chat-body .channel-pane .avatar--placeholder,
+.chat-channel .avatar--placeholder,
+.chat-body .mini-profile-popover .avatar--placeholder {
   color: inherit;
   border-color: var(--chat-avatar-placeholder-border);
 }
 
-/* The popover you get by clicking a message author. Its header already follows
-   the chat header colours; without this its body, border and shadow stayed on
-   the profile palette. */
+/* The popover you get by clicking a message author — chat-specific markup that
+   only ever renders from a message, so it needs no further scoping. Its header
+   follows the chat header colours; this covers its body, border and shadow. */
 .chat-body .mini-profile-popover {
   background-color: var(--chat-pane-bg);
   color: var(--chat-pane-text);
@@ -4037,22 +3989,53 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   box-shadow: 0 8px 24px color-mix(in srgb, var(--chat-divider) 60%, transparent);
 }
 
-.chat-body .action-dropdown__menu {
+.chat-body .mini-profile__header {
+  background-color: var(--chat-header-bg);
+}
+
+.chat-body .mini-profile__header .mini-profile__name {
+  color: var(--chat-header-title-text);
+}
+
+.chat-body .mini-profile__header .subtitle,
+.chat-body .mini-profile__header .tag-line,
+.chat-body .mini-profile__header .pronouns {
+  color: color-mix(in srgb, var(--chat-header-text) 80%, transparent);
+}
+
+.chat-body .mini-profile__header a {
+  color: var(--chat-header-link);
+}
+
+.chat-body .mini-profile__header .avatar--placeholder {
+  color: var(--chat-header-text);
+  border-color: color-mix(in srgb, var(--chat-header-text) 50%, transparent);
+}
+
+/* The two dropdowns that belong to chat chrome: the header's domain switcher
+   and the composer's "posting as" picker. Dropdowns on the settings pages are
+   left alone with the rest of that furniture. */
+.chat-body .site-header .action-dropdown__menu,
+.chat-channel .action-dropdown__menu {
   background-color: var(--chat-pane-bg);
   border-color: var(--chat-divider);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--chat-divider) 25%, transparent);
 }
 
-.chat-body .action-dropdown__item,
-.chat-body .action-dropdown__item:hover {
+.chat-body .site-header .action-dropdown__item,
+.chat-body .site-header .action-dropdown__item:hover,
+.chat-channel .action-dropdown__item,
+.chat-channel .action-dropdown__item:hover {
   color: var(--chat-pane-text);
 }
 
-.chat-body .action-dropdown__item:hover {
+.chat-body .site-header .action-dropdown__item:hover,
+.chat-channel .action-dropdown__item:hover {
   background-color: color-mix(in srgb, var(--chat-pane-text) 8%, transparent);
 }
 
-.chat-body .action-dropdown__divider {
+.chat-body .site-header .action-dropdown__divider,
+.chat-channel .action-dropdown__divider {
   border-top-color: var(--chat-divider);
 }
 
@@ -4345,6 +4328,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  color: var(--chat-pane-text);
 }
 
 .chat-channel-header {
