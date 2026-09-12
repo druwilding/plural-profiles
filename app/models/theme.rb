@@ -202,13 +202,19 @@ class Theme < ApplicationRecord
     forms:         "Form controls",
     buttons:       "Buttons",
     flash:         "Flash messages",
-    chat_header:   "Page header bar",
+    chat_header:   "Header bars",
     chat_rail:     "Server sidebar",
     chat_dividers: "Divider bars",
     chat_sidebar:  "Channel sidebar",
     chat_topbar:   "Chat header",
     chat_pane:     "Message pane",
     chat_composer: "Composer bar"
+  }.freeze
+
+  # Extra explanation for groups whose name doesn't cover everything they
+  # paint. Rendered under the group's summary in the designer.
+  GROUP_HINTS = {
+    chat_header: "The bar across the top, plus the banner at the top of cards and of the profile popover."
   }.freeze
 
   # The two top-level halves of the theme designer. Profile is primary (every

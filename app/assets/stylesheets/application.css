@@ -3889,6 +3889,11 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    below match the base selectors' shape for the same reason. */
 .chat-body .site-header {
   background-color: var(--chat-header-bg);
+  /* Nothing in the bar currently falls back to this — the logo, the domain
+     switcher and Sign out all set their own colour — but it's the right
+     inherited base for the surface, and without it anything added to the bar
+     later would pick up the message-pane colour instead. The visible uses of
+     --chat-header-text are the card-header and mini-profile banners below. */
   color: var(--chat-header-text);
   border-bottom-color: var(--chat-divider);
 }

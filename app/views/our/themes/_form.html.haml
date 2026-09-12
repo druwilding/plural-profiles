@@ -24,6 +24,8 @@
       - section[:groups].each do |group_key|
         %details.theme-designer__group{open: [:page, :header, :pane, :chat_header].include?(group_key) || nil}
           %summary.form-section-summary= Theme::PROPERTY_GROUPS[group_key]
+          - if (group_hint = Theme::GROUP_HINTS[group_key])
+            %p.form-hint= group_hint
           - Theme::THEMEABLE_PROPERTIES.select { |_, v| v[:group] == group_key }.each do |prop, meta|
             = render "our/themes/color_field", theme: theme, prop: prop, meta: meta
 
