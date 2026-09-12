@@ -563,8 +563,13 @@ and borrowed `--primary-button-text`; on a theme with dark button text
 key per surface — `chat_rail_unread_dot` and `chat_sidebar_unread_dot` — because
 the rail dot sits on `chat_rail_bg` and the channel-list dot on
 `chat_sidebar_bg`, which a theme may colour very differently; a single key would
-force a compromise on whichever surface lost. Both follow `primary_button_text`,
-so nothing changes until they're set, and both appear in the chat preview mock.
+force a compromise on whichever surface lost. Both follow `pane_text` rather than the
+`primary_button_text` they used to borrow — button text is often near-black,
+which is what made them invisible in the first place, whereas a theme's pane
+text is by definition legible. That makes them the one place in the chat
+palette where an untouched theme renders differently from before: the dots take
+the pane text colour instead of the button text colour. Both appear in the chat
+preview mock.
 
 **No chat colour follows another chat colour.** The plan had the chat header
 and composer chaining through `chat_pane_*`. Flattened after review: each chat

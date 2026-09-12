@@ -157,7 +157,6 @@ class ChatThemeTest < ApplicationSystemTestCase
     # They sit on different surfaces, so one key would force a compromise on
     # whichever surface lost.
     @theme.update!(colors: base_colors.merge(
-      "primary_button_text" => "#010101",
       "chat_rail_unread_dot" => "#ff0000",
       "chat_sidebar_unread_dot" => "#0000ff"
     ))
@@ -174,8 +173,10 @@ class ChatThemeTest < ApplicationSystemTestCase
       "the rail dot's ring should match the rail background it sits on"
   end
 
-  test "both unread dots follow the primary button text until overridden" do
-    @theme.update!(colors: base_colors.merge("primary_button_text" => "#ff0000"))
+  test "both unread dots follow the pane text until overridden" do
+    # Pane text rather than the primary button's text colour they used to
+    # borrow: button text is often near-black, which left the dots invisible.
+    @theme.update!(colors: base_colors.merge("pane_text" => "#ff0000"))
     seed_unread_dots
 
     sign_in_via_browser

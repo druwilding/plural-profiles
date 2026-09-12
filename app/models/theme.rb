@@ -159,9 +159,10 @@ class Theme < ApplicationRecord
     # One per surface: the rail dot sits on chat_rail_bg and the channel-list
     # dot on chat_sidebar_bg, which a designer may well have coloured very
     # differently, so a single key would force a compromise on one of them.
-    # Both borrowed the primary button's text colour before, which on a theme
-    # with dark button text left them invisible.
-    "chat_rail_unread_dot"     => { label: "Unread dots",              default: "#4ec59a", group: :chat_rail,     fallback: "primary_button_text" },
+    # They follow pane_text rather than the primary button's text colour they
+    # used to borrow — button text is often near-black, which left the dots
+    # invisible, whereas a theme's pane text is by definition legible.
+    "chat_rail_unread_dot"     => { label: "Unread dots",              default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
 
     "chat_divider"             => { label: "Divider bars",             default: "#02120e", group: :chat_dividers, fallback: "pane_border" },
 
@@ -171,7 +172,7 @@ class Theme < ApplicationRecord
     # Channel names are bare links with no colour rule of their own, so they
     # have always taken the link colour rather than the pane text colour.
     "chat_sidebar_link"        => { label: "Channel names & links",    default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
-    "chat_sidebar_unread_dot"  => { label: "Unread dots",              default: "#4ec59a", group: :chat_sidebar,  fallback: "primary_button_text" },
+    "chat_sidebar_unread_dot"  => { label: "Unread dots",              default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
 
     "chat_topbar_bg"           => { label: "Chat header background",   default: "#133b2f", group: :chat_topbar,   fallback: "pane_bg" },
     "chat_topbar_text"         => { label: "Chat header text",         default: "#5ea389", group: :chat_topbar,   fallback: "pane_text" },
@@ -202,19 +203,13 @@ class Theme < ApplicationRecord
     forms:         "Form controls",
     buttons:       "Buttons",
     flash:         "Flash messages",
-    chat_header:   "Header bars",
+    chat_header:   "Header bar",
     chat_rail:     "Server sidebar",
     chat_dividers: "Divider bars",
     chat_sidebar:  "Channel sidebar",
     chat_topbar:   "Chat header",
     chat_pane:     "Message pane",
     chat_composer: "Composer bar"
-  }.freeze
-
-  # Extra explanation for groups whose name doesn't cover everything they
-  # paint. Rendered under the group's summary in the designer.
-  GROUP_HINTS = {
-    chat_header: "The bar across the top, plus the banner at the top of cards and of the profile popover."
   }.freeze
 
   # The two top-level halves of the theme designer. Profile is primary (every
