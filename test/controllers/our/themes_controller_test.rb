@@ -97,6 +97,26 @@ class Our::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "#111111", @theme.colors["page_bg"]
   end
 
+  test "update with an oversized background image re-renders edit without raising" do
+    sign_in_as @user
+    file = Tempfile.new([ "huge", ".png" ])
+    file.binmode
+    file.write(png_bytes(4500, 4500))
+    file.rewind
+
+    patch our_theme_path(@theme), params: {
+      theme: {
+        name: @theme.name,
+        background_image: Rack::Test::UploadedFile.new(file.path, "image/png")
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_match "must be 4000×4000 pixels or smaller", response.body
+  ensure
+    file&.close!
+  end
+
   # -- Destroy --
 
   test "destroy deletes theme" do
