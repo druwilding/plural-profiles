@@ -518,7 +518,7 @@ class GroupTest < ActiveSupport::TestCase
 
   test "chat fields default to inheriting the main field" do
     group = groups(:friends)
-    group.update!(tag_line: "Rally around")
+    group.update!(tag_line: "Rally around", pronouns: "they/them")
     assert_equal group.name, group.chat_name
     assert_equal group.tag_line, group.chat_tag_line
     assert_equal group.pronouns, group.chat_pronouns
