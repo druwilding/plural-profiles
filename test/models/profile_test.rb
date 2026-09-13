@@ -158,54 +158,6 @@ class ProfileTest < ActiveSupport::TestCase
     assert profile.valid?
   end
 
-  test "resolve_heart_emoji is case-insensitive" do
-    assert_equal "aqua_heart", Profile.resolve_heart_emoji("11_AQUA_HEART")
-    assert_equal "aqua_heart", Profile.resolve_heart_emoji("AQUA_HEART")
-    assert_equal "aqua_heart", Profile.resolve_heart_emoji("Aqua_Heart")
-  end
-
-  test "heart_emoji_display_name formats name" do
-    profile = profiles(:alice)
-    assert_equal "dewdrop heart", profile.heart_emoji_display_name("dewdrop_heart")
-    assert_equal "cadbury heart", profile.heart_emoji_display_name("cadbury_heart")
-  end
-
-  test "HEART_EMOJIS constant contains expected hearts" do
-    assert_includes Profile::HEART_EMOJIS, "dewdrop_heart"
-    assert_includes Profile::HEART_EMOJIS, "red_heart"
-  end
-
-  test "HEART_EMOJIS constant has no duplicates and is well-formed" do
-    assert_equal Profile::HEART_EMOJIS.uniq, Profile::HEART_EMOJIS
-    assert Profile::HEART_EMOJIS.all? { |heart| heart.match?(/\A[a-z]+_heart\z/) },
-      "expected every entry to be a lowercase name ending in _heart"
-  end
-
-  test "resolve_heart_emoji returns canonical name for bare name" do
-    assert_equal "aqua_heart", Profile.resolve_heart_emoji("aqua_heart")
-    assert_equal "cadbury_heart", Profile.resolve_heart_emoji("cadbury_heart")
-  end
-
-  test "resolve_heart_emoji strips a number prefix regardless of what number it is" do
-    assert_equal "aqua_heart", Profile.resolve_heart_emoji("11_aqua_heart")
-    assert_equal "cadbury_heart", Profile.resolve_heart_emoji("50cadbury_heart")
-    assert_equal "dewdrop_heart", Profile.resolve_heart_emoji("01_dewdrop_heart")
-    assert_equal "red_heart", Profile.resolve_heart_emoji("36_red_heart")
-    assert_equal "red_heart", Profile.resolve_heart_emoji("999_red_heart")
-  end
-
-  test "resolve_heart_emoji handles cadbury's no-underscore number prefix in every form" do
-    assert_equal "cadbury_heart", Profile.resolve_heart_emoji("cadbury_heart")
-    assert_equal "cadbury_heart", Profile.resolve_heart_emoji("50cadbury_heart")
-    assert_equal "cadbury_heart", Profile.resolve_heart_emoji("51cadbury_heart")
-    assert_equal "cadbury_heart", Profile.resolve_heart_emoji("50_cadbury_heart")
-  end
-
-  test "resolve_heart_emoji returns nil for unknown name" do
-    assert_nil Profile.resolve_heart_emoji("fake_heart")
-    assert_nil Profile.resolve_heart_emoji("99_fake_heart")
-  end
-
   # -- chat identity (mini-profile) --
 
   test "chat fields default to inheriting the main field" do

@@ -42,10 +42,7 @@
           - if has_pronouns
             %span= formatted_inline(postable.chat_pronouns)
           - if has_hearts
-            .heart-display__grid
-              - postable.chat_heart_emojis.each do |heart|
-                .heart-display__heart
-                  = image_tag "/images/hearts/#{heart}.webp", width: 24, height: 24, alt: postable.heart_emoji_display_name(heart), title: postable.heart_emoji_display_name(heart), loading: "lazy"
+            = render "shared/heart_list", hearts: postable.chat_heart_emojis
     - if postable.chat_tag_line.present?
       %p.tag-line= formatted_inline(postable.chat_tag_line)
 

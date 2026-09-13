@@ -41,10 +41,6 @@ module ApplicationHelper
   SPOILER_HINT_PATTERN = /(?:\[(?<pre_hint>[^\]]+)\]\s*)?\|\|(?<content>.+?)\|\|(?:\s*\[(?<post_hint>[^\]]+)\])?/m
   CODE_BLOCK_PATTERN = /<code(?:\s[^>]*)?>.*?<\/code>/m
 
-  # Delimiters (: or ;) and the internal word separator (_ or -) can each be
-  # mixed independently, e.g. :cadbury_heart:, ;cadbury-heart;, :cadbury_heart;
-  HEART_EMOJI_PATTERN = /[:;]([a-z0-9_-]+[_-]heart)[:;]/i
-
   # Newlines adjacent to these block-level tags get stripped before newline→<br>
   # conversion, to prevent spurious <br> inside structured HTML like tables.
   # Limited to table structural tags — other block elements (div, details, etc.)
@@ -88,7 +84,7 @@ module ApplicationHelper
   def plain_field(text)
     return "" if text.blank?
     text = text.gsub(SPOILER_PLAIN_PATTERN, "▓▓▓▓")
-    text = text.gsub(HEART_EMOJI_PATTERN, "♥")
+    text = text.gsub(HeartEmoji::PATTERN, "♥")
     strip_tags(text)
   end
 
@@ -199,11 +195,11 @@ module ApplicationHelper
     non_text = html.scan(skip_pattern)
 
     result = parts.map do |part|
-      part.gsub(HEART_EMOJI_PATTERN) do |match|
-        canonical = Profile.resolve_heart_emoji(Regexp.last_match(1))
+      part.gsub(HeartEmoji::PATTERN) do |match|
+        canonical = HeartEmoji.resolve(Regexp.last_match(1))
         if canonical
-          display = Profile.heart_emoji_display_name(canonical)
-          '<img src="/images/hearts/%s.webp" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ canonical, display, display ]
+          display = HeartEmoji.display_name(canonical)
+          '<img src="%s" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ HeartEmoji.image_path(canonical), display, display ]
         else
           match
         end
