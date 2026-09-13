@@ -5562,7 +5562,9 @@ button.profile-picker__option {
 
 .heart-dialog {
   width: min(560px, 92vw);
-  max-height: 85vh;
+  /* A fixed height, so the dialog doesn't shrink and jump around the screen
+     as a search narrows the grid. */
+  height: min(40rem, 85vh);
   padding: 1.25rem;
   background-color: var(--pane-bg);
   border: 1px solid var(--pane-border);
@@ -5607,6 +5609,8 @@ button.profile-picker__option {
 }
 
 .heart-dialog__grid {
+  flex: 1;
+  align-content: start;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   gap: 0.35rem;
