@@ -3084,6 +3084,19 @@ h1 .heart-inline {
   color: var(--pane-title-text);
 }
 
+/* A card__header heading (the mock's own "Header title text" h2, but also
+   "Form controls" and "Buttons", which sit in a card__header same as a real
+   banner does) tracks --header-title-text everywhere else in the app — see
+   .card > .card__header h1, h2, h3 above. That rule ties on specificity with
+   the pane-title one just above, and a tie is won by whichever comes later in
+   the file, which silently gave every card__header heading in the preview the
+   pane colour instead. The extra .card__header class outranks both rules on
+   purpose, so this holds regardless of source order. */
+.theme-preview__panel[data-preview-panel="profile"] .card__header h2,
+.theme-preview__panel[data-preview-panel="profile"] .card__header h3 {
+  color: var(--header-title-text);
+}
+
 .theme-preview__section {
   margin-bottom: 1.5rem;
 }
