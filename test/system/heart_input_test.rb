@@ -99,6 +99,43 @@ class HeartInputTest < ApplicationSystemTestCase
     assert_selector "#profile_subtitle:focus"
   end
 
+  test "in forced colors the heart button and focus rings use the text colour" do
+    visit edit_our_profile_path(@profile)
+
+    with_forced_colors do
+      canvas_text = page.evaluate_script(<<~JS)
+        (() => {
+          const el = document.createElement("div")
+          el.style.forcedColorAdjust = "none"
+          el.style.color = "CanvasText"
+          document.body.appendChild(el)
+          const value = getComputedStyle(el).color
+          el.remove()
+          return value
+        })()
+      JS
+
+      find_field("Name").send_keys(:tab)
+      assert_selector "#profile_name + .heart-input__button:focus-visible"
+      button = page.evaluate_script(<<~JS)
+        (() => {
+          const style = getComputedStyle(document.activeElement)
+          return { color: style.color, outlineColor: style.outlineColor, outlineStyle: style.outlineStyle }
+        })()
+      JS
+      assert_equal canvas_text, button["color"], "the heart icon should be CanvasText"
+      assert_equal canvas_text, button["outlineColor"], "the heart button focus ring should be CanvasText"
+      assert_equal "solid", button["outlineStyle"]
+
+      page.driver.browser.action.send_keys(:enter).perform
+      assert_selector "dialog.heart-dialog[open]"
+      find(".heart-dialog__search").send_keys(:down)
+      assert_selector ".heart-dialog__heart:focus-visible"
+      heart_outline = page.evaluate_script("getComputedStyle(document.activeElement).outlineColor")
+      assert_equal canvas_text, heart_outline, "a focused heart in the picker should be outlined in CanvasText"
+    end
+  end
+
   # -- Autocomplete --
 
   test "typing a semicolon and two letters suggests starts-with matches first, then contains matches" do

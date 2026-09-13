@@ -5715,9 +5715,16 @@ button.profile-picker__option {
 }
 
 @media (forced-colors: active) {
+  /* Text colour for the heart icon and both focus rings, rather than
+     ButtonText or Highlight, so they read as part of the field. */
   .heart-input__button {
-    color: ButtonText;
+    color: CanvasText;
     opacity: 1;
+  }
+
+  .heart-input__button:focus-visible,
+  .heart-dialog__heart:focus-visible {
+    outline: 2px solid CanvasText;
   }
 
   .heart-input__menu,
@@ -5730,9 +5737,5 @@ button.profile-picker__option {
     forced-color-adjust: none;
     background-color: Highlight;
     color: HighlightText;
-  }
-
-  .heart-dialog__heart:focus-visible {
-    outline-color: Highlight;
   }
 }
