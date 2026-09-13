@@ -117,7 +117,17 @@ export default class extends Controller {
   setInputs(property, value) {
     const hexInput = this.hexInputTargets.find(el => el.dataset.property === property)
     const colorInput = this.colorInputTargets.find(el => el.dataset.property === property)
-    if (hexInput) hexInput.value = value
+    if (hexInput) {
+      hexInput.value = value
+      // Coloris paints the visible swatch from its wrapper's inline colour and
+      // only refreshes that on the input's own "input" event. Setting .value
+      // here fires no event, so an inherited row kept its old swatch after the
+      // colour it follows changed. Update the wrapper the way Coloris does,
+      // rather than dispatching "input", which would re-run updateFromHex for a
+      // field the designer never touched.
+      const field = hexInput.closest(".clr-field")
+      if (field) field.style.color = value
+    }
     if (colorInput) colorInput.value = value.slice(0, 7)
   }
 

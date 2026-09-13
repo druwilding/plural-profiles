@@ -294,6 +294,78 @@ class ChatThemeTest < ApplicationSystemTestCase
       "the plain-form picker must not take the composer highlight"
   end
 
+  test "the composer's posting-as options take the chat footer text colour" do
+    # The options are action-dropdown items too, so the generic channel
+    # dropdown rule used to paint them in the message-pane colour and the Chat
+    # footer text colour never reached them.
+    @theme.update!(colors: base_colors.merge("chat_pane_text" => "#0000ff", "chat_composer_text" => "#ff0000"))
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_text "No messages yet. Say hello!"
+
+    option = find(".composer .profile-picker__option.action-dropdown__item", match: :first, visible: :all)
+    assert_equal rgb("#ff0000"), option.native.style("color")
+  end
+
+  # Emulated forced-colors applies the @media (forced-colors: active) rules.
+  # Every value below is read with getComputedStyle, and each system colour is
+  # resolved the same way on a throwaway element, so the comparison doesn't
+  # depend on what the emulated palette happens to be.
+  def with_forced_colors
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia",
+      features: [ { name: "forced-colors", value: "active" } ])
+    yield
+  ensure
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
+  end
+
+  test "chat-themed controls fall back to system colours in forced-colors mode" do
+    # The chat-scoped rules used to outrank the base forced-colors ones. For the
+    # textarea and spoilers that's under forced-color-adjust: none, so a
+    # high-contrast user would have seen the chat theme's colours as written.
+    @theme.update!(colors: base_colors.merge(
+      "chat_input_bg" => "#ff0000", "chat_input_text" => "#ff0000",
+      "chat_spoiler" => "#00ff00", "chat_sidebar_text" => "#0000ff"
+    ))
+    @channel.messages.create!(user: @user, postable: profiles(:alice), body: "a ||secret|| here")
+
+    sign_in_via_browser
+    visit chat_url(channel_path)
+    assert_text "here"
+
+    with_forced_colors do
+      probe = page.evaluate_script(<<~JS)
+        (() => {
+          const sys = (keyword, prop) => {
+            const el = document.createElement("div")
+            el.style.forcedColorAdjust = "none"
+            el.style[prop] = keyword
+            document.body.appendChild(el)
+            const value = getComputedStyle(el)[prop]
+            el.remove()
+            return value
+          }
+          const cs = selector => getComputedStyle(document.querySelector(selector))
+          return {
+            canvas: sys("Canvas", "backgroundColor"),
+            canvasText: sys("CanvasText", "color"),
+            highlight: sys("Highlight", "backgroundColor"),
+            textareaBg: cs(".composer-input-row textarea").backgroundColor,
+            textareaText: cs(".composer-input-row textarea").color,
+            spoilerEdge: cs(".chat-message__body .spoiler").borderTopColor,
+            activeBg: cs(".channel-pane .sidebar-tree__leaf--active").backgroundColor
+          }
+        })()
+      JS
+
+      assert_equal probe["canvas"], probe["textareaBg"], "composer textarea background should be Canvas"
+      assert_equal probe["canvasText"], probe["textareaText"], "composer textarea text should be CanvasText"
+      assert_equal probe["canvasText"], probe["spoilerEdge"], "a hidden spoiler's edge should be CanvasText"
+      assert_equal probe["highlight"], probe["activeBg"], "the active channel should be marked with Highlight"
+    end
+  end
+
   test "the header bar stays chat-coloured on the ordinary chat pages too" do
     # It's chat chrome, visible on every page in the layout, so unlike the
     # cards below it, it does follow the chat palette throughout.

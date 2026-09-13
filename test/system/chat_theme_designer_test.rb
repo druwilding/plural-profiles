@@ -176,6 +176,31 @@ class ChatThemeDesignerTest < ApplicationSystemTestCase
       "the preview rail should match the pane border it follows"
   end
 
+  # Coloris paints the visible swatch from its wrapper's inline colour and only
+  # refreshes it on the input's own "input" event, which a programmatic value
+  # change never fires, so an inherited row kept showing its old swatch.
+  test "an inherited row's swatch repaints when the colour it follows changes" do
+    visit edit_our_theme_path(@theme)
+    open_all_sections
+    assert hex_field("chat_pane_bg").disabled?
+
+    hex_field("pane_bg").set("#00ff00")
+
+    wrapper = group_for("chat_pane_bg").find(".clr-field", visible: :all)
+    assert_equal "rgba(0, 255, 0, 1)", wrapper.native.style("color")
+  end
+
+  test "unticking Override repaints the swatch with the colour it now follows" do
+    @theme.update!(colors: { "pane_bg" => "#00ff00", "chat_pane_bg" => "#ff0000" })
+    visit edit_our_theme_path(@theme)
+    open_all_sections
+
+    set_override("chat_pane_bg", false)
+
+    wrapper = group_for("chat_pane_bg").find(".clr-field", visible: :all)
+    assert_equal "rgba(0, 255, 0, 1)", wrapper.native.style("color")
+  end
+
   test "the chat preview tab shows a chat mock that responds to chat colours" do
     visit edit_our_theme_path(@theme)
     assert_selector ".theme-preview__panel[data-preview-panel='profile']", visible: true

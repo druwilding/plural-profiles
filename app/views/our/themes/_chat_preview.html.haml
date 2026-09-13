@@ -11,7 +11,13 @@
 -# override hangs off; without it the header bar and the shared components
 -# would render in the profile colours.
 
-.theme-preview__chat.chat-body
+-# `inert` makes the whole mock non-interactive for every input method, not
+-# just the mouse: it contains a real link and a real textarea, which would
+-# otherwise be reachable with Tab — Enter on the fake Sign out would navigate
+-# away from the designer, and typing into the fake composer would steal focus.
+-# It also keeps the mock out of the accessibility tree, which suits a purely
+-# visual colour sample.
+.theme-preview__chat.chat-body{inert: true}
   %header.site-header
     .site-header__brand
       %span.logo

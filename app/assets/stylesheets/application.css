@@ -3289,16 +3289,6 @@ h1 .heart-inline {
   font-size: 0.8rem;
 }
 
-/* The mock is inert — nothing in it navigates or submits. */
-.theme-preview__chat a,
-.theme-preview__chat .server-rail__icon,
-.theme-preview__chat .sidebar-tree__leaf,
-.theme-preview__chat textarea,
-.theme-preview__chat .btn {
-  pointer-events: none;
-}
-
-
 .theme-preview__section:last-child {
   margin-bottom: 0;
 }
@@ -3974,6 +3964,31 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   background-color: color-mix(in srgb, var(--chat-spoiler) 10%, transparent);
 }
 
+/* In forced-colors mode the base .spoiler rules keep a spoiler legible with
+   system colours, under forced-color-adjust: none, so author colours apply as
+   written. The chat-scoped rules above are more specific and would win over
+   them regardless of the media query: a hidden spoiler's edge would match its
+   background and a revealed one would stay in theme colours. These mirror the
+   base rules, with the chat spoiler colour standing in for the profile one. */
+@media (forced-colors: active) {
+  .chat-channel .spoiler {
+    forced-color-adjust: none;
+    background-color: var(--chat-spoiler);
+    color: transparent;
+    border: 1px solid CanvasText;
+  }
+
+  .chat-channel .spoiler:focus-visible {
+    outline-color: CanvasText;
+  }
+
+  .chat-channel .spoiler--revealed {
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}
+
 /* `inherit` rather than a fixed colour: this outranks the per-region rules
    that set `color` on .server-rail, .channel-pane and .composer, so pinning it
    to the pane colour left a server with no avatar drawing its placeholder logo
@@ -4046,6 +4061,41 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-body .site-header .action-dropdown__divider,
 .chat-channel .action-dropdown__divider {
   border-top-color: var(--chat-divider);
+}
+
+/* The composer's "posting as" options are action-dropdown items too, so the
+   generic channel rule above painted their names in the message-pane colour
+   and the Chat footer text colour never reached them. One more ancestor class
+   outranks it without relying on source order. */
+.chat-channel .composer .action-dropdown__item,
+.chat-channel .composer .action-dropdown__item:hover {
+  color: var(--chat-composer-text);
+}
+
+.chat-channel .composer .action-dropdown__item:hover {
+  background-color: color-mix(in srgb, var(--chat-composer-text) 8%, transparent);
+}
+
+/* Forced-colors parity for the chat dropdowns. The rules above outrank the
+   base forced-colors ones for these parts, so a hovered item would lose its
+   Highlight and the menu and divider their system-colour edges. */
+@media (forced-colors: active) {
+  .chat-body .site-header .action-dropdown__menu,
+  .chat-channel .action-dropdown__menu {
+    border: 2px solid CanvasText;
+  }
+
+  .chat-body .site-header .action-dropdown__divider,
+  .chat-channel .action-dropdown__divider {
+    border-top-color: CanvasText;
+  }
+
+  .chat-body .site-header .action-dropdown__item:hover,
+  .chat-channel .action-dropdown__item:hover,
+  .chat-channel .composer .action-dropdown__item:hover {
+    font-weight: bold;
+    background-color: Highlight;
+  }
 }
 
 .server-list {
@@ -4271,6 +4321,18 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 
 .channel-pane .sidebar-tree__leaf--active {
   background-color: color-mix(in srgb, var(--chat-sidebar-text) 20%, transparent);
+}
+
+/* The base forced-colors rule marks the active row with Highlight and
+   HighlightText; these channel-pane rules are more specific and would replace
+   that with the themed tint, losing the active row's contrast. Normal and
+   hovered rows need no mirror: the base doesn't give them system colours in
+   forced-colors mode either, so they already behave as they do elsewhere. */
+@media (forced-colors: active) {
+  .channel-pane .sidebar-tree__leaf--active {
+    background: Highlight;
+    color: HighlightText;
+  }
 }
 
 .channel-pane__server-name {
@@ -4921,6 +4983,27 @@ button.profile-picker__option {
   max-height: 9.6rem;
   resize: none;
   overflow-y: auto;
+}
+
+/* The base forced-colors rule gives every text field Canvas and CanvasText
+   under forced-color-adjust: none, so author colours apply as written. The
+   composer's textarea and the posting-as search field override those with chat
+   colours at higher specificity, which in high-contrast mode would leave them
+   in arbitrary theme colours and potentially unreadable. Put them back on
+   system colours, focus ring included. */
+@media (forced-colors: active) {
+  .composer-input-row textarea,
+  .composer .profile-picker__search {
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+
+  .composer-input-row textarea:focus,
+  .composer .profile-picker__search:focus {
+    border-color: CanvasText;
+    outline: 2px solid CanvasText;
+  }
 }
 
 /* Server invites */

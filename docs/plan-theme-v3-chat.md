@@ -650,10 +650,12 @@ Brakeman clean.
 
 All three questions raised in the first draft are settled:
 
-1. **Background images in chat** — not wanted at all. Chat pages show flat
-   `chat_page_bg`. This became [Phase 2](#phase-2-drop-background-images-from-chat),
-   and it is the only change in the plan that alters how an existing theme
-   renders.
+1. **Background images in chat** — not wanted at all. The chat view is covered
+   edge to edge by its panes, and the plain chat pages (server list, settings,
+   invites) show the profile page background. This became
+   [Phase 2](#phase-2-drop-background-images-from-chat). It is one of two
+   deliberate changes to how an untouched theme renders; the other is the
+   unread dots following pane text rather than the primary button's text.
 
 2. **Chat swatches on theme cards** — no. `SWATCH_PROPERTIES` stays exactly as
    it is, profile-only. Nothing to build.
