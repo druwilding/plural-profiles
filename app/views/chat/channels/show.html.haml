@@ -39,5 +39,5 @@
             %p= message
 
       .composer-input-row
-        = form.text_area :body, rows: 1, required: true, autofocus: true, placeholder: "Message ##{plain_field(@channel.name)} (Enter to send, Shift+Enter for a new line)", data: { "composer-target": "textarea", action: "keydown->composer#submitOnEnter input->composer#detectProxy input->composer#autoGrow" }
+        = heart_field(form, :body, as: :text_area, menu_placement: "above", rows: 1, required: true, autofocus: true, placeholder: "Message ##{plain_field(@channel.name)} (Enter to send, Shift+Enter for a new line)", data: { "composer-target": "textarea", action: "keydown->composer#submitOnEnter input->composer#detectProxy input->composer#autoGrow" })
         = form.submit "Send", class: "visually-hidden"

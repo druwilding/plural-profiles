@@ -751,4 +751,54 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "padding: 10px"
     assert_includes result, "Some text alongside"
   end
+  # -- Heart input --
+
+  test "heart_emojis_json_tag lists every heart in order" do
+    script = Nokogiri::HTML::DocumentFragment.parse(heart_emojis_json_tag).at_css("script#heart-emojis[type='application/json']")
+    assert script, "expected a JSON script tag with id heart-emojis"
+
+    hearts = JSON.parse(script.text)
+    assert_equal HeartEmoji::ALL, hearts.map { |heart| heart["name"] }
+    assert_equal(
+      { "name" => "abyss_heart", "label" => "abyss heart", "src" => "/images/hearts/abyss_heart.webp", "code" => ":abyss_heart:" },
+      hearts.find { |heart| heart["name"] == "abyss_heart" }
+    )
+  end
+
+  test "heart_field wraps a text field with a hidden heart picker button" do
+    form = ActionView::Helpers::FormBuilder.new(:profile, Profile.new(subtitle: "the creative one"), self, {})
+    wrapper = Nokogiri::HTML::DocumentFragment.parse(heart_field(form, :subtitle)).at_css(".heart-input")
+
+    assert_includes wrapper["class"], "heart-input--line"
+    assert_equal "heart-input", wrapper["data-controller"]
+    assert_equal "below", wrapper["data-heart-input-placement-value"]
+
+    field = wrapper.at_css("input#profile_subtitle[type='text'][name='profile[subtitle]']")
+    assert field, "expected the field to keep its normal id and name"
+    assert_equal "the creative one", field["value"]
+    assert_equal "field", field["data-heart-input-target"]
+
+    button = wrapper.at_css("button.heart-input__button")
+    assert_equal "button", button["type"]
+    assert button.key?("hidden"), "expected the button to stay hidden until JS connects"
+    assert_equal "Insert a heart", button["aria-label"]
+    assert_equal "heart-input#openPicker", button["data-action"]
+    assert button.at_css("svg[aria-hidden='true']")
+  end
+
+  test "heart_field renders a textarea and merges data onto the field" do
+    form = ActionView::Helpers::FormBuilder.new(:chat_message, Chat::Message.new, self, {})
+    html = heart_field(form, :body, as: :text_area, menu_placement: "above", rows: 1,
+      data: { "composer-target": "textarea", action: "keydown->composer#submitOnEnter" })
+    wrapper = Nokogiri::HTML::DocumentFragment.parse(html).at_css(".heart-input")
+
+    assert_includes wrapper["class"], "heart-input--area"
+    assert_equal "above", wrapper["data-heart-input-placement-value"]
+
+    field = wrapper.at_css("textarea#chat_message_body[rows='1']")
+    assert field
+    assert_equal "textarea", field["data-composer-target"]
+    assert_equal "keydown->composer#submitOnEnter", field["data-action"]
+    assert_equal "field", field["data-heart-input-target"]
+  end
 end

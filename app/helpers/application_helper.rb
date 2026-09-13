@@ -88,6 +88,37 @@ module ApplicationHelper
     strip_tags(text)
   end
 
+  # Every heart as JSON for heart_input_controller.js, in HeartEmoji::ALL
+  # order, rendered once in the page head so HeartEmoji stays the single
+  # source of truth.
+  def heart_emojis_json_tag
+    hearts = HeartEmoji::ALL.map do |heart|
+      { name: heart, label: HeartEmoji.display_name(heart), src: HeartEmoji.image_path(heart), code: HeartEmoji.code(heart) }
+    end
+    tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
+  end
+
+  # A text field (or textarea, with as: :text_area) that accepts heart codes,
+  # wrapped so heart_input_controller.js can add the heart picker button and
+  # the :ab autocomplete menu. The field keeps its normal id, so form.label
+  # still points at it. `data` is merged onto the field, not the wrapper.
+  # menu_placement: "above" opens the autocomplete menu upwards, for fields
+  # pinned to the bottom of the screen (the chat composer).
+  def heart_field(form, method, as: :text_field, menu_placement: "below", **options)
+    field_data = (options.delete(:data) || {}).merge("heart-input-target": "field")
+    modifier = as == :text_area ? "heart-input--area" : "heart-input--line"
+
+    tag.div(class: [ "heart-input", modifier ], data: { controller: "heart-input", "heart-input-placement-value": menu_placement }) do
+      safe_join([
+        form.public_send(as, method, **options, data: field_data),
+        # Hidden until the controller connects, so there's no dead button without JS.
+        tag.button(heart_button_icon, type: "button", class: "heart-input__button", hidden: true,
+          title: "Insert a heart", "aria-label": "Insert a heart", "aria-haspopup": "dialog",
+          data: { action: "heart-input#openPicker", "heart-input-target": "button" })
+      ])
+    end
+  end
+
   def relative_time(time)
     return "unknown" unless time
     if time.future?
@@ -150,6 +181,16 @@ module ApplicationHelper
   end
 
   private
+
+  # An outlined heart that follows the text colour, so it suits every theme
+  # and forced-colors mode (a coloured heart image would clash with some).
+  def heart_button_icon
+    tag.svg(
+      tag.path(d: "M12 20.5s-7.5-4.6-9.4-9.3C1.2 7.6 3.4 4 6.9 4c2.1 0 3.8 1.2 5.1 3 1.3-1.8 3-3 5.1-3 3.5 0 5.7 3.6 4.3 7.2-1.9 4.7-9.4 9.3-9.4 9.3z"),
+      class: "heart-input__icon", viewBox: "0 0 24 24", width: 18, height: 18, fill: "none",
+      stroke: "currentColor", "stroke-width": 2, "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"
+    )
+  end
 
   def newlines_to_br(html)
     html.gsub("\n", "<br>")
