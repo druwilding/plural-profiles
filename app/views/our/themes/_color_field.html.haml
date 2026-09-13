@@ -1,0 +1,45 @@
+-# One colour row in the theme designer.
+-#
+-# Locals:
+-#   theme — the theme being edited
+-#   prop  — the property key, e.g. "chat_pane_bg"
+-#   meta  — its THEMEABLE_PROPERTIES entry
+-#
+-# Chat properties (the ones with a `fallback:`) get an "Override" checkbox:
+-# unticked, the colour follows its profile counterpart; ticked, the picker
+-# becomes editable and the colour is stored.
+-#
+-# "Inherited" is stored as the *absence* of a value, so inheriting is achieved
+-# by disabling both inputs — a disabled control submits nothing, and update
+-# replaces the whole colours hash, so the key simply stops being stored.
+-# Rendering them disabled server-side (rather than relying on JS to do it on
+-# load) is also what keeps this safe without JS: the inherit state can't be
+-# changed, but saving the form can never accidentally pin every chat colour.
+
+- inheritable = meta[:fallback].present?
+- overridden = !inheritable || theme.overridden?(prop)
+- inherited_from = inheritable ? Theme::THEMEABLE_PROPERTIES.dig(meta[:fallback], :label) : nil
+
+.form-group.theme-designer__color-group{class: ("theme-designer__color-group--inheritable" if inheritable),
+  data: { property: prop, fallback: meta[:fallback], "theme-designer-target": ("inheritGroup" if inheritable) }}
+  .theme-designer__color-head
+    %label{for: "theme_colors_#{prop}"}= meta[:label]
+    - if inheritable
+      %label.checkbox-label.theme-designer__override-label
+        %input{type: "checkbox", checked: overridden,
+          data: { property: prop, action: "change->theme-designer#toggleInherit" }}
+        Override
+
+  .theme-designer__color-input
+    %input{type: "color", alpha: true, name: "theme[colors][#{prop}]", value: theme.color_for(prop),
+      id: "theme_colors_#{prop}", disabled: !overridden,
+      data: { "theme-designer-target": "colorInput", property: prop, action: "input->theme-designer#updatePreview" }}
+    %input.theme-designer__hex-input{type: "text", name: "theme[colors][#{prop}]", value: theme.color_for(prop),
+      maxlength: 9, pattern: "#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", disabled: !overridden,
+      aria: { label: "#{meta[:label]} hex" },
+      data: { "theme-designer-target": "hexInput", property: prop, action: "input->theme-designer#updateFromHex", coloris: "" }}
+
+  - if inheritable
+    %p.form-hint.theme-designer__inherit-hint{hidden: overridden}
+      Following
+      %strong= inherited_from

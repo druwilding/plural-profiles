@@ -1,0 +1,36 @@
+-# The preview pane: a tab strip over the profile and chat mock-ups.
+-#
+-# Locals:
+-#   theme          — the theme being previewed
+-#   preview_style  — inline custom properties (plus background image, if any)
+-#   existing_bg_url — URL of the saved background image, or nil
+-#
+-# Both mock-ups sit inside one themed .theme-preview container, so the Stimulus
+-# controller only ever has to write custom properties to a single element.
+-# Switching tabs just changes which panel is hidden.
+-#
+-# The tab/tabpanel pairs are wired up with ids so assistive tech can move
+-# between them: each tab names the panel it controls, and each panel names the
+-# tab that labels it. Panels are focusable so a keyboard user can reach and
+-# scroll the mock itself.
+
+.theme-designer__preview-tabs{role: "tablist", aria: { label: "Theme preview" }}
+  %button#theme-preview-tab-profile.theme-designer__preview-tab.theme-designer__preview-tab--active{type: "button",
+    role: "tab", aria: { selected: "true", controls: "theme-preview-panel-profile" },
+    data: { "preview-panel": "profile", "theme-designer-target": "previewTab", action: "theme-designer#showPreview" }}
+    Profile pages
+  %button#theme-preview-tab-chat.theme-designer__preview-tab{type: "button",
+    role: "tab", aria: { selected: "false", controls: "theme-preview-panel-chat" },
+    data: { "preview-panel": "chat", "theme-designer-target": "previewTab", action: "theme-designer#showPreview" }}
+    Chat
+
+.theme-preview{style: preview_style,
+  data: { "theme-designer-target": "preview", "existing-bg-url": existing_bg_url }}
+  #theme-preview-panel-profile.theme-preview__panel{role: "tabpanel", tabindex: 0,
+    aria: { labelledby: "theme-preview-tab-profile" },
+    data: { "preview-panel": "profile", "theme-designer-target": "previewPanel" }}
+    = render "our/themes/preview"
+  #theme-preview-panel-chat.theme-preview__panel{hidden: true, role: "tabpanel", tabindex: 0,
+    aria: { labelledby: "theme-preview-tab-chat" },
+    data: { "preview-panel": "chat", "theme-designer-target": "previewPanel" }}
+    = render "our/themes/chat_preview"

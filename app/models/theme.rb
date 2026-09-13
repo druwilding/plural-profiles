@@ -91,51 +91,140 @@ class Theme < ApplicationRecord
   # other. See LEGACY_COLOR_ALIASES for the pre-split heading/text/link keys
   # this replaced.
   THEMEABLE_PROPERTIES = {
-    "page_bg"                 => { label: "Page background",           default: "#0b221b", group: :page    },
+    "page_bg"                 => { label: "Page background",            default: "#0b221b", group: :page    },
 
-    "header_bg"               => { label: "Header background",         default: "#0e2e24", group: :header  },
-    "header_title_text"       => { label: "Header title text",         default: "#5ea389", group: :header  },
-    "header_text"             => { label: "Header text",               default: "#5ea389", group: :header  },
-    "header_link"             => { label: "Header links",              default: "#3ab580", group: :header  },
+    "header_bg"               => { label: "Header background",          default: "#0e2e24", group: :header  },
+    "header_title_text"       => { label: "Header title text",          default: "#5ea389", group: :header  },
+    "header_text"             => { label: "Header text",                default: "#5ea389", group: :header  },
+    "header_link"             => { label: "Header links",               default: "#3ab580", group: :header  },
 
-    "pane_bg"                 => { label: "Pane background",           default: "#133b2f", group: :pane    },
-    "pane_border"             => { label: "Pane border",               default: "#02120e", group: :pane    },
-    "pane_title_text"         => { label: "Pane title text",           default: "#5ea389", group: :pane    },
-    "pane_text"               => { label: "Pane text",                 default: "#5ea389", group: :pane    },
-    "pane_link"               => { label: "Pane links",                default: "#3ab580", group: :pane    },
-    "spoiler"                 => { label: "Spoiler background",        default: "#3A3A3A", group: :pane    },
+    "pane_bg"                 => { label: "Pane background",            default: "#133b2f", group: :pane    },
+    "pane_border"             => { label: "Pane border",                default: "#02120e", group: :pane    },
+    "pane_title_text"         => { label: "Pane title text",            default: "#5ea389", group: :pane    },
+    "pane_text"               => { label: "Pane text",                  default: "#5ea389", group: :pane    },
+    "pane_link"               => { label: "Pane links",                 default: "#3ab580", group: :pane    },
+    "spoiler"                 => { label: "Spoiler background",         default: "#3A3A3A", group: :pane    },
 
-    "primary_button_bg"       => { label: "Main button background",    default: "#12684e", group: :buttons },
-    "primary_button_text"     => { label: "Main button text",          default: "#4ec59a", group: :buttons },
-    "primary_button_border"   => { label: "Main button border",        default: "#4ec59a", group: :buttons },
-    "secondary_button_bg"     => { label: "Default button background", default: "#155642", group: :buttons },
-    "secondary_button_text"   => { label: "Default button text",       default: "#4dbb8f", group: :buttons },
-    "secondary_button_border" => { label: "Default button border",     default: "#4dbb8f", group: :buttons },
-    "danger_button_bg"        => { label: "Danger button background",  default: "#9d1d46", group: :buttons },
-    "danger_button_text"      => { label: "Danger button text",        default: "#d8b5c0", group: :buttons },
-    "danger_button_border"    => { label: "Danger button border",      default: "#d8b5c0", group: :buttons },
-    "input_label"             => { label: "Input labels",              default: "#599981", group: :forms   },
-    "input_bg"                => { label: "Input background",          default: "#263a2e", group: :forms   },
-    "input_border"            => { label: "Input border",              default: "#3c6f5f", group: :forms   },
-    "input_text"              => { label: "Input text",                default: "#5ea389", group: :forms   },
-    "notice_bg"               => { label: "Notice background",         default: "#133b2f", group: :flash   },
-    "notice_border"           => { label: "Notice border",             default: "#5ea389", group: :flash   },
-    "notice_text"             => { label: "Notice text",               default: "#5ea389", group: :flash   },
-    "alert_bg"                => { label: "Alert background",          default: "#11694a", group: :flash   },
-    "alert_border"            => { label: "Alert border",              default: "#58cc9d", group: :flash   },
-    "alert_text"              => { label: "Alert text",                default: "#58cc9d", group: :flash   },
-    "warning_bg"              => { label: "Warning background",        default: "#a81d49", group: :flash   },
-    "warning_border"          => { label: "Warning border",            default: "#e6c4cf", group: :flash   },
-    "warning_text"            => { label: "Warning text",              default: "#e6c4cf", group: :flash   }
+    "primary_button_bg"       => { label: "Main button background",     default: "#12684e", group: :buttons },
+    "primary_button_text"     => { label: "Main button text",           default: "#4ec59a", group: :buttons },
+    "primary_button_border"   => { label: "Main button border",         default: "#4ec59a", group: :buttons },
+    "secondary_button_bg"     => { label: "Default button background",  default: "#155642", group: :buttons },
+    "secondary_button_text"   => { label: "Default button text",        default: "#4dbb8f", group: :buttons },
+    "secondary_button_border" => { label: "Default button border",      default: "#4dbb8f", group: :buttons },
+    "danger_button_bg"        => { label: "Danger button background",   default: "#9d1d46", group: :buttons },
+    "danger_button_text"      => { label: "Danger button text",         default: "#d8b5c0", group: :buttons },
+    "danger_button_border"    => { label: "Danger button border",       default: "#d8b5c0", group: :buttons },
+    "input_label"             => { label: "Input labels",               default: "#599981", group: :forms   },
+    "input_bg"                => { label: "Input background",           default: "#263a2e", group: :forms   },
+    "input_border"            => { label: "Input border",               default: "#3c6f5f", group: :forms   },
+    "input_text"              => { label: "Input text",                 default: "#5ea389", group: :forms   },
+    "notice_bg"               => { label: "Notice background",          default: "#133b2f", group: :flash   },
+    "notice_border"           => { label: "Notice border",              default: "#5ea389", group: :flash   },
+    "notice_text"             => { label: "Notice text",                default: "#5ea389", group: :flash   },
+    "alert_bg"                => { label: "Alert background",           default: "#11694a", group: :flash   },
+    "alert_border"            => { label: "Alert border",               default: "#58cc9d", group: :flash   },
+    "alert_text"              => { label: "Alert text",                 default: "#58cc9d", group: :flash   },
+    "warning_bg"              => { label: "Warning background",         default: "#a81d49", group: :flash   },
+    "warning_border"          => { label: "Warning border",             default: "#e6c4cf", group: :flash   },
+    "warning_text"            => { label: "Warning text",               default: "#e6c4cf", group: :flash   },
+
+    # ── Chat ────────────────────────────────────────────────────────────────
+    # Chat has its own palette because its regions don't map onto the profile
+    # page's. Chat needs the server rail, the divider bars, the channel list
+    # and the message pane to be four separately-coloured surfaces, where
+    # profile pages only ever have "page" and "pane" — so on profile colours
+    # alone the rail is welded to the divider (both --pane-border) and the
+    # channel list to the message pane (both --pane-bg), with no way to part
+    # them.
+    #
+    # Every key here carries a `fallback:` naming its profile-page equivalent,
+    # and is stored only when the designer explicitly sets it (see color_for).
+    # An untouched chat key therefore tracks its profile counterpart forever,
+    # which is why this shipped with no data migration: each `default:` below
+    # is exactly what that region rendered before the split, so an existing
+    # theme looks the same afterwards.
+    #
+    # `fallback:` appears on chat keys only. Inheritance runs one way —
+    # profile is always set, chat inherits or overrides — and it resolves
+    # *within* a single theme: color_for never consults another Theme row.
+    "chat_header_bg"           => { label: "Header background",         default: "#0e2e24", group: :chat_header,   fallback: "header_bg" },
+    "chat_header_title_text"   => { label: "Header title text",         default: "#5ea389", group: :chat_header,   fallback: "header_title_text" },
+    "chat_header_link"         => { label: "Header links",              default: "#3ab580", group: :chat_header,   fallback: "header_link" },
+
+    "chat_rail_bg"             => { label: "Server sidebar background", default: "#02120e", group: :chat_rail,    fallback: "pane_border" },
+    "chat_rail_text"           => { label: "Server sidebar text",       default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
+    "chat_rail_active"         => { label: "Active server ring",        default: "#5ea389", group: :chat_rail,     fallback: "pane_title_text" },
+    "chat_rail_link"           => { label: "Add server button",         default: "#3ab580", group: :chat_rail,     fallback: "pane_link" },
+    # One per surface: the rail dot sits on chat_rail_bg and the channel-list
+    # dot on chat_sidebar_bg, which a designer may well have coloured very
+    # differently, so a single key would force a compromise on one of them.
+    # They follow pane_text rather than the primary button's text colour they
+    # used to borrow — button text is often near-black, which left the dots
+    # invisible, whereas a theme's pane text is by definition legible.
+    "chat_rail_unread_dot"     => { label: "Unread dots",               default: "#5ea389", group: :chat_rail,     fallback: "pane_text" },
+
+    "chat_divider"             => { label: "Divider bars",              default: "#02120e", group: :chat_dividers, fallback: "pane_border" },
+
+    "chat_sidebar_bg"          => { label: "Channel list background",   default: "#133b2f", group: :chat_sidebar,  fallback: "pane_bg" },
+    "chat_sidebar_text"        => { label: "Channel list text",         default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
+    "chat_sidebar_title_text"  => { label: "Channel list title text",   default: "#5ea389", group: :chat_sidebar,  fallback: "pane_title_text" },
+    # Channel names are bare links with no colour rule of their own, so they
+    # have always taken the link colour rather than the pane text colour.
+    "chat_sidebar_link"        => { label: "Channel names & links",     default: "#3ab580", group: :chat_sidebar,  fallback: "pane_link" },
+    "chat_sidebar_unread_dot"  => { label: "Unread dots",               default: "#5ea389", group: :chat_sidebar,  fallback: "pane_text" },
+
+    "chat_topbar_bg"           => { label: "Chat header background",    default: "#133b2f", group: :chat_topbar,   fallback: "pane_bg" },
+    "chat_topbar_text"         => { label: "Chat header text",          default: "#5ea389", group: :chat_topbar,   fallback: "pane_text" },
+    "chat_topbar_title_text"   => { label: "Chat header title text",    default: "#5ea389", group: :chat_topbar,   fallback: "pane_title_text" },
+
+    "chat_pane_bg"             => { label: "Chat pane background",      default: "#133b2f", group: :chat_pane,     fallback: "pane_bg" },
+    "chat_pane_text"           => { label: "Chat pane text",            default: "#5ea389", group: :chat_pane,     fallback: "pane_text" },
+    "chat_pane_title_text"     => { label: "Message author names",      default: "#5ea389", group: :chat_pane,     fallback: "pane_title_text" },
+    "chat_pane_link"           => { label: "Message links",             default: "#3ab580", group: :chat_pane,     fallback: "pane_link" },
+    "chat_spoiler"             => { label: "Spoiler background",        default: "#3A3A3A", group: :chat_pane,     fallback: "spoiler" },
+
+    "chat_composer_bg"         => { label: "Chat footer background",    default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
+    "chat_composer_text"       => { label: "Chat footer text",          default: "#5ea389", group: :chat_composer, fallback: "pane_text" },
+    # Follows pane_bg like every other chat colour follows its counterpart, with
+    # the same default — no special-case value of its own, so what the editor
+    # says it's following is what it actually shows. (.profile-picker used to be
+    # a color-mix of --pane-bg and --page-bg before the split.)
+    "chat_composer_highlight"  => { label: "Posting-as highlight",      default: "#133b2f", group: :chat_composer, fallback: "pane_bg" },
+    "chat_input_bg"            => { label: "Input background",          default: "#263a2e", group: :chat_composer, fallback: "input_bg" },
+    "chat_input_border"        => { label: "Input border",              default: "#3c6f5f", group: :chat_composer, fallback: "input_border" },
+    "chat_input_text"          => { label: "Input text",                default: "#5ea389", group: :chat_composer, fallback: "input_text" }
   }.freeze
 
   PROPERTY_GROUPS = {
-    page:    "Page",
-    header:  "Header",
-    pane:    "Pane",
-    forms:   "Form controls",
-    buttons: "Buttons",
-    flash:   "Flash messages"
+    page:          "Page",
+    header:        "Header",
+    pane:          "Pane",
+    forms:         "Form controls",
+    buttons:       "Buttons",
+    flash:         "Flash messages",
+    chat_header:   "Header bar",
+    chat_rail:     "Server sidebar",
+    chat_dividers: "Divider bars",
+    chat_sidebar:  "Channel sidebar",
+    chat_topbar:   "Chat header",
+    chat_pane:     "Chat pane",
+    chat_composer: "Chat footer"
+  }.freeze
+
+  # The two top-level halves of the theme designer. Profile is primary (every
+  # key always has a value); chat is secondary (keys are stored only when
+  # overridden). The form renders one accordion per section, each containing
+  # its groups in this order.
+  PROPERTY_SECTIONS = {
+    profile: { label: "Profile pages", groups: %i[page header pane forms buttons flash] },
+    # No chat page background: chat fills the window, so the body colour is
+    # only ever visible behind the cards on the plain chat pages (server list,
+    # settings, invites), which use the profile page background like every
+    # other page in the app.
+    # Dividers last: they're the seams between the other regions, so they're
+    # the thing you reach for once those are settled.
+    chat:    { label: "Chat",          groups: %i[chat_header chat_rail chat_sidebar chat_topbar
+                                                  chat_pane chat_composer chat_dividers] }
   }.freeze
 
   # Maps each pre-location-split colour key to the new key(s) it was folded
@@ -150,20 +239,67 @@ class Theme < ApplicationRecord
     "link"    => %w[header_link pane_link]
   }.freeze
 
-  # CSS custom properties that are derived from the theme's text colour at render
-  # time, mapped to their color-mix percentage.  Both to_css_properties (Ruby) and
-  # the theme-designer Stimulus controller (JS, via a data attribute) read from
-  # this single source so the formulas stay in sync.
+  # CSS custom properties that are derived from a text colour at render time,
+  # mapped to the property they derive from and their color-mix percentage.
+  # Both to_css_properties (Ruby) and the theme-designer Stimulus controller
+  # (JS, via a data attribute) read from this single source so the formulas
+  # stay in sync.
+  #
+  # These are the only derived values needing a chat twin, because they're the
+  # only ones declared as custom properties on :root — see to_css_properties
+  # for why that matters. Every other tint in the stylesheet is an inline
+  # color-mix() in an ordinary property, which re-resolves per element, so
+  # those just reference --chat-pane-text directly.
   DERIVED_TEXT_PROPERTIES = {
-    "tree-guide"                => 30,
-    "avatar-placeholder-border" => 50
+    "tree-guide"                     => { source: "pane_text",      percent: 30 },
+    "avatar-placeholder-border"      => { source: "pane_text",      percent: 50 },
+    "chat-tree-guide"                => { source: "chat_pane_text", percent: 30 },
+    "chat-avatar-placeholder-border" => { source: "chat_pane_text", percent: 50 }
   }.freeze
 
   SWATCH_PROPERTIES = %w[page_bg pane_bg pane_title_text pane_link primary_button_bg].freeze
 
-  # Returns the colour for a property, falling back to the default
+  # property => the property it inherits from, for every key that has one.
+  # Handed to the theme designer as JSON so the JS can resolve an inherited
+  # colour by walking the same chain color_for walks, rather than keeping a
+  # second copy of the relationships.
+  FALLBACK_CHAIN = THEMEABLE_PROPERTIES.filter_map { |key, meta|
+    [ key, meta[:fallback] ] if meta[:fallback]
+  }.to_h.freeze
+
+  # Whether the designer explicitly set this property, as opposed to leaving it
+  # to inherit. The editor uses this to pick each chat colour's initial
+  # inherit/override state; "inherited" is simply the absence of a stored value.
+  def overridden?(property)
+    colors&.dig(property.to_s).present?
+  end
+
+  # Returns the colour for a property: the stored value if the designer set
+  # one, else the stored value of the profile colour it follows, else the
+  # property's own default.
+  #
+  # Every fallback points straight at a profile key — chat colours never follow
+  # other chat colours, which would make "what is this actually following?" a
+  # question you had to trace rather than read. A test enforces that, which is
+  # what lets this be a single lookup rather than a walk.
+  #
+  # Resolution stays inside this theme: a fallback never reads another Theme
+  # row, so a server or channel theme with no chat colours of its own inherits
+  # from *its own* profile colours rather than deferring to another theme.
   def color_for(property)
-    colors&.dig(property.to_s) || THEMEABLE_PROPERTIES.dig(property.to_s, :default)
+    key = property.to_s
+    stored = colors&.dig(key)
+    return stored if stored.present?
+
+    meta = THEMEABLE_PROPERTIES[key]
+    return nil unless meta
+
+    if (parent = meta[:fallback])
+      inherited = colors&.dig(parent)
+      return inherited if inherited.present?
+    end
+
+    meta[:default]
   end
 
   # Upgrades a colours hash that may still use the pre-location-split keys
@@ -186,8 +322,8 @@ class Theme < ApplicationRecord
 
   # Generates a CSS string of custom property overrides
   def to_css_properties
-    text_color = color_for("pane_text")
-    # --tree-guide and --avatar-placeholder-border are declared on :root as
+    # --tree-guide and --avatar-placeholder-border (and their --chat-* twins)
+    # are declared on :root as
     # color-mix(in srgb, var(--pane-text) …).  Per the CSS custom properties spec
     # (https://www.w3.org/TR/css-variables-1/#syntax), a custom property's value
     # is inherited as an *unresolved* token sequence, so var(--pane-text) inside
@@ -200,8 +336,9 @@ class Theme < ApplicationRecord
     # already-resolved --tree-guide value that descendants inherit from :root.
     # We work around this by emitting an explicit, pre-resolved value here,
     # substituting the concrete theme colour in place of var(--pane-text).
-    derived = DERIVED_TEXT_PROPERTIES.map { |css_prop, percent|
-      "--#{css_prop}: color-mix(in srgb, #{text_color} #{percent}%, transparent);"
+    derived = DERIVED_TEXT_PROPERTIES.map { |css_prop, meta|
+      source_color = color_for(meta[:source])
+      "--#{css_prop}: color-mix(in srgb, #{source_color} #{meta[:percent]}%, transparent);"
     }
 
     props = THEMEABLE_PROPERTIES.keys.filter_map { |prop|
@@ -241,7 +378,12 @@ class Theme < ApplicationRecord
   # whenever THEMEABLE_PROPERTIES keys are renamed or restructured, and add
   # the old shape to import_attributes_from_json's upgrade path (see
   # LEGACY_COLOR_ALIASES for the v1 -> v2 header/pane text-colour split).
-  CURRENT_EXPORT_VERSION = 2
+  #
+  # v3 added the chat_* keys. There is deliberately no v2 -> v3 upgrade step:
+  # the keys are purely additive, and "absent" already means the right thing
+  # for a v2 export — inherit from the profile colour — so an older theme
+  # imports as a fully-inherited chat palette with no conversion at all.
+  CURRENT_EXPORT_VERSION = 3
 
   # Returns a hash representation of the theme suitable for JSON export.
   # Includes all non-image theme data; background image is excluded.

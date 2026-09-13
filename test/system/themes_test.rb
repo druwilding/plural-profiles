@@ -371,7 +371,7 @@ class ThemesTest < ApplicationSystemTestCase
     export_text = find("textarea[data-theme-designer-target='jsonOutput']").value
     parsed = JSON.parse(export_text)
 
-    assert_equal 2, parsed["plural_profiles_theme"]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, parsed["plural_profiles_theme"]
     assert_equal "Dark Forest", parsed["name"]
     assert_equal "#0e2e24", parsed["colors"]["page_bg"]
     assert_includes parsed["tags"], "dark"

@@ -109,10 +109,23 @@ class ThemeTest < ActiveSupport::TestCase
     # if to_css_properties accidentally falls back to the default instead of the
     # theme's overridden value.  Expected percentages come from the single source
     # of truth (DERIVED_TEXT_PROPERTIES) so the test stays in sync automatically.
+    # Setting pane_text alone also drives the --chat-* twins, since chat_pane_text
+    # inherits from pane_text until someone overrides it.
     theme = Theme.new(user: users(:one), name: "Custom text", colors: { "pane_text" => "#abcdef" })
     css = theme.to_css_properties
-    Theme::DERIVED_TEXT_PROPERTIES.each do |css_prop, percent|
-      assert_includes css, "--#{css_prop}: color-mix(in srgb, #abcdef #{percent}%, transparent);"
+    Theme::DERIVED_TEXT_PROPERTIES.each do |css_prop, meta|
+      assert_includes css, "--#{css_prop}: color-mix(in srgb, #abcdef #{meta[:percent]}%, transparent);"
+    end
+  end
+
+  test "derived chat properties follow chat_pane_text once it is overridden" do
+    theme = Theme.new(user: users(:one), name: "Split text",
+                      colors: { "pane_text" => "#abcdef", "chat_pane_text" => "#fedcba" })
+    css = theme.to_css_properties
+
+    Theme::DERIVED_TEXT_PROPERTIES.each do |css_prop, meta|
+      expected = meta[:source] == "chat_pane_text" ? "#fedcba" : "#abcdef"
+      assert_includes css, "--#{css_prop}: color-mix(in srgb, #{expected} #{meta[:percent]}%, transparent);"
     end
   end
 
@@ -132,6 +145,105 @@ class ThemeTest < ActiveSupport::TestCase
     assert_includes groups, :forms
     assert_includes groups, :buttons
     assert_includes groups, :flash
+  end
+
+  # ── Chat colour inheritance ─────────────────────────────────────────────
+
+  test "color_for returns the stored value when the chat key is set" do
+    theme = Theme.new(user: users(:one), name: "Set",
+                      colors: { "pane_bg" => "#111111", "chat_pane_bg" => "#222222" })
+    assert_equal "#222222", theme.color_for("chat_pane_bg")
+  end
+
+  test "color_for inherits the parent's stored value, not the parent's default" do
+    theme = Theme.new(user: users(:one), name: "Inherited", colors: { "pane_bg" => "#111111" })
+    assert_equal "#111111", theme.color_for("chat_pane_bg")
+    refute_equal Theme::THEMEABLE_PROPERTIES.dig("chat_pane_bg", :default), theme.color_for("chat_pane_bg")
+  end
+
+  test "every chat colour follows its profile colour directly" do
+    # chat_topbar_bg follows pane_bg, not chat_pane_bg — chat colours never
+    # chain through other chat colours.
+    theme = Theme.new(user: users(:one), name: "Direct", colors: { "pane_bg" => "#111111" })
+    assert_equal "#111111", theme.color_for("chat_topbar_bg")
+    assert_equal "#111111", theme.color_for("chat_composer_bg")
+  end
+
+  test "overriding one chat colour does not move another that follows the same profile colour" do
+    # chat_pane_bg and chat_topbar_bg both follow pane_bg independently, so
+    # setting one leaves the other where it was.
+    theme = Theme.new(user: users(:one), name: "Independent",
+                      colors: { "pane_bg" => "#111111", "chat_pane_bg" => "#222222" })
+
+    assert_equal "#222222", theme.color_for("chat_pane_bg")
+    assert_equal "#111111", theme.color_for("chat_topbar_bg")
+    assert_equal "#111111", theme.color_for("chat_composer_bg")
+  end
+
+  test "color_for falls back to the default when nothing in the chain is set" do
+    theme = Theme.new(user: users(:one), name: "Empty", colors: {})
+    assert_equal Theme::THEMEABLE_PROPERTIES.dig("pane_bg", :default), theme.color_for("chat_pane_bg")
+  end
+
+  test "every fallback names a real themeable property" do
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      assert Theme::THEMEABLE_PROPERTIES.key?(meta[:fallback]),
+        "#{key} falls back to unknown property #{meta[:fallback]}"
+    end
+  end
+
+  # This is what pins inheritance to one direction: profile keys are always
+  # set and terminate every chain, chat keys inherit or override. A fallback
+  # added to a profile key would silently make it bidirectional.
+  test "only chat properties declare a fallback" do
+    with_fallback = Theme::THEMEABLE_PROPERTIES.select { |_, meta| meta[:fallback] }.keys
+    non_chat = with_fallback.reject { |key| key.start_with?("chat_") }
+    assert_empty non_chat, "non-chat properties must not declare a fallback"
+  end
+
+  # This is what keeps "what is this following?" answerable by reading one
+  # line rather than tracing a chain — and what lets color_for be a single
+  # lookup instead of a walk.
+  test "no chat colour follows another chat colour" do
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      assert_not meta[:fallback].start_with?("chat_"),
+        "#{key} follows #{meta[:fallback]}; chat colours must follow a profile colour directly"
+    end
+  end
+
+  test "every chat colour defaults to the same value as the profile colour it follows" do
+    # The defaults are what an untouched theme renders, so a chat key whose
+    # default drifted from its counterpart's would silently change how an
+    # existing theme looks.
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      assert_equal Theme::THEMEABLE_PROPERTIES.dig(meta[:fallback], :default), meta[:default],
+        "#{key} should default to the same colour as #{meta[:fallback]}"
+    end
+  end
+
+  test "every chat property has a profile counterpart it renders identically to by default" do
+    # The promise that made this shippable without a data migration: an
+    # untouched theme resolves every chat key to the same colour its profile
+    # counterpart had before the split.
+    theme = themes(:dark_forest)
+    css = theme.to_css_properties
+
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless key.start_with?("chat_")
+      assert_includes css, "--#{key.tr('_', '-')}: #{theme.color_for(meta[:fallback])};",
+        "#{key} should render as its inherited colour on an untouched theme"
+    end
+  end
+
+  test "to_css_properties emits every chat property concretely" do
+    css = themes(:dark_forest).to_css_properties
+    Theme::THEMEABLE_PROPERTIES.each_key do |key|
+      next unless key.start_with?("chat_")
+      assert_match(/--#{key.tr('_', '-')}: #\h{6}(\h{2})?;/, css, "#{key} should be emitted as a concrete hex")
+    end
   end
 
   # -- Color validation --
@@ -427,7 +539,7 @@ class ThemeTest < ActiveSupport::TestCase
   test "to_export_hash includes expected keys" do
     theme = themes(:dark_forest)
     hash = theme.to_export_hash
-    assert_equal 2, hash[:plural_profiles_theme]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, hash[:plural_profiles_theme]
     assert_equal "Dark Forest", hash[:name]
     assert_kind_of Hash, hash[:colors]
     assert_equal "#0e2e24", hash[:colors]["page_bg"]
@@ -439,7 +551,7 @@ class ThemeTest < ActiveSupport::TestCase
   test "to_export_hash omits nil values via compact" do
     theme = Theme.new(user: users(:one), name: "Minimal", colors: { "page_bg" => "#000000" })
     hash = theme.to_export_hash
-    assert_equal 2, hash[:plural_profiles_theme]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, hash[:plural_profiles_theme]
     assert_equal "Minimal", hash[:name]
     assert_not hash.key?(:credit)
     assert_not hash.key?(:credit_url)
@@ -463,7 +575,7 @@ class ThemeTest < ActiveSupport::TestCase
     theme = themes(:dark_forest)
     json = theme.to_export_json
     parsed = JSON.parse(json)
-    assert_equal 2, parsed["plural_profiles_theme"]
+    assert_equal Theme::CURRENT_EXPORT_VERSION, parsed["plural_profiles_theme"]
     assert_equal "Dark Forest", parsed["name"]
     assert_equal "#0e2e24", parsed["colors"]["page_bg"]
   end
@@ -591,5 +703,116 @@ class ThemeTest < ActiveSupport::TestCase
     assert_equal "Round trip test", attrs[:notes]
     assert_equal "no-repeat", attrs[:background_repeat]
     assert_equal "cover", attrs[:background_size]
+  end
+  # ── Chat colours in import/export ───────────────────────────────────────
+
+  test "a theme with no chat overrides exports no chat keys" do
+    theme = Theme.new(user: users(:one), name: "Profile only", colors: { "pane_bg" => "#112233" })
+    exported = theme.to_export_hash
+
+    assert_equal Theme::CURRENT_EXPORT_VERSION, exported[:plural_profiles_theme]
+    assert_empty exported[:colors].keys.select { |key| key.start_with?("chat_") }
+  end
+
+  test "a theme with chat overrides exports only the ones that were set" do
+    theme = Theme.new(user: users(:one), name: "Half designed",
+                      colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })
+    exported = theme.to_export_hash
+
+    assert_equal "#ff0000", exported[:colors]["chat_rail_bg"]
+    assert_not exported[:colors].key?("chat_pane_bg")
+  end
+
+  test "importing a v2 export leaves every chat colour inherited" do
+    # The reason no v2 -> v3 upgrade step exists: "absent" already means the
+    # right thing, so an older export arrives as a fully-inherited chat palette.
+    json = {
+      plural_profiles_theme: 2,
+      name: "Old export",
+      colors: { pane_bg: "#112233", pane_text: "#445566" }
+    }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+
+    assert_empty attrs[:colors].keys.select { |key| key.start_with?("chat_") }
+
+    theme = Theme.new(user: users(:one), **attrs)
+    assert_equal "#112233", theme.color_for("chat_pane_bg"), "chat should follow the imported profile colour"
+  end
+
+  test "importing a v3 export keeps its chat overrides" do
+    json = {
+      plural_profiles_theme: 3,
+      name: "New export",
+      colors: { pane_bg: "#112233", chat_rail_bg: "#ff0000" }
+    }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+    theme = Theme.new(user: users(:one), **attrs)
+
+    assert_equal "#ff0000", theme.color_for("chat_rail_bg")
+    assert_equal "#112233", theme.color_for("chat_pane_bg")
+  end
+
+  test "importing a v1 export upgrades through both splits at once" do
+    # v1 keys land on the v2 header/pane keys, which the chat keys then inherit
+    # from — the two upgrades compose without a v1 -> v3 path of their own.
+    json = { plural_profiles_theme: 1, name: "Ancient", colors: { text: "#445566" } }.to_json
+
+    attrs = Theme.import_attributes_from_json(json)
+    theme = Theme.new(user: users(:one), **attrs)
+
+    assert_equal "#445566", theme.color_for("pane_text")
+    assert_equal "#445566", theme.color_for("chat_pane_text")
+  end
+
+  test "a version above the current one is still rejected" do
+    json = { plural_profiles_theme: Theme::CURRENT_EXPORT_VERSION + 1, name: "Future" }.to_json
+    error = assert_raises(RuntimeError) { Theme.import_attributes_from_json(json) }
+    assert_match "Unsupported theme version", error.message
+  end
+
+  test "both unread dots follow the pane text until set, and set apart" do
+    theme = Theme.new(user: users(:one), name: "Dots", colors: { "pane_text" => "#111111" })
+    assert_equal "#111111", theme.color_for("chat_rail_unread_dot")
+    assert_equal "#111111", theme.color_for("chat_sidebar_unread_dot")
+
+    theme.colors = theme.colors.merge("chat_rail_unread_dot" => "#ff0000")
+    assert_equal "#ff0000", theme.color_for("chat_rail_unread_dot")
+    assert_equal "#111111", theme.color_for("chat_sidebar_unread_dot"),
+      "the channel-list dot should be independent of the rail's"
+  end
+
+  test "overridden? distinguishes a set colour from an inherited one" do
+    theme = Theme.new(user: users(:one), name: "Mixed",
+                      colors: { "pane_bg" => "#112233", "chat_rail_bg" => "#ff0000" })
+
+    assert theme.overridden?("chat_rail_bg")
+    assert_not theme.overridden?("chat_pane_bg")
+  end
+
+  test "every :root chat variable points at the profile variable it follows" do
+    # They used to be literal hexes duplicated by hand, which drifted: an
+    # un-themed page could show a chat colour different from the profile colour
+    # the editor said it was following. Referencing the fallback makes that
+    # impossible, and this keeps it from quietly reverting to a literal.
+    css = Rails.root.join("app/assets/stylesheets/application.css").read
+    root = css[/:root\s*\{(.*?)\}/m, 1]
+
+    Theme::THEMEABLE_PROPERTIES.each do |key, meta|
+      next unless meta[:fallback]
+      var = "--#{key.tr('_', '-')}"
+      expected = "var(--#{meta[:fallback].tr('_', '-')})"
+      declared = root[/#{Regexp.escape(var)}:\s*([^;]+);/, 1]
+      assert_equal expected, declared&.strip, "#{var} in :root should be #{expected}"
+    end
+  end
+
+  test "FALLBACK_CHAIN matches the fallbacks declared on the properties" do
+    # The editor resolves inherited colours in JS from this map, so it drifting
+    # from THEMEABLE_PROPERTIES would show up as the wrong swatch rather than
+    # as an error.
+    expected = Theme::THEMEABLE_PROPERTIES.filter_map { |key, meta| [ key, meta[:fallback] ] if meta[:fallback] }.to_h
+    assert_equal expected, Theme::FALLBACK_CHAIN
   end
 end

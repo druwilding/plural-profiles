@@ -42,6 +42,49 @@
   --warning-text: var(--warning-border);
   --tree-guide: color-mix(in srgb, var(--pane-text) 30%, transparent);
   --avatar-placeholder-border: color-mix(in srgb, var(--pane-text) 50%, transparent);
+
+  /* Chat's own palette. Each one is a var() pointing at the profile colour it
+     inherits from, generated from Theme::THEMEABLE_PROPERTIES' fallbacks — so
+     an un-themed chat page can never show a chat colour that differs from the
+     profile colour the designer is told it follows. (These used to be literal
+     hexes duplicated by hand, which is exactly how they drift.)
+
+     var() here is safe despite the caveat in Theme#to_css_properties about
+     custom properties resolving at :root. That only bites when body overrides
+     a referenced property but not the one referencing it. A themed page emits
+     every chat colour concretely alongside its profile counterpart, shadowing
+     these entirely; an un-themed page overrides nothing, so each var() resolves
+     against :root's own profile values, which is exactly what's wanted. */
+  --chat-header-bg: var(--header-bg);
+  --chat-header-title-text: var(--header-title-text);
+  --chat-header-link: var(--header-link);
+  --chat-rail-bg: var(--pane-border);
+  --chat-rail-text: var(--pane-text);
+  --chat-rail-active: var(--pane-title-text);
+  --chat-rail-link: var(--pane-link);
+  --chat-rail-unread-dot: var(--pane-text);
+  --chat-divider: var(--pane-border);
+  --chat-sidebar-bg: var(--pane-bg);
+  --chat-sidebar-text: var(--pane-text);
+  --chat-sidebar-title-text: var(--pane-title-text);
+  --chat-sidebar-link: var(--pane-link);
+  --chat-sidebar-unread-dot: var(--pane-text);
+  --chat-topbar-bg: var(--pane-bg);
+  --chat-topbar-text: var(--pane-text);
+  --chat-topbar-title-text: var(--pane-title-text);
+  --chat-pane-bg: var(--pane-bg);
+  --chat-pane-text: var(--pane-text);
+  --chat-pane-title-text: var(--pane-title-text);
+  --chat-pane-link: var(--pane-link);
+  --chat-spoiler: var(--spoiler);
+  --chat-composer-bg: var(--pane-bg);
+  --chat-composer-text: var(--pane-text);
+  --chat-composer-highlight: var(--pane-bg);
+  --chat-input-bg: var(--input-bg);
+  --chat-input-border: var(--input-border);
+  --chat-input-text: var(--input-text);
+  --chat-tree-guide: color-mix(in srgb, var(--chat-pane-text) 30%, transparent);
+  --chat-avatar-placeholder-border: color-mix(in srgb, var(--chat-pane-text) 50%, transparent);
 }
 
 html {
@@ -241,9 +284,13 @@ details[open] > .form-section-summary::before {
 }
 
 @media (forced-colors: active) {
-  .form-section-summary {
-    outline: 1px solid ButtonText;
-    padding: 0.25rem 0.5rem;
+  /* No always-on outline. The ▶/▼ marker already shows these are
+     disclosures, and boxing every heading drew a rectangle inside a
+     rectangle once the theme form's sections nested. Keyboard focus still
+     gets a clear system-colour ring. */
+  .form-section-summary:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
   }
 }
 
@@ -3022,17 +3069,248 @@ h1 .heart-inline {
   border: 1px solid var(--pane-border);
 }
 
-.theme-preview a {
+/* Scoped to the profile panel rather than the whole preview. At
+   `.theme-preview a` this is (0,1,1), which outranks the chat mock's own
+   `:where(.chat-body) a` (0,0,1) and painted every link in the mock — message
+   links included — with the *profile* link colour. The mock is meant to be
+   governed entirely by the real chat rules; this rule is profile-preview
+   chrome and has no business reaching into it. */
+.theme-preview__panel[data-preview-panel="profile"] a {
   color: var(--pane-link);
 }
 
-.theme-preview h2,
-.theme-preview h3 {
+.theme-preview__panel[data-preview-panel="profile"] h2,
+.theme-preview__panel[data-preview-panel="profile"] h3 {
   color: var(--pane-title-text);
 }
 
 .theme-preview__section {
   margin-bottom: 1.5rem;
+}
+
+/* ── Theme designer: inherit toggles ─────────────────────── */
+
+.theme-designer__color-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.theme-designer__override-label {
+  font-size: 0.78rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* An inheriting row must show the colour actually in effect — that's the whole
+   point of "Following X". Dimming the row used to dim the Coloris swatch with
+   it, so a near-black inherited colour rendered as a washed-out grey in the
+   form while the preview showed the true near-black: the form contradicted the
+   preview. The swatch is pinned at full opacity so no disabled-state rule can
+   distort it; inheritance is already signalled by the disabled (dimmed) hex
+   text, the unticked Override box and the "Following X" hint. */
+.theme-designer__color-group--inheriting .theme-designer__color-input .clr-field button {
+  opacity: 1;
+}
+
+.theme-designer__inherit-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+}
+
+.theme-designer__group {
+  margin-left: 0.25rem;
+}
+
+/* ── Theme designer: preview tabs ────────────────────────── */
+
+.theme-designer__preview-tabs {
+  display: flex;
+  gap: 0.35rem;
+  /* Inset past the panel's 8px corner radius, so the first tab meets a
+     straight edge rather than sitting on the curve. */
+  padding-left: 0.85rem;
+  /* Flush against the preview below: the tabs have a top-only radius and read
+     as tabs *of* the panel, so any gap leaves them floating above nothing. */
+  margin-bottom: -1px;
+}
+
+.theme-designer__preview-tab {
+  background: none;
+  border: 1px solid var(--pane-border);
+  border-radius: 6px 6px 0 0;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--pane-text);
+  cursor: pointer;
+}
+
+.theme-designer__preview-tab--active {
+  background-color: var(--pane-bg);
+  color: var(--pane-title-text);
+  font-weight: 600;
+  /* Hides the panel's own top border behind the selected tab, joining the two
+     into one shape. */
+  border-bottom-color: var(--pane-bg);
+}
+
+/* The tabs are <button>s, and the base forced-colors rule gives every button
+   forced-color-adjust: none, so the theme colours above would show exactly as
+   written in high-contrast mode — a dark themed fill on the selected tab rather
+   than a system colour. Restate them on system colours, following the app's
+   forced-colors conventions: an unselected tab reads like a secondary button,
+   and the selected one is filled with Highlight, as selected rows are
+   elsewhere — but keeps the same CanvasText outline as its neighbours, so it
+   still reads as a tab rather than a floating block of colour. :hover is
+   restated too, or the base button:hover rule (0,1,1) would flip the selected
+   tab back to Canvas. */
+@media (forced-colors: active) {
+  .theme-designer__preview-tab,
+  .theme-designer__preview-tab:hover {
+    background-color: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+
+  .theme-designer__preview-tab--active,
+  .theme-designer__preview-tab--active:hover {
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: CanvasText;
+  }
+}
+
+/* ── Theme designer: chat preview mock ───────────────────── */
+
+/* The chat mock reuses the real chat class names so every colour rule applies
+   to it unchanged. What doesn't transfer is the layout: the real thing fills
+   the viewport and scrolls internally, which inside a preview panel would
+   either collapse to nothing or run off the page. Everything below cancels
+   layout only — no colours — so the mock can't drift from what chat actually
+   looks like. */
+/* Chat fills the whole window, so its mock bleeds to the edges of the preview
+   panel rather than floating in the middle of it — cancelling .theme-preview's
+   1.5rem padding, which would otherwise frame the mock in the *profile* page
+   colour and imply a chat page background that no longer exists. */
+.theme-preview__panel[data-preview-panel="chat"] {
+  margin: -1.5rem;
+}
+
+/* .theme-preview scopes this to (0,2,0) so it beats .chat-body's
+   `height: 100dvh` (0,1,0). Matching the single-class specificity wouldn't be
+   enough: .chat-body is declared several hundred lines further down, so on a
+   tie it wins and the mock fills the viewport. */
+.theme-preview .theme-preview__chat {
+  /* Height comes from the contents (see .chat-shell's min-height below) so the
+     mock is just tall enough to show every element rather than running off the
+     bottom of the screen.
+
+     The profile preview paints the theme's background image on .theme-preview
+     itself, so an opaque colour here keeps the image out of a chat mock that
+     should never show one. Nothing of it is actually visible — the header and
+     the shell cover it entirely. */
+  height: auto;
+  background-color: var(--chat-pane-bg);
+  display: flex;
+  flex-direction: column;
+  /* Matches .theme-preview's own radius, less its 1px border. */
+  border-radius: 7px;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+.theme-preview__chat .site-header {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.theme-preview__chat .site-header .logo {
+  font-size: 0.85rem;
+}
+
+.theme-preview__chat .site-header nav a {
+  margin-left: 0;
+}
+
+/* Enough room for the rail's icons, the channel list, and a date divider plus
+   one message — the shortest the mock can be and still show everything that
+   can be themed. */
+.theme-preview__chat .chat-shell {
+  flex: 1;
+  min-height: 190px;
+}
+
+/* The real rail and channel list are sized for a full window; at preview width
+   they'd leave almost nothing for the messages. */
+.theme-preview__chat .server-rail {
+  width: 44px;
+  gap: 0.5rem;
+  padding: 0.85rem 0;
+}
+
+.theme-preview__chat .server-rail__icon,
+.theme-preview__chat .server-rail__icon .avatar,
+.theme-preview__chat .server-rail__icon .avatar--placeholder {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.theme-preview__chat .channel-pane {
+  /* Close to the real 200px, and wide enough that the mock's longest channel
+     name plus its unread dot stays on one line — a wrapped row misreads as a
+     styling bug rather than a narrow column. */
+  width: 186px;
+  padding: 0.85rem 0.6rem;
+  overflow: hidden;
+}
+
+.theme-preview__chat .chat-main {
+  padding: 0;
+  overflow: hidden;
+}
+
+.theme-preview__chat .chat-channel-header {
+  padding: 0.55rem 0.9rem 0.65rem;
+}
+
+.theme-preview__chat .chat-channel-header h1 {
+  font-size: 0.95rem;
+}
+
+/* Real chat has a screenful of empty space under the newest message; without
+   a floor here the mock packs the composer right up against it and reads as
+   cramped. */
+.theme-preview__chat .chat-messages-scroll {
+  padding: 0.8rem 0.9rem;
+  /* Comfortably taller than the mock's own content (~127px with the date
+     divider), so the empty space below the last message is real rather than a
+     rounding error. */
+  min-height: 190px;
+  overflow: hidden;
+}
+
+.theme-preview__chat .chat-message__avatar .avatar,
+.theme-preview__chat .chat-message__avatar .avatar--placeholder {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+}
+
+.theme-preview__chat .composer {
+  padding: 0.6rem 0.9rem 0.75rem;
+}
+
+.theme-preview__chat .composer-input-row textarea {
+  min-height: 2rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
 }
 
 .theme-preview__section:last-child {
@@ -3626,6 +3904,222 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-body {
   height: 100vh;
   height: 100dvh;
+  /* No chat-specific page background or text colour: the panes fill the
+     window, so body is only visible behind the cards on the plain chat pages
+     (server list, settings, invites), which keep the profile --page-bg and
+     --pane-text that every other page in the app uses. The chat view sets its
+     own text colour below. */
+}
+
+/* The site header is the same markup in both layouts, so chat's version of it
+   is a scoped override rather than a separate component. Specificity (0,2,0)
+   beats the base .site-header rules (0,1,0) without !important; the nav rules
+   below match the base selectors' shape for the same reason. */
+.chat-body .site-header {
+  background-color: var(--chat-header-bg);
+  /* Nothing in the bar falls back to this — the logo, the domain switcher and
+     Sign out all set their own colour — but without it anything added later
+     would inherit a profile colour into chat chrome. There's no separate
+     "header body text" key: the bar has no body text to colour, so this and
+     the popover banner below reuse the title colour, which is the one already
+     known to read against --chat-header-bg. */
+  color: var(--chat-header-title-text);
+  border-bottom-color: var(--chat-divider);
+}
+
+.chat-body .site-header .logo {
+  color: var(--chat-header-title-text);
+}
+
+.chat-body .site-header nav a,
+.chat-body .site-header nav .link-button {
+  color: var(--chat-header-link);
+}
+
+/* Media queries don't add specificity, so the rule above (0,3,1) outranks the
+   base forced-colors override on .site-header nav .link-button (0,2,1) and
+   would keep Sign out in the themed colour even in forced-colors mode. Same
+   fix as the base rule, one level deeper. */
+@media (forced-colors: active) {
+  .chat-body .site-header nav .link-button {
+    color: CanvasText;
+  }
+}
+
+/* Shared components, scoped to the chat *view* rather than the chat layout.
+   .chat-body also wraps ordinary pages — the server list, server and channel
+   settings, the invite page — whose cards, headings and links are plain
+   profile-page furniture. Colours picked to look right on the message pane
+   look wrong there (a message-author colour chosen against a light chat pane
+   landing on an invite card's heading, say), so those pages keep the profile
+   palette and only the chat view proper is repainted.
+
+   Elements whose colours aren't part of the chat palette (buttons, flash
+   messages, form labels) stay shared everywhere. */
+.chat-channel h1,
+.chat-channel h2,
+.chat-channel h3 {
+  color: var(--chat-pane-title-text);
+}
+
+.chat-channel .subtitle {
+  color: color-mix(in srgb, var(--chat-pane-text) 80%, transparent);
+}
+
+/* :where() keeps this at the base `a` rule's specificity (0,0,1) rather than
+   (0,1,1). At (0,1,1) it would outrank every single-class rule that colours a
+   link in chat — .channel-pane__server-name, .channel-pane__add-channel,
+   .server-rail__icon, .chat-channel-back — and flatten them all to the link
+   colour. This way it only replaces the global default, exactly as intended. */
+:where(.chat-channel) a {
+  color: var(--chat-pane-link);
+}
+
+.chat-channel .spoiler {
+  background-color: var(--chat-spoiler);
+  border-color: var(--chat-spoiler);
+}
+
+.chat-channel .spoiler:focus-visible {
+  outline-color: var(--chat-spoiler);
+}
+
+.chat-channel .spoiler--revealed {
+  background-color: color-mix(in srgb, var(--chat-spoiler) 10%, transparent);
+}
+
+/* In forced-colors mode the base .spoiler rules keep a spoiler legible with
+   system colours, under forced-color-adjust: none, so author colours apply as
+   written. The chat-scoped rules above are more specific and would win over
+   them regardless of the media query: a hidden spoiler's edge would match its
+   background and a revealed one would stay in theme colours. These mirror the
+   base rules, with the chat spoiler colour standing in for the profile one. */
+@media (forced-colors: active) {
+  .chat-channel .spoiler {
+    forced-color-adjust: none;
+    background-color: var(--chat-spoiler);
+    color: transparent;
+    border: 1px solid CanvasText;
+  }
+
+  .chat-channel .spoiler:focus-visible {
+    outline-color: CanvasText;
+  }
+
+  .chat-channel .spoiler--revealed {
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}
+
+/* `inherit` rather than a fixed colour: this outranks the per-region rules
+   that set `color` on .server-rail, .channel-pane and .composer, so pinning it
+   to the pane colour left a server with no avatar drawing its placeholder logo
+   in the message-pane colour while sitting on the rail. Inheriting means each
+   placeholder picks up the surface it's actually on, and the mini-profile
+   header below still overrides it explicitly. */
+.chat-body .server-rail .avatar--placeholder,
+.chat-body .channel-pane .avatar--placeholder,
+.chat-channel .avatar--placeholder,
+.chat-body .mini-profile-popover .avatar--placeholder {
+  color: inherit;
+  border-color: var(--chat-avatar-placeholder-border);
+}
+
+/* The popover you get by clicking a message author — chat-specific markup that
+   only ever renders from a message, so it needs no further scoping. Its header
+   follows the chat header colours; this covers its body, border and shadow. */
+.chat-body .mini-profile-popover {
+  background-color: var(--chat-pane-bg);
+  color: var(--chat-pane-text);
+  border-color: var(--chat-divider);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--chat-divider) 60%, transparent);
+}
+
+.chat-body .mini-profile__header {
+  background-color: var(--chat-header-bg);
+}
+
+.chat-body .mini-profile__header .mini-profile__name {
+  color: var(--chat-header-title-text);
+}
+
+.chat-body .mini-profile__header .subtitle,
+.chat-body .mini-profile__header .tag-line,
+.chat-body .mini-profile__header .pronouns {
+  color: color-mix(in srgb, var(--chat-header-title-text) 80%, transparent);
+}
+
+.chat-body .mini-profile__header a {
+  color: var(--chat-header-link);
+}
+
+.chat-body .mini-profile__header .avatar--placeholder {
+  color: var(--chat-header-title-text);
+  border-color: color-mix(in srgb, var(--chat-header-title-text) 50%, transparent);
+}
+
+/* The two dropdowns that belong to chat chrome: the header's domain switcher
+   and the composer's "posting as" picker. Dropdowns on the settings pages are
+   left alone with the rest of that furniture. */
+.chat-body .site-header .action-dropdown__menu,
+.chat-channel .action-dropdown__menu {
+  background-color: var(--chat-pane-bg);
+  border-color: var(--chat-divider);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--chat-divider) 25%, transparent);
+}
+
+.chat-body .site-header .action-dropdown__item,
+.chat-body .site-header .action-dropdown__item:hover,
+.chat-channel .action-dropdown__item,
+.chat-channel .action-dropdown__item:hover {
+  color: var(--chat-pane-text);
+}
+
+.chat-body .site-header .action-dropdown__item:hover,
+.chat-channel .action-dropdown__item:hover {
+  background-color: color-mix(in srgb, var(--chat-pane-text) 8%, transparent);
+}
+
+.chat-body .site-header .action-dropdown__divider,
+.chat-channel .action-dropdown__divider {
+  border-top-color: var(--chat-divider);
+}
+
+/* The composer's "posting as" options are action-dropdown items too, so the
+   generic channel rule above painted their names in the message-pane colour
+   and the Chat footer text colour never reached them. One more ancestor class
+   outranks it without relying on source order. */
+.chat-channel .composer .action-dropdown__item,
+.chat-channel .composer .action-dropdown__item:hover {
+  color: var(--chat-composer-text);
+}
+
+.chat-channel .composer .action-dropdown__item:hover {
+  background-color: color-mix(in srgb, var(--chat-composer-text) 8%, transparent);
+}
+
+/* Forced-colors parity for the chat dropdowns. The rules above outrank the
+   base forced-colors ones for these parts, so a hovered item would lose its
+   Highlight and the menu and divider their system-colour edges. */
+@media (forced-colors: active) {
+  .chat-body .site-header .action-dropdown__menu,
+  .chat-channel .action-dropdown__menu {
+    border: 2px solid CanvasText;
+  }
+
+  .chat-body .site-header .action-dropdown__divider,
+  .chat-channel .action-dropdown__divider {
+    border-top-color: CanvasText;
+  }
+
+  .chat-body .site-header .action-dropdown__item:hover,
+  .chat-channel .action-dropdown__item:hover,
+  .chat-channel .composer .action-dropdown__item:hover {
+    font-weight: bold;
+    background-color: Highlight;
+  }
 }
 
 .server-list {
@@ -3705,7 +4199,8 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .server-rail {
   width: 72px;
   flex-shrink: 0;
-  background-color: var(--pane-border);
+  background-color: var(--chat-rail-bg);
+  color: var(--chat-rail-text);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3723,7 +4218,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   height: 42px;
   flex-shrink: 0;
   border-radius: 25%;
-  color: var(--pane-text);
+  color: var(--chat-rail-text);
   text-decoration: none;
   border: 2px solid transparent;
 }
@@ -3748,17 +4243,17 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 }
 
 .server-rail__icon:hover {
-  border-color: color-mix(in srgb, var(--pane-text) 40%, transparent);
+  border-color: color-mix(in srgb, var(--chat-rail-text) 40%, transparent);
 }
 
 .server-rail__icon--active {
   border-color: transparent;
-  box-shadow: 0 0 0 2px var(--pane-border), 0 0 0 4px var(--pane-title-text);
+  box-shadow: 0 0 0 2px var(--chat-rail-bg), 0 0 0 4px var(--chat-rail-active);
 }
 
 .server-rail__icon--add {
-  border: 1px dashed color-mix(in srgb, var(--pane-text) 40%, transparent);
-  color: var(--pane-link);
+  border: 1px dashed color-mix(in srgb, var(--chat-rail-text) 40%, transparent);
+  color: var(--chat-rail-link);
   font-size: 1.3rem;
   text-decoration: none;
 }
@@ -3769,15 +4264,19 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: var(--primary-button-text);
+  background-color: var(--chat-sidebar-unread-dot);
   flex-shrink: 0;
 }
 
+/* Same specificity as .unread-dot above and declared after it, so the rail's
+   own colour wins. The two sit on different surfaces — chat_rail_bg and
+   chat_sidebar_bg — which a theme may colour very differently. */
 .unread-dot--rail {
   position: absolute;
   top: 0;
   right: 0;
-  border: 2px solid var(--pane-border);
+  background-color: var(--chat-rail-unread-dot);
+  border: 2px solid var(--chat-rail-bg);
 }
 
 @media (forced-colors: active) {
@@ -3808,8 +4307,9 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .channel-pane {
   width: 200px;
   flex-shrink: 0;
-  background-color: var(--pane-bg);
-  border-right: 1px solid var(--pane-border);
+  background-color: var(--chat-sidebar-bg);
+  color: var(--chat-sidebar-text);
+  border-right: 1px solid var(--chat-divider);
   padding: 1rem 0.75rem;
   overflow-y: auto;
 }
@@ -3829,10 +4329,40 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   padding-left: 0;
 }
 
+/* The channel rows reuse .sidebar-tree__leaf, which lives with the profile
+   sidebar styles and so wasn't caught by the chat palette conversion. Channel
+   names have always been link-coloured (they're bare <a>s with no colour rule
+   of their own), so they follow --chat-sidebar-link to keep that; the hover
+   and active tints follow --chat-sidebar-text. Both defaults match what the
+   profile variables gave them before. */
+.channel-pane .sidebar-tree__leaf {
+  color: var(--chat-sidebar-link);
+}
+
+.channel-pane .sidebar-tree__leaf:hover {
+  background-color: color-mix(in srgb, var(--chat-sidebar-text) 10%, transparent);
+}
+
+.channel-pane .sidebar-tree__leaf--active {
+  background-color: color-mix(in srgb, var(--chat-sidebar-text) 20%, transparent);
+}
+
+/* The base forced-colors rule marks the active row with Highlight and
+   HighlightText; these channel-pane rules are more specific and would replace
+   that with the themed tint, losing the active row's contrast. Normal and
+   hovered rows need no mirror: the base doesn't give them system colours in
+   forced-colors mode either, so they already behave as they do elsewhere. */
+@media (forced-colors: active) {
+  .channel-pane .sidebar-tree__leaf--active {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
 .channel-pane__server-name {
   display: block;
   font-weight: 700;
-  color: var(--pane-title-text);
+  color: var(--chat-sidebar-title-text);
   text-decoration: none;
   margin-bottom: 0.75rem;
 }
@@ -3846,7 +4376,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   margin-top: 0.6rem;
   padding-left: 1.1rem;
   font-size: 0.85rem;
-  color: var(--pane-link);
+  color: var(--chat-sidebar-link);
   text-decoration: none;
 }
 
@@ -3882,7 +4412,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .chat-main:has(.chat-channel) {
   padding: 0;
   overflow-y: hidden;
-  background-color: var(--pane-bg);
+  background-color: var(--chat-pane-bg);
 }
 
 /* Wraps the header, the scrollable history, and the composer for a single
@@ -3893,6 +4423,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  color: var(--chat-pane-text);
 }
 
 .chat-channel-header {
@@ -3901,8 +4432,19 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.6rem 1.25rem 0.9rem;
-  border-bottom: 1px solid var(--pane-border);
+  /* Defaults to the message pane's own colour, so this reads as one surface
+     with the history below it until a designer parts the two. */
+  background-color: var(--chat-topbar-bg);
+  /* Inherited by the channel description, which has no colour rule of its own. */
+  color: var(--chat-topbar-text);
+  border-bottom: 1px solid var(--chat-divider);
   flex-shrink: 0;
+}
+
+/* Beats .chat-body h1 (0,1,1), which would otherwise paint this the message
+   pane's title colour — the header is its own surface with its own keys. */
+.chat-body .chat-channel-header h1 {
+  color: var(--chat-topbar-title-text);
 }
 
 .chat-channel-header h1 {
@@ -3957,6 +4499,10 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   margin: 0.15rem 0 0;
 }
 
+.chat-body .chat-channel-header .subtitle {
+  color: color-mix(in srgb, var(--chat-topbar-text) 80%, transparent);
+}
+
 /* Hidden by default — only shown at the small-screen breakpoint below,
    where the server rail and channel list collapse away and this is the
    only way back to them. */
@@ -3968,14 +4514,14 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   height: 32px;
   flex-shrink: 0;
   border-radius: 6px;
-  color: var(--pane-text);
+  color: var(--chat-topbar-text);
   text-decoration: none;
   font-size: 1.5rem;
   line-height: 1;
 }
 
 .chat-channel-back:hover {
-  background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
+  background-color: color-mix(in srgb, var(--chat-topbar-text) 10%, transparent);
 }
 
 /* Mobile (600px and below): collapse to a single pane at a time, matching
@@ -4040,7 +4586,7 @@ turbo-frame {
   align-items: center;
   gap: 0.75rem;
   padding-top: 1.5rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -4055,7 +4601,7 @@ turbo-frame {
      than the harder --pane-border — and a border (not a background bar) so
      the same CanvasText override used for tree-guide lines elsewhere in
      forced-colors mode applies here too. */
-  border-top: 1px solid var(--tree-guide);
+  border-top: 1px solid var(--chat-tree-guide);
 }
 
 @media (forced-colors: active) {
@@ -4120,7 +4666,7 @@ turbo-frame {
 .chat-message__name {
   font-weight: 700;
   font-size: 0.9rem;
-  color: var(--pane-title-text);
+  color: var(--chat-pane-title-text);
 }
 
 /* Same forced-colors issue as .link-button above: the name is a <button>
@@ -4136,13 +4682,13 @@ turbo-frame {
   font-style: italic;
   font-weight: 500;
   font-size: 0.9rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
 }
 
 .chat-message__pronouns,
 .chat-message__time {
   font-size: 0.76rem;
-  color: color-mix(in srgb, var(--pane-text) 65%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
 }
 
 .chat-message__pronouns {
@@ -4152,7 +4698,7 @@ turbo-frame {
 .chat-message__subtitle {
   display: block;
   font-size: 0.78rem;
-  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
+  color: color-mix(in srgb, var(--chat-pane-text) 75%, transparent);
 }
 
 .chat-message__body {
@@ -4162,7 +4708,9 @@ turbo-frame {
 
 .composer {
   flex-shrink: 0;
-  border-top: 1px solid var(--pane-border);
+  background-color: var(--chat-composer-bg);
+  color: var(--chat-composer-text);
+  border-top: 1px solid var(--chat-divider);
   padding: 0.5rem 1.25rem 0.75rem;
 }
 
@@ -4380,13 +4928,73 @@ button.profile-picker__option {
   margin-top: 0;
 }
 
+/* The composer's "posting as" picker takes the chat palette. The same
+   .profile-picker markup is also used as a plain form field on the server
+   create, join and membership pages, which are ordinary pages and keep the
+   profile colours in the base rules above. Only the copy inside .composer is
+   chat chrome, so the chat colours hang off that ancestor. */
+.composer .profile-picker {
+  background-color: var(--chat-composer-highlight);
+  border: 1px solid color-mix(in srgb, var(--chat-composer-text) 35%, transparent);
+}
+
+.composer .profile-picker__trigger-pronouns {
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+}
+
+.composer .profile-picker__search {
+  border: 1px solid var(--chat-divider);
+  background-color: var(--chat-input-bg);
+  color: var(--chat-composer-text);
+}
+
+.composer .profile-picker__option:focus-visible {
+  outline: 2px solid var(--chat-pane-link);
+}
+
+.composer .profile-picker__option--current {
+  background-color: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
+}
+
+.composer .profile-picker__option-pronouns {
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+}
+
+.composer .profile-picker__option-subtitle {
+  color: color-mix(in srgb, var(--chat-composer-text) 75%, transparent);
+}
+
+.composer .profile-picker__empty {
+  color: color-mix(in srgb, var(--chat-composer-text) 65%, transparent);
+}
+
+.composer .profile-picker__group-label {
+  color: color-mix(in srgb, var(--chat-composer-text) 60%, transparent);
+}
+
+/* The override above is (0,3,0), which beats the base forced-colors rule
+   for this selector (0,2,0) regardless of the media query, so it needs its
+   own. Same trap as the chat-scoped Sign out link. */
+@media (forced-colors: active) {
+  .composer .profile-picker__option:focus-visible {
+    outline-color: CanvasText;
+  }
+}
+
 .composer-input-row {
   display: flex;
   gap: 0.6rem;
   align-items: flex-end;
 }
 
+/* The message box follows the chat input colours rather than the shared form
+   ones, so a chat theme can size its composer to the pane behind it. Each
+   defaults to the matching --input-* value, so this changes nothing until a
+   designer sets them. */
 .composer-input-row textarea {
+  background-color: var(--chat-input-bg);
+  border-color: var(--chat-input-border);
+  color: var(--chat-input-text);
   flex: 1;
   line-height: 1.4;
   /* The shared textarea rule sets a 100px min-height sized for full-page
@@ -4399,6 +5007,27 @@ button.profile-picker__option {
   max-height: 9.6rem;
   resize: none;
   overflow-y: auto;
+}
+
+/* The base forced-colors rule gives every text field Canvas and CanvasText
+   under forced-color-adjust: none, so author colours apply as written. The
+   composer's textarea and the posting-as search field override those with chat
+   colours at higher specificity, which in high-contrast mode would leave them
+   in arbitrary theme colours and potentially unreadable. Put them back on
+   system colours, focus ring included. */
+@media (forced-colors: active) {
+  .composer-input-row textarea,
+  .composer .profile-picker__search {
+    background-color: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+
+  .composer-input-row textarea:focus,
+  .composer .profile-picker__search:focus {
+    border-color: CanvasText;
+    outline: 2px solid CanvasText;
+  }
 }
 
 /* Server invites */

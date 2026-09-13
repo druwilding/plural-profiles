@@ -1,6 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 import Coloris from "@melloware/coloris"
 
+// Accepts what someone may have typed so far ("ff0000", " #ff0000") and
+// returns a usable #RRGGBB(AA), or null if it isn't a colour yet.
+function normalizeHex(raw) {
+  let value = (raw || "").trim()
+  if (value.length && value[0] !== "#") value = `#${value}`
+  return /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value) ? value : null
+}
+
 // Maps theme property names (underscore) to CSS custom property names (hyphen)
 function cssProp(property) {
   return `--${property.replace(/_/g, "-")}`
@@ -28,20 +36,167 @@ function colorToHex(colorString) {
 }
 
 export default class extends Controller {
-  static targets = ["colorInput", "hexInput", "preview", "jsonOutput",
+  static targets = ["colorInput", "hexInput", "preview", "jsonOutput", "inheritGroup",
                     "nameInput", "creditInput", "creditUrlInput", "notesInput", "tagInput",
                     "backgroundFileInput", "backgroundRepeat",
-                    "backgroundSize", "backgroundPosition", "backgroundAttachment"]
+                    "backgroundSize", "backgroundPosition", "backgroundAttachment",
+                    "previewPanel", "previewTab"]
 
-  // Derived-text mix percentages, populated from Theme::DERIVED_TEXT_PROPERTIES
-  // via a data attribute so the Ruby and JS definitions stay in sync.
-  static values = { derivedTextProperties: Object }
+  // Both populated from the model via data attributes so the Ruby and JS
+  // definitions stay in sync: derivedTextProperties from
+  // Theme::DERIVED_TEXT_PROPERTIES, fallbackChain from Theme::FALLBACK_CHAIN.
+  static values = { derivedTextProperties: Object, fallbackChain: Object, exportVersion: Number }
 
   connect() {
     this.bgObjectUrl = null
+    this.buildDependents()
     this.initColoris()
+    this.initInheritStates()
     this.applyAllToPreview()
     this.applyBackgroundToPreview()
+  }
+
+  // Reverse index of the fallback map: profile property -> the chat properties
+  // that follow it. Changing a profile colour has to repaint every chat colour
+  // currently following it, and scanning every chat key on every keystroke
+  // would be wasteful.
+  buildDependents() {
+    this.dependents = {}
+    const chain = this.hasFallbackChainValue ? this.fallbackChainValue : {}
+    for (const [property, parent] of Object.entries(chain)) {
+      (this.dependents[parent] ||= []).push(property)
+    }
+  }
+
+  // The server renders an inheriting colour's input already disabled, but the
+  // presentation that hangs off that state is applied by setInherit — so
+  // without this, a freshly-loaded page shows inherited rows undimmed and,
+  // more to the point, leaves Coloris's trigger button live on a field that
+  // can't be edited. Presentation only: values are left exactly as rendered.
+  initInheritStates() {
+    this.inheritGroupTargets.forEach(group => {
+      this.syncInheritPresentation(group.dataset.property, this.isInheriting(group.dataset.property))
+    })
+  }
+
+  // The group element wrapping one colour row, or null for a property that
+  // can't inherit.
+  groupFor(property) {
+    return this.inheritGroupTargets.find(el => el.dataset.property === property)
+  }
+
+  isInheriting(property) {
+    const hexInput = this.hexInputTargets.find(el => el.dataset.property === property)
+    return hexInput ? hexInput.disabled : false
+  }
+
+  // What a property shows when it isn't set: the value of the profile colour
+  // it follows — the same rule Theme#color_for applies server-side. Every
+  // fallback points straight at a profile key (enforced by a model test), so
+  // this is one lookup, never a walk.
+  inheritedValue(property) {
+    const chain = this.hasFallbackChainValue ? this.fallbackChainValue : {}
+    const parent = chain[property]
+    if (!parent) return null
+    const input = this.hexInputTargets.find(el => el.dataset.property === parent)
+    // Normalized, because the parent's input may hold a half-typed value.
+    return input ? normalizeHex(input.value) : null
+  }
+
+  // Repaints every chat colour currently following `property`.
+  refreshDependents(property) {
+    (this.dependents[property] || []).forEach(child => {
+      if (!this.isInheriting(child)) return
+      const value = this.inheritedValue(child)
+      if (!value) return
+      this.setInputs(child, value)
+      this.applyToPreview(child, value)
+    })
+  }
+
+  setInputs(property, value) {
+    const hexInput = this.hexInputTargets.find(el => el.dataset.property === property)
+    const colorInput = this.colorInputTargets.find(el => el.dataset.property === property)
+    if (hexInput) {
+      hexInput.value = value
+      // Coloris paints the visible swatch from its wrapper's inline colour and
+      // only refreshes that on the input's own "input" event. Setting .value
+      // here fires no event, so an inherited row kept its old swatch after the
+      // colour it follows changed. Update the wrapper the way Coloris does,
+      // rather than dispatching "input", which would re-run updateFromHex for a
+      // field the designer never touched.
+      const field = hexInput.closest(".clr-field")
+      if (field) field.style.color = value
+    }
+    if (colorInput) colorInput.value = value.slice(0, 7)
+  }
+
+  // The per-colour "Override" checkbox. Ticked means the colour is set for
+  // chat; unticked means it follows its profile counterpart.
+  toggleInherit(event) {
+    const property = event.currentTarget.dataset.property
+    this.setInherit(property, !event.currentTarget.checked)
+    this.updateJsonOutput()
+  }
+
+  setInherit(property, inheriting) {
+    const hexInput = this.hexInputTargets.find(el => el.dataset.property === property)
+    if (!hexInput) return
+
+    // Only the hex input's disabled state is touched. initColoris disables
+    // every native colour input permanently (Coloris replaces them), so
+    // re-enabling one here would resurrect a hidden field that then posts
+    // alongside the hex input under the same name.
+    hexInput.disabled = inheriting
+
+    this.syncInheritPresentation(property, inheriting)
+
+    // Switching back to inheriting snaps the swatch to whatever it's now
+    // following; switching to overriding keeps the colour it was showing, so
+    // the designer starts from what they can already see rather than a jump.
+    if (inheriting) {
+      const value = this.inheritedValue(property)
+      if (value) {
+        this.setInputs(property, value)
+        this.applyToPreview(property, value)
+      }
+    }
+    this.refreshDependents(property)
+  }
+
+
+  syncInheritPresentation(property, inheriting) {
+    const hexInput = this.hexInputTargets.find(el => el.dataset.property === property)
+    if (!hexInput) return
+
+    // Coloris replaces the hex input with its own wrapper and trigger button;
+    // disabling the input alone still leaves that button clickable, so the
+    // picker would open for a field that can't be edited.
+    const field = hexInput.closest(".clr-field")
+    const trigger = field && field.querySelector("button")
+    if (trigger) trigger.disabled = inheriting
+
+    const group = this.groupFor(property)
+    if (!group) return
+    group.classList.toggle("theme-designer__color-group--inheriting", inheriting)
+    const hint = group.querySelector(".theme-designer__inherit-hint")
+    if (hint) hint.hidden = !inheriting
+    const checkbox = group.querySelector('input[type="checkbox"]')
+    if (checkbox) checkbox.checked = !inheriting
+  }
+
+  // Preview tabs: the profile mock and the chat mock share one themed
+  // container, so switching is just which panel is visible.
+  showPreview(event) {
+    const name = event.currentTarget.dataset.previewPanel
+    this.previewPanelTargets.forEach(panel => {
+      panel.hidden = panel.dataset.previewPanel !== name
+    })
+    this.previewTabTargets.forEach(tab => {
+      const selected = tab.dataset.previewPanel === name
+      tab.classList.toggle("theme-designer__preview-tab--active", selected)
+      tab.setAttribute("aria-selected", selected ? "true" : "false")
+    })
   }
 
   disconnect() {
@@ -94,6 +249,7 @@ export default class extends Controller {
     if (hexInput) hexInput.value = hexValue
 
     this.applyToPreview(property, hexValue)
+    this.refreshDependents(property)
     this.updateJsonOutput()
   }
 
@@ -101,16 +257,12 @@ export default class extends Controller {
   updateFromHex(event) {
     const input = event.currentTarget
     const property = input.dataset.property
-    let value = input.value.trim()
+    const value = normalizeHex(input.value)
+    if (!value) return
 
-    // Auto-add # prefix
-    if (value.length && value[0] !== "#") value = `#${value}`
-
-    // Only apply if it looks like a valid hex colour (6 or 8 digits for alpha)
-    if (/^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(value)) {
-      this.applyToPreview(property, value)
-      this.updateJsonOutput()
-    }
+    this.applyToPreview(property, value)
+    this.refreshDependents(property)
+    this.updateJsonOutput()
   }
 
   // Apply a single property to the preview container
@@ -118,15 +270,14 @@ export default class extends Controller {
     if (!this.hasPreviewTarget) return
     this.previewTarget.style.setProperty(cssProp(property), value)
 
-    // Also update computed properties that depend on pane text.
-    // Percentages come from the server via derivedTextPropertiesValue so they
+    // Also update computed properties derived from this one. Sources and
+    // percentages come from the server via derivedTextPropertiesValue so they
     // stay in sync with Theme::DERIVED_TEXT_PROPERTIES without duplication.
-    if (property === "pane_text") {
-      const derived = this.hasDerivedTextPropertiesValue ? this.derivedTextPropertiesValue : {}
-      Object.entries(derived).forEach(([prop, percent]) => {
-        this.previewTarget.style.setProperty(`--${prop}`, `color-mix(in srgb, ${value} ${percent}%, transparent)`)
-      })
-    }
+    const derived = this.hasDerivedTextPropertiesValue ? this.derivedTextPropertiesValue : {}
+    Object.entries(derived).forEach(([prop, meta]) => {
+      if (meta.source !== property) return
+      this.previewTarget.style.setProperty(`--${prop}`, `color-mix(in srgb, ${value} ${meta.percent}%, transparent)`)
+    })
   }
 
   // Apply all current colours to the preview
@@ -140,14 +291,21 @@ export default class extends Controller {
   updateJsonOutput() {
     if (!this.hasJsonOutputTarget) return
 
-    const data = { plural_profiles_theme: 2 }
+    // No literal fallback: a hardcoded version here would quietly go stale the
+    // next time the format is bumped, and every view carrying the export
+    // textarea passes the value from Theme::CURRENT_EXPORT_VERSION.
+    const data = { plural_profiles_theme: this.exportVersionValue }
 
     if (this.hasNameInputTarget && this.nameInputTarget.value.trim()) {
       data.name = this.nameInputTarget.value.trim()
     }
 
+    // Disabled inputs are the ones set to inherit; they aren't submitted, so
+    // they mustn't appear in the export either — an exported inherited colour
+    // would import as an explicit override and stop following the profile.
     const colors = {}
     this.hexInputTargets.forEach(input => {
+      if (input.disabled) return
       colors[input.dataset.property] = input.value
     })
     if (Object.keys(colors).length) data.colors = colors

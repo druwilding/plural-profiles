@@ -22,12 +22,24 @@ class Our::ThemesController < ApplicationController
   end
 
   def new
-    colors = Theme::THEMEABLE_PROPERTIES.transform_values { |v| v[:default] }
-    default_source = Current.user.active_theme || Theme.site_default_theme
-    colors.merge!(default_source.colors) if default_source
+    # Seed *defaults* for the profile keys only. Chat keys get no default, so
+    # they start inherited rather than pinned to the stock green — a starting
+    # point nobody chose, which would stop tracking the profile colours the
+    # moment the designer edited them.
+    colors = Theme::THEMEABLE_PROPERTIES.reject { |_, v| v[:fallback] }.transform_values { |v| v[:default] }
 
     imported = {}
-    if params[:theme].present?
+    if params[:theme].blank?
+      # A blank "New theme" starts from what the user is using, chat colours and
+      # all, so they can tweak rather than rebuild.
+      default_source = Current.user.active_theme || Theme.site_default_theme
+      colors.merge!(default_source.colors) if default_source
+    else
+      # An import is the imported theme and nothing else, layered over the
+      # stock defaults only — never over the active theme. Otherwise an export
+      # that omits keys (every pre-v3 export has no chat keys at all) quietly
+      # inherits the user's current colours for them: shown in the preview as
+      # though they belonged to the import, and saved into it on Create.
       raw_colors = params[:theme][:colors]
       if raw_colors.is_a?(ActionController::Parameters) || raw_colors.is_a?(Hash)
         imported_colors = Theme.migrate_legacy_colors(raw_colors.to_unsafe_h.transform_keys(&:to_s))

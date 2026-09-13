@@ -285,4 +285,22 @@ class Chat::ServersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to chat_root_path
   end
+  # Phase 2 of themes v3: chat is the one layout that drops the theme's
+  # background image, showing a flat colour instead. Guarded here rather
+  # than only in the helper test, because the regression that matters is the
+  # chat layout forgetting to pass background_image: false.
+  test "chat pages render the theme colours but never its background image" do
+    theme = themes(:dark_forest)
+    theme.background_image.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/avatar.png")),
+      filename: "bg.png", content_type: "image/png"
+    )
+    @owner.update!(active_theme: theme, override_themes: true)
+
+    sign_in_as @owner
+    get chat_servers_path
+    assert_response :success
+    assert_match "--chat-pane-bg:", response.body
+    assert_no_match(/background-image:/, response.body)
+  end
 end
