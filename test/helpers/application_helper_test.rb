@@ -381,6 +381,27 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_not_includes result, ":AQUA_HEART:"
   end
 
+  test "replaces heart code delimited by semicolons" do
+    text = "here is ;cadbury_heart; for you"
+    result = formatted_description(text)
+    assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"'
+    assert_not_includes result, ";cadbury_heart;"
+  end
+
+  test "replaces heart code with hyphens instead of underscores" do
+    text = "here is :cadbury-heart: for you"
+    result = formatted_description(text)
+    assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"'
+    assert_not_includes result, ":cadbury-heart:"
+  end
+
+  test "replaces heart code with mismatched delimiters and separators" do
+    [ ";cadbury-heart;", ":cadbury_heart;", ";cadbury-heart:", ":cadbury-heart;" ].each do |code|
+      result = formatted_description(code)
+      assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"', "expected #{code} to resolve"
+    end
+  end
+
   test "does not convert heart emoji code inside a code block" do
     text = "Use <code>:11_aqua_heart:</code> to show a heart"
     result = formatted_description(text)

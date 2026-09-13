@@ -117,9 +117,11 @@ class Profile < ApplicationRecord
   # Resolve a heart name to its canonical HEART_EMOJIS entry.
   # Accepts both the bare name ("aqua_heart") and older pastes that still carry
   # a number prefix ("11_aqua_heart") — the number is stripped and ignored, since
-  # Discord's numbering has changed under us before and will again.
+  # Discord's numbering has changed under us before and will again. Also
+  # accepts hyphens in place of underscores ("aqua-heart"), since typed heart
+  # codes allow either separator.
   def self.resolve_heart_emoji(name)
-    bare = name.to_s.downcase.sub(/\A\d+_?/, "")
+    bare = name.to_s.downcase.sub(/\A\d+[_-]?/, "").tr("-", "_")
     bare if HEART_EMOJIS.include?(bare)
   end
 
