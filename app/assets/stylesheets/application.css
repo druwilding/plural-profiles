@@ -5667,6 +5667,53 @@ button.profile-picker__option {
   outline-color: var(--chat-pane-link);
 }
 
+/* Always-visible scrollbars on the picker grid and the autocomplete menu —
+   with macOS's default overlay scrollbars there's otherwise no sign that
+   more hearts are hidden below. Styling ::-webkit-scrollbar is what makes
+   Chrome and Safari keep them showing; Chrome ignores it on any element that
+   also sets the standard scrollbar-color/scrollbar-width, so those are only
+   applied where the pseudo-element isn't supported (Firefox). */
+.heart-dialog__grid,
+.heart-input__menu {
+  --heart-scrollbar-thumb: color-mix(in srgb, var(--pane-text) 45%, transparent);
+  --heart-scrollbar-track: color-mix(in srgb, var(--pane-text) 10%, transparent);
+}
+
+.chat-body .heart-dialog__grid {
+  --heart-scrollbar-thumb: color-mix(in srgb, var(--chat-pane-text) 45%, transparent);
+  --heart-scrollbar-track: color-mix(in srgb, var(--chat-pane-text) 10%, transparent);
+}
+
+.composer .heart-input__menu {
+  --heart-scrollbar-thumb: color-mix(in srgb, var(--chat-composer-text) 45%, transparent);
+  --heart-scrollbar-track: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
+}
+
+.heart-dialog__grid::-webkit-scrollbar,
+.heart-input__menu::-webkit-scrollbar {
+  width: 10px;
+}
+
+.heart-dialog__grid::-webkit-scrollbar-track,
+.heart-input__menu::-webkit-scrollbar-track {
+  background-color: var(--heart-scrollbar-track);
+  border-radius: 5px;
+}
+
+.heart-dialog__grid::-webkit-scrollbar-thumb,
+.heart-input__menu::-webkit-scrollbar-thumb {
+  background-color: var(--heart-scrollbar-thumb);
+  border-radius: 5px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .heart-dialog__grid,
+  .heart-input__menu {
+    scrollbar-width: thin;
+    scrollbar-color: var(--heart-scrollbar-thumb) var(--heart-scrollbar-track);
+  }
+}
+
 @media (forced-colors: active) {
   .heart-input__button {
     color: ButtonText;
