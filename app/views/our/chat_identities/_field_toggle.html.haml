@@ -9,7 +9,8 @@
 -#   hint             — (optional) hint text shown under the title
 -#   input_type       — (optional, default :text_field) :text_field or
 -#                      :text_area, whichever form builder method edits the
--#                      override value
+-#                      override value (wrapped by heart_field, so it gets
+-#                      the heart picker button and autocomplete)
 -#   placeholder      — (optional) placeholder for the override input
 -#   override_hint    — (optional) replaces the default "Leave blank to hide
 -#                      this from chat." hint under the override input —
@@ -50,5 +51,5 @@
       %span.chat-identity-field__blank (nothing set)
 
   .chat-identity-field__override
-    = form.public_send(input_type, override_field, placeholder: local_assigns[:placeholder])
+    = heart_field(form, override_field, as: input_type, placeholder: local_assigns[:placeholder])
     %p.form-hint= local_assigns[:override_hint] || "Leave blank to hide this from chat."

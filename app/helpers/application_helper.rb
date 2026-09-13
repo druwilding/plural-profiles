@@ -41,10 +41,6 @@ module ApplicationHelper
   SPOILER_HINT_PATTERN = /(?:\[(?<pre_hint>[^\]]+)\]\s*)?\|\|(?<content>.+?)\|\|(?:\s*\[(?<post_hint>[^\]]+)\])?/m
   CODE_BLOCK_PATTERN = /<code(?:\s[^>]*)?>.*?<\/code>/m
 
-  # Delimiters (: or ;) and the internal word separator (_ or -) can each be
-  # mixed independently, e.g. :cadbury_heart:, ;cadbury-heart;, :cadbury_heart;
-  HEART_EMOJI_PATTERN = /[:;]([a-z0-9_-]+[_-]heart)[:;]/i
-
   # Newlines adjacent to these block-level tags get stripped before newline→<br>
   # conversion, to prevent spurious <br> inside structured HTML like tables.
   # Limited to table structural tags — other block elements (div, details, etc.)
@@ -88,8 +84,39 @@ module ApplicationHelper
   def plain_field(text)
     return "" if text.blank?
     text = text.gsub(SPOILER_PLAIN_PATTERN, "▓▓▓▓")
-    text = text.gsub(HEART_EMOJI_PATTERN, "♥")
+    text = text.gsub(HeartEmoji::PATTERN, "♥")
     strip_tags(text)
+  end
+
+  # Every heart as JSON for heart_input_controller.js, in HeartEmoji::ALL
+  # order, rendered once in the page head so HeartEmoji stays the single
+  # source of truth.
+  def heart_emojis_json_tag
+    hearts = HeartEmoji::ALL.map do |heart|
+      { name: heart, label: HeartEmoji.display_name(heart), src: HeartEmoji.image_path(heart), code: HeartEmoji.code(heart) }
+    end
+    tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
+  end
+
+  # A text field (or textarea, with as: :text_area) that accepts heart codes,
+  # wrapped so heart_input_controller.js can add the heart picker button and
+  # the :ab autocomplete menu. The field keeps its normal id, so form.label
+  # still points at it. `data` is merged onto the field, not the wrapper.
+  # menu_placement: "above" opens the autocomplete menu upwards, for fields
+  # pinned to the bottom of the screen (the chat composer).
+  def heart_field(form, method, as: :text_field, menu_placement: "below", **options)
+    field_data = (options.delete(:data) || {}).merge("heart-input-target": "field")
+    modifier = as == :text_area ? "heart-input--area" : "heart-input--line"
+
+    tag.div(class: [ "heart-input", modifier ], data: { controller: "heart-input", "heart-input-placement-value": menu_placement }) do
+      safe_join([
+        form.public_send(as, method, **options, data: field_data),
+        # Hidden until the controller connects, so there's no dead button without JS.
+        tag.button(heart_button_icon, type: "button", class: "heart-input__button", hidden: true,
+          title: "Insert a heart", "aria-label": "Insert a heart", "aria-haspopup": "dialog",
+          data: { action: "heart-input#openPicker", "heart-input-target": "button" })
+      ])
+    end
   end
 
   def relative_time(time)
@@ -155,6 +182,16 @@ module ApplicationHelper
 
   private
 
+  # An outlined heart that follows the text colour, so it suits every theme
+  # and forced-colors mode (a coloured heart image would clash with some).
+  def heart_button_icon
+    tag.svg(
+      tag.path(d: "M12 20.5s-7.5-4.6-9.4-9.3C1.2 7.6 3.4 4 6.9 4c2.1 0 3.8 1.2 5.1 3 1.3-1.8 3-3 5.1-3 3.5 0 5.7 3.6 4.3 7.2-1.9 4.7-9.4 9.3-9.4 9.3z"),
+      class: "heart-input__icon", viewBox: "0 0 24 24", width: 18, height: 18, fill: "none",
+      stroke: "currentColor", "stroke-width": 2, "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"
+    )
+  end
+
   def newlines_to_br(html)
     html.gsub("\n", "<br>")
   end
@@ -199,11 +236,11 @@ module ApplicationHelper
     non_text = html.scan(skip_pattern)
 
     result = parts.map do |part|
-      part.gsub(HEART_EMOJI_PATTERN) do |match|
-        canonical = Profile.resolve_heart_emoji(Regexp.last_match(1))
+      part.gsub(HeartEmoji::PATTERN) do |match|
+        canonical = HeartEmoji.resolve(Regexp.last_match(1))
         if canonical
-          display = Profile.heart_emoji_display_name(canonical)
-          '<img src="/images/hearts/%s.webp" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ canonical, display, display ]
+          display = HeartEmoji.display_name(canonical)
+          '<img src="%s" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ HeartEmoji.image_path(canonical), display, display ]
         else
           match
         end
