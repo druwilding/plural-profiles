@@ -41,7 +41,9 @@ module ApplicationHelper
   SPOILER_HINT_PATTERN = /(?:\[(?<pre_hint>[^\]]+)\]\s*)?\|\|(?<content>.+?)\|\|(?:\s*\[(?<post_hint>[^\]]+)\])?/m
   CODE_BLOCK_PATTERN = /<code(?:\s[^>]*)?>.*?<\/code>/m
 
-  HEART_EMOJI_PATTERN = /:([a-z0-9_]+_heart):/i
+  # Delimiters (: or ;) and the internal word separator (_ or -) can each be
+  # mixed independently, e.g. :cadbury_heart:, ;cadbury-heart;, :cadbury_heart;
+  HEART_EMOJI_PATTERN = /[:;]([a-z0-9_-]+[_-]heart)[:;]/i
 
   # Newlines adjacent to these block-level tags get stripped before newline→<br>
   # conversion, to prevent spurious <br> inside structured HTML like tables.
