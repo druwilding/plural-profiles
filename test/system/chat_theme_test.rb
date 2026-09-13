@@ -308,18 +308,6 @@ class ChatThemeTest < ApplicationSystemTestCase
     assert_equal rgb("#ff0000"), option.native.style("color")
   end
 
-  # Emulated forced-colors applies the @media (forced-colors: active) rules.
-  # Every value below is read with getComputedStyle, and each system colour is
-  # resolved the same way on a throwaway element, so the comparison doesn't
-  # depend on what the emulated palette happens to be.
-  def with_forced_colors
-    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia",
-      features: [ { name: "forced-colors", value: "active" } ])
-    yield
-  ensure
-    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
-  end
-
   test "chat-themed controls fall back to system colours in forced-colors mode" do
     # The chat-scoped rules used to outrank the base forced-colors ones. For the
     # textarea and spoilers that's under forced-color-adjust: none, so a

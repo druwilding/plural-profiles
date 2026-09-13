@@ -201,6 +201,47 @@ class ChatThemeDesignerTest < ApplicationSystemTestCase
     assert_equal "rgba(0, 255, 0, 1)", wrapper.native.style("color")
   end
 
+  # The tabs are buttons, which the base forced-colors rule gives
+  # forced-color-adjust: none, so the theme colours used to show as written in
+  # high-contrast mode. The section headings carried an always-on outline that
+  # boxed each one, nested boxes and all.
+  test "preview tabs and section headings follow the forced-colors look" do
+    visit edit_our_theme_path(@theme)
+    assert_selector ".theme-designer__preview-tab--active"
+
+    with_forced_colors do
+      probe = page.evaluate_script(<<~JS)
+        (() => {
+          const sys = (keyword, prop) => {
+            const el = document.createElement("div")
+            el.style.forcedColorAdjust = "none"
+            el.style[prop] = keyword
+            document.body.appendChild(el)
+            const value = getComputedStyle(el)[prop]
+            el.remove()
+            return value
+          }
+          const cs = selector => getComputedStyle(document.querySelector(selector))
+          return {
+            canvas: sys("Canvas", "backgroundColor"),
+            canvasText: sys("CanvasText", "color"),
+            highlight: sys("Highlight", "backgroundColor"),
+            activeTabBg: cs(".theme-designer__preview-tab--active").backgroundColor,
+            activeTabEdge: cs(".theme-designer__preview-tab--active").borderTopColor,
+            idleTabBg: cs(".theme-designer__preview-tab:not(.theme-designer__preview-tab--active)").backgroundColor,
+            headingOutline: cs(".theme-designer__section > .form-section-summary").outlineStyle
+          }
+        })()
+      JS
+
+      assert_equal probe["highlight"], probe["activeTabBg"], "the selected tab should be marked with Highlight"
+      assert_equal probe["canvasText"], probe["activeTabEdge"],
+        "the selected tab needs the same CanvasText outline as the others, not one lost in its fill"
+      assert_equal probe["canvas"], probe["idleTabBg"], "an unselected tab should sit on Canvas"
+      assert_equal "none", probe["headingOutline"], "section headings shouldn't carry an always-on outline"
+    end
+  end
+
   test "the chat preview tab shows a chat mock that responds to chat colours" do
     visit edit_our_theme_path(@theme)
     assert_selector ".theme-preview__panel[data-preview-panel='profile']", visible: true

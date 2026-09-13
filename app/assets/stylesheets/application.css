@@ -284,9 +284,13 @@ details[open] > .form-section-summary::before {
 }
 
 @media (forced-colors: active) {
-  .form-section-summary {
-    outline: 1px solid ButtonText;
-    padding: 0.25rem 0.5rem;
+  /* No always-on outline. The ▶/▼ marker already shows these are
+     disclosures, and boxing every heading drew a rectangle inside a
+     rectangle once the theme form's sections nested. Keyboard focus still
+     gets a clear system-colour ring. */
+  .form-section-summary:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
   }
 }
 
@@ -3153,9 +3157,29 @@ h1 .heart-inline {
   border-bottom-color: var(--pane-bg);
 }
 
+/* The tabs are <button>s, and the base forced-colors rule gives every button
+   forced-color-adjust: none, so the theme colours above would show exactly as
+   written in high-contrast mode — a dark themed fill on the selected tab rather
+   than a system colour. Restate them on system colours, following the app's
+   forced-colors conventions: an unselected tab reads like a secondary button,
+   and the selected one is filled with Highlight, as selected rows are
+   elsewhere — but keeps the same CanvasText outline as its neighbours, so it
+   still reads as a tab rather than a floating block of colour. :hover is
+   restated too, or the base button:hover rule (0,1,1) would flip the selected
+   tab back to Canvas. */
 @media (forced-colors: active) {
-  .theme-designer__preview-tab--active {
-    border-width: 2px;
+  .theme-designer__preview-tab,
+  .theme-designer__preview-tab:hover {
+    background-color: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+
+  .theme-designer__preview-tab--active,
+  .theme-designer__preview-tab--active:hover {
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: CanvasText;
   }
 }
 

@@ -77,4 +77,31 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     click_button "Sign in"
     assert_current_path root_path
   end
+
+  # Turns on Chrome's forced-colors (high-contrast) emulation for the block and
+  # always turns it off again afterwards — the browser is reused between tests,
+  # so leaving it on would quietly change every later test's colours. It applies
+  # the @media (forced-colors: active) rules; compare computed values against
+  # system colours resolved the same way rather than against fixed rgb values.
+  #
+  # Transitions are switched off for the duration. Emulation applies the
+  # forced-colors rules at once, but a property with a transition (buttons fade
+  # their background) is still animating from its old value when the test reads
+  # it, so an immediate read catches a colour partway there — which made these
+  # assertions pass or fail on timing alone. The style goes in before emulation
+  # starts, so that switch itself never animates.
+  def with_forced_colors
+    page.execute_script(<<~JS)
+      const style = document.createElement("style")
+      style.id = "forced-colors-test-no-transitions"
+      style.textContent = "*, *::before, *::after { transition: none !important; animation: none !important; }"
+      document.head.appendChild(style)
+    JS
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia",
+      features: [ { name: "forced-colors", value: "active" } ])
+    yield
+  ensure
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
+    page.execute_script('document.getElementById("forced-colors-test-no-transitions")?.remove()')
+  end
 end
