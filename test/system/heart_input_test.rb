@@ -136,6 +136,42 @@ class HeartInputTest < ApplicationSystemTestCase
     end
   end
 
+  test "in forced colors the picker's buttons use system colours, not the theme's" do
+    visit edit_our_profile_path(@profile)
+    heart_button_for(find_field("Subtitle")).click
+    assert_selector "dialog.heart-dialog[open]"
+
+    with_forced_colors do
+      probe = page.evaluate_script(<<~JS)
+        (() => {
+          const sys = (keyword, prop) => {
+            const el = document.createElement("div")
+            el.style.forcedColorAdjust = "none"
+            el.style[prop] = keyword
+            document.body.appendChild(el)
+            const value = getComputedStyle(el)[prop]
+            el.remove()
+            return value
+          }
+          const cs = selector => getComputedStyle(document.querySelector(selector))
+          return {
+            canvas: sys("Canvas", "backgroundColor"),
+            canvasText: sys("CanvasText", "color"),
+            heartColor: cs(".heart-dialog__heart-name").color,
+            heartBg: cs(".heart-dialog__heart").backgroundColor,
+            closeColor: cs(".heart-dialog__close").color,
+            closeBg: cs(".heart-dialog__close").backgroundColor
+          }
+        })()
+      JS
+
+      assert_equal probe["canvasText"], probe["heartColor"], "heart names in the picker should be CanvasText"
+      assert_equal probe["canvas"], probe["heartBg"], "hearts in the picker should sit on Canvas"
+      assert_equal probe["canvasText"], probe["closeColor"], "the close button should be CanvasText"
+      assert_equal probe["canvas"], probe["closeBg"], "the close button should sit on Canvas"
+    end
+  end
+
   # -- Autocomplete --
 
   test "typing a semicolon and two letters suggests starts-with matches first, then contains matches" do
@@ -271,5 +307,54 @@ class HeartInputTest < ApplicationSystemTestCase
     field.fill_in with: ""
     field.send_keys(";ab", :enter)
     assert_equal ":abyss_heart: ", field.value
+  end
+
+  # -- Edge cases --
+
+  test "the menu waits for an IME composition to finish" do
+    visit edit_our_profile_path(@profile)
+    page.execute_script(<<~JS)
+      const field = document.getElementById("profile_subtitle")
+      field.focus()
+      field.value = ";ab"
+      field.setSelectionRange(3, 3)
+      field.dispatchEvent(new InputEvent("input", { bubbles: true, isComposing: true }))
+    JS
+    assert_no_selector ".heart-input__menu", visible: true, wait: 0.3
+
+    page.execute_script(<<~JS)
+      document.getElementById("profile_subtitle").dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: "ab" }))
+    JS
+    assert_selector ".heart-input__option--active", text: "abyss heart"
+  end
+
+  test "going back to a page doesn't restore a duplicate picker dialog from the Turbo cache" do
+    visit edit_our_profile_path(@profile)
+    heart_button_for(find_field("Subtitle")).click
+    find(".heart-dialog__search").send_keys(:escape)
+    assert_no_selector "dialog.heart-dialog[open]"
+
+    click_link "Cancel"
+    assert_current_path our_profile_path(@profile)
+    page.go_back
+    assert_current_path edit_our_profile_path(@profile)
+
+    heart_button_for(find_field("Subtitle")).click
+    assert_selector "dialog.heart-dialog[open]"
+    assert_equal 1, page.evaluate_script(%(document.querySelectorAll(".heart-dialog").length))
+    assert_equal 1, page.evaluate_script(%(document.querySelectorAll("#heart-dialog-search").length))
+  end
+
+  test "a field that failed validation keeps room for the heart button" do
+    visit edit_our_profile_path(@profile)
+    page.execute_script(%(document.getElementById("profile_name").removeAttribute("required")))
+    find_field("Name").fill_in with: ""
+    click_button "Update profile"
+
+    assert_selector ".field_with_errors > #profile_name"
+    name_padding, subtitle_padding = page.evaluate_script(<<~JS)
+      [ "profile_name", "profile_subtitle" ].map((id) => getComputedStyle(document.getElementById(id)).paddingRight)
+    JS
+    assert_equal subtitle_padding, name_padding
   end
 end

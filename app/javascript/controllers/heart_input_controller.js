@@ -147,6 +147,7 @@ export default class extends Controller {
 
     this.onKeydown = this.onKeydown.bind(this)
     this.onInput = this.onInput.bind(this)
+    this.onCompositionEnd = this.onCompositionEnd.bind(this)
     this.onCaretMove = this.onCaretMove.bind(this)
     this.onFocus = this.onFocus.bind(this)
     this.onBlur = this.onBlur.bind(this)
@@ -157,6 +158,7 @@ export default class extends Controller {
     // up, so an open menu always gets first claim on Enter.
     this.element.addEventListener("keydown", this.onKeydown, true)
     this.fieldTarget.addEventListener("input", this.onInput)
+    this.fieldTarget.addEventListener("compositionend", this.onCompositionEnd)
     this.fieldTarget.addEventListener("click", this.onCaretMove)
     this.fieldTarget.addEventListener("keyup", this.onCaretMove)
     this.fieldTarget.addEventListener("focus", this.onFocus)
@@ -171,6 +173,7 @@ export default class extends Controller {
   disconnect() {
     this.element.removeEventListener("keydown", this.onKeydown, true)
     this.fieldTarget.removeEventListener("input", this.onInput)
+    this.fieldTarget.removeEventListener("compositionend", this.onCompositionEnd)
     this.fieldTarget.removeEventListener("click", this.onCaretMove)
     this.fieldTarget.removeEventListener("keyup", this.onCaretMove)
     this.fieldTarget.removeEventListener("focus", this.onFocus)
@@ -203,7 +206,15 @@ export default class extends Controller {
 
   // -- Autocomplete menu --
 
-  onInput() {
+  // Text still being composed with an IME isn't final, so wait for
+  // compositionend — which, unlike the input events during composition,
+  // isn't followed by another input event to update from.
+  onInput(event) {
+    if (event.isComposing) return
+    this.update({ fromInput: true })
+  }
+
+  onCompositionEnd() {
     this.update({ fromInput: true })
   }
 
@@ -222,7 +233,7 @@ export default class extends Controller {
 
   onBeforeCache() {
     this.closeMenu()
-    sharedDialog?.dismiss()
+    sharedDialog?.destroy()
   }
 
   onKeydown(event) {
@@ -511,11 +522,14 @@ class HeartDialog {
     this.search.focus()
   }
 
-  // Closes without inserting or returning focus — for Turbo caching the page.
-  dismiss() {
-    if (!this.element.open) return
+  // Removed entirely (open or not) before Turbo snapshots the page. Left in,
+  // it would be restored from the cache as a lifeless copy with the same ids,
+  // alongside the fresh dialog heartDialog() then builds.
+  destroy() {
     this.controller = null
-    this.element.close()
+    if (this.element.open) this.element.close()
+    this.element.remove()
+    if (sharedDialog === this) sharedDialog = null
   }
 
   filter() {

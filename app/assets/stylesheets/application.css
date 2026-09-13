@@ -5425,17 +5425,22 @@ button.profile-picker__option {
   position: relative;
 }
 
-/* Room for the button, only once JS is there to show it. */
-.js .heart-input--line > input {
+/* Room for the button, only once JS is there to show it. A field that failed
+   validation is wrapped in .field_with_errors (Rails' default
+   field_error_proc), so allow for that wrapper too. */
+.js .heart-input--line > input,
+.js .heart-input--line > .field_with_errors > input {
   padding-right: 2.75rem;
 }
 
-.js .heart-input--area > textarea {
+.js .heart-input--area > textarea,
+.js .heart-input--area > .field_with_errors > textarea {
   padding-right: 3.25rem;
 }
 
 /* Block, so the wrapper is exactly the field's height and the button lines up. */
-.heart-input > textarea {
+.heart-input > textarea,
+.heart-input > .field_with_errors > textarea {
   display: block;
 }
 
@@ -5579,7 +5584,7 @@ button.profile-picker__option {
 }
 
 .heart-dialog::backdrop {
-  background-color: color-mix(in srgb, black 60%, transparent);
+  background-color: color-mix(in srgb, var(--page-bg) 60%, transparent);
 }
 
 .heart-dialog__header {
@@ -5723,8 +5728,37 @@ button.profile-picker__option {
   }
 
   .heart-input__button:focus-visible,
-  .heart-dialog__heart:focus-visible {
+  .composer-input-row .heart-input__button:focus-visible,
+  .heart-dialog__heart:focus-visible,
+  .chat-body .heart-dialog__heart:focus-visible {
     outline: 2px solid CanvasText;
+  }
+
+  /* The global forced-colors button rule switches forced-color-adjust off (for
+     filled CanvasText buttons), and these borderless buttons override its
+     colours — so without this they'd keep their theme colours in
+     high-contrast mode. A CanvasText border marks hover instead. */
+  .heart-input__button,
+  .heart-input__button:hover,
+  .heart-input__button:focus-visible,
+  .composer-input-row .heart-input__button,
+  .composer-input-row .heart-input__button:hover,
+  .composer-input-row .heart-input__button:focus-visible,
+  .heart-dialog__close,
+  .heart-dialog__close:hover,
+  .heart-dialog__heart,
+  .heart-dialog__heart:hover,
+  .chat-body .heart-dialog__close,
+  .chat-body .heart-dialog__heart {
+    background-color: Canvas;
+    color: CanvasText;
+  }
+
+  .heart-input__button:hover,
+  .composer-input-row .heart-input__button:hover,
+  .heart-dialog__close:hover,
+  .heart-dialog__heart:hover {
+    border-color: CanvasText;
   }
 
   .heart-input__menu,
