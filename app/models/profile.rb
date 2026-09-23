@@ -82,15 +82,19 @@ class Profile < ApplicationRecord
     InclusionOverride.prune_stale!(user)
   end
 
+  def known_emote_codes
+    EmoteRegistry.current.entries.map(&:code)
+  end
+
   def heart_emojis_are_valid
     return if heart_emojis.blank?
-    invalid = heart_emojis - HeartEmoji::ALL
+    invalid = heart_emojis - known_emote_codes
     errors.add(:heart_emojis, "contains invalid hearts: #{invalid.join(', ')}") if invalid.any?
   end
 
   def mini_profile_heart_emojis_are_valid
     return if mini_profile_heart_emojis.blank?
-    invalid = mini_profile_heart_emojis - HeartEmoji::ALL
+    invalid = mini_profile_heart_emojis - known_emote_codes
     errors.add(:mini_profile_heart_emojis, "contains invalid hearts: #{invalid.join(', ')}") if invalid.any?
   end
 end

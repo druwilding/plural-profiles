@@ -88,12 +88,12 @@ module ApplicationHelper
     strip_tags(text)
   end
 
-  # Every heart as JSON for heart_input_controller.js, in HeartEmoji::ALL
-  # order, rendered once in the page head so HeartEmoji stays the single
+  # Every pickable emote as JSON for heart_input_controller.js, in display
+  # order, rendered once in the page head so the registry stays the single
   # source of truth.
   def heart_emojis_json_tag
-    hearts = HeartEmoji::ALL.map do |heart|
-      { name: heart, label: HeartEmoji.display_name(heart), src: HeartEmoji.image_path(heart), code: HeartEmoji.code(heart) }
+    hearts = EmoteRegistry.current.pickable.map do |emote|
+      { name: emote.code, label: emote.label, src: emote.src, code: HeartEmoji.code(emote.code) }
     end
     tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
   end
@@ -237,10 +237,9 @@ module ApplicationHelper
 
     result = parts.map do |part|
       part.gsub(HeartEmoji::PATTERN) do |match|
-        canonical = HeartEmoji.resolve(Regexp.last_match(1))
-        if canonical
-          display = HeartEmoji.display_name(canonical)
-          '<img src="%s" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ HeartEmoji.image_path(canonical), display, display ]
+        emote = EmoteRegistry.current.resolve(Regexp.last_match(1))
+        if emote
+          '<img src="%s" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
         else
           match
         end

@@ -1,0 +1,6 @@
+<% emote_fixture_names.each do |_name, code| %>
+<%= code %>_image:
+  name: image
+  record: <%= code %> (Emote)
+  blob: <%= code %>_image_blob
+<% end %>

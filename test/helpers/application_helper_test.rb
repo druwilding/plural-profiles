@@ -283,7 +283,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces a valid heart emoji code regardless of case" do
     text = "I love this :11_AQUA_HEART: so much"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_includes result, 'class="heart-inline"'
@@ -293,7 +293,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces a valid heart emoji code with an image" do
     text = "I love this :11_aqua_heart: so much"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_includes result, 'class="heart-inline"'
@@ -303,9 +303,9 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces multiple adjacent heart emojis" do
     text = ":11_aqua_heart::12_ocean_heart::13_storm_heart:"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/aqua_heart.webp"'
-    assert_includes result, '<img src="/images/hearts/ocean_heart.webp"'
-    assert_includes result, '<img src="/images/hearts/storm_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("ocean_heart")}\""
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("storm_heart")}\""
   end
 
   test "leaves unknown heart codes as plain text" do
@@ -325,7 +325,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "mixes heart emojis with regular text and spoilers" do
     text = "hello :40_red_heart: and ||secret|| bye"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/red_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
     assert_includes result, SPOILER_OPEN
   end
 
@@ -344,7 +344,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces cadbury heart code regardless of number prefix style" do
     [ "50cadbury_heart", "51cadbury_heart", "50_cadbury_heart" ].each do |code|
       result = formatted_description(":#{code}:")
-      assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"', "expected #{code} to resolve"
+      assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\"", "expected #{code} to resolve"
       assert_includes result, 'alt="cadbury heart"'
     end
   end
@@ -352,7 +352,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces heart code given as a bare name without a number prefix" do
     text = "I love this :aqua_heart: so much"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_not_includes result, ":aqua_heart:"
@@ -361,7 +361,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces cadbury heart code" do
     text = "here is :cadbury_heart: for you"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\""
     assert_includes result, 'alt="cadbury heart"'
     assert_not_includes result, ":cadbury_heart:"
   end
@@ -369,7 +369,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces a heart code that still carries an old number prefix" do
     text = "here is :25_shadow_heart: even though it's now 26"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/shadow_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("shadow_heart")}\""
     assert_includes result, 'alt="shadow heart"'
     assert_not_includes result, ":25_shadow_heart:"
   end
@@ -377,28 +377,28 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces bare heart code case-insensitively" do
     text = ":AQUA_HEART:"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
     assert_not_includes result, ":AQUA_HEART:"
   end
 
   test "replaces heart code delimited by semicolons" do
     text = "here is ;cadbury_heart; for you"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\""
     assert_not_includes result, ";cadbury_heart;"
   end
 
   test "replaces heart code with hyphens instead of underscores" do
     text = "here is :cadbury-heart: for you"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\""
     assert_not_includes result, ":cadbury-heart:"
   end
 
   test "replaces heart code with mismatched delimiters and separators" do
     [ ";cadbury-heart;", ":cadbury_heart;", ";cadbury-heart:", ":cadbury-heart;" ].each do |code|
       result = formatted_description(code)
-      assert_includes result, '<img src="/images/hearts/cadbury_heart.webp"', "expected #{code} to resolve"
+      assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\"", "expected #{code} to resolve"
     end
   end
 
@@ -406,24 +406,24 @@ class ApplicationHelperTest < ActionView::TestCase
     text = "Use <code>:11_aqua_heart:</code> to show a heart"
     result = formatted_description(text)
     assert_includes result, "<code>:11_aqua_heart:</code>"
-    assert_not_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
   end
 
   test "converts hearts outside code but not inside" do
     text = ":40_red_heart: and <code>:11_aqua_heart:</code> and :13_storm_heart:"
     result = formatted_description(text)
-    assert_includes result, '<img src="/images/hearts/red_heart.webp"'
-    assert_includes result, '<img src="/images/hearts/storm_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("storm_heart")}\""
     assert_includes result, "<code>:11_aqua_heart:</code>"
-    assert_not_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
   end
 
   test "does not replace heart emoji codes inside HTML tag attributes" do
     text = '<span class="spoiler" aria-label=":11_aqua_heart:">:40_red_heart:</span>'
     result = formatted_description(text)
     assert_includes result, 'aria-label=":11_aqua_heart:"'
-    assert_includes result, '<img src="/images/hearts/red_heart.webp"'
-    assert_not_includes result, '<img src="/images/hearts/aqua_heart.webp"'
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+    assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
   end
 
   # -- Multiple blank lines --
@@ -758,9 +758,9 @@ class ApplicationHelperTest < ActionView::TestCase
     assert script, "expected a JSON script tag with id heart-emojis"
 
     hearts = JSON.parse(script.text)
-    assert_equal HeartEmoji::ALL, hearts.map { |heart| heart["name"] }
+    assert_equal HeartEmoji.all, hearts.map { |heart| heart["name"] }
     assert_equal(
-      { "name" => "abyss_heart", "label" => "abyss heart", "src" => "/images/hearts/abyss_heart.webp", "code" => ":abyss_heart:" },
+      { "name" => "abyss_heart", "label" => "abyss heart", "src" => HeartEmoji.image_path("abyss_heart"), "code" => ":abyss_heart:" },
       hearts.find { |heart| heart["name"] == "abyss_heart" }
     )
   end

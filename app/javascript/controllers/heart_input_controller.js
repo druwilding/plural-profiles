@@ -11,7 +11,7 @@ import { Controller } from "@hotwired/stimulus"
 //    <body>, so it sits outside any <form> and can never submit one.
 //  - Typing `:` or `;` and at least two name characters opens an autocomplete
 //    menu at the caret: hearts whose name starts with what's typed first,
-//    then any whose name contains it, each group in HeartEmoji::ALL order.
+//    then any whose name contains it, each group in HeartEmoji.all order.
 //    Up/Down move the highlight, Enter/Tab insert, Escape dismisses.
 //
 // The heart list itself comes from ApplicationHelper#heart_emojis_json_tag.
@@ -59,7 +59,7 @@ function normaliseQuery(query) {
 // Names starting with the query come first — matched on the full name, so
 // "abyss_he" still finds abyss — then names containing it anywhere, matched
 // without the "_heart" suffix so "he" doesn't match every single heart. Both
-// groups keep HeartEmoji::ALL order.
+// groups keep HeartEmoji.all order.
 function matchHearts(query) {
   const normalised = normaliseQuery(query)
   if (!normalised) return []

@@ -51,7 +51,7 @@
     .heart-picker{data: {controller: "heart-picker"}}
       = hidden_field_tag "profile[heart_emojis][]", ""
       .heart-picker__grid
-        - HeartEmoji::ALL.each do |heart|
+        - HeartEmoji.all.each do |heart|
           %label.heart-picker__heart{title: HeartEmoji.display_name(heart)}
             %input.heart-picker__checkbox{type: "checkbox", name: "profile[heart_emojis][]", value: heart, checked: profile.heart_emojis.include?(heart) || nil, "aria-label": HeartEmoji.display_name(heart)}
             = image_tag HeartEmoji.image_path(heart), width: 24, height: 24, alt: "", loading: "lazy"

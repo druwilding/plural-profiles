@@ -190,7 +190,7 @@ EmoteRegistry.current   # site-wide in v1; later EmoteRegistry.for(server:, user
 ```
 
 - The registry is built once, into plain Ruby structs with lookup hashes for names, codes and aliases. Each entry's `src` (the variant's proxy path) is computed at build time, so rendering never touches ActiveStorage.
-- It's cached in `Rails.cache` under a version key, and also memoised per process. The version is bumped by `after_commit` (e.g. `Rails.cache.increment("emote_registry_version")`), so every worker picks up changes on its next request.
+- The built registry is memoised per process and keyed on a **database version**: counts plus `max(updated_at)` of the three emote tables, read with one cheap query per request (memoised in `Current`). Production's cache store is `:memory_store`, which is per process, so a `Rails.cache` counter wouldn't reach other workers. `after_commit` on the three models clears the `Current` memo, so the rest of the same request sees the change.
 - **Order is natural sort on name**, so `2_x` sorts before `10_y` even without zero-padding. The sort happens in Ruby when the registry is built.
 - `label` is the code with underscores shown as spaces (`spring heart`), the same as `HeartEmoji.display_name` today.
 
@@ -213,7 +213,7 @@ EmoteRegistry.current   # site-wide in v1; later EmoteRegistry.for(server:, user
 
 ## Importing the existing 50 hearts
 
-A rake task, `emotes:import_hearts`, run once per environment and safe to re-run (idempotent):
+A **data migration** (`ImportHeartsAsEmotes`), so it runs automatically in `postdeploy` and exactly once per environment. A rake task could be forgotten, and one re-run on every deploy would bring back hearts an admin had since deleted. It:
 
 1. Create the group **Hearts** (`position: 0`, `plain_text: "♥"`).
 2. For each entry in the current `HeartEmoji::ALL` order, create an emote with:
@@ -224,7 +224,7 @@ A rake task, `emotes:import_hearts`, run once per environment and safe to re-run
 
 `public/images/hearts/` stays in the repo until production has been checked. It's deleted in the cleanup phase.
 
-Tests get a fixture group and a handful of fixture emotes with attached images. The current `heart_emoji_test.rb` assertions (e.g. "ALL contains dewdrop_heart") become registry tests against those fixtures.
+Tests get a fixture group and all 50 hearts as fixture emotes, so existing tests behave the same as production. Their images live in `test/fixtures/files/emotes/`, named after each emote (`01_dewdrop_heart.webp`), and the emote, blob and attachment fixtures are generated from those filenames (`test/test_helpers/emote_fixture_helper.rb`).
 
 ---
 
@@ -379,7 +379,7 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 - `db/migrate/…_create_emote_groups_emotes_and_aliases.rb`
 - `app/models/emote_group.rb`, `app/models/emote.rb`, `app/models/emote_alias.rb`
 - `app/models/emote_registry.rb`
-- `lib/tasks/emotes.rake` (`emotes:import_hearts`)
+- `db/migrate/…_import_hearts_as_emotes.rb`
 - `app/controllers/admin/base_controller.rb`, `admin/emotes_controller.rb`, `admin/emote_groups_controller.rb`
 - `app/views/admin/emotes/{index,upload,review}.html.haml` plus row/section partials and turbo stream templates
 - `app/javascript/controllers/auto_submit_controller.js`, `emote_upload_review_controller.js`
@@ -438,7 +438,7 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 
 Each phase is its own PR and leaves the site working.
 
-1. **Database + registry + import.** Migrations, models, `EmoteRegistry`, `emotes:import_hearts`, and `HeartEmoji` as a facade. There's no visible change: hearts now come from the database and are served via ActiveStorage variants. Verify librsvg here too.
+1. **Database + registry + import.** Migrations (including the heart import), models, `EmoteRegistry`, and `HeartEmoji` as a facade. There's no visible change: hearts now come from the database and are served via ActiveStorage variants. Verify librsvg here too.
 2. **Generic codes.** The new pattern with the lookahead scanner, name/alias/legacy resolution, `plain_field` changes. `:100:` works from this point on.
 3. **Admin emotes page.** Grouped list, quick rename, code override, aliases, archive/restore/delete, group management, and the rename/delete jobs.
 4. **Upload + bulk upload** with the review step and orphan cleanup.

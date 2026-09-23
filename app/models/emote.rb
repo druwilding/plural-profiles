@@ -1,0 +1,92 @@
+# An emote that can be typed as a code (:spring_heart:) into formatted text
+# or picked for a profile. Each emote has:
+#
+# - name: what admins edit, e.g. "02_spring_heart". Sorts the emote within its
+#   group, and can itself be typed (:02_spring_heart:).
+# - code: the canonical code that pickers insert and profiles store, e.g.
+#   "spring_heart". Derived from the name unless code_overridden is set.
+# - aliases: old codes, recorded whenever the code changes, so text written
+#   with them keeps rendering.
+#
+# Names, codes and aliases share one namespace: none may be used twice.
+class Emote < ApplicationRecord
+  IDENTIFIER_FORMAT = /\A[a-z0-9_]+\z/
+  MAX_IDENTIFIER_LENGTH = 64
+
+  belongs_to :emote_group
+  has_many :aliases, class_name: "EmoteAlias", dependent: :destroy
+
+  # The original upload is kept as-is; only this static webp is ever shown,
+  # so SVGs are never served as SVG and animations show their first frame.
+  has_one_attached :image do |attachable|
+    attachable.variant :display, resize_to_limit: [ 64, 64 ], format: :webp, preprocessed: true
+  end
+
+  normalizes :name, :code, with: ->(value) { value.strip.downcase }
+
+  scope :active, -> { where(archived_at: nil) }
+  scope :archived, -> { where.not(archived_at: nil) }
+
+  before_validation :derive_code, unless: :code_overridden?
+  before_update :record_previous_code_as_alias, if: :will_save_change_to_code?
+
+  validates :name, :code, presence: true, length: { maximum: MAX_IDENTIFIER_LENGTH },
+    format: { with: IDENTIFIER_FORMAT, message: "can only contain lowercase letters, numbers and underscores", allow_blank: true }
+  validates :image, presence: true
+  validate :identifiers_are_unique
+
+  after_commit { EmoteRegistry.expire_current }
+
+  # "02 Spring-Heart.webp" → "02_spring_heart". Blank when nothing usable is
+  # left, e.g. "♥♥♥.png".
+  def self.name_from_filename(filename)
+    File.basename(filename.to_s, ".*").downcase
+      .gsub(/[\s.-]+/, "_")
+      .gsub(/[^a-z0-9_]/, "")
+      .squeeze("_")
+      .delete_prefix("_").delete_suffix("_")
+  end
+
+  # The code suggested for a name: the number prefix that sets the sort order
+  # is dropped, unless the number is the emote itself (100, 1st_place).
+  #   "02_spring_heart" → "spring_heart", "50cadbury_heart" → "cadbury_heart",
+  #   "100" → "100", "1st_place" → "1st_place"
+  def self.default_code(name)
+    name = name.to_s
+    return name if name.match?(/\A\d+\z/)
+    return name if name.match?(/\A\d+(st|nd|rd|th)(_|\z)/)
+    name.sub(/\A\d+_?/, "").presence || name
+  end
+
+  def archived?
+    archived_at.present?
+  end
+
+  private
+
+  def derive_code
+    self.code = self.class.default_code(name) if name.present?
+  end
+
+  # Keeps the old code working in existing text. Renaming back to a code this
+  # emote used before reclaims it from its aliases instead.
+  def record_previous_code_as_alias
+    aliases.where(code: code).delete_all
+    aliases.find_or_create_by!(code: code_in_database)
+  end
+
+  def identifiers_are_unique
+    other_emotes = Emote.where.not(id: id)
+    other_aliases = EmoteAlias.includes(:emote).where.not(emote_id: id)
+
+    { name: name, code: code }.each do |attribute, value|
+      next if value.blank?
+
+      if (other = other_emotes.where(name: value).or(other_emotes.where(code: value)).first)
+        errors.add(attribute, "“#{value}” is already used by #{other.name}")
+      elsif (existing_alias = other_aliases.find_by(code: value))
+        errors.add(attribute, "“#{value}” is an old code of #{existing_alias.emote.name}")
+      end
+    end
+  end
+end
