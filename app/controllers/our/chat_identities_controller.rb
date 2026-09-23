@@ -49,15 +49,11 @@ class Our::ChatIdentitiesController < ApplicationController
                 mini_profile_description mini_profile_description_inherited
                 mini_profile_avatar mini_profile_avatar_alt_text mini_profile_avatar_shape mini_profile_avatar_inherited
                 mini_profile_link_enabled]
-    profile_only = %i[mini_profile_heart_emojis_inherited]
+    # Emotes only exist on Profile — permitting them unconditionally would let
+    # a crafted request for a Group sail through permit and then blow up with
+    # UnknownAttributeError on #update, since Group has no such column.
+    profile_only = %i[mini_profile_emotes mini_profile_emotes_inherited]
     permitted = @postable.is_a?(Profile) ? shared + profile_only : shared
-    # mini_profile_heart_emojis only exists on Profile — permitting it
-    # unconditionally would let a crafted request for a Group sail through
-    # permit and then blow up with UnknownAttributeError on #update, since
-    # Group has no such column.
-    array_options = @postable.is_a?(Profile) ? { mini_profile_heart_emojis: [] } : {}
-    params.require(:chat_identity).permit(*permitted, **array_options).tap do |p|
-      p[:mini_profile_heart_emojis] = p[:mini_profile_heart_emojis].reject(&:blank?) if p.key?(:mini_profile_heart_emojis)
-    end
+    params.require(:chat_identity).permit(*permitted)
   end
 end

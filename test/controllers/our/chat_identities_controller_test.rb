@@ -76,19 +76,20 @@ class Our::ChatIdentitiesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "al:", @profile.reload.chat_bracket_before
   end
 
-  test "update persists pronouns and heart_emojis overrides for a profile" do
+  test "update persists pronouns and emotes overrides for a profile" do
     sign_in_as @user
     patch our_chat_identity_path("Profile", @profile.uuid), params: {
       chat_identity: {
         mini_profile_pronouns_inherited: "false",
         mini_profile_pronouns: "it/its",
-        mini_profile_heart_emojis_inherited: "false",
-        mini_profile_heart_emojis: [ "", "aqua_heart", "moss_heart" ]
+        mini_profile_emotes_inherited: "false",
+        mini_profile_emotes: ":aqua_heart: :moss_heart: :aqua_heart:"
       }
     }
     @profile.reload
     assert_equal "it/its", @profile.mini_profile_pronouns
-    assert_equal %w[aqua_heart moss_heart], @profile.mini_profile_heart_emojis
+    assert_equal ":aqua_heart: :moss_heart: :aqua_heart:", @profile.mini_profile_emotes
+    assert_equal ":aqua_heart: :moss_heart: :aqua_heart:", @profile.chat_emotes
   end
 
   test "update persists pronouns override for a group" do
@@ -103,9 +104,9 @@ class Our::ChatIdentitiesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "they/them", @group.mini_profile_pronouns
   end
 
-  test "update ignores heart_emojis params for a group" do
+  test "update ignores emotes params for a group" do
     sign_in_as @user
-    # Group has no such column at all — permitting mini_profile_heart_emojis
+    # Group has no such column at all — permitting mini_profile_emotes
     # unconditionally (rather than only for Profile) previously let this
     # sail through Strong Parameters and then raise UnknownAttributeError
     # (a 500) on #update, instead of being silently dropped like any other
@@ -114,18 +115,18 @@ class Our::ChatIdentitiesControllerTest < ActionDispatch::IntegrationTest
       chat_identity: {
         mini_profile_subtitle_inherited: "false",
         mini_profile_subtitle: "Group chat subtitle",
-        mini_profile_heart_emojis: [ "aqua_heart" ]
+        mini_profile_emotes: ":aqua_heart:"
       }
     }
     assert_response :redirect
     assert_equal "Group chat subtitle", @group.reload.mini_profile_subtitle
-    assert_not @group.respond_to?(:mini_profile_heart_emojis)
+    assert_not @group.respond_to?(:mini_profile_emotes)
   end
 
-  test "preview does not blow up when sent heart_emojis params for a group" do
+  test "preview does not blow up when sent emotes params for a group" do
     sign_in_as @user
     post preview_our_chat_identity_path("Group", @group.uuid), params: {
-      chat_identity: { mini_profile_heart_emojis: [ "aqua_heart" ] }
+      chat_identity: { mini_profile_emotes: ":aqua_heart:" }
     }
     assert_response :success
   end

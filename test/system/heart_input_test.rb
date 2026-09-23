@@ -69,6 +69,22 @@ class HeartInputTest < ApplicationSystemTestCase
     end
   end
 
+  test "the Emotes field takes the same emote more than once, in any order, shown next to the pronouns" do
+    visit edit_our_profile_path(@profile)
+    field = find_field("Emotes")
+    field.fill_in with: ":red_heart: "
+
+    heart_button_for(field).click
+    within("dialog.heart-dialog[open]") { click_button "aqua heart" }
+    heart_button_for(field).click
+    within("dialog.heart-dialog[open]") { click_button "red heart" }
+    assert_field "Emotes", with: ":red_heart: :aqua_heart: :red_heart: "
+
+    click_button "Update profile"
+    assert_text "Profile updated."
+    assert_equal [ "red heart", "aqua heart", "red heart" ], all(".pronouns__emotes img").map { |img| img[:alt] }
+  end
+
   test "the heart button inserts the chosen heart at the caret and it saves as the plain code" do
     visit edit_our_profile_path(@profile)
     field = find_field("Subtitle")

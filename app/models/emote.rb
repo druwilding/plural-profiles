@@ -40,9 +40,6 @@ class Emote < ApplicationRecord
   validates :image, presence: true
   validate :identifiers_are_unique
 
-  before_destroy :remember_codes_for_profile_cleanup, prepend: true
-  after_update_commit :rewrite_profile_codes, if: :saved_change_to_code?
-  after_destroy_commit :remove_codes_from_profiles
   after_commit { EmoteRegistry.expire_current }
 
   # "02 Spring-Heart.webp" → "02_spring_heart". Blank when nothing usable is
@@ -108,21 +105,6 @@ class Emote < ApplicationRecord
   def record_previous_code_as_alias
     aliases.where(code: code).delete_all
     aliases.find_or_create_by!(code: code_in_database)
-  end
-
-  # Profiles store codes, and reads already resolve old codes through aliases,
-  # so this only tidies the stored data.
-  def rewrite_profile_codes
-    old_code, new_code = saved_change_to_code
-    Emotes::RewriteProfileCodesJob.perform_later(old_code, new_code)
-  end
-
-  def remember_codes_for_profile_cleanup
-    @codes_for_profile_cleanup = [ code_in_database, *aliases.pluck(:code) ]
-  end
-
-  def remove_codes_from_profiles
-    @codes_for_profile_cleanup.each { |old_code| Emotes::RewriteProfileCodesJob.perform_later(old_code, nil) }
   end
 
   def identifiers_are_unique

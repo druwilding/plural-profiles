@@ -663,7 +663,7 @@ class GroupTest < ActiveSupport::TestCase
 
   test "does not respond to the hearts chat field" do
     group = groups(:friends)
-    assert_not group.respond_to?(:chat_heart_emojis)
+    assert_not group.respond_to?(:chat_emotes)
   end
 
   test "chat_pronouns uses the independent value once set" do

@@ -27,6 +27,11 @@
     = heart_field(form, :tag_line)
 
   .form-group
+    = form.label :emotes
+    = heart_field(form, :emotes, "aria-describedby": "profile_emotes_hint")
+    %p.form-hint#profile_emotes_hint Shown next to your pronouns. Type codes like :spring_heart: or use the button to select emotes.
+
+  .form-group
     = form.label :description
     = heart_field(form, :description, as: :text_area, rows: 18)
 
@@ -45,16 +50,6 @@
                   %span.label-badge.label-badge--inline= label
               - if group.subtitle.present?
                 %span.checkbox-label__subtitle= formatted_inline(group.subtitle)
-
-  %fieldset.form-group
-    %legend Heart emojis
-    .heart-picker{data: {controller: "heart-picker"}}
-      = hidden_field_tag "profile[heart_emojis][]", ""
-      .heart-picker__grid
-        - HeartEmoji.all.each do |heart|
-          %label.heart-picker__heart{title: HeartEmoji.display_name(heart)}
-            %input.heart-picker__checkbox{type: "checkbox", name: "profile[heart_emojis][]", value: heart, checked: profile.heart_emojis.include?(heart) || nil, "aria-label": HeartEmoji.display_name(heart)}
-            = image_tag HeartEmoji.image_path(heart), width: 24, height: 24, alt: "", loading: "lazy"
 
   .form-group
     = form.label :labels_text, "Labels (optional, comma-separated)"

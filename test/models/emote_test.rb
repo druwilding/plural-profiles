@@ -1,8 +1,6 @@
 require "test_helper"
 
 class EmoteTest < ActiveSupport::TestCase
-  include ActiveJob::TestHelper
-
   def build_emote(name:, **attributes)
     emote = Emote.new(emote_group: emote_groups(:hearts), name: name, **attributes)
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
@@ -122,29 +120,6 @@ class EmoteTest < ActiveSupport::TestCase
     emote.restore!
     assert_not emote.archived?
     assert_includes Emote.active, emote
-  end
-
-  test "changing the code queues a rewrite of profiles' picked emotes" do
-    assert_enqueued_with(job: Emotes::RewriteProfileCodesJob, args: [ "cadbury_heart", "chocolate_heart" ]) do
-      emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
-    end
-  end
-
-  test "renaming without changing the code queues nothing" do
-    assert_no_enqueued_jobs(only: Emotes::RewriteProfileCodesJob) do
-      emotes(:cadbury_heart).update!(name: "50cadbury_heart")
-    end
-  end
-
-  test "destroying queues removal of the code and every old code from profiles" do
-    emote = emotes(:cadbury_heart)
-    emote.update!(name: "48_chocolate_heart")
-
-    assert_enqueued_with(job: Emotes::RewriteProfileCodesJob, args: [ "chocolate_heart", nil ]) do
-      assert_enqueued_with(job: Emotes::RewriteProfileCodesJob, args: [ "cadbury_heart", nil ]) do
-        emote.destroy!
-      end
-    end
   end
 
   test "natural_sort orders numbers by value" do

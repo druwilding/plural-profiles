@@ -102,8 +102,7 @@ class Our::ProfilesController < ApplicationController
   end
 
   def profile_params
-    params.require(:profile).permit(:name, :pronouns, :subtitle, :tag_line, :description, :avatar, :avatar_alt_text, :avatar_shape, :labels_text, :theme_id, created_at_parts: [ :month, :day, :year, :hour, :minute ], group_ids: [], heart_emojis: []).tap do |p|
-      p[:heart_emojis] = p[:heart_emojis].reject(&:blank?) if p.key?(:heart_emojis)
+    params.require(:profile).permit(:name, :pronouns, :emotes, :subtitle, :tag_line, :description, :avatar, :avatar_alt_text, :avatar_shape, :labels_text, :theme_id, created_at_parts: [ :month, :day, :year, :hour, :minute ], group_ids: []).tap do |p|
       created_at = parse_created_at_parts(p.delete(:created_at_parts))
       if created_at && (@profile&.created_at.nil? || created_at != @profile.created_at.strftime("%Y-%m-%dT%H:%M"))
         p[:created_at] = created_at

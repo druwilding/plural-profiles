@@ -27,14 +27,14 @@ v1 has site-wide emotes only. The schema and code are shaped so that **chat-serv
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Who can manage emotes  | Users with the existing `users.admin` flag, guarded by `ApplicationController#require_admin`                                                                                                                             |
 | Typed code             | Both `:spring_heart:` and `:02_spring_heart:` work. The code that gets suggested and inserted drops the number prefix, except for names like `100` or `1st_place`. It's derived automatically and admins can override it |
-| Renames                | The old code is kept as an alias automatically and keeps rendering. Picked profile hearts are rewritten to the new code                                                                                                  |
-| Profile heart picker   | Offers **all** emotes, in sections by group                                                                                                                                                                              |
+| Renames                | The old code is kept as an alias automatically and keeps rendering. Stored text (including profiles' emotes) is never rewritten                                                                                          |
+| Profile emotes         | A plain **Emotes** text field, like pronouns, so emotes can repeat and go in any order. Replaced the checkbox grid                                                                                                       |
 | Deleting               | Archive by default: an archived emote is hidden from pickers but keeps rendering. Permanent delete is a separate action that needs confirming                                                                            |
 | Image processing       | The original upload is stored unchanged. A resized, **static** webp is generated for display, so animated uploads show their first frame                                                                                 |
 | Bulk upload clashes    | Only clashing files ask for a choice: replace image, skip, or add under a new name                                                                                                                                        |
 | Delimiters             | `:x:` and `;x;` (mixed too) for **all** emotes, not only hearts                                                                                                                                                          |
-| Profile field label    | "Hearts" becomes **"Emotes"** in the UI. DB columns keep their names                                                                                                                                                     |
-| Limit on picked emotes | None                                                                                                                                                                                                                     |
+| Profile field label    | "Emotes". New columns `emotes`, `mini_profile_emotes`, `mini_profile_emotes_inherited`                                                                                                                                   |
+| Limit on emotes        | None                                                                                                                                                                                                                     |
 | Plain-text stand-in    | Every group **must** set a `plain_text` symbol (e.g. ♥ for Hearts)                                                                                                                                                       |
 | Activity log           | Not needed                                                                                                                                                                                                               |
 
@@ -169,14 +169,11 @@ add_index :emote_aliases, :code, unique: true
 - Moving an emote to another group is allowed. When scopes exist, moves will be limited to groups in the same scope.
 - `after_commit` on all three models bumps the registry cache version (below).
 
-### Why keep strings in `profiles.heart_emojis`?
+### Profiles' emotes are text
 
-Profiles keep storing **codes** (strings) instead of emote IDs, for two reasons:
+Profiles used to store picked hearts as a jsonb array of codes (`heart_emojis`, and `mini_profile_heart_emojis` for chat), picked from a checkbox grid. People wanted to repeat hearts and choose their order, so this became a plain text field, `emotes` (and `mini_profile_emotes` / `mini_profile_emotes_inherited`), that behaves exactly like pronouns: the emote picker button and autocomplete, rendered with `formatted_inline`, no special validation.
 
-- It's the format the data already has, so no data migration is needed.
-- Resolution goes through aliases, so a stale code still displays correctly even before the rename job rewrites it.
-
-The column names (`heart_emojis`, `mini_profile_heart_emojis`) stay as they are.
+`AddEmotesTextToProfiles` copied each profile's picked hearts over in order as codes (`[dewdrop_heart, red_heart]` → `:dewdrop_heart: :red_heart:`). The old columns are ignored by `Profile` and dropped in the cleanup phase.
 
 ---
 
@@ -296,21 +293,11 @@ Rails 8.1.3.1 disables libvips' "unfuzzed" loaders, SVG included, because they a
 
 ## Where users see emotes
 
-### Profile heart picker (profile form and chat identity form)
+### Profile emotes (profile form and chat identity form)
 
-- The field label and help text change from "Hearts" to **"Emotes"**. This covers the profile form, the chat identity form's toggle, and any headings on profile pages that say "hearts". The DB columns (`heart_emojis`, `mini_profile_heart_emojis`) and param names stay as they are.
-- Every non-archived emote, **in sections by group** with a heading each. It still uses the `heart-picker` checkbox grid.
-- There's no limit on how many emotes a profile can pick.
-- The setter keeps normalising through `resolve`, so aliases and number prefixes are rewritten to the current code when the profile is saved.
-- Validation:
-  - every entry must resolve;
-  - **newly added** entries must not be archived;
-  - an archived emote that was already picked may stay, so a profile never fails to save because an admin archived one of its hearts.
-- An archived emote the profile has already picked still shows in the grid, checked, and marked "(archived)". Unticking it removes it for good.
-
-### Displayed profile hearts (`shared/_heart_list`)
-
-This partial looks each code up in the registry and silently skips any that don't resolve (i.e. hard-deleted ones).
+- An **Emotes** text field right after Pronouns, with the emote picker button and autocomplete, like every other emote field. The chat settings page uses the standard "Use main / Set for chat" card for it.
+- Shown next to the pronouns in every profile header and the chat mini-profile, as `formatted_inline(profile.emotes)` in `.pronouns__emotes`.
+- Archived and deleted emotes behave as in any other text: archived ones still render; a deleted one's code shows as plain text.
 
 ### Picker dialog and autocomplete (`heart_input_controller.js`)
 
@@ -324,13 +311,7 @@ This partial looks each code up in the registry and silently skips any that don'
 
 ### Rename side effects
 
-When an emote's `code` changes:
-
-1. An `EmoteAlias` is created for the old code, inside the same transaction.
-2. `Emotes::RewriteProfileCodesJob` rewrites `profiles.heart_emojis` and `mini_profile_heart_emojis` (plus any chat identity override columns that store heart arrays) from the old code to the new one. It uses a single jsonb `UPDATE … WHERE heart_emojis ? :old`. It keeps the data tidy, but correctness doesn't depend on it, because reads already resolve through aliases.
-3. Free text (descriptions, chat messages) is **never rewritten**. The alias keeps it rendering.
-
-Hard delete runs a similar job that *removes* the code from profile arrays.
+When an emote's `code` changes, an `EmoteAlias` is created for the old code, inside the same transaction. Stored text (descriptions, chat messages, profiles' emotes) is **never rewritten**: the alias keeps it rendering.
 
 ---
 
@@ -374,17 +355,18 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 - `app/models/emote_registry.rb`
 - `db/migrate/…_import_hearts_as_emotes.rb`
 - `app/controllers/admin/base_controller.rb`, `admin/emotes_controller.rb`, `admin/emote_groups_controller.rb`
-- `app/views/admin/emotes/{index,upload,review}.html.haml` plus row/section partials and turbo stream templates
-- `app/javascript/controllers/auto_submit_controller.js`, `emote_upload_review_controller.js`
-- `app/jobs/emotes/rewrite_profile_codes_job.rb`, `app/jobs/purge_orphan_emote_uploads_job.rb`
+- `app/views/admin/emotes/{index,upload,decide}.html.haml` plus row/section partials, and `app/views/admin/emote_groups/index.html.haml`
+- `app/javascript/controllers/auto_submit_controller.js`, `preserve_focus_controller.js`, `emote_filter_controller.js`, `emote_upload_controller.js`, `emote_upload_decision_controller.js`
+- `app/models/emote_upload.rb`, `app/jobs/purge_orphan_emote_uploads_job.rb`
+- `db/migrate/…_add_emotes_text_to_profiles.rb`
 - Fixtures: `test/fixtures/emote_groups.yml`, `emotes.yml`, `emote_aliases.yml`, plus attachment fixtures
 
 **Changed:**
 - `app/models/heart_emoji.rb`: becomes a facade over `EmoteRegistry`, then removed
 - `app/helpers/application_helper.rb`: `replace_heart_emojis` (scanner + registry), `plain_field`, `heart_emojis_json_tag`
-- `app/models/profile.rb`: setters and validations (archived rule)
-- `app/views/our/profiles/_form.html.haml`, `app/views/our/chat_identities/edit.html.haml`: grouped picker
-- `app/views/shared/_heart_list.html.haml`
+- `app/models/profile.rb`: the `emotes` text field replaces the heart array, its setters and validations
+- `app/views/our/profiles/_form.html.haml`, `app/views/our/chat_identities/edit.html.haml`: Emotes text field instead of the checkbox grid
+- Profile headers and the chat mini-profile: `.pronouns__emotes` instead of `shared/_heart_list` (removed, with `heart_picker_controller.js`)
 - `app/javascript/controllers/heart_input_controller.js`: grouped dialog, name + code matching
 - `config/routes.rb`, account/sidebar nav (admin link)
 
@@ -407,12 +389,10 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
   - codes inside `<code>` and attributes untouched
   - `plain_field` with a heart, a non-heart and an unknown code
 - **Uniqueness:** a name clashing with another emote's code; a code clashing with an alias; re-deriving on rename; override stops re-deriving.
-- **Rename:** alias created, profile arrays rewritten by the job, old code still renders in a chat message.
+- **Rename:** alias created, old code still renders in a chat message and in a profile's emotes.
 - **Archive/restore/delete:**
   - an archived emote is missing from pickable lists but still renders;
-  - a profile that already has it still saves;
-  - newly adding it fails;
-  - hard delete removes it from profiles and codes render as text.
+  - after a hard delete, its codes render as plain text.
 - **Registry cache:** a change to any model bumps the version, and a fresh registry reflects it.
 - **Admin access:** non-admins are redirected from every endpoint.
 - **Upload flow (system tests):**
@@ -434,6 +414,6 @@ Each phase is its own PR and leaves the site working.
 2. **Generic codes.** The new pattern with the lookahead scanner, name/alias/legacy resolution, `plain_field` changes. `:100:` works from this point on.
 3. **Admin emotes page.** Grouped list, quick rename, code override, aliases, archive/restore/delete, group management, and the rename/delete jobs.
 4. **Upload + bulk upload**: automatic import, a decision page for clashes, in-browser SVG conversion, and orphan cleanup.
-5. **Grouped pickers.** The "Hearts" → "Emotes" label change, profile/chat identity checkbox grids in group sections, and dialog sections plus name matching in `heart_input_controller.js`.
-6. **Cleanup.** Delete `public/images/hearts/` and `HeartEmoji`. Optionally, do a mechanical rename of `heart_input` / `heart_field` / `heart_emojis_json_tag` to `emote_*`. The DB columns keep their names.
+5. **Pickers and profile emotes.** Dialog sections by group *(done)*; profiles' checkbox grid replaced by an Emotes text field, with existing picks migrated *(done)*; autocomplete matching on names as well as codes.
+6. **Cleanup.** Delete `public/images/hearts/` and `HeartEmoji`. Drop the old `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited` columns (and their `ignored_columns` entry). Optionally, do a mechanical rename of `heart_input` / `heart_field` / `heart_emojis_json_tag` to `emote_*`.
 

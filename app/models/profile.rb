@@ -1,4 +1,7 @@
 class Profile < ApplicationRecord
+  # Replaced by the emotes text field; dropped once that's settled in.
+  self.ignored_columns += %w[heart_emojis mini_profile_heart_emojis mini_profile_heart_emojis_inherited]
+
   include HasAvatar
   include HasLabels
   include ChatProxyable
@@ -9,7 +12,7 @@ class Profile < ApplicationRecord
   chat_identity_field :tag_line
   chat_identity_field :description
   chat_identity_field :pronouns
-  chat_identity_field :heart_emojis
+  chat_identity_field :emotes
 
   belongs_to :user
   belongs_to :theme, optional: true
@@ -28,9 +31,6 @@ class Profile < ApplicationRecord
 
   validates :name, presence: true
   validates :uuid, uniqueness: true
-
-  validate :heart_emojis_are_valid
-  validate :mini_profile_heart_emojis_are_valid
 
   def to_param
     uuid
@@ -56,19 +56,6 @@ class Profile < ApplicationRecord
     Profile.where(id: all_copy_ids, user_id: user_id).where("labels @> ?", labels.to_json)
   end
 
-  # Normalizes any number-prefixed entries (e.g. a stale form submitted after a
-  # renumber) to their bare canonical form, so only genuinely unknown hearts
-  # fail validation.
-  def heart_emojis=(values)
-    super(Array(values).map { |value| value.blank? ? value : (HeartEmoji.resolve(value) || value) })
-  end
-
-  # Mirrors heart_emojis= — same number-prefix normalization, applied to the
-  # independent chat-identity override rather than the main field.
-  def mini_profile_heart_emojis=(values)
-    super(Array(values).map { |value| value.blank? ? value : (HeartEmoji.resolve(value) || value) })
-  end
-
   private
 
   def generate_uuid
@@ -80,29 +67,5 @@ class Profile < ApplicationRecord
   # this runs any overrides routed through that link are stale.
   def prune_stale_inclusion_overrides
     InclusionOverride.prune_stale!(user)
-  end
-
-  def heart_emojis_are_valid
-    validate_emote_codes(:heart_emojis)
-  end
-
-  def mini_profile_heart_emojis_are_valid
-    validate_emote_codes(:mini_profile_heart_emojis)
-  end
-
-  # Every code must be a known emote. Archived emotes can't be newly picked,
-  # but one that was already picked may stay, so archiving an emote never
-  # stops a profile from saving.
-  def validate_emote_codes(attribute)
-    codes = public_send(attribute)
-    return if codes.blank?
-
-    registry = EmoteRegistry.current
-    invalid = codes.reject { |code| registry.resolve(code)&.code == code }
-    errors.add(attribute, "contains invalid emotes: #{invalid.join(', ')}") if invalid.any?
-
-    newly_added = codes - Array(attribute_in_database(attribute))
-    archived = newly_added.select { |code| registry.resolve(code)&.archived? }
-    errors.add(attribute, "contains archived emotes: #{archived.join(', ')}") if archived.any?
   end
 end

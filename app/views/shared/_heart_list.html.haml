@@ -1,9 +1,0 @@
--# A row of heart images — a profile's picked hearts, shown next to pronouns.
--# Codes that no longer resolve (a deleted emote) are skipped.
--#
--# Locals:
--#   hearts — array of canonical heart codes (e.g. profile.heart_emojis)
-.heart-display__grid
-  - hearts.filter_map { |heart| EmoteRegistry.current.resolve(heart) }.each do |emote|
-    .heart-display__heart
-      = image_tag emote.src, width: 24, height: 24, alt: emote.label, title: emote.label, loading: "lazy"
