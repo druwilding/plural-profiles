@@ -490,6 +490,18 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
+  test "remove_group prunes overrides routed through the removed link" do
+    sign_in_as users(:three)
+    delete remove_group_our_group_path(groups(:castle_clan)), params: { group_id: groups(:flux).id }
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
+  test "remove_profile prunes overrides for the removed profile" do
+    sign_in_as users(:three)
+    delete remove_profile_our_group_path(groups(:flux)), params: { profile_id: profiles(:drift).id }
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
   test "remove_group redirects logged-out user to sign in" do
     everyone = groups(:everyone)
     assert_no_difference("GroupGroup.count") do

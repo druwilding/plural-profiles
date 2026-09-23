@@ -16,3 +16,6 @@ production:
   clear_stale_duplication_wizards:
     command: "DuplicationWizard.stale.delete_all"
     schedule: every day at 3am
+  prune_stale_inclusion_overrides:
+    command: "User.find_each { |user| InclusionOverride.prune_stale!(user) }"
+    schedule: every day at 3:30am

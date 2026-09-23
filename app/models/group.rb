@@ -30,6 +30,8 @@ class Group < ApplicationRecord
 
   before_create :generate_uuid
   after_save :sync_selected_parent_groups
+  after_save :prune_stale_inclusion_overrides, unless: :previously_new_record?
+  after_destroy :prune_stale_inclusion_overrides
 
   validates :name, presence: true
   validates :uuid, uniqueness: true
@@ -792,5 +794,9 @@ class Group < ApplicationRecord
     end
     parent_links.reset
     parent_groups.reset
+  end
+
+  def prune_stale_inclusion_overrides
+    InclusionOverride.prune_stale!(user)
   end
 end

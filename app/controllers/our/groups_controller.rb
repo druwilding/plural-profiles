@@ -80,6 +80,7 @@ class Our::GroupsController < ApplicationController
   def remove_profile
     profile = @group.profiles.find(params[:profile_id])
     @group.profiles.delete(profile)
+    InclusionOverride.prune_stale!(Current.user)
     redirect_to manage_profiles_our_group_path(@group), notice: "Profile removed from group."
   end
 
@@ -98,6 +99,7 @@ class Our::GroupsController < ApplicationController
   def remove_group
     child = @group.child_groups.find(params[:group_id])
     @group.child_groups.delete(child)
+    InclusionOverride.prune_stale!(Current.user)
     redirect_to group_management_path, notice: "Group removed."
   rescue ActiveRecord::RecordNotFound
     redirect_to group_management_path, alert: "Group not found."

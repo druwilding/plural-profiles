@@ -132,4 +132,59 @@ class InclusionOverrideTest < ActiveSupport::TestCase
       assert_equal profiles(:drift).id, o.target_id
     end
   end
+
+  # -- prune_stale! ---
+
+  test "prune_stale! keeps overrides whose route still exists" do
+    assert_no_difference("InclusionOverride.count") do
+      InclusionOverride.prune_stale!(@user)
+    end
+  end
+
+  test "prune_stale! removes overrides routed through a removed group link" do
+    group_groups(:prism_in_spectrum).destroy
+    InclusionOverride.prune_stale!(@user)
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:rogue_pack_hidden_in_alpha_via_spectrum))
+  end
+
+  test "prune_stale! removes overrides whose target profile left the group" do
+    group_profiles(:drift_in_flux).destroy
+    InclusionOverride.prune_stale!(@user)
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+    assert InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:ripple_hidden_in_castle))
+  end
+
+  test "prune_stale! removes overrides whose target group left the parent" do
+    group_groups(:static_in_flux).destroy
+    InclusionOverride.prune_stale!(@user)
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:static_burst_hidden_in_castle))
+  end
+
+  test "prune_stale! only touches the given user's overrides" do
+    group_profiles(:drift_in_flux).delete
+    InclusionOverride.prune_stale!(users(:one))
+    assert InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
+  test "unticking a parent group on a group prunes overrides through that link" do
+    groups(:flux).update!(selected_parent_group_ids: [ "" ])
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
+  test "removing a group from a profile prunes overrides for that profile" do
+    profiles(:drift).update!(group_ids: [ "" ])
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
+  test "deleting a group prunes overrides routed through it in other trees" do
+    groups(:flux).destroy
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
+  test "re-adding a removed link does not bring old overrides back" do
+    flux = groups(:flux)
+    flux.update!(selected_parent_group_ids: [ "" ])
+    flux.update!(selected_parent_group_ids: [ groups(:castle_clan).id ])
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
 end
