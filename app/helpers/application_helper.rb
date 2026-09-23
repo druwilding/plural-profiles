@@ -84,7 +84,7 @@ module ApplicationHelper
   def plain_field(text)
     return "" if text.blank?
     text = text.gsub(SPOILER_PLAIN_PATTERN, "▓▓▓▓")
-    text = text.gsub(HeartEmoji::PATTERN, "♥")
+    text = EmoteRegistry.current.replace_codes(text, &:plain_text)
     strip_tags(text)
   end
 
@@ -229,20 +229,17 @@ module ApplicationHelper
   end
 
   def replace_heart_emojis(html)
-    # Only replace hearts in text nodes — skip <code>...</code> blocks and HTML tags
-    # so that heart codes inside attributes (e.g. title=":11_aqua_heart:") are preserved
-    skip_pattern = /#{CODE_BLOCK_PATTERN}|<[^>]*>/m
+    # Only replace emotes in text nodes — skip <code>...</code> blocks and HTML tags
+    # so that emote codes inside attributes (e.g. title=":11_aqua_heart:") are preserved.
+    # Entities are skipped too, so the ; ending one (&amp;) can't open an emote code.
+    skip_pattern = /#{CODE_BLOCK_PATTERN}|<[^>]*>|&(?:[a-z][a-z0-9]*|#\d+|#x\h+);/mi
     parts = html.split(skip_pattern)
     non_text = html.scan(skip_pattern)
 
+    registry = EmoteRegistry.current
     result = parts.map do |part|
-      part.gsub(HeartEmoji::PATTERN) do |match|
-        emote = EmoteRegistry.current.resolve(Regexp.last_match(1))
-        if emote
-          '<img src="%s" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
-        else
-          match
-        end
+      registry.replace_codes(part) do |emote|
+        '<img src="%s" title="%s" alt="%s" class="heart-inline emote-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
       end
     end
     non_text.each_with_index { |segment, i| result.insert((i * 2) + 1, segment) }

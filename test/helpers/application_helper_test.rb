@@ -286,7 +286,7 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_includes result, 'class="heart-inline"'
+    assert_includes result, 'class="heart-inline emote-inline"'
     assert_not_includes result, ":11_AQUA_HEART:"
   end
 
@@ -296,7 +296,7 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_includes result, 'class="heart-inline"'
+    assert_includes result, 'class="heart-inline emote-inline"'
     assert_not_includes result, ":11_aqua_heart:"
   end
 
@@ -424,6 +424,51 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, 'aria-label=":11_aqua_heart:"'
     assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
     assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+  end
+
+  test "replaces an emote code that doesn't end in _heart" do
+    emote = Emote.new(emote_group: emote_groups(:hearts), name: "100")
+    emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
+    emote.save!
+
+    result = formatted_inline("that's :100:!")
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("100")}\""
+    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_not_includes result, ":100:"
+  end
+
+  test "replaces an emote typed by its name" do
+    result = formatted_inline(":02_spring_heart:")
+    assert_includes result, "<img src=\"#{HeartEmoji.image_path("spring_heart")}\""
+    assert_includes result, 'alt="spring heart"'
+  end
+
+  test "an unknown code doesn't stop the next emote from rendering" do
+    result = formatted_inline("see you at 12:30:red_heart:")
+    assert_includes result, "see you at 12:30<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+  end
+
+  test "the semicolon ending an HTML entity doesn't open an emote code" do
+    assert_equal "&amp;red_heart;", formatted_inline("&amp;red_heart;")
+    result = formatted_inline("Tom & Jerry;red_heart;")
+    assert_includes result, "Tom &amp; Jerry<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+  end
+
+  test "leaves unknown codes as typed" do
+    assert_equal "a :fake_heart: b :note:", formatted_inline("a :fake_heart: b :note:")
+  end
+
+  test "plain_field replaces emotes with their group's plain text symbol" do
+    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    emote = Emote.new(emote_group: other, name: "100")
+    emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
+    emote.save!
+
+    assert_equal "Hello ♥ and ★", plain_field("Hello :11_aqua_heart: and ;100;")
+  end
+
+  test "plain_field leaves unknown codes as typed" do
+    assert_equal "Ratio 3:2 :fake_heart:", plain_field("Ratio 3:2 :fake_heart:")
   end
 
   # -- Multiple blank lines --

@@ -91,4 +91,50 @@ class EmoteRegistryTest < ActiveSupport::TestCase
     EmoteRegistry.expire_current
     assert_same before, registry
   end
+
+  # -- replace_codes --
+
+  def replace(text)
+    registry.replace_codes(text) { |emote| "[#{emote.code}]" }
+  end
+
+  test "replace_codes accepts every delimiter and separator combination" do
+    [ ":cadbury_heart:", ";cadbury-heart;", ":cadbury_heart;", ";cadbury_heart:" ].each do |code|
+      assert_equal "a [cadbury_heart] b", replace("a #{code} b"), "expected #{code} to be replaced"
+    end
+  end
+
+  test "replace_codes accepts names, aliases and old numbered codes" do
+    emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
+
+    assert_equal "[spring_heart] [chocolate_heart] [chocolate_heart] [aqua_heart]",
+      replace(":02_spring_heart: :cadbury_heart: :50cadbury_heart: :11_aqua_heart:")
+  end
+
+  test "replace_codes replaces codes that don't end in _heart" do
+    add_emote("100")
+    assert_equal "that's [100]!", replace("that's :100:!")
+  end
+
+  test "replace_codes replaces codes side by side" do
+    assert_equal "[red_heart][red_heart]", replace(":red_heart::red_heart:")
+  end
+
+  test "replace_codes leaves the closing delimiter of an unknown code to open the next one" do
+    assert_equal "12:30[red_heart]", replace("12:30:red_heart:")
+    assert_equal "ratio 3:2[red_heart]", replace("ratio 3:2:red_heart:")
+    assert_equal ":nope[red_heart]", replace(":nope:red_heart:")
+  end
+
+  test "replace_codes leaves unknown codes and stray delimiters alone" do
+    [ "a:b:c", ":unknown:", "10:30", "https://example.com", "::", ";)", "time: 12:30:45" ].each do |text|
+      assert_equal text, replace(text)
+    end
+  end
+
+  test "replace_codes only replaces a code that's exactly an emote" do
+    assert_equal "10:100:", replace("10:100:")
+    add_emote("100")
+    assert_equal "10[100]", replace("10:100:")
+  end
 end

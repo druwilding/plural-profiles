@@ -114,6 +114,8 @@ PATTERN = /[:;]([a-z0-9][a-z0-9_-]*)(?=[:;])/i
 - `a:b:c`
 - a code inside `<code>`, which must be left alone (as today)
 
+HTML entities (`&amp;`, `&#39;`) are skipped, the same way tags and `<code>` blocks already are. Otherwise the `;` that ends an entity could open an emote code: `&amp;red_heart;` would render as a broken `&amp` followed by a heart.
+
 False positives need an exact emote match. `10:100:` would render a 💯 only if `100` exists, and that trade-off is accepted.
 
 ### `plain_field`

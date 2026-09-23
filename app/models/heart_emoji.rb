@@ -3,10 +3,6 @@
 # in the database (Emote, EmoteGroup, EmoteAlias); this module goes away once
 # callers use the registry directly.
 module HeartEmoji
-  # Delimiters (: or ;) and the internal word separator (_ or -) can each be
-  # mixed independently, e.g. :cadbury_heart:, ;cadbury-heart;, :cadbury_heart;
-  PATTERN = /[:;]([a-z0-9_-]+[_-]heart)[:;]/i
-
   # Every pickable emote's canonical code, in display order: the profile
   # form, the heart picker dialog, and autocomplete results.
   def self.all

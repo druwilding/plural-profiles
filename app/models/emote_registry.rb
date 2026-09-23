@@ -8,10 +8,14 @@
 # in one process reach every other process on its next request. The cache store
 # is per-process (memory_store), so a Rails.cache counter wouldn't do that.
 class EmoteRegistry
-  Entry = Data.define(:id, :name, :code, :label, :src, :group_id, :archived) do
+  Entry = Data.define(:id, :name, :code, :label, :src, :group_id, :plain_text, :archived) do
     alias_method :archived?, :archived
   end
   Group = Data.define(:id, :name, :plain_text, :position)
+
+  # A typed code: a delimiter (: or ;) and a name, with the closing delimiter
+  # only looked ahead at. See #replace_codes for why it isn't consumed here.
+  CODE_PATTERN = /[:;]([a-z0-9][a-z0-9_-]*)(?=[:;])/i
 
   # A number before the name, e.g. the "11_" in "11_aqua_heart" or the "50" in
   # "50cadbury_heart": old Discord-numbered pastes. Only stripped when a letter
@@ -73,13 +77,13 @@ class EmoteRegistry
   def initialize(version:, groups:, emotes:)
     @version = version
     @groups = groups.freeze
+    @groups_by_id = @groups.index_by(&:id)
     @entries = emotes.map { |emote| entry_for(emote) }.freeze
     @by_name = @entries.index_by(&:name)
     @by_code = @entries.index_by(&:code)
     @by_alias = emotes.each_with_object({}) do |emote, lookup|
       emote.aliases.each { |emote_alias| lookup[emote_alias.code] = @by_code[emote.code] }
     end
-    @groups_by_id = @groups.index_by(&:id)
   end
 
   # Entries that can be offered in pickers and autocomplete. Archived emotes
@@ -106,9 +110,35 @@ class EmoteRegistry
     @groups_by_id[id]
   end
 
+  # Replaces every code in text that resolves to an emote with the block's
+  # result for that emote; everything else is left exactly as it was.
+  # Delimiters (: or ;) and separators (_ or -) can be mixed, e.g.
+  # :cadbury_heart:, ;cadbury-heart;, :cadbury_heart;
+  #
+  # The closing delimiter is only consumed when the code resolves. Otherwise an
+  # unknown code would swallow the delimiter that opens the next real one: in
+  # "12:30:red_heart:", ":30" isn't an emote, so its closing colon is left to
+  # open ":red_heart:".
+  def replace_codes(text)
+    result = +""
+    position = 0
+    while (match = CODE_PATTERN.match(text, position))
+      emote = resolve(match[1])
+      if emote
+        result << text[position...match.begin(0)] << yield(emote)
+        position = match.end(0) + 1
+      else
+        result << text[position...match.end(0)]
+        position = match.end(0)
+      end
+    end
+    result << text[position..]
+  end
+
   private
 
   def entry_for(emote)
+    group = @groups_by_id[emote.emote_group_id]
     Entry.new(
       id: emote.id,
       name: emote.name,
@@ -116,6 +146,7 @@ class EmoteRegistry
       label: emote.code.tr("_", " "),
       src: image_src(emote),
       group_id: emote.emote_group_id,
+      plain_text: group&.plain_text,
       archived: emote.archived?
     )
   end

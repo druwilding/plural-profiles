@@ -61,11 +61,4 @@ class HeartEmojiTest < ActiveSupport::TestCase
   test "code is the canonical colon form" do
     assert_equal ":abyss_heart:", HeartEmoji.code("abyss_heart")
   end
-
-  test "PATTERN matches every delimiter and separator combination" do
-    [ ":cadbury_heart:", ";cadbury-heart;", ":cadbury_heart;", ";cadbury_heart:" ].each do |code|
-      assert_match HeartEmoji::PATTERN, code
-      assert_equal "cadbury", code.match(HeartEmoji::PATTERN)[1][0, 7]
-    end
-  end
 end
