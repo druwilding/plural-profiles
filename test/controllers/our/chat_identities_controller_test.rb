@@ -104,31 +104,25 @@ class Our::ChatIdentitiesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "they/them", @group.mini_profile_pronouns
   end
 
-  test "update ignores emotes params for a group" do
+  test "update persists an emotes override for a group" do
     sign_in_as @user
-    # Group has no such column at all — permitting mini_profile_emotes
-    # unconditionally (rather than only for Profile) previously let this
-    # sail through Strong Parameters and then raise UnknownAttributeError
-    # (a 500) on #update, instead of being silently dropped like any other
-    # unpermitted param.
     patch our_chat_identity_path("Group", @group.uuid), params: {
       chat_identity: {
-        mini_profile_subtitle_inherited: "false",
-        mini_profile_subtitle: "Group chat subtitle",
-        mini_profile_emotes: ":aqua_heart:"
+        mini_profile_emotes_inherited: "false",
+        mini_profile_emotes: ":aqua_heart: :aqua_heart:"
       }
     }
     assert_response :redirect
-    assert_equal "Group chat subtitle", @group.reload.mini_profile_subtitle
-    assert_not @group.respond_to?(:mini_profile_emotes)
+    @group.reload
+    assert_not @group.mini_profile_emotes_inherited?
+    assert_equal ":aqua_heart: :aqua_heart:", @group.chat_emotes
   end
 
-  test "preview does not blow up when sent emotes params for a group" do
+  test "edit shows an Emotes card for a group" do
     sign_in_as @user
-    post preview_our_chat_identity_path("Group", @group.uuid), params: {
-      chat_identity: { mini_profile_emotes: ":aqua_heart:" }
-    }
-    assert_response :success
+    get edit_our_chat_identity_path("Group", @group.uuid)
+    assert_select "h3", text: "Emotes"
+    assert_select "input[name='chat_identity[mini_profile_emotes]']"
   end
 
   test "update rejects a blank name once set to not inherited" do

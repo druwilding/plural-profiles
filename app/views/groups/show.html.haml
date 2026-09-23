@@ -69,9 +69,12 @@
               - if node[:group].avatar.attached?
                 = image_tag node[:group].avatar.variant(resize_to_fill: [32, 32]), class: "avatar avatar--inline", width: 32, height: 32, alt: ""
               = formatted_inline(node[:group].name)
-            - if node[:group].pronouns.present?
+            - if node[:group].pronouns.present? || node[:group].emotes.present?
               .pronouns
-                %span= formatted_inline(node[:group].pronouns)
+                - if node[:group].pronouns.present?
+                  %span= formatted_inline(node[:group].pronouns)
+                - if node[:group].emotes.present?
+                  %span.pronouns__emotes= formatted_inline(node[:group].emotes)
             - if node[:profiles].any?
               .profile-grid
                 - node[:profiles].each do |entry|
@@ -87,9 +90,12 @@
           = image_tag @group.avatar.variant(resize_to_fill: [96, 96]), class: "avatar avatar--large #{avatar_shape_class(@group)}".strip, width: 96, height: 96, alt: @group.avatar_alt_text.presence || ""
       %h1= formatted_inline(@group.name)
 
-      - if @group.pronouns.present?
+      - if @group.pronouns.present? || @group.emotes.present?
         .pronouns
-          %span= formatted_inline(@group.pronouns)
+          - if @group.pronouns.present?
+            %span= formatted_inline(@group.pronouns)
+          - if @group.emotes.present?
+            %span.pronouns__emotes= formatted_inline(@group.emotes)
 
     - if @group.description.present?
       .group-description

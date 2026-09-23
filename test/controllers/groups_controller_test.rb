@@ -12,6 +12,14 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Friends", response.body
   end
 
+  test "show displays the group's emotes on the shared page, even without pronouns" do
+    group = groups(:friends)
+    group.update!(pronouns: nil, emotes: ":aqua_heart: :aqua_heart:")
+    get group_path(uuid: group.uuid)
+    assert_response :success
+    assert_equal [ "aqua heart", "aqua heart" ], css_select(".pronouns__emotes img").map { |img| img["alt"] }.first(2)
+  end
+
   test "show lists group profiles" do
     group = groups(:friends)
     get group_path(uuid: group.uuid)

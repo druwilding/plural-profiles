@@ -24,6 +24,11 @@
     = heart_field(form, :tag_line)
 
   .form-group
+    = form.label :emotes
+    = heart_field(form, :emotes, "aria-describedby": "group_emotes_hint")
+    %p.form-hint#group_emotes_hint Type codes like :spring_heart: or use the button to select emotes.
+
+  .form-group
     = form.label :description
     = heart_field(form, :description, as: :text_area, rows: 18)
 

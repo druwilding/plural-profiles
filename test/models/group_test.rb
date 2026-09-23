@@ -661,9 +661,13 @@ class GroupTest < ActiveSupport::TestCase
     assert_equal "Nickname", group.chat_name
   end
 
-  test "does not respond to the hearts chat field" do
+  test "chat_emotes inherits the main emotes until set for chat" do
     group = groups(:friends)
-    assert_not group.respond_to?(:chat_emotes)
+    group.update!(emotes: ":red_heart: :red_heart:")
+    assert_equal ":red_heart: :red_heart:", group.chat_emotes
+
+    group.update!(mini_profile_emotes_inherited: false, mini_profile_emotes: ":aqua_heart:")
+    assert_equal ":aqua_heart:", group.chat_emotes
   end
 
   test "chat_pronouns uses the independent value once set" do

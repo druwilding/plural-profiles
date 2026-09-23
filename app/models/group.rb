@@ -9,6 +9,7 @@ class Group < ApplicationRecord
   chat_identity_field :tag_line
   chat_identity_field :description
   chat_identity_field :pronouns
+  chat_identity_field :emotes
 
   belongs_to :user
   belongs_to :theme, optional: true
