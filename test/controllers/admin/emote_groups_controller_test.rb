@@ -14,11 +14,28 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_not EmoteGroup.exists?(name: "Other")
   end
 
+  test "index lists groups in order with their emote counts" do
+    EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    sign_in_as @admin
+    get admin_emote_groups_path
+
+    assert_response :success
+    assert_equal [ "Hearts", "Other" ], css_select(".emote-groups__group input[name='emote_group[name]']").map { |input| input["value"] }
+    assert_select ".emote-groups__count", text: "50 emotes"
+    assert_select ".emote-groups__count", text: "0 emotes"
+  end
+
+  test "index requires an admin" do
+    sign_in_as users(:two)
+    get admin_emote_groups_path
+    assert_redirected_to root_path
+  end
+
   test "create adds a group at the end" do
     sign_in_as @admin
     post admin_emote_groups_path, params: { emote_group: { name: "Other", plain_text: "★" } }
 
-    assert_redirected_to admin_emotes_path
+    assert_redirected_to admin_emote_groups_path
     group = EmoteGroup.find_by!(name: "Other")
     assert_equal 1, group.position
     assert_nil group.owner
@@ -28,7 +45,7 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     post admin_emote_groups_path, params: { emote_group: { name: "Other", plain_text: "" } }
 
-    assert_redirected_to admin_emotes_path
+    assert_redirected_to admin_emote_groups_path
     assert_match "Plain text can't be blank", flash[:alert]
   end
 
@@ -54,7 +71,7 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     patch move_admin_emote_group_path(@hearts, direction: "up")
 
-    assert_redirected_to admin_emotes_path(anchor: "emote-groups")
+    assert_redirected_to admin_emote_groups_path
     assert_equal 0, @hearts.reload.position
   end
 

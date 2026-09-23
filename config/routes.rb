@@ -57,8 +57,10 @@ Rails.application.routes.draw do
     end
   end
 
-  # Site-wide emote management (admins only)
+  # Site-wide administration (admins only)
   namespace :admin do
+    root "dashboard#show"
+
     resources :emotes, only: %i[index update destroy] do
       member do
         patch :archive
@@ -66,7 +68,7 @@ Rails.application.routes.draw do
         delete :remove_alias
       end
     end
-    resources :emote_groups, only: %i[create update destroy] do
+    resources :emote_groups, only: %i[index create update destroy] do
       member do
         patch :move
       end

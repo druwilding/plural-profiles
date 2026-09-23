@@ -175,15 +175,15 @@ body {
 }
 
 .admin-badge {
-  margin-left: 1.5rem;
+  margin-left: 0.5rem;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 0.2em 0.5em;
   border-radius: 3px;
-  background: color-mix(in srgb, var(--danger-button-bg) 85%, transparent);
-  color: var(--danger-button-text);
-  border: 1px solid color-mix(in srgb, var(--danger-button-border) 40%, transparent);
+  background: var(--alert-bg);
+  color: var(--alert-text);
+  border: 1px solid var(--alert-border);
   vertical-align: middle;
   text-transform: uppercase;
 }
@@ -2956,6 +2956,34 @@ h1 .heart-inline {
   vertical-align: -0.1em;
 }
 
+/* ── Admin ─────────────────────────────── */
+
+.admin-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0 1.5rem;
+}
+
+.admin-links__item h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.admin-links__item p {
+  margin: 0;
+}
+
 /* ── Admin: emotes ─────────────────────── */
 
 .admin-emotes__intro p,
@@ -2996,7 +3024,7 @@ h1 .heart-inline {
 
 .emote-groups {
   list-style: none;
-  margin: 0 0 1rem;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -3013,15 +3041,16 @@ h1 .heart-inline {
   border-bottom: 1px solid var(--input-border);
 }
 
+.emote-groups__group:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 .emote-groups__form {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.5rem;
-}
-
-.emote-groups__form--new {
-  padding-top: 0.25rem;
 }
 
 .emote-groups__field label {

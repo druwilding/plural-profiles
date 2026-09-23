@@ -1,24 +1,29 @@
 # Adds, renames, reorders and deletes the site-wide emote groups shown as
 # sections on the admin emotes page and in the pickers.
 class Admin::EmoteGroupsController < Admin::BaseController
-  before_action :set_group, except: :create
+  before_action :set_group, except: %i[index create]
+
+  def index
+    @groups = EmoteGroup.site_wide.ordered.to_a
+    @emote_counts = Emote.where(emote_group: @groups).group(:emote_group_id).count
+  end
 
   def create
     group = EmoteGroup.site_wide.new(group_params)
     group.position = (EmoteGroup.site_wide.maximum(:position) || -1) + 1
 
     if group.save
-      redirect_to admin_emotes_path, notice: "Added the #{group.name} group."
+      redirect_to admin_emote_groups_path, notice: "Added the #{group.name} group."
     else
-      redirect_to admin_emotes_path, alert: "Couldn't add the group: #{group.errors.full_messages.to_sentence}."
+      redirect_to admin_emote_groups_path, alert: "Couldn't add the group: #{group.errors.full_messages.to_sentence}."
     end
   end
 
   def update
     if @group.update(group_params)
-      redirect_to admin_emotes_path, notice: "Saved the #{@group.name} group."
+      redirect_to admin_emote_groups_path, notice: "Saved the #{@group.name} group."
     else
-      redirect_to admin_emotes_path, alert: "Couldn't save the group: #{@group.errors.full_messages.to_sentence}."
+      redirect_to admin_emote_groups_path, alert: "Couldn't save the group: #{@group.errors.full_messages.to_sentence}."
     end
   end
 
@@ -36,14 +41,14 @@ class Admin::EmoteGroupsController < Admin::BaseController
       end
     end
 
-    redirect_to admin_emotes_path(anchor: "emote-groups")
+    redirect_to admin_emote_groups_path
   end
 
   def destroy
     if @group.destroy
-      redirect_to admin_emotes_path, notice: "Deleted the #{@group.name} group."
+      redirect_to admin_emote_groups_path, notice: "Deleted the #{@group.name} group."
     else
-      redirect_to admin_emotes_path, alert: "Only an empty group can be deleted. Move or delete its emotes first."
+      redirect_to admin_emote_groups_path, alert: "Only an empty group can be deleted. Move or delete its emotes first."
     end
   end
 

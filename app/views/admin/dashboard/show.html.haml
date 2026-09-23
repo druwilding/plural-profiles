@@ -1,0 +1,14 @@
+- content_for(:title) { "Admin — Plural Profiles" }
+
+.card
+  .card__header
+    %h1 Admin
+  %p Site-wide settings that affect everyone. Only admins can see these pages.
+
+%ul.admin-links
+  %li.card.admin-links__item
+    %h2= link_to "Emotes", admin_emotes_path
+    %p Manage site-wide emotes.
+  %li.card.admin-links__item
+    %h2= link_to "Emote groups", admin_emote_groups_path
+    %p Manage site-wide emote groups

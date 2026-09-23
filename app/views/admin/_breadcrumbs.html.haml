@@ -1,0 +1,5 @@
+-# A link back to the admin landing page, shown above each admin page.
+%nav.admin-breadcrumbs{"aria-label": "Breadcrumb"}
+  = link_to "Admin", admin_root_path
+  %span{"aria-hidden": "true"} ›
+  %span{"aria-current": "page"}= current

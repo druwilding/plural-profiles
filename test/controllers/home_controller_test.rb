@@ -23,17 +23,17 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   # -- Admin badge --
 
-  test "admin badge is present for admin user" do
+  test "admin link is present for admin user" do
     sign_in_as users(:one)
     assert users(:one).admin?
     get root_path
-    assert_select ".admin-badge", text: "ADMIN"
+    assert_select ".site-header nav a[href=?]", admin_root_path, text: "Admin"
   end
 
-  test "admin badge is absent for non-admin user" do
+  test "admin link is absent for non-admin user" do
     sign_in_as users(:two)
     assert_not users(:two).admin?
     get root_path
-    assert_select ".admin-badge", count: 0
+    assert_select "a[href=?]", admin_root_path, count: 0
   end
 end

@@ -1,5 +1,7 @@
 - content_for(:title) { "Emotes — Plural Profiles" }
 
+= render "admin/breadcrumbs", current: "Emotes"
+
 .card
   .card__header
     %h1 Emotes
@@ -7,17 +9,12 @@
     %p
       An emote's name sets its order in its group: #{tag.code("02_spring_heart")} comes before #{tag.code("03_hunter_heart")}.
       The code people type drops that number, so #{tag.code("02_spring_heart")} is typed as #{tag.code(":spring_heart:")}
-      (typing the full name works too). Names that are all number, like #{tag.code("100")}, keep it.
+      (typing the full name works too).
     %p
       Renaming an emote keeps its old code working, so nothing already written breaks.
       Archiving hides an emote from pickers but keeps it showing wherever it's already used.
-
-%section.card#emote-groups{"aria-labelledby": "emote-groups-heading"}
-  .card__header
-    %h2#emote-groups-heading Groups
-  %p.admin-emotes__hint
-    Groups are shown as sections in every emote picker, in this order. The symbol stands in for the group's emotes where images can't be shown, such as page titles.
-  = render "admin/emotes/groups"
+  .card__actions
+    = link_to "Manage groups", admin_emote_groups_path, class: "btn btn--secondary"
 
 %section.card{"aria-labelledby": "emote-list-heading", data: { controller: "emote-filter preserve-focus" }}
   .card__header

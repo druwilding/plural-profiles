@@ -17,7 +17,7 @@
           = link_to "New profile", new_our_profile_path
           = link_to "Themes", our_themes_path
           - if Current.user&.admin?
-            %span.admin-badge ADMIN
+            = link_to "Admin", admin_root_path
           = link_to "Sign out", session_path, data: { turbo_method: :delete }
         - else
           = link_to "Sign in", new_session_path

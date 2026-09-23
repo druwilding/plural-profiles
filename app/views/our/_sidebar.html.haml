@@ -41,7 +41,5 @@
     %li{class: "sidebar__item #{('sidebar__item--active' if current_page?(our_account_path))}"}
       = link_to "Account", our_account_path, class: "sidebar__link"
     - if Current.user&.admin?
-      %li{class: "sidebar__item #{('sidebar__item--active' if current_page?(admin_emotes_path))}"}
-        = link_to admin_emotes_path, class: "sidebar__link" do
-          Emotes
-          %span.admin-badge admin
+      %li{class: "sidebar__item #{('sidebar__item--active' if controller_path.start_with?('admin/'))}"}
+        = link_to "Admin", admin_root_path, class: "sidebar__link"

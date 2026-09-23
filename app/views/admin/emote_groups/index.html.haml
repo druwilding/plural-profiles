@@ -1,0 +1,47 @@
+- content_for(:title) { "Emote groups — Plural Profiles" }
+
+= render "admin/breadcrumbs", current: "Emote groups"
+
+.card
+  .card__header
+    %h1 Emote groups
+  %p.admin-emotes__intro
+    Groups are shown as sections in every emote picker, in this order. The symbol stands in for the group's emotes where images can't be shown, such as page titles.
+  .card__actions
+    = link_to "Back to emotes", admin_emotes_path, class: "btn btn--secondary"
+
+%section.card{"aria-labelledby": "emote-groups-heading"}
+  .card__header
+    %h2#emote-groups-heading Groups
+  %ol.emote-groups
+    - @groups.each_with_index do |group, index|
+      - emote_count = @emote_counts.fetch(group.id, 0)
+      %li.emote-groups__group
+        = form_with model: group, url: admin_emote_group_path(group), class: "emote-groups__form" do |form|
+          .emote-groups__field
+            = form.label :name, "Name", for: dom_id(group, :name)
+            = form.text_field :name, id: dom_id(group, :name), required: true
+          .emote-groups__field.emote-groups__field--symbol
+            = form.label :plain_text, "Symbol", for: dom_id(group, :plain_text)
+            = form.text_field :plain_text, id: dom_id(group, :plain_text), required: true, maxlength: 16
+          = form.submit "Save", class: "btn btn--small"
+        .emote-groups__actions
+          %span.emote-groups__count= pluralize(emote_count, "emote")
+          - unless index.zero?
+            = link_to "Move up", move_admin_emote_group_path(group, direction: "up"), data: { turbo_method: :patch }, class: "btn btn--small btn--secondary", "aria-label": "Move #{group.name} up"
+          - unless index == @groups.size - 1
+            = link_to "Move down", move_admin_emote_group_path(group, direction: "down"), data: { turbo_method: :patch }, class: "btn btn--small btn--secondary", "aria-label": "Move #{group.name} down"
+          - if emote_count.zero?
+            = link_to "Delete", admin_emote_group_path(group), data: { turbo_method: :delete, turbo_confirm: "Delete the #{group.name} group?" }, class: "btn btn--small btn--danger", "aria-label": "Delete the #{group.name} group"
+
+%section.card{"aria-labelledby": "new-emote-group-heading"}
+  .card__header
+    %h2#new-emote-group-heading Add a group
+  = form_with model: EmoteGroup.new, url: admin_emote_groups_path, class: "emote-groups__form" do |form|
+    .emote-groups__field
+      = form.label :name, "Name", for: "new_emote_group_name"
+      = form.text_field :name, id: "new_emote_group_name", required: true
+    .emote-groups__field.emote-groups__field--symbol
+      = form.label :plain_text, "Symbol", for: "new_emote_group_plain_text"
+      = form.text_field :plain_text, id: "new_emote_group_plain_text", required: true, maxlength: 16
+    = form.submit "Add group", class: "btn btn--small"

@@ -60,7 +60,11 @@ class AdminEmotesTest < ApplicationSystemTestCase
       find_field("Code").send_keys(:enter)
     end
 
-    assert_selector "#emote-status", text: "Saved 48_cadbury_heart."
+    # The old code only becomes an alias once the new code is saved.
+    within("##{ActionView::RecordIdentifier.dom_id(cadbury)}") do
+      assert_selector ".emote-row__alias code", text: ":cadbury_heart:"
+      assert_field "Code", with: "cadbury"
+    end
     assert_equal "cadbury", cadbury.reload.code
   end
 
