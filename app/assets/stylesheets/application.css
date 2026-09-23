@@ -3660,6 +3660,11 @@ h1 .heart-inline {
   font-size: 0.85rem;
   font-style: italic;
   margin: 0.2rem 0 0;
+  white-space: pre-wrap;
+}
+
+.theme-card__notes {
+  white-space: pre-wrap;
 }
 
 .theme-row__tags {
