@@ -406,14 +406,41 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 
 ---
 
-## Suggested phasing
+## Status
 
-Each phase is its own PR and leaves the site working.
+### Done (PR #316)
 
-1. **Database + registry + import.** Migrations (including the heart import), models, `EmoteRegistry`, and `HeartEmoji` as a facade. There's no visible change: hearts now come from the database and are served via ActiveStorage variants.
-2. **Generic codes.** The new pattern with the lookahead scanner, name/alias/legacy resolution, `plain_field` changes. `:100:` works from this point on.
-3. **Admin emotes page.** Grouped list, quick rename, code override, aliases, archive/restore/delete, group management, and the rename/delete jobs.
-4. **Upload + bulk upload**: automatic import, a decision page for clashes, in-browser SVG conversion, and orphan cleanup.
-5. **Pickers and profile emotes.** Dialog sections by group *(done)*; profiles' checkbox grid replaced by an Emotes text field, with existing picks migrated *(done)*; autocomplete matching on names as well as codes *(done)*.
-6. **Cleanup.** Delete `public/images/hearts/` and `HeartEmoji`. Drop the old `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited` columns (and their `ignored_columns` entry). Optionally, do a mechanical rename of `heart_input` / `heart_field` / `heart_emojis_json_tag` to `emote_*`.
+Phases 1–5 were built on one branch and shipped as a single PR:
 
+1. **Database + registry + import.** Migrations (including the heart import), models, `EmoteRegistry`, and `HeartEmoji` as a facade.
+2. **Generic codes.** The new pattern with the lookahead scanner, name/alias/legacy resolution, `plain_field` changes. `:100:` works.
+3. **Admin pages.** An `/admin` landing page; the emotes page (grouped list, quick rename, code override, aliases, archive/restore/delete); a separate emote groups page.
+4. **Upload.** Automatic import, a decision page for clashes only, in-browser SVG conversion, and orphan cleanup.
+5. **Pickers and emote fields.** Dialog sections by group; autocomplete matching on names and codes, ranked. Profiles' checkbox grid replaced by an **Emotes** text field (existing picks migrated), and **groups** got the same field, both with a chat override.
+
+### Deploying
+
+Check on a review app or staging first:
+
+- **The heart import runs in `postdeploy`** and uploads 50 images to S3, so the S3 credentials must be available there, not only to the web process.
+- **Traffic switches only after `postdeploy`.** The new code needs the emote tables. Confirm Scalingo waits for `postdeploy` before routing to the new containers.
+- **libvips on Scalingo writes WebP.** Every emote is shown as a generated WebP. One heart rendering on a review app confirms it.
+- **The worker process is running.** It runs the daily orphan cleanup (`config/recurring.yml`) and the image processing the import queues. Without it, images are generated on first view instead.
+
+Once live, check that:
+
+- a profile with hearts still shows them;
+- an old paste like `:48_cadbury_heart:` renders;
+- `/admin/emotes` lists all 50 hearts.
+
+### After deploy: cleanup PR
+
+- [ ] **Keep one copy of the heart images** in a data folder (e.g. `db/emotes/hearts/`, named like `01_dewdrop_heart.webp`), and point three things at it:
+  - the `ImportHeartsAsEmotes` migration;
+  - a new `db/seeds.rb` that imports them when there are no emotes;
+  - the test fixtures (`EmoteFixtureHelper`), replacing `test/fixtures/files/emotes/`.
+
+  Then delete `public/images/hearts/`. The seeds also close a gap: a fresh `db:setup` / `db:prepare` loads `schema.rb` and never runs the import migration, so a new dev database currently gets no emotes.
+- [ ] **Remove the `HeartEmoji` facade.** Its only remaining caller is `HeartEmoji.code` in `ApplicationHelper#heart_emojis_json_tag`, plus a comment in `heart_input_controller.js`. The registry tests already cover what `heart_emoji_test.rb` tests.
+- [ ] **Drop the old profile columns** once the migrated emotes look right in production: `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited`. Remove them from `Profile.ignored_columns` in the same PR. Until then they're what makes `AddEmotesTextToProfiles` safe to roll back.
+- [ ] **Optionally, rename "heart" to "emote"** in the code: `heart_input_controller.js`, `heart_field`, `heart_emojis_json_tag` (and the `#heart-emojis` element), the `.heart-dialog` / `.heart-input` CSS classes, and test names like `heart_input_test.rb`. Keep the `heart-inline` class on inline images alongside `emote-inline`, in case custom CSS targets it. Best as its own PR, since it touches many files.
