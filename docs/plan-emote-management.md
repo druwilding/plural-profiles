@@ -330,7 +330,7 @@ This partial looks each code up in the registry and silently skips any that don'
 - The head JSON (`heart_emojis_json_tag`) comes from `EmoteRegistry#pickable`:
   - each entry has `{ code, name, label, src, group }`;
   - the entries are wrapped in a fragment cache keyed on the registry version.
-- The **dialog** shows a heading per group.
+- The **dialog** is titled "Choose an emote", with a "Search emotes…" box. While browsing it shows a heading per group; a search shows one list of matches, best first, without headings. Buttons show the full label ("spring heart"). Up/Down arrows move to the nearest emote in the row above or below by position, since each group's grid has its own rows. *(Done early, alongside phase 3.)*
 - **Autocomplete** matches on code *and* name, so typing `:02` finds `02_spring_heart`, and still inserts the canonical `:spring_heart:`.
 - `normaliseQuery` no longer strips leading digits outright. Otherwise `:10` could never find `:100:`. Instead, the query is matched against the name as typed, and against the code with the number prefix stripped.
 - The "don't match every `_heart` suffix" rule becomes: match anywhere in the code, but rank prefix matches first, then group order, then name order.

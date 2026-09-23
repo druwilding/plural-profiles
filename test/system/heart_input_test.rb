@@ -41,6 +41,34 @@ class HeartInputTest < ApplicationSystemTestCase
     assert_no_selector "#profile_labels_text + .heart-input__button"
   end
 
+  test "the picker shows every emote by group, with full names, and arrows move between groups" do
+    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    hundred = Emote.new(emote_group: other, name: "100")
+    hundred.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
+    hundred.save!
+
+    visit edit_our_profile_path(@profile)
+    heart_button_for(find_field("Subtitle")).click
+
+    within("dialog.heart-dialog[open]") do
+      assert_selector "h2", text: "Choose an emote"
+      assert_equal "Search emotes…", find(".heart-dialog__search")[:placeholder]
+      assert_equal [ "Hearts", "Other" ], all(".heart-dialog__group-title").map(&:text)
+      assert_selector ".heart-dialog__heart-name", text: "spring heart"
+
+      find("button[aria-label='sunshine heart']").send_keys(:down)
+      assert_equal "100", evaluate_script("document.activeElement.getAttribute('aria-label')")
+      find("button[aria-label='100']").send_keys(:up)
+      assert_equal "Hearts", evaluate_script("document.activeElement.closest('.heart-dialog__group').querySelector('h3').textContent")
+      find("button[aria-label='100']").send_keys(:left)
+      assert_equal "sunshine heart", evaluate_script("document.activeElement.getAttribute('aria-label')")
+
+      find(".heart-dialog__search").fill_in with: "sun"
+      assert_no_selector ".heart-dialog__group-title"
+      assert_equal [ "sunlit heart", "sunshine heart" ], all(".heart-dialog__heart").map { |button| button[:title] }
+    end
+  end
+
   test "the heart button inserts the chosen heart at the caret and it saves as the plain code" do
     visit edit_our_profile_path(@profile)
     field = find_field("Subtitle")

@@ -5945,15 +5945,29 @@ button.profile-picker__option {
   background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
+/* The scrolling area: one section per emote group (or one of search results),
+   each with its own grid. */
 .heart-dialog__grid {
   flex: 1;
-  align-content: start;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  gap: 0.35rem;
   min-height: 0;
   overflow-y: auto;
   padding: 3px;
+}
+
+.heart-dialog__group + .heart-dialog__group {
+  margin-top: 1rem;
+}
+
+.heart-dialog__group-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  color: var(--pane-title-text);
+}
+
+.heart-dialog__group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.35rem;
 }
 
 .heart-dialog__heart {
@@ -5968,6 +5982,8 @@ button.profile-picker__option {
   color: var(--pane-text);
   font-size: 0.8rem;
   line-height: 1.2;
+  /* Buttons don't wrap by default; full names like "passionate heart" need to. */
+  white-space: normal;
 }
 
 .heart-dialog__heart:hover {
@@ -5995,6 +6011,7 @@ button.profile-picker__option {
 }
 
 .chat-body .heart-dialog__title,
+.chat-body .heart-dialog__group-title,
 .chat-body .heart-dialog__close,
 .chat-body .heart-dialog__heart {
   color: var(--chat-pane-text);

@@ -307,7 +307,7 @@ export default class extends Controller {
       menu.id = `heart-input-menu-${this.id}`
       menu.className = "heart-input__menu"
       menu.setAttribute("role", "listbox")
-      menu.setAttribute("aria-label", "Matching hearts")
+      menu.setAttribute("aria-label", "Matching emotes")
       menu.hidden = true
       // Keep focus (and the caret) in the field when an option is clicked.
       menu.addEventListener("mousedown", (event) => event.preventDefault())
@@ -374,7 +374,7 @@ export default class extends Controller {
     const label = this.matches[index].label
     const count = this.matches.length
     this.statusElement.textContent = announceCount
-      ? `${count} ${count === 1 ? "heart" : "hearts"} found, ${label} selected`
+      ? `${count} ${count === 1 ? "emote" : "emotes"} found, ${label} selected`
       : label
   }
 
@@ -449,6 +449,51 @@ export default class extends Controller {
   }
 }
 
+// [[group name, [emote, …]], …] in the order the emotes arrive, which is
+// already group order then name order.
+function groupHearts(list) {
+  const groups = new Map()
+  for (const heart of list) {
+    const group = heart.group || "Emotes"
+    if (!groups.has(group)) groups.set(group, [])
+    groups.get(group).push(heart)
+  }
+  return [ ...groups ]
+}
+
+// The button in the nearest row above (direction -1) or below (1) whose centre
+// is closest horizontally to the current one's.
+function nearestInRow(buttons, current, direction) {
+  const from = current.getBoundingClientRect()
+  const fromCentre = from.left + from.width / 2
+  let rowTop = null
+  let best = null
+  let bestDistance = Infinity
+
+  for (const button of buttons) {
+    const rect = button.getBoundingClientRect()
+    const below = rect.top > from.top + 1
+    const above = rect.top < from.top - 1
+    if ((direction > 0 && !below) || (direction < 0 && !above)) continue
+
+    const closerRow = rowTop === null || (direction > 0 ? rect.top < rowTop - 1 : rect.top > rowTop + 1)
+    const sameRow = rowTop !== null && Math.abs(rect.top - rowTop) <= 1
+    if (!closerRow && !sameRow) continue
+    if (closerRow) {
+      rowTop = rect.top
+      best = null
+      bestDistance = Infinity
+    }
+
+    const distance = Math.abs(rect.left + rect.width / 2 - fromCentre)
+    if (distance < bestDistance) {
+      best = button
+      bestDistance = distance
+    }
+  }
+  return best
+}
+
 function heartDialog() {
   if (!sharedDialog || !sharedDialog.element.isConnected) sharedDialog = new HeartDialog()
   return sharedDialog
@@ -461,13 +506,13 @@ class HeartDialog {
     dialog.setAttribute("aria-labelledby", "heart-dialog-title")
     dialog.innerHTML = `
       <div class="heart-dialog__header">
-        <h2 class="heart-dialog__title" id="heart-dialog-title">Choose a heart</h2>
+        <h2 class="heart-dialog__title" id="heart-dialog-title">Choose an emote</h2>
         <button type="button" class="heart-dialog__close" aria-label="Close">×</button>
       </div>
-      <label class="visually-hidden" for="heart-dialog-search">Search hearts</label>
-      <input type="search" id="heart-dialog-search" class="heart-dialog__search" placeholder="Search hearts…" autocomplete="off" spellcheck="false">
-      <div class="heart-dialog__grid" role="group" aria-label="Hearts"></div>
-      <p class="heart-dialog__empty" hidden>No hearts match that search.</p>
+      <label class="visually-hidden" for="heart-dialog-search">Search emotes</label>
+      <input type="search" id="heart-dialog-search" class="heart-dialog__search" placeholder="Search emotes…" autocomplete="off" spellcheck="false">
+      <div class="heart-dialog__grid"></div>
+      <p class="heart-dialog__empty" hidden>No emotes match that search.</p>
     `
 
     this.element = dialog
@@ -507,7 +552,7 @@ class HeartDialog {
 
     const name = document.createElement("span")
     name.className = "heart-dialog__heart-name"
-    name.textContent = heart.label.replace(/ heart$/, "")
+    name.textContent = heart.label
 
     button.append(image, name)
     return button
@@ -532,19 +577,53 @@ class HeartDialog {
     if (sharedDialog === this) sharedDialog = null
   }
 
+  // Browsing shows every emote in a section per group, in group order. A
+  // search shows one list of matches, best first, so Enter picks the best.
   filter() {
     const query = this.search.value
-    const visible = query.trim() ? matchHearts(query) : hearts()
-    const buttons = visible.map((heart) => this.buttons.get(heart.name))
-    this.grid.replaceChildren(...buttons)
+    const sections = query.trim()
+      ? [ this.buildSection(null, matchHearts(query)) ]
+      : groupHearts(hearts()).map(([ group, members ]) => this.buildSection(group, members))
+    this.grid.replaceChildren(...sections.filter(Boolean))
+
+    const buttons = this.allButtons()
     this.empty.hidden = buttons.length > 0
     this.setTabStop(buttons[0])
   }
 
-  // Only one heart is in the tab order at a time; arrow keys move between
+  buildSection(group, members) {
+    if (members.length === 0) return null
+
+    const section = document.createElement("section")
+    section.className = "heart-dialog__group"
+    const grid = document.createElement("div")
+    grid.className = "heart-dialog__group-grid"
+    grid.setAttribute("role", "group")
+
+    if (group) {
+      const heading = document.createElement("h3")
+      heading.className = "heart-dialog__group-title"
+      heading.id = `heart-dialog-group-${this.sectionCount = (this.sectionCount || 0) + 1}`
+      heading.textContent = group
+      grid.setAttribute("aria-labelledby", heading.id)
+      section.append(heading)
+    } else {
+      grid.setAttribute("aria-label", "Matching emotes")
+    }
+
+    grid.append(...members.map((heart) => this.buttons.get(heart.name)))
+    section.append(grid)
+    return section
+  }
+
+  allButtons() {
+    return [ ...this.grid.querySelectorAll(".heart-dialog__heart") ]
+  }
+
+  // Only one emote is in the tab order at a time; arrow keys move between
   // them (onGridKeydown), so Tab goes straight from the grid to what's next.
   setTabStop(target) {
-    for (const button of this.grid.children) button.tabIndex = button === target ? 0 : -1
+    for (const button of this.allButtons()) button.tabIndex = button === target ? 0 : -1
   }
 
   choose(name) {
@@ -577,7 +656,7 @@ class HeartDialog {
   }
 
   onSearchKeydown(event) {
-    const first = this.grid.firstElementChild
+    const first = this.allButtons()[0]
     if (!first) return
     if (event.key === "ArrowDown") {
       event.preventDefault()
@@ -588,31 +667,33 @@ class HeartDialog {
     }
   }
 
+  // Left/Right move through emotes in order, across group boundaries.
+  // Up/Down move to the nearest emote in the row above or below, found by
+  // position since each group's grid has its own rows; Up from the top row
+  // goes back to the search box.
   onGridKeydown(event) {
-    const buttons = [ ...this.grid.children ]
+    const buttons = this.allButtons()
     const index = buttons.indexOf(document.activeElement)
     if (index === -1) return
 
-    const columns = buttons.filter((button) => button.offsetTop === buttons[0].offsetTop).length || 1
-    let next
+    let target
     switch (event.key) {
-      case "ArrowRight": next = index + 1; break
-      case "ArrowLeft": next = index - 1; break
-      case "ArrowDown": next = index + columns; break
+      case "ArrowRight": target = buttons[Math.min(index + 1, buttons.length - 1)]; break
+      case "ArrowLeft": target = buttons[Math.max(index - 1, 0)]; break
+      case "ArrowDown": target = nearestInRow(buttons, buttons[index], 1) || buttons[index]; break
       case "ArrowUp":
-        if (index < columns) {
+        target = nearestInRow(buttons, buttons[index], -1)
+        if (!target) {
           event.preventDefault()
           this.search.focus()
           return
         }
-        next = index - columns
         break
-      case "Home": next = 0; break
-      case "End": next = buttons.length - 1; break
+      case "Home": target = buttons[0]; break
+      case "End": target = buttons[buttons.length - 1]; break
       default: return
     }
     event.preventDefault()
-    const target = buttons[Math.min(Math.max(next, 0), buttons.length - 1)]
     this.setTabStop(target)
     target.focus()
   }

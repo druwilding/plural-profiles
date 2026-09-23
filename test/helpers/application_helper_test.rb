@@ -805,7 +805,7 @@ class ApplicationHelperTest < ActionView::TestCase
     hearts = JSON.parse(script.text)
     assert_equal HeartEmoji.all, hearts.map { |heart| heart["name"] }
     assert_equal(
-      { "name" => "abyss_heart", "label" => "abyss heart", "src" => HeartEmoji.image_path("abyss_heart"), "code" => ":abyss_heart:" },
+      { "name" => "abyss_heart", "label" => "abyss heart", "src" => HeartEmoji.image_path("abyss_heart"), "code" => ":abyss_heart:", "group" => "Hearts" },
       hearts.find { |heart| heart["name"] == "abyss_heart" }
     )
   end

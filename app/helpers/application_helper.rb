@@ -92,8 +92,9 @@ module ApplicationHelper
   # order, rendered once in the page head so the registry stays the single
   # source of truth.
   def heart_emojis_json_tag
-    hearts = EmoteRegistry.current.pickable.map do |emote|
-      { name: emote.code, label: emote.label, src: emote.src, code: HeartEmoji.code(emote.code) }
+    registry = EmoteRegistry.current
+    hearts = registry.pickable.map do |emote|
+      { name: emote.code, label: emote.label, src: emote.src, code: HeartEmoji.code(emote.code), group: registry.group(emote.group_id)&.name }
     end
     tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
   end
