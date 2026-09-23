@@ -1,6 +1,8 @@
 require "test_helper"
 
 class EmoteTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
   def build_emote(name:, **attributes)
     emote = Emote.new(emote_group: emote_groups(:hearts), name: name, **attributes)
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
@@ -109,5 +111,44 @@ class EmoteTest < ActiveSupport::TestCase
 
   test "an emote's name may equal its own code" do
     assert build_emote(name: "100").save
+  end
+
+  test "archive! and restore!" do
+    emote = emotes(:red_heart)
+    emote.archive!
+    assert emote.archived?
+    assert_includes Emote.archived, emote
+
+    emote.restore!
+    assert_not emote.archived?
+    assert_includes Emote.active, emote
+  end
+
+  test "changing the code queues a rewrite of profiles' picked emotes" do
+    assert_enqueued_with(job: Emotes::RewriteProfileCodesJob, args: [ "cadbury_heart", "chocolate_heart" ]) do
+      emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
+    end
+  end
+
+  test "renaming without changing the code queues nothing" do
+    assert_no_enqueued_jobs(only: Emotes::RewriteProfileCodesJob) do
+      emotes(:cadbury_heart).update!(name: "50cadbury_heart")
+    end
+  end
+
+  test "destroying queues removal of the code and every old code from profiles" do
+    emote = emotes(:cadbury_heart)
+    emote.update!(name: "48_chocolate_heart")
+
+    assert_enqueued_with(job: Emotes::RewriteProfileCodesJob, args: [ "chocolate_heart", nil ]) do
+      assert_enqueued_with(job: Emotes::RewriteProfileCodesJob, args: [ "cadbury_heart", nil ]) do
+        emote.destroy!
+      end
+    end
+  end
+
+  test "natural_sort orders numbers by value" do
+    names = %w[10_b 2_a 1_c 100 9].map { |name| Emote.new(name: name) }
+    assert_equal %w[1_c 2_a 9 10_b 100], Emote.natural_sort(names).map(&:name)
   end
 end

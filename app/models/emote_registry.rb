@@ -61,14 +61,9 @@ class EmoteRegistry
 
       emotes = Emote.joins(:emote_group).merge(EmoteGroup.site_wide)
         .includes(:aliases, image_attachment: :blob).to_a
-      emotes.sort_by! { |emote| [ group_order.fetch(emote.emote_group_id, groups.size), natural_sort_key(emote.name), emote.name ] }
+      emotes.sort_by! { |emote| [ group_order.fetch(emote.emote_group_id, groups.size), Emote.natural_sort_key(emote.name), emote.name ] }
 
       new(version: version, groups: groups, emotes: emotes)
-    end
-
-    # "2_x" before "10_y": digit runs compare as numbers.
-    def natural_sort_key(name)
-      name.scan(/\d+|\D+/).map { |part| part.match?(/\A\d/) ? [ 0, part.to_i ] : [ 1, part ] }
     end
   end
 
@@ -144,18 +139,10 @@ class EmoteRegistry
       name: emote.name,
       code: emote.code,
       label: emote.code.tr("_", " "),
-      src: image_src(emote),
+      src: emote.display_image_path,
       group_id: emote.emote_group_id,
       plain_text: group&.plain_text,
       archived: emote.archived?
     )
-  end
-
-  # Proxy URLs are stable (unlike the expiring redirect URLs), which matters
-  # because rendered chat HTML embeds them, and are served with long-lived
-  # cache headers. Replacing an image makes a new blob, so a new URL.
-  def image_src(emote)
-    return unless emote.image.attached?
-    Rails.application.routes.url_helpers.rails_storage_proxy_path(emote.image.variant(:display), only_path: true)
   end
 end

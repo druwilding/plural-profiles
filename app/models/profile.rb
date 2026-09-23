@@ -82,19 +82,27 @@ class Profile < ApplicationRecord
     InclusionOverride.prune_stale!(user)
   end
 
-  def known_emote_codes
-    EmoteRegistry.current.entries.map(&:code)
-  end
-
   def heart_emojis_are_valid
-    return if heart_emojis.blank?
-    invalid = heart_emojis - known_emote_codes
-    errors.add(:heart_emojis, "contains invalid hearts: #{invalid.join(', ')}") if invalid.any?
+    validate_emote_codes(:heart_emojis)
   end
 
   def mini_profile_heart_emojis_are_valid
-    return if mini_profile_heart_emojis.blank?
-    invalid = mini_profile_heart_emojis - known_emote_codes
-    errors.add(:mini_profile_heart_emojis, "contains invalid hearts: #{invalid.join(', ')}") if invalid.any?
+    validate_emote_codes(:mini_profile_heart_emojis)
+  end
+
+  # Every code must be a known emote. Archived emotes can't be newly picked,
+  # but one that was already picked may stay, so archiving an emote never
+  # stops a profile from saving.
+  def validate_emote_codes(attribute)
+    codes = public_send(attribute)
+    return if codes.blank?
+
+    registry = EmoteRegistry.current
+    invalid = codes.reject { |code| registry.resolve(code)&.code == code }
+    errors.add(attribute, "contains invalid emotes: #{invalid.join(', ')}") if invalid.any?
+
+    newly_added = codes - Array(attribute_in_database(attribute))
+    archived = newly_added.select { |code| registry.resolve(code)&.archived? }
+    errors.add(attribute, "contains archived emotes: #{archived.join(', ')}") if archived.any?
   end
 end

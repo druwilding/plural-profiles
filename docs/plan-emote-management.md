@@ -236,13 +236,17 @@ The routes live under a new `admin` namespace. The controllers inherit a `before
 
 ```ruby
 namespace :admin do
-  resources :emote_groups, except: :show
   resources :emotes, only: [:index, :update, :destroy] do
     member     { patch :archive; patch :restore; delete :remove_alias }
-    collection { get :upload; post :review; post :import }
+    collection { get :upload; post :review; post :import }   # phase 4
+  end
+  resources :emote_groups, only: [:create, :update, :destroy] do
+    member { patch :move }
   end
 end
 ```
+
+Groups are managed inline on the emotes page, so they have no index, new or edit pages of their own.
 
 Add an "Emotes" link in the account/sidebar area, visible only to admins, next to the existing admin-only shared-theme controls.
 
@@ -257,13 +261,13 @@ Add an "Emotes" link in the account/sidebar area, visible only to admins, next t
   - a **group select**;
   - an **Archive** button.
 - **Quick rename:** every row is its own small form. A tiny Stimulus `auto-submit` controller submits it on `change` (blur) or Enter. The server replies with a Turbo Stream that:
-  - replaces the whole group section, so the row moves to its new sorted position;
-  - shows validation errors inline on the row (e.g. "code `heart` is already used by 03_heart").
+  - on success, replaces the **whole list** (`#emote-sections`), so the row moves to its new sorted position, even into another group. That's simpler than working out which sections changed, and the list is small. A status line (`role="status"`) says what was saved;
+  - on failure, replaces only that row, showing validation errors inline (e.g. "code `heart` is already used by 03_heart").
 
-  After the re-sort, focus goes back to the renamed row's input.
+  A `preserve-focus` controller puts focus back on the element with the same id after the re-render. Enter keeps focus in the renamed field, which has moved with its row. Tab keeps it on whatever field the admin moved to.
 - A filter box at the top narrows the rows client-side by name, code or alias.
 - An **Archived** section at the bottom, collapsed, has Restore and **Delete permanently** buttons. The delete button uses `turbo_confirm` to spell out the consequence: codes in text will show as plain text again, and the emote is removed from profiles.
-- A group management strip lets admins add, rename or reorder groups (move up/down) and set `plain_text`. The symbol is required and limited to a few characters (validated as 1–4 grapheme clusters, so a single emoji or ♥ fits). A group can only be deleted when it's empty.
+- A group management card lets admins add, rename or reorder groups (move up/down) and set `plain_text`. These use ordinary Save buttons and redirects rather than auto-submit, since group edits are rare. The symbol is required and limited to a few characters (validated as 1–4 grapheme clusters, so a single emoji or ♥ fits). A group can only be deleted when it's empty.
 
 ### Upload and bulk upload (one flow)
 

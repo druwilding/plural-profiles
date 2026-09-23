@@ -136,6 +136,33 @@ class ProfileTest < ActiveSupport::TestCase
     assert profile.errors[:heart_emojis].any? { |e| e.include?("fake_heart") }
   end
 
+  test "an archived emote can't be newly picked" do
+    emotes(:red_heart).archive!
+    profile = profiles(:alice)
+    profile.heart_emojis = %w[dewdrop_heart red_heart]
+
+    assert_not profile.valid?
+    assert_includes profile.errors[:heart_emojis], "contains archived emotes: red_heart"
+  end
+
+  test "an archived emote that was already picked may stay" do
+    profile = profiles(:alice)
+    profile.update!(heart_emojis: %w[dewdrop_heart red_heart])
+    emotes(:red_heart).archive!
+
+    profile.heart_emojis = %w[red_heart dewdrop_heart aqua_heart]
+    assert profile.valid?, profile.errors.full_messages.to_sentence
+  end
+
+  test "assigning heart_emojis rewrites old codes to the current code" do
+    emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
+    profile = profiles(:alice)
+    profile.heart_emojis = %w[cadbury_heart]
+
+    assert_equal %w[chocolate_heart], profile.heart_emojis
+    assert profile.valid?
+  end
+
   test "assigning heart_emojis normalizes old number prefixes to their bare form" do
     profile = profiles(:alice)
     profile.heart_emojis = %w[13_storm_heart 50cadbury_heart]
