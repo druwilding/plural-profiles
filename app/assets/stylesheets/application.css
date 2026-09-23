@@ -790,6 +790,11 @@ fieldset.form-group legend {
   margin-top: 0.4rem;
 }
 
+.checkbox-label--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .checkbox-label__text {
   display: flex;
   flex-wrap: wrap;

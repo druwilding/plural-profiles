@@ -4,6 +4,7 @@ class Our::GroupsController < ApplicationController
   allow_unauthenticated_access only: :show
   before_action :resume_session, only: :show
   before_action :set_group, only: %i[ show edit update destroy manage_profiles add_profile remove_profile add_group remove_group regenerate_uuid manage_groups toggle_visibility duplicate duplicate_scan duplicate_resolve duplicate_resolve_post duplicate_confirm duplicate_execute ]
+  before_action :set_parent_group_options, only: %i[ new create edit update ]
   before_action :validate_theme_choice, only: %i[create update]
 
   def index
@@ -502,6 +503,10 @@ class Our::GroupsController < ApplicationController
     redirect_to group_path(params[:id]) unless @group
   end
 
+  def set_parent_group_options
+    @parent_group_options = Current.user.groups.order_by_name_and_labels
+  end
+
   def load_theme_options
     @our_themes = Current.user.themes.order(:name)
     @shared_themes = Theme.shared.order(:name)
@@ -522,7 +527,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def group_params
-    params.require(:group).permit(:name, :pronouns, :subtitle, :tag_line, :description, :avatar, :avatar_alt_text, :avatar_shape, :labels_text, :theme_id, created_at_parts: [ :month, :day, :year, :hour, :minute ]).tap do |p|
+    params.require(:group).permit(:name, :pronouns, :subtitle, :tag_line, :description, :avatar, :avatar_alt_text, :avatar_shape, :labels_text, :theme_id, created_at_parts: [ :month, :day, :year, :hour, :minute ], selected_parent_group_ids: []).tap do |p|
       created_at = parse_created_at_parts(p.delete(:created_at_parts))
       if created_at && (@group&.created_at.nil? || created_at != @group.created_at.strftime("%Y-%m-%dT%H:%M"))
         p[:created_at] = created_at
