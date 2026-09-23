@@ -41,23 +41,15 @@ class Our::ChatIdentitiesController < ApplicationController
   end
 
   def chat_identity_params
-    shared = %i[chat_bracket_before chat_bracket_after
-                mini_profile_name mini_profile_name_inherited
-                mini_profile_subtitle mini_profile_subtitle_inherited
-                mini_profile_pronouns mini_profile_pronouns_inherited
-                mini_profile_tag_line mini_profile_tag_line_inherited
-                mini_profile_description mini_profile_description_inherited
-                mini_profile_avatar mini_profile_avatar_alt_text mini_profile_avatar_shape mini_profile_avatar_inherited
-                mini_profile_link_enabled]
-    profile_only = %i[mini_profile_heart_emojis_inherited]
-    permitted = @postable.is_a?(Profile) ? shared + profile_only : shared
-    # mini_profile_heart_emojis only exists on Profile — permitting it
-    # unconditionally would let a crafted request for a Group sail through
-    # permit and then blow up with UnknownAttributeError on #update, since
-    # Group has no such column.
-    array_options = @postable.is_a?(Profile) ? { mini_profile_heart_emojis: [] } : {}
-    params.require(:chat_identity).permit(*permitted, **array_options).tap do |p|
-      p[:mini_profile_heart_emojis] = p[:mini_profile_heart_emojis].reject(&:blank?) if p.key?(:mini_profile_heart_emojis)
-    end
+    permitted = %i[chat_bracket_before chat_bracket_after
+                   mini_profile_name mini_profile_name_inherited
+                   mini_profile_subtitle mini_profile_subtitle_inherited
+                   mini_profile_pronouns mini_profile_pronouns_inherited
+                   mini_profile_emotes mini_profile_emotes_inherited
+                   mini_profile_tag_line mini_profile_tag_line_inherited
+                   mini_profile_description mini_profile_description_inherited
+                   mini_profile_avatar mini_profile_avatar_alt_text mini_profile_avatar_shape mini_profile_avatar_inherited
+                   mini_profile_link_enabled]
+    params.require(:chat_identity).permit(*permitted)
   end
 end

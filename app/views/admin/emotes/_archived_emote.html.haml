@@ -1,0 +1,9 @@
+%li.emote-row.emote-row--archived{id: dom_id(emote), data: { "emote-filter-target": "row", search: [ emote.name, emote.code, *emote.aliases.map(&:code) ].join(" ") }}
+  = image_tag emote.display_image_path, class: "emote-row__image", width: 48, height: 48, alt: "", loading: "lazy"
+  .emote-row__summary
+    %span.emote-row__name= emote.name
+    %code= ":#{emote.code}:"
+  .emote-row__aside
+    = link_to "Restore", restore_admin_emote_path(emote), data: { turbo_method: :patch }, class: "btn btn--small btn--secondary", "aria-label": "Restore #{emote.name}"
+    = link_to "Delete permanently", admin_emote_path(emote), class: "btn btn--small btn--danger", "aria-label": "Delete #{emote.name} permanently",
+      data: { turbo_method: :delete, turbo_confirm: "Delete #{emote.name} permanently? :#{emote.code}: and its old codes will show as plain text wherever they're used. This can't be undone." }

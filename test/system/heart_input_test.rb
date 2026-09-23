@@ -41,6 +41,100 @@ class HeartInputTest < ApplicationSystemTestCase
     assert_no_selector "#profile_labels_text + .heart-input__button"
   end
 
+  test "the picker shows every emote by group, with full names, and arrows move between groups" do
+    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    hundred = Emote.new(emote_group: other, name: "100")
+    hundred.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
+    hundred.save!
+
+    visit edit_our_profile_path(@profile)
+    heart_button_for(find_field("Subtitle")).click
+
+    within("dialog.heart-dialog[open]") do
+      assert_selector "h2", text: "Choose an emote"
+      assert_equal "Search emotes…", find(".heart-dialog__search")[:placeholder]
+      assert_equal [ "Hearts", "Other" ], all(".heart-dialog__group-title").map(&:text)
+      assert_selector ".heart-dialog__heart-name", text: "spring heart"
+
+      find("button[aria-label='sunshine heart']").send_keys(:down)
+      assert_equal "100", evaluate_script("document.activeElement.getAttribute('aria-label')")
+      find("button[aria-label='100']").send_keys(:up)
+      assert_equal "Hearts", evaluate_script("document.activeElement.closest('.heart-dialog__group').querySelector('h3').textContent")
+      find("button[aria-label='100']").send_keys(:left)
+      assert_equal "sunshine heart", evaluate_script("document.activeElement.getAttribute('aria-label')")
+
+      find(".heart-dialog__search").fill_in with: "sun"
+      assert_no_selector ".heart-dialog__group-title"
+      assert_equal [ "sunlit heart", "sunshine heart" ], all(".heart-dialog__heart").map { |button| button[:title] }
+    end
+  end
+
+  test "the Emotes field takes the same emote more than once, in any order, shown next to the pronouns" do
+    visit edit_our_profile_path(@profile)
+    field = find_field("Emotes")
+    field.fill_in with: ":red_heart: "
+
+    heart_button_for(field).click
+    within("dialog.heart-dialog[open]") { click_button "aqua heart" }
+    heart_button_for(field).click
+    within("dialog.heart-dialog[open]") { click_button "red heart" }
+    assert_field "Emotes", with: ":red_heart: :aqua_heart: :red_heart: "
+
+    click_button "Update profile"
+    assert_text "Profile updated."
+    assert_equal [ "red heart", "aqua heart", "red heart" ], all(".pronouns__emotes img").map { |img| img[:alt] }
+  end
+
+  def add_emote(name, group: emote_groups(:hearts))
+    emote = Emote.new(emote_group: group, name: name)
+    emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
+    emote.save!
+  end
+
+  test "autocomplete matches names as well as codes, including numbers, and inserts the code" do
+    add_emote("100")
+    visit edit_our_profile_path(@profile)
+    field = find_field("Subtitle")
+    field.fill_in with: ""
+
+    field.send_keys(":02")
+    assert_equal [ "spring heart" ], option_labels(field)
+    field.send_keys(:enter)
+    assert_equal ":spring_heart: ", field.value
+
+    field.send_keys(":10")
+    assert_selector ".heart-input__option--active", text: "100"
+    assert_equal [ "100", "aqua heart" ], option_labels(field)
+    field.send_keys(:enter)
+    assert_equal ":spring_heart: :100: ", field.value
+  end
+
+  test "autocomplete opens straight after a finished code that isn't a heart" do
+    add_emote("100")
+    visit edit_our_profile_path(@profile)
+    field = find_field("Subtitle")
+    field.fill_in with: ":100:"
+    field.send_keys(":ab")
+
+    assert_selector ".heart-input__option--active", text: "abyss heart"
+  end
+
+  test "the picker shows emotes added since the page was first loaded, after a Turbo visit" do
+    visit our_profile_path(@profile)
+    click_link "Edit"
+    heart_button_for(find_field("Subtitle")).click
+    within("dialog.heart-dialog[open]") { assert_no_selector "button[aria-label='party']" }
+    find(".heart-dialog__search").send_keys(:escape)
+
+    add_emote("07_party")
+    within(".sidebar") { click_link "Alice", match: :first }
+    click_link "Edit"
+    # Turbo shows its cached copy of the edit page first; wait for the real one.
+    assert_no_selector "html[data-turbo-preview]"
+    heart_button_for(find_field("Subtitle")).click
+    within("dialog.heart-dialog[open]") { assert_selector "button[aria-label='party']" }
+  end
+
   test "the heart button inserts the chosen heart at the caret and it saves as the plain code" do
     visit edit_our_profile_path(@profile)
     field = find_field("Subtitle")
@@ -184,7 +278,7 @@ class HeartInputTest < ApplicationSystemTestCase
     assert_equal [ "abyss heart", "vulnerable heart" ], option_labels(field)
     assert_equal "true", field[:"aria-expanded"]
     assert_images = menu_for(field).all("img").map { |img| URI(img[:src]).path }
-    assert_equal [ "/images/hearts/abyss_heart.webp", "/images/hearts/vulnerable_heart.webp" ], assert_images
+    assert_equal [ HeartEmoji.image_path("abyss_heart"), HeartEmoji.image_path("vulnerable_heart") ], assert_images
 
     field.send_keys(:enter)
 

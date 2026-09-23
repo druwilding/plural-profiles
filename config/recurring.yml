@@ -19,3 +19,6 @@ production:
   prune_stale_inclusion_overrides:
     command: "User.find_each { |user| InclusionOverride.prune_stale!(user) }"
     schedule: every day at 3:30am
+  purge_orphan_emote_uploads:
+    class: PurgeOrphanEmoteUploadsJob
+    schedule: every day at 4am

@@ -57,6 +57,29 @@ Rails.application.routes.draw do
     end
   end
 
+  # Site-wide administration (admins only)
+  namespace :admin do
+    root "dashboard#show"
+
+    resources :emotes, only: %i[index update destroy] do
+      member do
+        patch :archive
+        patch :restore
+        delete :remove_alias
+      end
+      collection do
+        get :upload
+        post :upload, action: :upload_files
+        post :resolve
+      end
+    end
+    resources :emote_groups, only: %i[index create update destroy] do
+      member do
+        patch :move
+      end
+    end
+  end
+
   # Shareable UUID URLs (require authentication)
   resources :profiles, only: :show, param: :uuid
   resources :groups, only: :show, param: :uuid do

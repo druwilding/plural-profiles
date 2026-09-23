@@ -175,15 +175,15 @@ body {
 }
 
 .admin-badge {
-  margin-left: 1.5rem;
+  margin-left: 0.5rem;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 0.2em 0.5em;
   border-radius: 3px;
-  background: color-mix(in srgb, var(--danger-button-bg) 85%, transparent);
-  color: var(--danger-button-text);
-  border: 1px solid color-mix(in srgb, var(--danger-button-border) 40%, transparent);
+  background: var(--alert-bg);
+  color: var(--alert-text);
+  border: 1px solid var(--alert-border);
   vertical-align: middle;
   text-transform: uppercase;
 }
@@ -1566,7 +1566,7 @@ a .spoiler--revealed {
 
 /* .pronouns is a flex container, so a trailing space in a text node right
    before another flex-item child (e.g. an inline link) collapses away —
-   same reason .heart-display__grid below carries its own margin-left
+   same reason .pronouns__emotes below carries its own margin-left
    rather than relying on a space in the markup. */
 .pronouns a {
   margin-left: 0.3em;
@@ -2820,105 +2820,16 @@ input[type="submit"].btn--small,
   font-style: italic;
 }
 
-/* ── Heart emoji picker ────────────────────────────────── */
+/* ── Profile emotes (shown next to pronouns) ───────────── */
 
-.heart-picker__grid,
-.heart-display__grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+/* Upright rather than italic like the pronouns, and spaced from them with a
+   margin: .pronouns is a flex container, so a space in the markup collapses. */
+.pronouns__emotes {
+  font-style: normal;
+}
+
+.pronouns > * + .pronouns__emotes {
   margin-left: 0.5rem;
-}
-
-.heart-picker__heart {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 4px;
-  border: 2px solid transparent;
-  border-radius: 0.5rem;
-  background: none;
-  cursor: pointer;
-  transition: opacity 0.15s, border-color 0.15s, transform 0.15s;
-}
-
-.heart-picker__heart:has(input:checked) {
-  opacity: 1;
-  border-color: var(--input-border);
-}
-
-.heart-picker__heart img {
-  pointer-events: none;
-}
-
-/* Checkbox is always hidden — the label itself is the interactive control */
-.heart-picker__checkbox {
-  -webkit-appearance: none;
-  appearance: none;
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  margin: 0;
-  cursor: pointer;
-  outline: none;
-}
-
-.heart-picker__heart:has(input:focus-visible) {
-  outline: 3px solid var(--input-border);
-  outline-offset: 2px;
-}
-
-.heart-display__heart {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.heart-display {
-  margin: 1rem 0;
-}
-
-.heart-display h3 {
-  margin-bottom: 0.5rem;
-}
-
-@media (forced-colors: active) {
-  .heart-picker__heart {
-    border: none;
-    opacity: 1;
-    background: Canvas;
-  }
-
-  .heart-picker__heart:has(input:checked) {
-    border: 2px solid CanvasText;
-    background: Canvas;
-  }
-
-  .heart-picker__heart:has(input:focus-visible) {
-    outline: 3px solid CanvasText;
-    outline-offset: 2px;
-  }
-
-  .heart-picker__checkbox,
-  .heart-picker__checkbox:checked {
-    forced-color-adjust: none;
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
-    min-width: 0;
-    min-height: 0;
-    border: 0;
-    background: none;
-    opacity: 0;
-  }
-
-  .heart-picker__checkbox:checked::after {
-    content: none;
-  }
 }
 
 @media (forced-colors: active) {
@@ -2954,6 +2865,476 @@ input[type="submit"].btn--small,
 
 h1 .heart-inline {
   vertical-align: -0.1em;
+}
+
+/* ── Admin ─────────────────────────────── */
+
+.admin-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0 1.5rem;
+}
+
+.admin-links__item h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.admin-links__item p {
+  margin: 0;
+}
+
+/* ── Admin: emotes ─────────────────────── */
+
+.admin-emotes__intro p,
+.admin-emotes__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.admin-emotes__hint {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.admin-emotes__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.admin-emotes__filter {
+  flex: 0 1 20rem;
+  margin: 0;
+}
+
+.admin-emotes__filter span {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.admin-emotes__status {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: 0.85rem;
+  min-height: 1.4em;
+}
+
+.emote-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.emote-groups__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--input-border);
+}
+
+.emote-groups__group:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.emote-groups__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.emote-groups__field label {
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.emote-groups__field input[type="text"] {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+}
+
+.emote-groups__field--symbol input[type="text"] {
+  width: 5rem;
+}
+
+.emote-groups__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emote-groups__count {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.emote-section + .emote-section {
+  margin-top: 1.75rem;
+}
+
+.emote-section__heading {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: var(--pane-title-text);
+}
+
+summary.emote-section__heading {
+  cursor: pointer;
+}
+
+.emote-section__count {
+  font-weight: normal;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.emote-section__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.emote-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.emote-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--input-border) 60%, transparent);
+}
+
+.emote-row[hidden] {
+  display: none;
+}
+
+.emote-row__image {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+/* Fields wrap onto more lines as space runs out, whether from a narrow
+   screen or larger text, rather than overflowing into the Archive button. */
+.emote-row__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+}
+
+.emote-row__field {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.emote-row__field--name {
+  flex-grow: 1.3;
+}
+
+.emote-row__field--group {
+  flex: 0.7 1 8rem;
+}
+
+.emote-row__field select {
+  width: 100%;
+}
+
+.emote-row__field label {
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.emote-row__field input[type="text"],
+.emote-row__field select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+}
+
+.emote-row__field input[aria-invalid="true"] {
+  border-color: var(--error, var(--warning-border));
+}
+
+.emote-row__field input:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+.emote-row__code {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.emote-row__colon {
+  opacity: 0.7;
+}
+
+label.emote-row__override {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.3rem 0 0;
+  cursor: pointer;
+}
+
+.emote-row__override input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.emote-row__errors {
+  flex-basis: 100%;
+}
+
+.emote-row__errors p {
+  margin: 0;
+  color: var(--error, var(--warning-border));
+  font-size: 0.85rem;
+}
+
+.emote-row__aside {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.emote-row__aliases {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.emote-row__alias {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.2rem 0.1rem 0.45rem;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+}
+
+.emote-row__alias-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  color: var(--pane-link);
+  text-decoration: none;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.emote-row__alias-remove:hover,
+.emote-row__alias-remove:focus-visible {
+  background-color: color-mix(in srgb, var(--pane-link) 20%, transparent);
+}
+
+.emote-row__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.emote-row__name {
+  font-weight: 600;
+}
+
+/* In em, not px, so larger text switches to this layout too. */
+@media (max-width: 56em) {
+  .emote-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .emote-row__image {
+    align-self: start;
+  }
+
+  .emote-row__aside {
+    grid-column: 2;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
+
+  .emote-row__aliases {
+    grid-column: 2;
+  }
+}
+
+/* ── Admin: emote upload ─────────────────── */
+
+.emote-upload__dropzone {
+  padding: 1.25rem;
+  border: 2px dashed var(--input-border);
+  border-radius: 8px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.emote-upload__dropzone--active {
+  border-color: var(--pane-link);
+  background-color: color-mix(in srgb, var(--pane-link) 10%, transparent);
+}
+
+.emote-upload__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.emote-upload__status {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  min-height: 1.4em;
+}
+
+.upload-review {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.upload-review__row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--input-border) 60%, transparent);
+}
+
+.upload-review__row:last-child {
+  border-bottom: none;
+}
+
+.upload-review__preview {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.upload-review__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.upload-review__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.75rem;
+}
+
+.upload-review__field {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.upload-review__field--name {
+  flex: 1.4 1 10rem;
+}
+
+.upload-review__field label {
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.upload-review__field input[type="text"],
+.upload-review__field select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.95rem;
+}
+
+.upload-review__code {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+}
+
+.upload-review__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.upload-review__existing {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.upload-review__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+label.upload-review__choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--pane-text);
+  cursor: pointer;
+}
+
+.upload-review__choice input[type="radio"] {
+  width: auto;
+  margin: 0;
+}
+
+.upload-review__choices .upload-review__fields {
+  margin-left: 1.6rem;
+}
+
+.upload-review__errors,
+.upload-review__errors p {
+  margin: 0;
+  color: var(--error, var(--warning-border));
+  font-size: 0.9rem;
 }
 
 /* ── Utilities ─────────────────────────────────────────── */
@@ -5630,15 +6011,29 @@ button.profile-picker__option {
   background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
+/* The scrolling area: one section per emote group (or one of search results),
+   each with its own grid. */
 .heart-dialog__grid {
   flex: 1;
-  align-content: start;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  gap: 0.35rem;
   min-height: 0;
   overflow-y: auto;
   padding: 3px;
+}
+
+.heart-dialog__group + .heart-dialog__group {
+  margin-top: 1rem;
+}
+
+.heart-dialog__group-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  color: var(--pane-title-text);
+}
+
+.heart-dialog__group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.35rem;
 }
 
 .heart-dialog__heart {
@@ -5653,6 +6048,8 @@ button.profile-picker__option {
   color: var(--pane-text);
   font-size: 0.8rem;
   line-height: 1.2;
+  /* Buttons don't wrap by default; full names like "passionate heart" need to. */
+  white-space: normal;
 }
 
 .heart-dialog__heart:hover {
@@ -5680,6 +6077,7 @@ button.profile-picker__option {
 }
 
 .chat-body .heart-dialog__title,
+.chat-body .heart-dialog__group-title,
 .chat-body .heart-dialog__close,
 .chat-body .heart-dialog__heart {
   color: var(--chat-pane-text);

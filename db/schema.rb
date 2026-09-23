@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,6 +143,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
     t.index ["user_id"], name: "index_duplication_wizards_on_user_id"
   end
 
+  create_table "emote_aliases", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.bigint "emote_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_emote_aliases_on_code", unique: true
+    t.index ["emote_id"], name: "index_emote_aliases_on_emote_id"
+  end
+
+  create_table "emote_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "owner_id"
+    t.string "owner_type"
+    t.string "plain_text", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "name"], name: "index_emote_groups_on_owner_type_and_owner_id_and_name", unique: true
+    t.index ["owner_type", "owner_id"], name: "index_emote_groups_on_owner"
+  end
+
+  create_table "emotes", force: :cascade do |t|
+    t.datetime "archived_at"
+    t.string "code", null: false
+    t.boolean "code_overridden", default: false, null: false
+    t.datetime "created_at", null: false
+    t.bigint "emote_group_id", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_emotes_on_code", unique: true
+    t.index ["emote_group_id"], name: "index_emotes_on_emote_group_id"
+    t.index ["name"], name: "index_emotes_on_name", unique: true
+  end
+
   create_table "group_groups", force: :cascade do |t|
     t.bigint "child_group_id", null: false
     t.datetime "created_at", null: false
@@ -171,12 +205,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
     t.bigint "copied_from_id"
     t.datetime "created_at", null: false
     t.text "description"
+    t.string "emotes"
     t.jsonb "labels", default: [], null: false
     t.string "mini_profile_avatar_alt_text"
     t.boolean "mini_profile_avatar_inherited", default: true, null: false
     t.string "mini_profile_avatar_shape", default: "rounded", null: false
     t.text "mini_profile_description"
     t.boolean "mini_profile_description_inherited", default: false, null: false
+    t.string "mini_profile_emotes"
+    t.boolean "mini_profile_emotes_inherited", default: true, null: false
     t.boolean "mini_profile_link_enabled", default: false, null: false
     t.string "mini_profile_name"
     t.boolean "mini_profile_name_inherited", default: true, null: false
@@ -233,6 +270,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
     t.bigint "copied_from_id"
     t.datetime "created_at", null: false
     t.text "description"
+    t.string "emotes"
     t.jsonb "heart_emojis", default: [], null: false
     t.jsonb "labels", default: [], null: false
     t.string "mini_profile_avatar_alt_text"
@@ -240,6 +278,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
     t.string "mini_profile_avatar_shape", default: "rounded", null: false
     t.text "mini_profile_description"
     t.boolean "mini_profile_description_inherited", default: false, null: false
+    t.string "mini_profile_emotes"
+    t.boolean "mini_profile_emotes_inherited", default: true, null: false
     t.jsonb "mini_profile_heart_emojis", default: [], null: false
     t.boolean "mini_profile_heart_emojis_inherited", default: true, null: false
     t.boolean "mini_profile_link_enabled", default: false, null: false
@@ -466,6 +506,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090000) do
   add_foreign_key "chat_servers", "users", column: "owner_id"
   add_foreign_key "duplication_wizards", "groups"
   add_foreign_key "duplication_wizards", "users"
+  add_foreign_key "emote_aliases", "emotes"
+  add_foreign_key "emotes", "emote_groups"
   add_foreign_key "group_groups", "groups", column: "child_group_id"
   add_foreign_key "group_groups", "groups", column: "parent_group_id"
   add_foreign_key "group_profiles", "groups"

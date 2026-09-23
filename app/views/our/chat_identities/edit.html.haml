@@ -62,36 +62,11 @@
       = render "field_toggle", form: form, field: :pronouns, label: "Pronouns",
           inherited_value: formatted_inline(@postable.pronouns)
 
-      - if @postable.is_a?(Profile)
-        - hearts_title_id = "chat-identity-field-hearts-title"
-        .card.chat-identity-field{role: "group", "aria-labelledby": hearts_title_id}
-          .chat-identity-field__head
-            %h3{id: hearts_title_id} Hearts
-            .chat-identity-toggle
-              %label.chat-identity-toggle__option
-                = form.radio_button :mini_profile_heart_emojis_inherited, true, class: "chat-identity-toggle__input"
-                %span.chat-identity-toggle__option-label Use main
-              %label.chat-identity-toggle__option
-                = form.radio_button :mini_profile_heart_emojis_inherited, false, class: "chat-identity-toggle__input"
-                %span.chat-identity-toggle__option-label Set for chat
-
-          .chat-identity-field__inherited
-            - if @postable.heart_emojis.any?
-              = render "shared/heart_list", hearts: @postable.heart_emojis
-            - else
-              %span.chat-identity-field__blank (no hearts set)
-
-          .chat-identity-field__override
-            .heart-picker{data: {controller: "heart-picker"}}
-              = hidden_field_tag "chat_identity[mini_profile_heart_emojis][]", ""
-              .heart-picker__grid
-                - HeartEmoji::ALL.each do |heart|
-                  %label.heart-picker__heart{title: HeartEmoji.display_name(heart)}
-                    %input.heart-picker__checkbox{type: "checkbox", name: "chat_identity[mini_profile_heart_emojis][]", value: heart, checked: @postable.mini_profile_heart_emojis.include?(heart) || nil, "aria-label": HeartEmoji.display_name(heart)}
-                    = image_tag HeartEmoji.image_path(heart), width: 24, height: 24, alt: "", loading: "lazy"
-
       = render "field_toggle", form: form, field: :tag_line, label: "Tagline",
           inherited_value: formatted_inline(@postable.tag_line)
+
+      = render "field_toggle", form: form, field: :emotes, label: "Emotes",
+          inherited_value: formatted_inline(@postable.emotes)
 
       = render "field_toggle", form: form, field: :description, label: "Description",
           input_type: :text_area,

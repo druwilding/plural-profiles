@@ -84,16 +84,17 @@ module ApplicationHelper
   def plain_field(text)
     return "" if text.blank?
     text = text.gsub(SPOILER_PLAIN_PATTERN, "▓▓▓▓")
-    text = text.gsub(HeartEmoji::PATTERN, "♥")
+    text = EmoteRegistry.current.replace_codes(text, &:plain_text)
     strip_tags(text)
   end
 
-  # Every heart as JSON for heart_input_controller.js, in HeartEmoji::ALL
-  # order, rendered once in the page head so HeartEmoji stays the single
-  # source of truth.
+  # Every pickable emote as JSON for heart_input_controller.js, in display
+  # order, rendered once per page (at the end of the body) so the registry
+  # stays the single source of truth.
   def heart_emojis_json_tag
-    hearts = HeartEmoji::ALL.map do |heart|
-      { name: heart, label: HeartEmoji.display_name(heart), src: HeartEmoji.image_path(heart), code: HeartEmoji.code(heart) }
+    registry = EmoteRegistry.current
+    hearts = registry.pickable.map do |emote|
+      { name: emote.name, label: emote.label, src: emote.src, code: HeartEmoji.code(emote.code), group: registry.group(emote.group_id)&.name }
     end
     tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
   end
@@ -229,21 +230,17 @@ module ApplicationHelper
   end
 
   def replace_heart_emojis(html)
-    # Only replace hearts in text nodes — skip <code>...</code> blocks and HTML tags
-    # so that heart codes inside attributes (e.g. title=":11_aqua_heart:") are preserved
-    skip_pattern = /#{CODE_BLOCK_PATTERN}|<[^>]*>/m
+    # Only replace emotes in text nodes — skip <code>...</code> blocks and HTML tags
+    # so that emote codes inside attributes (e.g. title=":11_aqua_heart:") are preserved.
+    # Entities are skipped too, so the ; ending one (&amp;) can't open an emote code.
+    skip_pattern = /#{CODE_BLOCK_PATTERN}|<[^>]*>|&(?:[a-z][a-z0-9]*|#\d+|#x\h+);/mi
     parts = html.split(skip_pattern)
     non_text = html.scan(skip_pattern)
 
+    registry = EmoteRegistry.current
     result = parts.map do |part|
-      part.gsub(HeartEmoji::PATTERN) do |match|
-        canonical = HeartEmoji.resolve(Regexp.last_match(1))
-        if canonical
-          display = HeartEmoji.display_name(canonical)
-          '<img src="%s" title="%s" alt="%s" class="heart-inline" width="24" height="24" loading="lazy">' % [ HeartEmoji.image_path(canonical), display, display ]
-        else
-          match
-        end
+      registry.replace_codes(part) do |emote|
+        '<img src="%s" title="%s" alt="%s" class="heart-inline emote-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
       end
     end
     non_text.each_with_index { |segment, i| result.insert((i * 2) + 1, segment) }

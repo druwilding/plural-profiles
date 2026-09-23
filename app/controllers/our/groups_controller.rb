@@ -529,7 +529,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def group_params
-    params.require(:group).permit(:name, :pronouns, :subtitle, :tag_line, :description, :avatar, :avatar_alt_text, :avatar_shape, :labels_text, :theme_id, created_at_parts: [ :month, :day, :year, :hour, :minute ], selected_parent_group_ids: []).tap do |p|
+    params.require(:group).permit(:name, :pronouns, :emotes, :subtitle, :tag_line, :description, :avatar, :avatar_alt_text, :avatar_shape, :labels_text, :theme_id, created_at_parts: [ :month, :day, :year, :hour, :minute ], selected_parent_group_ids: []).tap do |p|
       created_at = parse_created_at_parts(p.delete(:created_at_parts))
       if created_at && (@group&.created_at.nil? || created_at != @group.created_at.strftime("%Y-%m-%dT%H:%M"))
         p[:created_at] = created_at

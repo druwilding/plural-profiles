@@ -23,12 +23,12 @@
       %h1= formatted_inline(@profile.name)
       - if @profile.subtitle.present?
         %p.subtitle= formatted_inline(@profile.subtitle)
-      - if @profile.pronouns.present? || @profile.heart_emojis.any?
+      - if @profile.pronouns.present? || @profile.emotes.present?
         .pronouns
           - if @profile.pronouns.present?
             %span= formatted_inline(@profile.pronouns)
-          - if @profile.heart_emojis.any?
-            = render "shared/heart_list", hearts: @profile.heart_emojis
+          - if @profile.emotes.present?
+            %span.pronouns__emotes= formatted_inline(@profile.emotes)
     - if @profile.tag_line.present?
       %p.tag-line= formatted_inline(@profile.tag_line)
 

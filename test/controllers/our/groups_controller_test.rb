@@ -89,6 +89,32 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "they/them", Group.last.pronouns
   end
 
+  test "create and update save emotes as typed" do
+    sign_in_as @user
+    post our_groups_path, params: { group: { name: "Coworkers", emotes: ":red_heart: :aqua_heart: :red_heart:" } }
+    group = Group.last
+    assert_equal ":red_heart: :aqua_heart: :red_heart:", group.emotes
+
+    patch our_group_path(group), params: { group: { emotes: ":sunshine_heart:" } }
+    assert_equal ":sunshine_heart:", group.reload.emotes
+  end
+
+  test "show displays the group's emotes next to its pronouns" do
+    sign_in_as @user
+    group = groups(:friends)
+    group.update!(pronouns: "they/them", emotes: ":violet_heart: :red_heart:")
+    get our_group_path(group)
+    assert_select ".pronouns span", text: "they/them"
+    assert_equal [ "violet heart", "red heart" ], css_select(".pronouns__emotes img").map { |img| img["alt"] }
+  end
+
+  test "the group form has an emotes field with the emote picker" do
+    sign_in_as @user
+    get edit_our_group_path(groups(:friends))
+    assert_select ".heart-input input[name='group[emotes]']"
+    assert_select "label[for=group_emotes]", text: "Emotes"
+  end
+
   test "create rejects blank name" do
     sign_in_as @user
     assert_no_difference("Group.count") do

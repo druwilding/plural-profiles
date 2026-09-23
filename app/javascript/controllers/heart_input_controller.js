@@ -11,7 +11,7 @@ import { Controller } from "@hotwired/stimulus"
 //    <body>, so it sits outside any <form> and can never submit one.
 //  - Typing `:` or `;` and at least two name characters opens an autocomplete
 //    menu at the caret: hearts whose name starts with what's typed first,
-//    then any whose name contains it, each group in HeartEmoji::ALL order.
+//    then any whose name contains it, each group in HeartEmoji.all order.
 //    Up/Down move the highlight, Enter/Tab insert, Escape dismisses.
 //
 // The heart list itself comes from ApplicationHelper#heart_emojis_json_tag.
@@ -23,7 +23,12 @@ const MIN_QUERY_LENGTH = 2
 // openCodeAtCaret — a letter or number there means it's not a heart code at
 // all (10:30, https://ab, note:ab).
 const OPEN_CODE = /[:;]([\p{L}\p{N}_-]+)$/u
-const COMPLETE_CODE = /[:;][a-z0-9_-]+[_-]heart[:;]$/i
+const COMPLETE_CODE = /[:;]([a-z0-9_-]+)[:;]$/i
+
+// A number before the name in an old Discord-numbered code, e.g. the "11_" in
+// "11_aqua_heart". Only stripped when a letter follows, so "100" stays "100".
+// Mirrors EmoteRegistry::LEGACY_NUMBER_PREFIX.
+const LEGACY_NUMBER_PREFIX = /^\d+_?(?=[a-z])/
 const WORD_CHARACTER = /[\p{L}\p{N}_]/u
 
 const CARET_KEYS = [ "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown" ]
@@ -38,39 +43,62 @@ const MIRRORED_PROPERTIES = [
 ]
 
 let heartList = null
+let heartSource = null
 let sharedDialog = null
 let nextId = 0
 
+// Parsed again whenever the JSON element changes: it's in the body, which
+// Turbo replaces on every visit, so the list stays current when emotes change
+// (e.g. after an admin uploads some) without a full page load.
 function hearts() {
-  if (!heartList) {
-    const source = document.getElementById("heart-emojis")
+  const source = document.getElementById("heart-emojis")
+  if (source !== heartSource) {
+    heartSource = source
     heartList = source ? JSON.parse(source.textContent) : []
   }
   return heartList
 }
 
-// Same normalisation as HeartEmoji.resolve: case-insensitive, hyphens (or
-// spaces, from the dialog search) for underscores, and any old Discord number
-// prefix ignored.
-function normaliseQuery(query) {
-  return query.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/^\d+_?/, "")
+// "spring_heart" from ":spring_heart:"
+function codeOf(heart) {
+  return heart.code.slice(1, -1)
 }
 
-// Names starting with the query come first — matched on the full name, so
-// "abyss_he" still finds abyss — then names containing it anywhere, matched
-// without the "_heart" suffix so "he" doesn't match every single heart. Both
-// groups keep HeartEmoji::ALL order.
-function matchHearts(query) {
-  const normalised = normaliseQuery(query)
-  if (!normalised) return []
+// Same normalisation as EmoteRegistry#resolve: case-insensitive, and hyphens
+// (or spaces, from the dialog search) for underscores.
+function normaliseQuery(query) {
+  return query.trim().toLowerCase().replace(/[\s-]+/g, "_")
+}
 
-  const startsWith = []
-  const contains = []
+// Matches in tiers, each in display order:
+// 1. an exact name or code (":100" puts 100 first)
+// 2. codes starting with the query ("abyss_he" finds abyss, ":10" finds 100)
+// 3. names starting with it (":02" finds 02_spring_heart, ":10" 10_aqua_heart)
+// 4. codes containing it anywhere, without the "_heart" suffix so "he"
+//    doesn't match every single heart
+// An old Discord number prefix ("11_aq") also matches by what follows it.
+function matchHearts(query) {
+  const typed = normaliseQuery(query)
+  if (!typed) return []
+  const bare = typed.replace(LEGACY_NUMBER_PREFIX, "")
+
+  const tiers = [ [], [], [], [] ]
   for (const heart of hearts()) {
-    if (heart.name.startsWith(normalised)) startsWith.push(heart)
-    else if (heart.name.replace(/_heart$/, "").includes(normalised)) contains.push(heart)
+    const code = codeOf(heart)
+    if (heart.name === typed || code === typed) tiers[0].push(heart)
+    else if (code.startsWith(typed) || code.startsWith(bare)) tiers[1].push(heart)
+    else if (heart.name.startsWith(typed)) tiers[2].push(heart)
+    else if (code.replace(/_heart$/, "").includes(bare)) tiers[3].push(heart)
   }
-  return [ ...startsWith, ...contains ]
+  return tiers.flat()
+}
+
+// Whether a finished code (without its delimiters) is an emote, by the same
+// rules as EmoteRegistry#resolve apart from old codes (aliases).
+function isEmoteCode(value) {
+  const typed = normaliseQuery(value)
+  const bare = typed.replace(LEGACY_NUMBER_PREFIX, "")
+  return hearts().some((heart) => heart.name === typed || codeOf(heart) === typed || codeOf(heart) === bare)
 }
 
 function openCodeAtCaret(field) {
@@ -85,9 +113,10 @@ function openCodeAtCaret(field) {
   const preceding = before.slice(0, start)
   const characterBefore = preceding.slice(-1)
   if (characterBefore === ":" || characterBefore === ";") {
-    // Only straight after a finished heart code (:red_heart::ab), so hearts
+    // Only straight after a finished emote code (:red_heart::ab), so emotes
     // can sit side by side — not after a stray delimiter (::ab).
-    if (!COMPLETE_CODE.test(preceding)) return null
+    const complete = preceding.match(COMPLETE_CODE)
+    if (!complete || !isEmoteCode(complete[1])) return null
   } else if (WORD_CHARACTER.test(characterBefore)) {
     return null
   }
@@ -307,7 +336,7 @@ export default class extends Controller {
       menu.id = `heart-input-menu-${this.id}`
       menu.className = "heart-input__menu"
       menu.setAttribute("role", "listbox")
-      menu.setAttribute("aria-label", "Matching hearts")
+      menu.setAttribute("aria-label", "Matching emotes")
       menu.hidden = true
       // Keep focus (and the caret) in the field when an option is clicked.
       menu.addEventListener("mousedown", (event) => event.preventDefault())
@@ -374,7 +403,7 @@ export default class extends Controller {
     const label = this.matches[index].label
     const count = this.matches.length
     this.statusElement.textContent = announceCount
-      ? `${count} ${count === 1 ? "heart" : "hearts"} found, ${label} selected`
+      ? `${count} ${count === 1 ? "emote" : "emotes"} found, ${label} selected`
       : label
   }
 
@@ -449,7 +478,53 @@ export default class extends Controller {
   }
 }
 
+// [[group name, [emote, …]], …] in the order the emotes arrive, which is
+// already group order then name order.
+function groupHearts(list) {
+  const groups = new Map()
+  for (const heart of list) {
+    const group = heart.group || "Emotes"
+    if (!groups.has(group)) groups.set(group, [])
+    groups.get(group).push(heart)
+  }
+  return [ ...groups ]
+}
+
+// The button in the nearest row above (direction -1) or below (1) whose centre
+// is closest horizontally to the current one's.
+function nearestInRow(buttons, current, direction) {
+  const from = current.getBoundingClientRect()
+  const fromCentre = from.left + from.width / 2
+  let rowTop = null
+  let best = null
+  let bestDistance = Infinity
+
+  for (const button of buttons) {
+    const rect = button.getBoundingClientRect()
+    const below = rect.top > from.top + 1
+    const above = rect.top < from.top - 1
+    if ((direction > 0 && !below) || (direction < 0 && !above)) continue
+
+    const closerRow = rowTop === null || (direction > 0 ? rect.top < rowTop - 1 : rect.top > rowTop + 1)
+    const sameRow = rowTop !== null && Math.abs(rect.top - rowTop) <= 1
+    if (!closerRow && !sameRow) continue
+    if (closerRow) {
+      rowTop = rect.top
+      best = null
+      bestDistance = Infinity
+    }
+
+    const distance = Math.abs(rect.left + rect.width / 2 - fromCentre)
+    if (distance < bestDistance) {
+      best = button
+      bestDistance = distance
+    }
+  }
+  return best
+}
+
 function heartDialog() {
+  if (sharedDialog && sharedDialog.heartList !== hearts()) sharedDialog.destroy()
   if (!sharedDialog || !sharedDialog.element.isConnected) sharedDialog = new HeartDialog()
   return sharedDialog
 }
@@ -461,20 +536,21 @@ class HeartDialog {
     dialog.setAttribute("aria-labelledby", "heart-dialog-title")
     dialog.innerHTML = `
       <div class="heart-dialog__header">
-        <h2 class="heart-dialog__title" id="heart-dialog-title">Choose a heart</h2>
+        <h2 class="heart-dialog__title" id="heart-dialog-title">Choose an emote</h2>
         <button type="button" class="heart-dialog__close" aria-label="Close">×</button>
       </div>
-      <label class="visually-hidden" for="heart-dialog-search">Search hearts</label>
-      <input type="search" id="heart-dialog-search" class="heart-dialog__search" placeholder="Search hearts…" autocomplete="off" spellcheck="false">
-      <div class="heart-dialog__grid" role="group" aria-label="Hearts"></div>
-      <p class="heart-dialog__empty" hidden>No hearts match that search.</p>
+      <label class="visually-hidden" for="heart-dialog-search">Search emotes</label>
+      <input type="search" id="heart-dialog-search" class="heart-dialog__search" placeholder="Search emotes…" autocomplete="off" spellcheck="false">
+      <div class="heart-dialog__grid"></div>
+      <p class="heart-dialog__empty" hidden>No emotes match that search.</p>
     `
 
     this.element = dialog
     this.search = dialog.querySelector(".heart-dialog__search")
     this.grid = dialog.querySelector(".heart-dialog__grid")
     this.empty = dialog.querySelector(".heart-dialog__empty")
-    this.buttons = new Map(hearts().map((heart) => [ heart.name, this.buildButton(heart) ]))
+    this.heartList = hearts()
+    this.buttons = new Map(this.heartList.map((heart) => [ heart.name, this.buildButton(heart) ]))
 
     dialog.querySelector(".heart-dialog__close").addEventListener("click", () => dialog.close())
     dialog.addEventListener("click", (event) => this.onDialogClick(event))
@@ -507,7 +583,7 @@ class HeartDialog {
 
     const name = document.createElement("span")
     name.className = "heart-dialog__heart-name"
-    name.textContent = heart.label.replace(/ heart$/, "")
+    name.textContent = heart.label
 
     button.append(image, name)
     return button
@@ -532,19 +608,53 @@ class HeartDialog {
     if (sharedDialog === this) sharedDialog = null
   }
 
+  // Browsing shows every emote in a section per group, in group order. A
+  // search shows one list of matches, best first, so Enter picks the best.
   filter() {
     const query = this.search.value
-    const visible = query.trim() ? matchHearts(query) : hearts()
-    const buttons = visible.map((heart) => this.buttons.get(heart.name))
-    this.grid.replaceChildren(...buttons)
+    const sections = query.trim()
+      ? [ this.buildSection(null, matchHearts(query)) ]
+      : groupHearts(hearts()).map(([ group, members ]) => this.buildSection(group, members))
+    this.grid.replaceChildren(...sections.filter(Boolean))
+
+    const buttons = this.allButtons()
     this.empty.hidden = buttons.length > 0
     this.setTabStop(buttons[0])
   }
 
-  // Only one heart is in the tab order at a time; arrow keys move between
+  buildSection(group, members) {
+    if (members.length === 0) return null
+
+    const section = document.createElement("section")
+    section.className = "heart-dialog__group"
+    const grid = document.createElement("div")
+    grid.className = "heart-dialog__group-grid"
+    grid.setAttribute("role", "group")
+
+    if (group) {
+      const heading = document.createElement("h3")
+      heading.className = "heart-dialog__group-title"
+      heading.id = `heart-dialog-group-${this.sectionCount = (this.sectionCount || 0) + 1}`
+      heading.textContent = group
+      grid.setAttribute("aria-labelledby", heading.id)
+      section.append(heading)
+    } else {
+      grid.setAttribute("aria-label", "Matching emotes")
+    }
+
+    grid.append(...members.map((heart) => this.buttons.get(heart.name)))
+    section.append(grid)
+    return section
+  }
+
+  allButtons() {
+    return [ ...this.grid.querySelectorAll(".heart-dialog__heart") ]
+  }
+
+  // Only one emote is in the tab order at a time; arrow keys move between
   // them (onGridKeydown), so Tab goes straight from the grid to what's next.
   setTabStop(target) {
-    for (const button of this.grid.children) button.tabIndex = button === target ? 0 : -1
+    for (const button of this.allButtons()) button.tabIndex = button === target ? 0 : -1
   }
 
   choose(name) {
@@ -577,7 +687,7 @@ class HeartDialog {
   }
 
   onSearchKeydown(event) {
-    const first = this.grid.firstElementChild
+    const first = this.allButtons()[0]
     if (!first) return
     if (event.key === "ArrowDown") {
       event.preventDefault()
@@ -588,31 +698,33 @@ class HeartDialog {
     }
   }
 
+  // Left/Right move through emotes in order, across group boundaries.
+  // Up/Down move to the nearest emote in the row above or below, found by
+  // position since each group's grid has its own rows; Up from the top row
+  // goes back to the search box.
   onGridKeydown(event) {
-    const buttons = [ ...this.grid.children ]
+    const buttons = this.allButtons()
     const index = buttons.indexOf(document.activeElement)
     if (index === -1) return
 
-    const columns = buttons.filter((button) => button.offsetTop === buttons[0].offsetTop).length || 1
-    let next
+    let target
     switch (event.key) {
-      case "ArrowRight": next = index + 1; break
-      case "ArrowLeft": next = index - 1; break
-      case "ArrowDown": next = index + columns; break
+      case "ArrowRight": target = buttons[Math.min(index + 1, buttons.length - 1)]; break
+      case "ArrowLeft": target = buttons[Math.max(index - 1, 0)]; break
+      case "ArrowDown": target = nearestInRow(buttons, buttons[index], 1) || buttons[index]; break
       case "ArrowUp":
-        if (index < columns) {
+        target = nearestInRow(buttons, buttons[index], -1)
+        if (!target) {
           event.preventDefault()
           this.search.focus()
           return
         }
-        next = index - columns
         break
-      case "Home": next = 0; break
-      case "End": next = buttons.length - 1; break
+      case "Home": target = buttons[0]; break
+      case "End": target = buttons[buttons.length - 1]; break
       default: return
     }
     event.preventDefault()
-    const target = buttons[Math.min(Math.max(next, 0), buttons.length - 1)]
     this.setTabStop(target)
     target.focus()
   }

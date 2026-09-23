@@ -70,6 +70,14 @@ class Chat::MiniProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_match group_path(@group.uuid), response.body
   end
 
+  test "show renders a group's chat emotes, using the chat override" do
+    @group.update!(emotes: ":red_heart:", mini_profile_emotes_inherited: false, mini_profile_emotes: ":aqua_heart: :aqua_heart:")
+    sign_in_as @owner
+    get chat_mini_profile_path("Group", @group.uuid)
+    assert_response :success
+    assert_equal [ "aqua heart", "aqua heart" ], css_select(".pronouns__emotes img").map { |img| img["alt"] }
+  end
+
   test "show reflects an overridden chat identity, not the full profile" do
     @profile.update!(mini_profile_pronouns_inherited: false, mini_profile_pronouns: "it/its")
     sign_in_as @owner

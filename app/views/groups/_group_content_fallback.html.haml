@@ -9,9 +9,12 @@
       %h1= formatted_inline(group.name)
       - if group.subtitle.present?
         %p.subtitle= formatted_inline(group.subtitle)
-      - if group.pronouns.present?
+      - if group.pronouns.present? || group.emotes.present?
         .pronouns
-          %span= formatted_inline(group.pronouns)
+          - if group.pronouns.present?
+            %span= formatted_inline(group.pronouns)
+          - if group.emotes.present?
+            %span.pronouns__emotes= formatted_inline(group.emotes)
     - if group.tag_line.present?
       %p.tag-line= formatted_inline(group.tag_line)
 

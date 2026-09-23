@@ -1,0 +1,24 @@
+#emote-sections
+  - @groups.each do |group|
+    - emotes = @emotes_by_group.fetch(group.id, [])
+    %section.emote-section{"aria-labelledby": dom_id(group, :heading)}
+      %h3.emote-section__heading{id: dom_id(group, :heading)}
+        = group.name
+        %span.emote-section__count= "(#{emotes.size})"
+      - if emotes.any?
+        %ul.emote-list
+          - emotes.each do |emote|
+            = render "admin/emotes/emote", emote: emote, groups: @groups
+      - else
+        %p.emote-section__empty No emotes in this group.
+
+  - if @archived_emotes.any?
+    %details.emote-section.emote-section--archived{data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-archived" }}
+      %summary.emote-section__heading
+        Archived
+        %span.emote-section__count= "(#{@archived_emotes.size})"
+      %p.admin-emotes__hint
+        Archived emotes don't appear in pickers, but still show wherever they're already used.
+      %ul.emote-list
+        - @archived_emotes.each do |emote|
+          = render "admin/emotes/archived_emote", emote: emote

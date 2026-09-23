@@ -1,0 +1,31 @@
+- content_for(:title) { "Upload emotes — Plural Profiles" }
+
+= render "admin/breadcrumbs", parents: [ [ "Emotes", admin_emotes_path ] ], current: "Upload emotes"
+
+.card
+  .card__header
+    %h1 Upload emotes
+  .admin-emotes__intro
+    %p
+      Choose PNG, WebP or SVG files, one or many. Each file's name becomes the emote's name, so
+      #{tag.code("02 Spring Heart.png")} becomes #{tag.code("02_spring_heart")}.
+      Files are added straight away. If a name is already in use, you'll be asked what to do with that file.
+    %p.admin-emotes__hint
+      Up to #{EmoteUpload::MAX_FILES} files at a time, #{EmoteUpload::MAX_FILE_SIZE / 1.megabyte} MB each.
+      SVGs are converted to PNG in your browser before uploading.
+
+  -# A plain (non-Turbo) submit: when files need a decision, that page is rendered straight from this POST.
+  = form_with url: upload_admin_emotes_path, multipart: true, data: { turbo: false, controller: "emote-upload", action: "submit->emote-upload#submit" } do |form|
+    .form-group
+      .emote-upload__dropzone{data: { "emote-upload-target": "dropzone", action: "dragover->emote-upload#dragOver dragleave->emote-upload#dragLeave drop->emote-upload#drop" }}
+        = form.label :files, "Images"
+        = form.file_field :files, multiple: true, required: true, accept: ".png,.webp,.svg,image/png,image/webp,image/svg+xml",
+          data: { "emote-upload-target": "input", action: "change->emote-upload#convert" }
+        %p.emote-upload__hint Or drop files anywhere in this box.
+      %p.emote-upload__status{role: "status", data: { "emote-upload-target": "status" }}
+
+    .form-group
+      = form.label :emote_group_id, "Add them to this group"
+      = form.select :emote_group_id, @groups.map { |group| [ group.name, group.id ] }
+
+    = form.submit "Upload", class: "btn", data: { "emote-upload-target": "submit" }

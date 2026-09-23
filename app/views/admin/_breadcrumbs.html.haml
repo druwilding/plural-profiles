@@ -1,0 +1,12 @@
+-# Links back up to the admin landing page, shown above each admin page.
+-#
+-# Locals:
+-#   current — the current page's name
+-#   parents — optional [[label, path], ...] between Admin and the current page
+%nav.admin-breadcrumbs{"aria-label": "Breadcrumb"}
+  = link_to "Admin", admin_root_path
+  - Array(local_assigns[:parents]).each do |label, path|
+    %span{"aria-hidden": "true"} ›
+    = link_to label, path
+  %span{"aria-hidden": "true"} ›
+  %span{"aria-current": "page"}= current

@@ -17,7 +17,7 @@
           = link_to "New profile", new_our_profile_path
           = link_to "Themes", our_themes_path
           - if Current.user&.admin?
-            %span.admin-badge ADMIN
+            = link_to "Admin", admin_root_path
           = link_to "Sign out", session_path, data: { turbo_method: :delete }
         - else
           = link_to "Sign in", new_session_path
@@ -40,3 +40,6 @@
           .flash.flash--alert= flash[:alert]
         = yield
     = yield :footer
+    -# In the body, not the head: Turbo replaces the body on every visit, but
+    -# never removes old head scripts, so a head copy would go stale.
+    = heart_emojis_json_tag

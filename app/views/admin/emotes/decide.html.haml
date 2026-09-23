@@ -1,0 +1,22 @@
+- content_for(:title) { "Uploaded emotes — Plural Profiles" }
+
+= render "admin/breadcrumbs", parents: [ [ "Emotes", admin_emotes_path ], [ "Upload", upload_admin_emotes_path ] ], current: "Choose what to do"
+
+.card
+  .card__header
+    %h1 Choose what to do
+  .admin-emotes__intro
+    - if @summary
+      %p= @summary
+    %p
+      #{@rows.size == 1 ? "This file needs" : "These files need"} a decision before #{@rows.size == 1 ? "it's" : "they're"} added.
+      Where a name is already in use, you can give that emote the new image, add the file as a new emote under a different name, or skip it.
+
+= form_with url: resolve_admin_emotes_path, data: { controller: "emote-upload-decision", "emote-upload-decision-taken-value": @taken_identifiers.to_json } do |form|
+  %section.card{"aria-label": "Files to decide on"}
+    %ol.upload-review
+      - @rows.each_with_index do |row, index|
+        = render "admin/emotes/decision", row: row, index: index, groups: @groups
+    .card__actions
+      = form.submit "Save", class: "btn"
+      = link_to "Cancel", admin_emotes_path, class: "btn btn--secondary"

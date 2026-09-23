@@ -1,0 +1,44 @@
+-# One emote on the admin page. The form submits itself when a field changes
+-# (auto-submit), and the response re-renders the whole list.
+-#
+-# Locals:
+-#   emote  — the Emote, possibly with validation errors from a failed update
+-#   groups — the site-wide EmoteGroups, for the group select
+%li.emote-row{id: dom_id(emote), data: { "emote-filter-target": "row", search: [ emote.name, emote.code, *emote.aliases.map(&:code) ].join(" ") }}
+  = image_tag emote.display_image_path, class: "emote-row__image", width: 48, height: 48, alt: "", loading: "lazy"
+
+  = form_with model: emote, url: admin_emote_path(emote), class: "emote-row__form", data: { controller: "auto-submit", action: "keydown.enter->auto-submit#submitNow" } do |form|
+    .emote-row__field.emote-row__field--name
+      = form.label :name, "Name", for: dom_id(emote, :name)
+      = form.text_field :name, id: dom_id(emote, :name), autocomplete: "off", spellcheck: false, "aria-invalid": emote.errors[:name].any? || nil, data: { action: "change->auto-submit#submit" }
+
+    .emote-row__field.emote-row__field--code
+      = form.label :code, "Code", for: dom_id(emote, :code)
+      .emote-row__code
+        %span.emote-row__colon{"aria-hidden": "true"} :
+        = form.text_field :code, id: dom_id(emote, :code), disabled: !emote.code_overridden?, autocomplete: "off", spellcheck: false, "aria-invalid": emote.errors[:code].any? || nil, data: { action: "change->auto-submit#submit" }
+        %span.emote-row__colon{"aria-hidden": "true"} :
+      %label.emote-row__override
+        = form.check_box :code_overridden, id: dom_id(emote, :code_overridden), data: { action: "change->auto-submit#submit" }
+        Custom code
+
+    .emote-row__field.emote-row__field--group
+      = form.label :emote_group_id, "Group", for: dom_id(emote, :group)
+      = form.select :emote_group_id, groups.map { |group| [ group.name, group.id ] }, {}, id: dom_id(emote, :group), data: { action: "change->auto-submit#submit" }
+
+    - if emote.errors.any?
+      .emote-row__errors{role: "alert"}
+        - emote.errors.full_messages.each do |message|
+          %p= message
+
+  - if emote.aliases.any?
+    .emote-row__aliases
+      %span.emote-row__aliases-label Old codes that still work:
+      - emote.aliases.sort_by(&:code).each do |emote_alias|
+        %span.emote-row__alias
+          %code= ":#{emote_alias.code}:"
+          = link_to "×", remove_alias_admin_emote_path(emote, alias_id: emote_alias.id), class: "emote-row__alias-remove", "aria-label": "Remove the old code :#{emote_alias.code}:",
+            data: { turbo_method: :delete, turbo_confirm: "Remove the old code :#{emote_alias.code}:? Anything already written with it will show as plain text instead of #{emote.name}." }
+
+  .emote-row__aside
+    = link_to "Archive", archive_admin_emote_path(emote), data: { turbo_method: :patch }, class: "btn btn--small btn--secondary", "aria-label": "Archive #{emote.name}"

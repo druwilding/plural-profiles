@@ -116,46 +116,22 @@ class ProfileTest < ActiveSupport::TestCase
     assert_empty profile.errors[:created_at]
   end
 
-  # Heart emojis
+  # Emotes
 
-  test "heart_emojis defaults to empty array" do
-    profile = users(:one).profiles.create!(name: "Heartless")
-    assert_equal [], profile.heart_emojis
+  test "emotes is blank by default" do
+    profile = users(:one).profiles.create!(name: "Emoteless")
+    assert_nil profile.emotes
   end
 
-  test "valid heart emojis are accepted" do
+  test "emotes is free text, so emotes can repeat and go in any order" do
     profile = profiles(:alice)
-    profile.heart_emojis = %w[dewdrop_heart red_heart]
-    assert profile.valid?
+    profile.update!(emotes: ":red_heart: :dewdrop_heart: :red_heart: and friends")
+    assert_equal ":red_heart: :dewdrop_heart: :red_heart: and friends", profile.reload.emotes
   end
 
-  test "invalid heart emoji names are rejected" do
-    profile = profiles(:alice)
-    profile.heart_emojis = %w[dewdrop_heart fake_heart]
-    assert_not profile.valid?
-    assert profile.errors[:heart_emojis].any? { |e| e.include?("fake_heart") }
-  end
-
-  test "assigning heart_emojis normalizes old number prefixes to their bare form" do
-    profile = profiles(:alice)
-    profile.heart_emojis = %w[13_storm_heart 50cadbury_heart]
-    assert_equal %w[storm_heart cadbury_heart], profile.heart_emojis
-    assert profile.valid?
-  end
-
-  test "assigning heart_emojis leaves genuinely unknown hearts untouched so they still fail validation" do
-    profile = profiles(:alice)
-    profile.heart_emojis = %w[dewdrop_heart 99_fake_heart]
-    assert_equal %w[dewdrop_heart 99_fake_heart], profile.heart_emojis
-    assert_not profile.valid?
-    assert profile.errors[:heart_emojis].any? { |e| e.include?("99_fake_heart") }
-  end
-
-  test "assigning heart_emojis normalizes uppercase and mixed case" do
-    profile = profiles(:alice)
-    profile.heart_emojis = %w[11_AQUA_HEART Red_Heart]
-    assert_equal %w[aqua_heart red_heart], profile.heart_emojis
-    assert profile.valid?
+  test "the old heart columns are ignored" do
+    assert_not_includes Profile.column_names, "heart_emojis"
+    assert_not_includes Profile.column_names, "mini_profile_heart_emojis"
   end
 
   # -- chat identity (mini-profile) --
@@ -165,7 +141,8 @@ class ProfileTest < ActiveSupport::TestCase
     assert_equal profile.name, profile.chat_name
     assert_equal profile.pronouns, profile.chat_pronouns
     assert_equal profile.tag_line, profile.chat_tag_line
-    assert_equal profile.heart_emojis, profile.chat_heart_emojis
+    profile.emotes = ":red_heart:"
+    assert_equal ":red_heart:", profile.chat_emotes
   end
 
   # Description is the one exception: it defaults to NOT inherited (and
@@ -211,7 +188,7 @@ class ProfileTest < ActiveSupport::TestCase
     assert profile.mini_profile_subtitle_inherited?
     assert profile.mini_profile_tag_line_inherited?
     assert profile.mini_profile_pronouns_inherited?
-    assert profile.mini_profile_heart_emojis_inherited?
+    assert profile.mini_profile_emotes_inherited?
     assert profile.mini_profile_avatar_inherited?
     assert_not profile.mini_profile_description_inherited?
   end
@@ -241,24 +218,10 @@ class ProfileTest < ActiveSupport::TestCase
     assert_equal "Nickname", profile.chat_name
   end
 
-  test "valid mini_profile_heart_emojis are accepted" do
+  test "chat_emotes uses the independent value once set for chat" do
     profile = profiles(:alice)
-    profile.mini_profile_heart_emojis = %w[dewdrop_heart red_heart]
-    assert profile.valid?
-  end
-
-  test "invalid mini_profile_heart_emojis are rejected" do
-    profile = profiles(:alice)
-    profile.mini_profile_heart_emojis = %w[dewdrop_heart fake_heart]
-    assert_not profile.valid?
-    assert profile.errors[:mini_profile_heart_emojis].any? { |e| e.include?("fake_heart") }
-  end
-
-  test "assigning mini_profile_heart_emojis normalizes old number prefixes to their bare form" do
-    profile = profiles(:alice)
-    profile.mini_profile_heart_emojis = %w[13_storm_heart 50cadbury_heart]
-    assert_equal %w[storm_heart cadbury_heart], profile.mini_profile_heart_emojis
-    assert profile.valid?
+    profile.update!(emotes: ":red_heart:", mini_profile_emotes_inherited: false, mini_profile_emotes: ":aqua_heart: :aqua_heart:")
+    assert_equal ":aqua_heart: :aqua_heart:", profile.chat_emotes
   end
 
   test "can attach a mini_profile_avatar independently of the main avatar" do

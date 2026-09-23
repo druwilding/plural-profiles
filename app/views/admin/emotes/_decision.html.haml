@@ -1,0 +1,51 @@
+-# One uploaded file waiting for a decision. emote-upload-decision checks the
+-# name as it's edited; the server checks again on save.
+-#
+-# Locals:
+-#   row    — an EmoteUpload::Row with status "clash", "duplicate", "unnamed" or "new"
+-#   index  — its position, for field names and ids
+-#   groups — the site-wide EmoteGroups
+- prefix = "rows[#{index}]"
+- id = ->(field) { "upload_row_#{index}_#{field}" }
+
+%li.upload-review__row{data: { "emote-upload-decision-target": "row" }}
+  = hidden_field_tag "#{prefix}[signed_id]", row.signed_id, id: nil
+  = hidden_field_tag "#{prefix}[replace_id]", row.clash&.id, id: nil
+  = image_tag rails_storage_proxy_path(row.blob.variant(Emote::DISPLAY_VARIANT)), class: "upload-review__preview", width: 48, height: 48, alt: ""
+
+  .upload-review__main
+    %p.upload-review__heading
+      %strong= row.filename
+      - if row.clash
+        is named like an emote that already exists:
+        %img.upload-review__existing{src: row.clash.display_image_path, width: 32, height: 32, alt: ""}
+        %strong= row.clash.name
+      - elsif row.name.blank?
+        needs a name: none could be made from the filename.
+
+    %fieldset.upload-review__choices
+      %legend.visually-hidden What to do with #{row.filename}
+      - if row.clash
+        %label.upload-review__choice
+          = radio_button_tag "#{prefix}[action]", "replace", row.action == "replace", id: id.(:replace), data: { action: "change->emote-upload-decision#update" }
+          Give #{row.clash.name} this image instead
+      %label.upload-review__choice
+        = radio_button_tag "#{prefix}[action]", "create", row.action == "create", id: id.(:create), data: { field: "create", action: "change->emote-upload-decision#update" }
+        Add it as a new emote
+      .upload-review__fields
+        .upload-review__field.upload-review__field--name
+          = label_tag id.(:name), "Name"
+          = text_field_tag "#{prefix}[name]", row.name, id: id.(:name), autocomplete: "off", spellcheck: false,
+            "aria-describedby": id.(:status), data: { field: "name", action: "input->emote-upload-decision#nameChanged" }
+          %p.upload-review__code{id: id.(:status), data: { field: "status" }}
+        .upload-review__field
+          = label_tag id.(:group), "Group"
+          = select_tag "#{prefix}[group_id]", options_from_collection_for_select(groups, :id, :name, row.group_id), id: id.(:group)
+      %label.upload-review__choice
+        = radio_button_tag "#{prefix}[action]", "skip", row.action == "skip", id: id.(:skip), data: { action: "change->emote-upload-decision#update" }
+        Skip this file
+
+    - if row.errors_list.any?
+      .upload-review__errors{role: "alert"}
+        - row.errors_list.each do |message|
+          %p= message

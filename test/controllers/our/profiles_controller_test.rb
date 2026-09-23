@@ -422,60 +422,40 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal old_uuid, @profile.reload.uuid
   end
 
-  # -- Heart emojis --
+  # -- Emotes --
 
-  test "create with heart emojis saves them" do
+  test "create saves emotes as typed" do
     sign_in_as @user
     post our_profiles_path, params: {
-      profile: { name: "Hearty", heart_emojis: %w[dewdrop_heart red_heart] }
+      profile: { name: "Hearty", emotes: ":red_heart: :dewdrop_heart: :red_heart:" }
     }
     assert_redirected_to our_profile_path(Profile.last)
-    assert_equal %w[dewdrop_heart red_heart], Profile.last.heart_emojis
+    assert_equal ":red_heart: :dewdrop_heart: :red_heart:", Profile.last.emotes
   end
 
-  test "update sets heart emojis" do
+  test "update sets and clears emotes" do
     sign_in_as @user
-    patch our_profile_path(@profile), params: {
-      profile: { heart_emojis: %w[violet_heart] }
-    }
+    patch our_profile_path(@profile), params: { profile: { emotes: ":violet_heart:" } }
     assert_redirected_to our_profile_path(@profile)
-    assert_equal %w[violet_heart], @profile.reload.heart_emojis
+    assert_equal ":violet_heart:", @profile.reload.emotes
+
+    patch our_profile_path(@profile), params: { profile: { emotes: "" } }
+    assert_equal "", @profile.reload.emotes
   end
 
-  test "update accepts heart emojis submitted with a stale number prefix" do
+  test "show displays emotes, including old codes" do
     sign_in_as @user
-    patch our_profile_path(@profile), params: {
-      profile: { heart_emojis: %w[22_violet_heart] }
-    }
-    assert_redirected_to our_profile_path(@profile)
-    assert_equal %w[violet_heart], @profile.reload.heart_emojis
-  end
-
-  test "update clears heart emojis with empty array" do
-    sign_in_as @user
-    @profile.update!(heart_emojis: %w[dewdrop_heart])
-    patch our_profile_path(@profile), params: {
-      profile: { heart_emojis: [ "" ] }
-    }
-    assert_redirected_to our_profile_path(@profile)
-    assert_equal [], @profile.reload.heart_emojis
-  end
-
-  test "update rejects invalid heart emojis" do
-    sign_in_as @user
-    patch our_profile_path(@profile), params: {
-      profile: { heart_emojis: %w[totally_fake_heart] }
-    }
-    assert_response :unprocessable_entity
-  end
-
-  test "show displays heart emojis" do
-    sign_in_as @user
-    @profile.update!(heart_emojis: %w[dewdrop_heart violet_heart])
+    @profile.update!(emotes: ":dewdrop_heart: :22_violet_heart:")
     get our_profile_path(@profile)
     assert_response :success
-    assert_match "dewdrop_heart.webp", response.body
-    assert_match "violet_heart.webp", response.body
+    assert_equal [ "dewdrop heart", "violet heart" ], css_select(".pronouns__emotes img").map { |img| img["alt"] }
+  end
+
+  test "the edit form has an emotes field with the emote picker" do
+    sign_in_as @user
+    get edit_our_profile_path(@profile)
+    assert_select ".heart-input input[name='profile[emotes]']"
+    assert_select "label[for=profile_emotes]", text: "Emotes"
   end
 
   # -- labels --

@@ -1,21 +1,11 @@
 require "test_helper"
 
 class HeartEmojiTest < ActiveSupport::TestCase
-  test "ALL contains expected hearts" do
-    assert_includes HeartEmoji::ALL, "dewdrop_heart"
-    assert_includes HeartEmoji::ALL, "red_heart"
-  end
-
-  test "ALL has no duplicates and is well-formed" do
-    assert_equal HeartEmoji::ALL.uniq, HeartEmoji::ALL
-    assert HeartEmoji::ALL.all? { |heart| heart.match?(/\A[a-z]+_heart\z/) },
-      "expected every entry to be a lowercase name ending in _heart"
-  end
-
-  test "every heart has an image" do
-    HeartEmoji::ALL.each do |heart|
-      assert File.exist?(Rails.public_path.join("images/hearts/#{heart}.webp")), "missing image for #{heart}"
-    end
+  test "all lists every pickable emote's code in display order" do
+    assert_equal "dewdrop_heart", HeartEmoji.all.first
+    assert_equal "sunshine_heart", HeartEmoji.all.last
+    assert_includes HeartEmoji.all, "red_heart"
+    assert_equal HeartEmoji.all.uniq, HeartEmoji.all
   end
 
   test "resolve is case-insensitive" do
@@ -59,18 +49,16 @@ class HeartEmojiTest < ActiveSupport::TestCase
     assert_equal "cadbury heart", HeartEmoji.display_name("cadbury_heart")
   end
 
-  test "image_path points at the public heart image" do
-    assert_equal "/images/hearts/abyss_heart.webp", HeartEmoji.image_path("abyss_heart")
+  test "image_path points at the emote's display image" do
+    assert_equal EmoteRegistry.current.resolve("abyss_heart").src, HeartEmoji.image_path("abyss_heart")
+    assert_match %r{\A/rails/active_storage/representations/proxy/.+/13_abyss_heart\.webp\z}, HeartEmoji.image_path("abyss_heart")
+  end
+
+  test "image_path is nil for an unknown heart" do
+    assert_nil HeartEmoji.image_path("fake_heart")
   end
 
   test "code is the canonical colon form" do
     assert_equal ":abyss_heart:", HeartEmoji.code("abyss_heart")
-  end
-
-  test "PATTERN matches every delimiter and separator combination" do
-    [ ":cadbury_heart:", ";cadbury-heart;", ":cadbury_heart;", ";cadbury_heart:" ].each do |code|
-      assert_match HeartEmoji::PATTERN, code
-      assert_equal "cadbury", code.match(HeartEmoji::PATTERN)[1][0, 7]
-    end
   end
 end

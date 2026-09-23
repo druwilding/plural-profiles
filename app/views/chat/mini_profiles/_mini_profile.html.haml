@@ -18,7 +18,7 @@
 -# real chat popover and the settings-page preview of unsaved changes.
 
 - has_pronouns = postable.respond_to?(:chat_pronouns) && postable.chat_pronouns.present?
-- has_hearts = postable.respond_to?(:chat_heart_emojis) && postable.chat_heart_emojis.any?
+- has_emotes = postable.respond_to?(:chat_emotes) && postable.chat_emotes.present?
 - avatar = chat_avatar_for(postable)
 
 .mini-profile
@@ -37,12 +37,12 @@
       %h2.mini-profile__name= formatted_inline(postable.chat_name)
       - if postable.chat_subtitle.present?
         %p.subtitle= formatted_inline(postable.chat_subtitle)
-      - if has_pronouns || has_hearts
+      - if has_pronouns || has_emotes
         .pronouns
           - if has_pronouns
             %span= formatted_inline(postable.chat_pronouns)
-          - if has_hearts
-            = render "shared/heart_list", hearts: postable.chat_heart_emojis
+          - if has_emotes
+            %span.pronouns__emotes= formatted_inline(postable.chat_emotes)
     - if postable.chat_tag_line.present?
       %p.tag-line= formatted_inline(postable.chat_tag_line)
 

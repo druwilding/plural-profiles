@@ -17,13 +17,12 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "show displays heart emojis on profile" do
+  test "show displays the profile's emotes next to the pronouns, repeats and all" do
     profile = profiles(:alice)
-    profile.update!(heart_emojis: %w[red_heart violet_heart])
+    profile.update!(emotes: ":violet_heart: :red_heart: :violet_heart:")
     get profile_path(uuid: profile.uuid)
     assert_response :success
-    assert_match "red_heart.webp", response.body
-    assert_match "violet_heart.webp", response.body
+    assert_equal [ "violet heart", "red heart", "violet heart" ], css_select(".pronouns__emotes img").map { |img| img["alt"] }
   end
 
   test "show applies profile theme CSS when profile has a theme" do
