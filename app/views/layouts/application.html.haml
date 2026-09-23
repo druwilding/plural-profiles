@@ -40,3 +40,6 @@
           .flash.flash--alert= flash[:alert]
         = yield
     = yield :footer
+    -# In the body, not the head: Turbo replaces the body on every visit, but
+    -# never removes old head scripts, so a head copy would go stale.
+    = heart_emojis_json_tag

@@ -84,14 +84,14 @@ ActiveRecord::Base.transaction do
 
   # ── Profiles ──────────────────────────────────────────────────────────────
 
-  stray  = user.profiles.create!(name: "Stray",  pronouns: "they/them", heart_emojis: %w[storm_heart shadow_heart],           description: "In Prism Circle & Rogue Pack — should NOT appear in Alpha Clan (excluded by profile override).", avatar_shape: "circle")
-  ember  = user.profiles.create!(name: "Ember",  pronouns: "she/her",   heart_emojis: %w[blossom_heart passionate_heart],     description: "In Prism Circle — SHOULD appear in Alpha Clan (selected in profile override).")
+  stray  = user.profiles.create!(name: "Stray",  pronouns: "they/them", emotes: ":storm_heart: :shadow_heart:",           description: "In Prism Circle & Rogue Pack — should NOT appear in Alpha Clan (excluded by profile override).", avatar_shape: "circle")
+  ember  = user.profiles.create!(name: "Ember",  pronouns: "she/her",   emotes: ":blossom_heart: :passionate_heart:",     description: "In Prism Circle — SHOULD appear in Alpha Clan (selected in profile override).")
   drift  = user.profiles.create!(name: "Drift",  pronouns: "he/him",                                                         description: "In Flux (direct) — should NOT appear in Castle Clan.")
-  ripple = user.profiles.create!(name: "Ripple", pronouns: "they/she",  heart_emojis: %w[seafoam_heart aqua_heart mist_heart], description: "In Flux (direct) — should NOT appear in Castle Clan.")
+  ripple = user.profiles.create!(name: "Ripple", pronouns: "they/she",  emotes: ":seafoam_heart: :aqua_heart: :mist_heart:", description: "In Flux (direct) — should NOT appear in Castle Clan.")
   grove  = user.profiles.create!(name: "Grove",                                                                              description: "Direct member of Alpha Clan.", avatar_shape: "square")
-  shadow = user.profiles.create!(name: "Shadow", pronouns: "she/they",  heart_emojis: %w[inky_heart void_heart],             description: "Direct member of Castle Clan.", avatar_shape: "circle")
-  mirage = user.profiles.create!(name: "Mirage", pronouns: "any/all",   heart_emojis: %w[lavender_heart violet_heart],       description: "In Echo Shard — SHOULD appear in Castle Clan via Flux.")
-  spark  = user.profiles.create!(name: "Spark",                         heart_emojis: %w[dawn_heart sunshine_heart],         description: "In Static Burst — should NOT appear in Castle Clan.")
+  shadow = user.profiles.create!(name: "Shadow", pronouns: "she/they",  emotes: ":inky_heart: :void_heart:",             description: "Direct member of Castle Clan.", avatar_shape: "circle")
+  mirage = user.profiles.create!(name: "Mirage", pronouns: "any/all",   emotes: ":lavender_heart: :violet_heart:",       description: "In Echo Shard — SHOULD appear in Castle Clan via Flux.")
+  spark  = user.profiles.create!(name: "Spark",                         emotes: ":dawn_heart: :sunshine_heart:",         description: "In Static Burst — should NOT appear in Castle Clan.")
 
   [
     [ stray,  "stray" ],

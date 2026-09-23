@@ -23,7 +23,12 @@ const MIN_QUERY_LENGTH = 2
 // openCodeAtCaret — a letter or number there means it's not a heart code at
 // all (10:30, https://ab, note:ab).
 const OPEN_CODE = /[:;]([\p{L}\p{N}_-]+)$/u
-const COMPLETE_CODE = /[:;][a-z0-9_-]+[_-]heart[:;]$/i
+const COMPLETE_CODE = /[:;]([a-z0-9_-]+)[:;]$/i
+
+// A number before the name in an old Discord-numbered code, e.g. the "11_" in
+// "11_aqua_heart". Only stripped when a letter follows, so "100" stays "100".
+// Mirrors EmoteRegistry::LEGACY_NUMBER_PREFIX.
+const LEGACY_NUMBER_PREFIX = /^\d+_?(?=[a-z])/
 const WORD_CHARACTER = /[\p{L}\p{N}_]/u
 
 const CARET_KEYS = [ "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown" ]
@@ -38,39 +43,62 @@ const MIRRORED_PROPERTIES = [
 ]
 
 let heartList = null
+let heartSource = null
 let sharedDialog = null
 let nextId = 0
 
+// Parsed again whenever the JSON element changes: it's in the body, which
+// Turbo replaces on every visit, so the list stays current when emotes change
+// (e.g. after an admin uploads some) without a full page load.
 function hearts() {
-  if (!heartList) {
-    const source = document.getElementById("heart-emojis")
+  const source = document.getElementById("heart-emojis")
+  if (source !== heartSource) {
+    heartSource = source
     heartList = source ? JSON.parse(source.textContent) : []
   }
   return heartList
 }
 
-// Same normalisation as HeartEmoji.resolve: case-insensitive, hyphens (or
-// spaces, from the dialog search) for underscores, and any old Discord number
-// prefix ignored.
-function normaliseQuery(query) {
-  return query.trim().toLowerCase().replace(/[\s-]+/g, "_").replace(/^\d+_?/, "")
+// "spring_heart" from ":spring_heart:"
+function codeOf(heart) {
+  return heart.code.slice(1, -1)
 }
 
-// Names starting with the query come first — matched on the full name, so
-// "abyss_he" still finds abyss — then names containing it anywhere, matched
-// without the "_heart" suffix so "he" doesn't match every single heart. Both
-// groups keep HeartEmoji.all order.
-function matchHearts(query) {
-  const normalised = normaliseQuery(query)
-  if (!normalised) return []
+// Same normalisation as EmoteRegistry#resolve: case-insensitive, and hyphens
+// (or spaces, from the dialog search) for underscores.
+function normaliseQuery(query) {
+  return query.trim().toLowerCase().replace(/[\s-]+/g, "_")
+}
 
-  const startsWith = []
-  const contains = []
+// Matches in tiers, each in display order:
+// 1. an exact name or code (":100" puts 100 first)
+// 2. codes starting with the query ("abyss_he" finds abyss, ":10" finds 100)
+// 3. names starting with it (":02" finds 02_spring_heart, ":10" 10_aqua_heart)
+// 4. codes containing it anywhere, without the "_heart" suffix so "he"
+//    doesn't match every single heart
+// An old Discord number prefix ("11_aq") also matches by what follows it.
+function matchHearts(query) {
+  const typed = normaliseQuery(query)
+  if (!typed) return []
+  const bare = typed.replace(LEGACY_NUMBER_PREFIX, "")
+
+  const tiers = [ [], [], [], [] ]
   for (const heart of hearts()) {
-    if (heart.name.startsWith(normalised)) startsWith.push(heart)
-    else if (heart.name.replace(/_heart$/, "").includes(normalised)) contains.push(heart)
+    const code = codeOf(heart)
+    if (heart.name === typed || code === typed) tiers[0].push(heart)
+    else if (code.startsWith(typed) || code.startsWith(bare)) tiers[1].push(heart)
+    else if (heart.name.startsWith(typed)) tiers[2].push(heart)
+    else if (code.replace(/_heart$/, "").includes(bare)) tiers[3].push(heart)
   }
-  return [ ...startsWith, ...contains ]
+  return tiers.flat()
+}
+
+// Whether a finished code (without its delimiters) is an emote, by the same
+// rules as EmoteRegistry#resolve apart from old codes (aliases).
+function isEmoteCode(value) {
+  const typed = normaliseQuery(value)
+  const bare = typed.replace(LEGACY_NUMBER_PREFIX, "")
+  return hearts().some((heart) => heart.name === typed || codeOf(heart) === typed || codeOf(heart) === bare)
 }
 
 function openCodeAtCaret(field) {
@@ -85,9 +113,10 @@ function openCodeAtCaret(field) {
   const preceding = before.slice(0, start)
   const characterBefore = preceding.slice(-1)
   if (characterBefore === ":" || characterBefore === ";") {
-    // Only straight after a finished heart code (:red_heart::ab), so hearts
+    // Only straight after a finished emote code (:red_heart::ab), so emotes
     // can sit side by side — not after a stray delimiter (::ab).
-    if (!COMPLETE_CODE.test(preceding)) return null
+    const complete = preceding.match(COMPLETE_CODE)
+    if (!complete || !isEmoteCode(complete[1])) return null
   } else if (WORD_CHARACTER.test(characterBefore)) {
     return null
   }
@@ -495,6 +524,7 @@ function nearestInRow(buttons, current, direction) {
 }
 
 function heartDialog() {
+  if (sharedDialog && sharedDialog.heartList !== hearts()) sharedDialog.destroy()
   if (!sharedDialog || !sharedDialog.element.isConnected) sharedDialog = new HeartDialog()
   return sharedDialog
 }
@@ -519,7 +549,8 @@ class HeartDialog {
     this.search = dialog.querySelector(".heart-dialog__search")
     this.grid = dialog.querySelector(".heart-dialog__grid")
     this.empty = dialog.querySelector(".heart-dialog__empty")
-    this.buttons = new Map(hearts().map((heart) => [ heart.name, this.buildButton(heart) ]))
+    this.heartList = hearts()
+    this.buttons = new Map(this.heartList.map((heart) => [ heart.name, this.buildButton(heart) ]))
 
     dialog.querySelector(".heart-dialog__close").addEventListener("click", () => dialog.close())
     dialog.addEventListener("click", (event) => this.onDialogClick(event))

@@ -89,15 +89,15 @@ class EmoteRegistry
 
   # Finds the emote for a typed code: its name (:02_spring_heart:, :100:), its
   # code (:spring_heart:), an old code (alias), or, for old Discord-numbered
-  # pastes, the code or alias after the number (:11_aqua_heart:). Case and
+  # pastes, any of those after the number (:11_aqua_heart:). Case and
   # hyphens-for-underscores don't matter.
   def resolve(raw)
     key = raw.to_s.downcase.tr("-", "_")
     return if key.empty?
 
-    @by_name[key] || @by_code[key] || @by_alias[key] || begin
+    lookup(key) || begin
       bare = key.sub(LEGACY_NUMBER_PREFIX, "")
-      @by_code[bare] || @by_alias[bare] if bare != key
+      lookup(bare) if bare != key
     end
   end
 
@@ -131,6 +131,10 @@ class EmoteRegistry
   end
 
   private
+
+  def lookup(key)
+    @by_name[key] || @by_code[key] || @by_alias[key]
+  end
 
   def entry_for(emote)
     group = @groups_by_id[emote.emote_group_id]

@@ -85,6 +85,56 @@ class HeartInputTest < ApplicationSystemTestCase
     assert_equal [ "red heart", "aqua heart", "red heart" ], all(".pronouns__emotes img").map { |img| img[:alt] }
   end
 
+  def add_emote(name, group: emote_groups(:hearts))
+    emote = Emote.new(emote_group: group, name: name)
+    emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
+    emote.save!
+  end
+
+  test "autocomplete matches names as well as codes, including numbers, and inserts the code" do
+    add_emote("100")
+    visit edit_our_profile_path(@profile)
+    field = find_field("Subtitle")
+    field.fill_in with: ""
+
+    field.send_keys(":02")
+    assert_equal [ "spring heart" ], option_labels(field)
+    field.send_keys(:enter)
+    assert_equal ":spring_heart: ", field.value
+
+    field.send_keys(":10")
+    assert_selector ".heart-input__option--active", text: "100"
+    assert_equal [ "100", "aqua heart" ], option_labels(field)
+    field.send_keys(:enter)
+    assert_equal ":spring_heart: :100: ", field.value
+  end
+
+  test "autocomplete opens straight after a finished code that isn't a heart" do
+    add_emote("100")
+    visit edit_our_profile_path(@profile)
+    field = find_field("Subtitle")
+    field.fill_in with: ":100:"
+    field.send_keys(":ab")
+
+    assert_selector ".heart-input__option--active", text: "abyss heart"
+  end
+
+  test "the picker shows emotes added since the page was first loaded, after a Turbo visit" do
+    visit our_profile_path(@profile)
+    click_link "Edit"
+    heart_button_for(find_field("Subtitle")).click
+    within("dialog.heart-dialog[open]") { assert_no_selector "button[aria-label='party']" }
+    find(".heart-dialog__search").send_keys(:escape)
+
+    add_emote("07_party")
+    within(".sidebar") { click_link "Alice", match: :first }
+    click_link "Edit"
+    # Turbo shows its cached copy of the edit page first; wait for the real one.
+    assert_no_selector "html[data-turbo-preview]"
+    heart_button_for(find_field("Subtitle")).click
+    within("dialog.heart-dialog[open]") { assert_selector "button[aria-label='party']" }
+  end
+
   test "the heart button inserts the chosen heart at the caret and it saves as the plain code" do
     visit edit_our_profile_path(@profile)
     field = find_field("Subtitle")

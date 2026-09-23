@@ -301,11 +301,11 @@ Rails 8.1.3.1 disables libvips' "unfuzzed" loaders, SVG included, because they a
 
 ### Picker dialog and autocomplete (`heart_input_controller.js`)
 
-- The head JSON (`heart_emojis_json_tag`) comes from `EmoteRegistry#pickable`:
+- The emote JSON (`heart_emojis_json_tag`) comes from `EmoteRegistry#pickable`. It's rendered at the end of the `<body>`, not in the `<head>`: Turbo replaces the body on every visit but never removes old head scripts, so a head copy went stale after emotes changed. The JS re-parses it whenever the element changes:
   - each entry has `{ code, name, label, src, group }`;
   - the entries are wrapped in a fragment cache keyed on the registry version.
 - The **dialog** is titled "Choose an emote", with a "Search emotes…" box. While browsing it shows a heading per group; a search shows one list of matches, best first, without headings. Buttons show the full label ("spring heart"). Up/Down arrows move to the nearest emote in the row above or below by position, since each group's grid has its own rows. *(Done early, alongside phase 3.)*
-- **Autocomplete** matches on code *and* name, so typing `:02` finds `02_spring_heart`, and still inserts the canonical `:spring_heart:`.
+- **Autocomplete** matches on code *and* name, so typing `:02` finds `02_spring_heart`, and still inserts the canonical `:spring_heart:`. Matches are ranked: exact name or code, then codes starting with the query, then names starting with it, then codes containing it. So `:10` offers `:100:` before `10_aqua_heart`.
 - `normaliseQuery` no longer strips leading digits outright. Otherwise `:10` could never find `:100:`. Instead, the query is matched against the name as typed, and against the code with the number prefix stripped.
 - The "don't match every `_heart` suffix" rule becomes: match anywhere in the code, but rank prefix matches first, then group order, then name order.
 
@@ -414,6 +414,6 @@ Each phase is its own PR and leaves the site working.
 2. **Generic codes.** The new pattern with the lookahead scanner, name/alias/legacy resolution, `plain_field` changes. `:100:` works from this point on.
 3. **Admin emotes page.** Grouped list, quick rename, code override, aliases, archive/restore/delete, group management, and the rename/delete jobs.
 4. **Upload + bulk upload**: automatic import, a decision page for clashes, in-browser SVG conversion, and orphan cleanup.
-5. **Pickers and profile emotes.** Dialog sections by group *(done)*; profiles' checkbox grid replaced by an Emotes text field, with existing picks migrated *(done)*; autocomplete matching on names as well as codes.
+5. **Pickers and profile emotes.** Dialog sections by group *(done)*; profiles' checkbox grid replaced by an Emotes text field, with existing picks migrated *(done)*; autocomplete matching on names as well as codes *(done)*.
 6. **Cleanup.** Delete `public/images/hearts/` and `HeartEmoji`. Drop the old `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited` columns (and their `ignored_columns` entry). Optionally, do a mechanical rename of `heart_input` / `heart_field` / `heart_emojis_json_tag` to `emote_*`.
 

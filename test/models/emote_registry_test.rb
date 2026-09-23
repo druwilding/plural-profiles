@@ -137,4 +137,22 @@ class EmoteRegistryTest < ActiveSupport::TestCase
     add_emote("100")
     assert_equal "10[100]", replace("10:100:")
   end
+
+  test "replacing an emote's image changes the version and its image path, so every process picks it up" do
+    before = registry
+    old_src = before.resolve("red_heart").src
+
+    emotes(:red_heart).image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "new_red.png", content_type: "image/png")
+    EmoteRegistry.expire_current
+
+    assert_not_equal before.version, registry.version
+    assert_not_equal old_src, registry.resolve("red_heart").src
+    assert_match %r{/new_red\.png\z}, registry.resolve("red_heart").src
+  end
+
+  test "an old Discord number before a name resolves too" do
+    emotes(:cadbury_heart).update!(code: "cadbury", code_overridden: true, name: "cadbury_heart")
+
+    assert_equal "cadbury", registry.resolve("50cadbury_heart").code
+  end
 end
