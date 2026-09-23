@@ -14,6 +14,7 @@
       Renaming an emote keeps its old code working, so nothing already written breaks.
       Archiving hides an emote from pickers but keeps it showing wherever it's already used.
   .card__actions
+    = link_to "Upload emotes", upload_admin_emotes_path, class: "btn"
     = link_to "Manage groups", admin_emote_groups_path, class: "btn btn--secondary"
 
 %section.card{"aria-labelledby": "emote-list-heading", data: { controller: "emote-filter preserve-focus" }}

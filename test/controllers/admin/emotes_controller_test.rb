@@ -159,4 +159,90 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     assert_empty @emote.aliases.reload
     assert_nil EmoteRegistry.current.resolve("cadbury_heart")
   end
+
+  # -- Upload --
+
+  def png_upload(filename)
+    Rack::Test::UploadedFile.new(StringIO.new(png_bytes(8, 8)), "image/png", original_filename: filename)
+  end
+
+  test "non-admins can't upload" do
+    sign_in_as @member
+
+    get upload_admin_emotes_path
+    assert_redirected_to root_path
+    assert_no_difference -> { ActiveStorage::Blob.count } do
+      post upload_admin_emotes_path, params: { files: [ png_upload("07_party.png") ] }
+    end
+    assert_redirected_to root_path
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: "x", name: "07_party", action: "create" } } }
+    assert_redirected_to root_path
+  end
+
+  test "upload page offers the groups" do
+    sign_in_as @admin
+    get upload_admin_emotes_path
+
+    assert_response :success
+    assert_select "input[type=file][name='files[]'][multiple]"
+    assert_select "select[name=emote_group_id] option", text: "Hearts"
+  end
+
+  test "uploading with no files sends the admin back" do
+    sign_in_as @admin
+    post upload_admin_emotes_path, params: { files: [ "" ] }
+
+    assert_redirected_to upload_admin_emotes_path
+    assert_equal "Choose at least one image to upload.", flash[:alert]
+  end
+
+  test "new files are added straight away, and rejected ones reported" do
+    sign_in_as @admin
+    post upload_admin_emotes_path, params: { emote_group_id: emote_groups(:hearts).id, files: [
+      png_upload("07_party.png"), png_upload("100.png"),
+      Rack::Test::UploadedFile.new(StringIO.new("hi"), "text/plain", original_filename: "notes.txt")
+    ] }
+
+    assert_redirected_to admin_emotes_path
+    assert_equal "2 emotes added.", flash[:notice]
+    assert_equal "Not uploaded: notes.txt isn't a PNG or WebP image.", flash[:alert]
+    assert Emote.exists?(name: "07_party")
+    assert Emote.exists?(code: "100")
+  end
+
+  test "a clash shows the decision page, and saving applies the decision" do
+    sign_in_as @admin
+    post upload_admin_emotes_path, params: { files: [ png_upload("07_party.png"), png_upload("36_red_heart.png") ] }
+
+    assert_response :success
+    assert_select "p", text: "1 emote added."
+    assert_select ".upload-review__row", 1
+    assert_select ".upload-review__heading", text: /36_red_heart.png\s+is named like an emote that already exists/
+    assert_select "input[type=radio][name='rows[0][action]'][value=replace][checked]"
+
+    signed_id = css_select("input[name='rows[0][signed_id]']").first["value"]
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: signed_id, name: "36_red_heart", action: "replace", replace_id: emotes(:red_heart).id } } }
+
+    assert_redirected_to admin_emotes_path
+    assert_equal "1 image replaced.", flash[:notice]
+    assert_equal "36_red_heart.png", emotes(:red_heart).reload.image.filename.to_s
+  end
+
+  test "a failed decision re-renders the page with errors and saves nothing" do
+    row = EmoteUpload.process([ png_upload("36_red_heart.png") ], group_id: nil).pending.first
+    sign_in_as @admin
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: row.signed_id, name: "36_red_heart", action: "create" } } }
+
+    assert_response :unprocessable_content
+    assert_select ".flash--alert", text: /Nothing was saved/
+    assert_select ".upload-review__errors", text: /already used by 36_red_heart/
+    assert_select "input[name='rows[0][signed_id]'][value=?]", row.signed_id
+  end
+
+  test "decisions for expired or tampered files send the admin back to upload" do
+    sign_in_as @admin
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: "tampered", name: "x", action: "create" } } }
+
+    assert_redirected_to upload_admin_emotes_path
+  end
 end

@@ -6,7 +6,7 @@ Today every heart is a hardcoded entry in `HeartEmoji::ALL` with a matching file
 
 This plan moves emotes into the database. Admins can then manage them from the site:
 
-1. **Upload** png, webp, or svg files, one or many at once. Every upload goes through a review step before anything is saved.
+1. **Upload** png, webp, or svg files, one or many at once. Files are added straight away; only files whose name is already in use (or unusable) ask what to do.
 2. **Name** each emote. The name comes from the filename at first and can be changed at any time. Names also set the order: `02_spring_heart` sorts before `03_hunter_heart`.
 3. **Rename quickly** on one page that shows every emote with a text box for its name.
 4. **Group** emotes (e.g. "Hearts", "Other"). Groups are stored in the database and shown as sections in every picker.
@@ -31,7 +31,7 @@ v1 has site-wide emotes only. The schema and code are shaped so that **chat-serv
 | Profile heart picker   | Offers **all** emotes, in sections by group                                                                                                                                                                              |
 | Deleting               | Archive by default: an archived emote is hidden from pickers but keeps rendering. Permanent delete is a separate action that needs confirming                                                                            |
 | Image processing       | The original upload is stored unchanged. A resized, **static** webp is generated for display, so animated uploads show their first frame                                                                                 |
-| Bulk upload clashes    | A review step with a choice for each file: replace image, skip, or add under a new name                                                                                                                                  |
+| Bulk upload clashes    | Only clashing files ask for a choice: replace image, skip, or add under a new name                                                                                                                                        |
 | Delimiters             | `:x:` and `;x;` (mixed too) for **all** emotes, not only hearts                                                                                                                                                          |
 | Profile field label    | "Hearts" becomes **"Emotes"** in the UI. DB columns keep their names                                                                                                                                                     |
 | Limit on picked emotes | None                                                                                                                                                                                                                     |
@@ -57,7 +57,7 @@ Each emote has three kinds of identifier. All of them are lowercase `[a-z0-9_]`.
 1. Drop the extension, then downcase.
 2. Turn spaces, hyphens and dots into `_`.
 3. Remove anything outside `[a-z0-9_]`, collapse repeated `_`, and trim `_` from both ends.
-4. If nothing is left, the file is flagged in the review step and needs a name typed in.
+4. If nothing is left, the file waits on the decision page for a name to be typed in.
 
 ### Deriving a code from a name
 
@@ -209,7 +209,7 @@ EmoteRegistry.current   # site-wide in v1; later EmoteRegistry.for(server:, user
 - **The original SVG is never served to browsers.** Everything shown uses the rasterised webp variant, which avoids SVG script/XSS problems entirely. Originals are kept only in storage, for later reprocessing.
 - The `<img>` keeps `class="heart-inline"` (themes may target it) and adds `emote-inline`. Non-square emotes: the variant keeps its aspect ratio (`resize_to_limit`). The inline `<img>` sets `height="24"` and the CSS adds `width: auto; max-width: …`, so a wide emote isn't squashed.
 
-⚠️ **To verify early:** vips on Scalingo (`Aptfile` → `libvips-dev`) must include librsvg to rasterise SVG. Check with `vips --vips-config` or by processing a test SVG on a review app. If librsvg is missing, add `librsvg2-dev` to `Aptfile`.
+SVG support on the server (librsvg) isn't needed: SVGs are converted in the browser.
 
 ---
 
@@ -271,39 +271,26 @@ Add an "Emotes" link in the account/sidebar area, visible only to admins, next t
 
 ### Upload and bulk upload (one flow)
 
-Uploading a single file is just a bulk upload of one.
+Uploading a single file is just an upload of one. *(Simplified from the original plan: there's no review step for files that can be added as they are.)*
 
-1. **Upload** (`GET /admin/emotes/upload`): a multi-file input with drag and drop, `accept=".png,.webp,.svg"`, and a target-group select.
-2. **Review** (`POST /admin/emotes/review`): the server stores each file as an **unattached blob**, which means:
-   - it can be previewed straight away;
-   - a validation error on confirm never makes the admin re-pick their files;
-   - nothing is written to `emotes` yet.
+1. **Upload** (`GET /admin/emotes/upload`): a multi-file input with drag and drop, `accept=".png,.webp,.svg"`, and a group select.
+2. **Process** (`POST /admin/emotes/upload`, `EmoteUpload.process`): every file is checked; each one that can be added as is, is added straight away, named from its filename. Rejected files (wrong type, too large, unreadable) are listed in a flash message.
+3. **Decisions** (only if needed): files whose name or code is already in use, or with no usable name, are stored as **unattached blobs** and shown on a "Choose what to do" page. Each has radio buttons:
+   - **Give the existing emote this image** (the default for a clash with an existing emote);
+   - **Add it as a new emote**, with a name box (checked automatically when the name is edited, with a live note on the code it will get, or that the name is taken too);
+   - **Skip this file** (the default when two files in the same upload share a name: the first is added, the second clashes with it).
+4. **Resolve** (`POST /admin/emotes/resolve`) applies the decisions in one transaction. If any fails, nothing is saved and the page comes back with errors, using the same stored files. Skipped files are purged.
+5. **Orphan cleanup:** a daily job, `PurgeOrphanEmoteUploadsJob` (4am, in `config/recurring.yml`), purges unattached blobs older than 24 hours that were created by an upload. They're tagged with blob `metadata: { emote_upload: true }`.
 
-   The review table has one row per file:
-   - a preview (display variant of the blob);
-   - an editable **name**, pre-filled from the filename;
-   - the derived **code**;
-   - a group select;
-   - a **status**:
-     - `new`: will be created.
-     - `clash`: the name, code or alias matches an existing emote. This row shows the existing emote's image next to the new one and offers:
-       - **Replace image** (default): keep the existing name, code and aliases, and swap the image;
-       - **Skip**;
-       - **Add as new**, which needs a different name.
-     - `invalid`: wrong type, too large, unreadable, or empty name. The row explains why, and the file is skipped.
-     - `duplicate in batch`: two files derive the same code. Only one can be created unless one is renamed.
+### SVGs are converted in the browser
 
-   Clash status is recomputed live as names are edited: a small Stimulus controller calls a JSON check endpoint, debounced.
-3. **Import** (`POST /admin/emotes/import`) creates or updates everything in one transaction:
-   - on success, it redirects to the emotes page with a flash ("12 added, 3 images replaced, 1 skipped");
-   - if anything fails validation, the review table is re-rendered with row errors, using the same blob signed IDs.
-4. **Orphan cleanup:** a daily job, `PurgeOrphanEmoteUploadsJob`, purges unattached blobs older than 24 hours that were created by this flow. They're tagged via blob `metadata: { emote_upload: true }`.
+Rails 8.1.3.1 disables libvips' "unfuzzed" loaders, SVG included, because they aren't hardened against malicious files. Rather than re-enable it for the whole app, the upload page draws each SVG on a canvas in the admin's browser (longest side 256px, keeping its shape) and uploads the PNG instead, keeping the file name. The server never reads SVG: one that arrives unconverted (JavaScript off, or a PNG that's really SVG) is rejected with a message. This also keeps the door closed when non-admins can upload emotes later. The original SVG isn't kept.
 
 ### Upload validation
 
-- The content type is **sniffed** from the file bytes (Marcel) rather than trusted from the filename or browser. Allowed types are `image/png`, `image/webp` and `image/svg+xml`.
-- Maximum size is 2 MB per file (originals are kept at full size) and 50 files per batch.
-- The image must decode in vips, and the display variant must generate. Otherwise the file is marked `invalid` in the review step.
+- The content type is **sniffed** from the file bytes (Marcel) rather than trusted from the filename or browser. Allowed types are `image/png` and `image/webp`.
+- Maximum size is 2 MB per file (originals are kept at full size) and 50 files per upload.
+- The display variant must generate. Otherwise the file is rejected as unreadable.
 
 ---
 
@@ -373,7 +360,7 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 ## Security
 
 - Every emote management endpoint uses `require_admin`. The JSON clash-check endpoint does too.
-- SVGs are never served as SVG, only as rasterised webp variants (see [Serving images](#serving-images)).
+- SVGs never reach the server: they're converted to PNG in the admin's browser (see [SVGs are converted in the browser](#svgs-are-converted-in-the-browser)).
 - Content types are sniffed from the bytes, and there are size and count limits.
 - Names and codes are restricted to `[a-z0-9_]`, so they're safe inside the generated `<img>` `title`/`alt` attributes (they're escaped anyway).
 
@@ -400,7 +387,6 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 - `app/views/shared/_heart_list.html.haml`
 - `app/javascript/controllers/heart_input_controller.js`: grouped dialog, name + code matching
 - `config/routes.rb`, account/sidebar nav (admin link)
-- `Aptfile`, if librsvg is missing
 
 ---
 
@@ -444,10 +430,10 @@ Nothing below is built in v1, but the v1 design shouldn't block any of it:
 
 Each phase is its own PR and leaves the site working.
 
-1. **Database + registry + import.** Migrations (including the heart import), models, `EmoteRegistry`, and `HeartEmoji` as a facade. There's no visible change: hearts now come from the database and are served via ActiveStorage variants. Verify librsvg here too.
+1. **Database + registry + import.** Migrations (including the heart import), models, `EmoteRegistry`, and `HeartEmoji` as a facade. There's no visible change: hearts now come from the database and are served via ActiveStorage variants.
 2. **Generic codes.** The new pattern with the lookahead scanner, name/alias/legacy resolution, `plain_field` changes. `:100:` works from this point on.
 3. **Admin emotes page.** Grouped list, quick rename, code override, aliases, archive/restore/delete, group management, and the rename/delete jobs.
-4. **Upload + bulk upload** with the review step and orphan cleanup.
+4. **Upload + bulk upload**: automatic import, a decision page for clashes, in-browser SVG conversion, and orphan cleanup.
 5. **Grouped pickers.** The "Hearts" → "Emotes" label change, profile/chat identity checkbox grids in group sections, and dialog sections plus name matching in `heart_input_controller.js`.
 6. **Cleanup.** Delete `public/images/hearts/` and `HeartEmoji`. Optionally, do a mechanical rename of `heart_input` / `heart_field` / `heart_emojis_json_tag` to `emote_*`. The DB columns keep their names.
 

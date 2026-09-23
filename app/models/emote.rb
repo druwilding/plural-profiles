@@ -13,13 +13,18 @@ class Emote < ApplicationRecord
   IDENTIFIER_FORMAT = /\A[a-z0-9_]+\z/
   MAX_IDENTIFIER_LENGTH = 64
 
+  # The static webp shown everywhere. 64px covers the largest display size
+  # (the 32px picker) at 2x.
+  DISPLAY_VARIANT = { resize_to_limit: [ 64, 64 ], format: :webp }.freeze
+
   belongs_to :emote_group
   has_many :aliases, class_name: "EmoteAlias", dependent: :destroy
 
   # The original upload is kept as-is; only this static webp is ever shown,
-  # so SVGs are never served as SVG and animations show their first frame.
+  # so animations show their first frame. SVGs never reach the server: the
+  # upload page converts them to PNG in the browser (see EmoteUpload).
   has_one_attached :image do |attachable|
-    attachable.variant :display, resize_to_limit: [ 64, 64 ], format: :webp, preprocessed: true
+    attachable.variant :display, **DISPLAY_VARIANT, preprocessed: true
   end
 
   normalizes :name, :code, with: ->(value) { value.strip.downcase }

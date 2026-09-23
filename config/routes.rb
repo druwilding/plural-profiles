@@ -67,6 +67,11 @@ Rails.application.routes.draw do
         patch :restore
         delete :remove_alias
       end
+      collection do
+        get :upload
+        post :upload, action: :upload_files
+        post :resolve
+      end
     end
     resources :emote_groups, only: %i[index create update destroy] do
       member do

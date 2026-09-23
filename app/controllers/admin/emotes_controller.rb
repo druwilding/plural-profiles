@@ -6,10 +6,51 @@
 # so a renamed emote moves to its new sorted position. The preserve-focus
 # controller puts focus back where the admin was.
 class Admin::EmotesController < Admin::BaseController
-  before_action :set_emote, except: :index
+  before_action :set_emote, except: %i[index upload upload_files resolve]
 
   def index
     load_sections
+  end
+
+  # Upload page: pick (or drop) files and the group they go into.
+  def upload
+    @groups = site_groups
+  end
+
+  # Imports every file it can straight away. Files whose name is already in
+  # use (or that have no usable name) wait on a decision page instead.
+  def upload_files
+    if Array(params[:files]).none? { |file| file.respond_to?(:original_filename) }
+      redirect_to upload_admin_emotes_path, alert: "Choose at least one image to upload."
+      return
+    end
+
+    outcome = EmoteUpload.process(params[:files], group_id: params[:emote_group_id])
+    rejected = rejected_message(outcome.rejected)
+    rejected = [ rejected, "Only the first #{EmoteUpload::MAX_FILES} files were uploaded." ].compact.join(" ") if outcome.truncated
+
+    if outcome.pending.empty?
+      flash[:alert] = rejected if rejected
+      redirect_to admin_emotes_path, notice: import_summary(outcome.result)
+    else
+      @rows = outcome.pending
+      @summary = import_summary(outcome.result, none: nil)
+      flash.now[:alert] = rejected if rejected
+      render_decisions
+    end
+  end
+
+  def resolve
+    result, rows = EmoteUpload.resolve(params[:rows])
+    if rows.empty?
+      redirect_to upload_admin_emotes_path, alert: "Those files have expired. Try uploading them again."
+    elsif result
+      redirect_to admin_emotes_path, notice: import_summary(result)
+    else
+      @rows = EmoteUpload.classify(rows)
+      flash.now[:alert] = "Nothing was saved. Fix the files marked below, then save again."
+      render_decisions(status: :unprocessable_content)
+    end
   end
 
   def update
@@ -84,6 +125,29 @@ class Admin::EmotesController < Admin::BaseController
     archived, active = emotes.partition(&:archived?)
     @emotes_by_group = Emote.natural_sort(active).group_by(&:emote_group_id)
     @archived_emotes = Emote.natural_sort(archived)
+  end
+
+  def render_decisions(status: :ok)
+    @groups = site_groups
+    @taken_identifiers = EmoteUpload.taken_identifiers
+    render :decide, status: status
+  end
+
+  def import_summary(result, none: "Nothing was imported.")
+    parts = []
+    parts << "#{pluralize_count(result.added, 'emote')} added" if result.added.positive?
+    parts << "#{pluralize_count(result.replaced, 'image')} replaced" if result.replaced.positive?
+    parts << "#{result.skipped} skipped" if result.skipped.positive?
+    parts.any? ? "#{parts.to_sentence.upcase_first}." : none
+  end
+
+  def pluralize_count(count, noun)
+    helpers.pluralize(count, noun)
+  end
+
+  def rejected_message(rows)
+    return if rows.empty?
+    "Not uploaded: " + rows.map { |row| "#{row.filename} #{row.error}" }.join("; ") + "."
   end
 
   def respond_with_sections(status)
