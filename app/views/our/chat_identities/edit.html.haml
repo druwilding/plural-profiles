@@ -62,11 +62,11 @@
       = render "field_toggle", form: form, field: :pronouns, label: "Pronouns",
           inherited_value: formatted_inline(@postable.pronouns)
 
-      = render "field_toggle", form: form, field: :emotes, label: "Emotes",
-          inherited_value: formatted_inline(@postable.emotes)
-
       = render "field_toggle", form: form, field: :tag_line, label: "Tagline",
           inherited_value: formatted_inline(@postable.tag_line)
+
+      = render "field_toggle", form: form, field: :emotes, label: "Emotes",
+          inherited_value: formatted_inline(@postable.emotes)
 
       = render "field_toggle", form: form, field: :description, label: "Description",
           input_type: :text_area,
