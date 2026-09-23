@@ -23,6 +23,8 @@ class Profile < ApplicationRecord
   has_many :chat_channel_default_postables, as: :postable, class_name: "Chat::ChannelDefaultPostable", dependent: :destroy
 
   before_create :generate_uuid
+  after_save :prune_stale_inclusion_overrides, unless: :previously_new_record?
+  after_destroy :prune_stale_inclusion_overrides
 
   validates :name, presence: true
   validates :uuid, uniqueness: true
@@ -71,6 +73,13 @@ class Profile < ApplicationRecord
 
   def generate_uuid
     self.uuid = PluralProfilesUuid.generate
+  end
+
+  # Unticking a group on the profile form removes the link as soon as
+  # group_ids= is assigned (inside update's transaction), so by the time
+  # this runs any overrides routed through that link are stale.
+  def prune_stale_inclusion_overrides
+    InclusionOverride.prune_stale!(user)
   end
 
   def heart_emojis_are_valid

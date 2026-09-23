@@ -105,6 +105,45 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "create adds the new group to selected parent groups" do
+    sign_in_as @user
+    post our_groups_path, params: {
+      group: { name: "Coworkers", selected_parent_group_ids: [ "", groups(:everyone).id ] }
+    }
+    assert_equal [ groups(:everyone) ], Group.last.parent_groups.to_a
+  end
+
+  test "new form lists groups as parent options" do
+    sign_in_as @user
+    get new_our_group_path
+    assert_select "input[type=checkbox][name='group[selected_parent_group_ids][]'][value=?]", groups(:everyone).id.to_s
+    assert_select "input[type=checkbox][name='group[selected_parent_group_ids][]'][disabled]", count: 0
+  end
+
+  test "edit form disables groups that are already inside this group" do
+    sign_in_as @user
+    get edit_our_group_path(groups(:everyone))
+    assert_select "input[type=checkbox][value=?][disabled]", groups(:friends).id.to_s
+    assert_select "input[type=checkbox][name='group[selected_parent_group_ids][]'][value=?]", groups(:everyone).id.to_s, count: 0
+  end
+
+  test "edit form checks current parent groups" do
+    sign_in_as @user
+    get edit_our_group_path(@group)
+    assert_select "input[type=checkbox][value=?][checked]", groups(:everyone).id.to_s
+  end
+
+  test "update rejects a circular parent selection" do
+    sign_in_as @user
+    everyone = groups(:everyone)
+    patch our_group_path(everyone), params: {
+      group: { name: "Everyone", selected_parent_group_ids: [ "", @group.id ] }
+    }
+    assert_response :unprocessable_entity
+    assert_match "because Friends is already inside Everyone", response.body
+    assert_empty everyone.reload.parent_groups
+  end
+
   test "update changes group attributes" do
     sign_in_as @user
     patch our_group_path(@group), params: {
@@ -449,6 +488,18 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
       post add_group_our_group_path(@group), params: { group_id: groups(:everyone).id }
     end
     assert_redirected_to new_session_path
+  end
+
+  test "remove_group prunes overrides routed through the removed link" do
+    sign_in_as users(:three)
+    delete remove_group_our_group_path(groups(:castle_clan)), params: { group_id: groups(:flux).id }
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
+  end
+
+  test "remove_profile prunes overrides for the removed profile" do
+    sign_in_as users(:three)
+    delete remove_profile_our_group_path(groups(:flux)), params: { profile_id: profiles(:drift).id }
+    assert_not InclusionOverride.exists?(ActiveRecord::FixtureSet.identify(:drift_hidden_in_castle))
   end
 
   test "remove_group redirects logged-out user to sign in" do

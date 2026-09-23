@@ -14,6 +14,26 @@ class InclusionOverride < ApplicationRecord
   # Normalise path to an array of integers
   before_validation :normalise_path
 
+  # Deletes the user's overrides whose route (root group → path → target)
+  # crosses a group or profile link that no longer exists. These are never
+  # read during traversal, but would silently come back into effect if the
+  # link were re-added later.
+  def self.prune_stale!(user)
+    group_ids = user.groups.select(:id)
+    group_links = GroupGroup.where(parent_group_id: group_ids).pluck(:parent_group_id, :child_group_id).to_set
+    profile_links = GroupProfile.where(group_id: group_ids).pluck(:group_id, :profile_id).to_set
+
+    stale_ids = where(group_id: group_ids).pluck(:id, :group_id, :path, :target_type, :target_id).filter_map do |id, root_id, path, target_type, target_id|
+      chain = [ root_id ] + Array(path).map(&:to_i)
+      target_links = target_type == "Group" ? group_links : profile_links
+      route_exists = chain.each_cons(2).all? { |pair| group_links.include?(pair) } &&
+        target_links.include?([ chain.last, target_id ])
+      id unless route_exists
+    end
+
+    where(id: stale_ids).delete_all
+  end
+
   private
 
   def normalise_path

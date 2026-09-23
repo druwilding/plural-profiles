@@ -44,6 +44,82 @@ class GroupTest < ActiveSupport::TestCase
     assert_includes friends.parent_groups, groups(:everyone)
   end
 
+  # -- selected_parent_group_ids (group form "In groups" checkboxes) ---
+
+  test "selected parent groups are linked when a new group is created" do
+    group = users(:one).groups.create!(name: "Coworkers", selected_parent_group_ids: [ groups(:everyone).id, "" ])
+    assert_equal [ groups(:everyone) ], group.parent_groups.to_a
+  end
+
+  test "selected parent groups replace existing parents on update" do
+    friends = groups(:friends)
+    other = users(:one).groups.create!(name: "Other")
+    assert friends.update(selected_parent_group_ids: [ other.id ])
+    assert_equal [ other ], friends.reload.parent_groups.to_a
+  end
+
+  test "empty selection removes all parents" do
+    friends = groups(:friends)
+    assert friends.update(selected_parent_group_ids: [ "" ])
+    assert_empty friends.reload.parent_groups
+  end
+
+  test "saving the same object again does not re-apply an old selection" do
+    friends = groups(:friends)
+    other = users(:one).groups.create!(name: "Other")
+    friends.update!(selected_parent_group_ids: [ other.id ])
+    assert_nil friends.selected_parent_group_ids
+
+    GroupGroup.create!(parent_group: groups(:everyone), child_group: friends)
+    friends.update!(name: "Pals")
+    assert_equal [ groups(:everyone), other ].sort_by(&:id), friends.reload.parent_groups.sort_by(&:id)
+  end
+
+  test "a failed save keeps the selection for re-rendering the form" do
+    everyone = groups(:everyone)
+    assert_not everyone.update(selected_parent_group_ids: [ groups(:friends).id ])
+    assert_equal [ groups(:friends).id ], everyone.selected_parent_group_ids
+  end
+
+  test "leaving selected parents unset does not touch existing parents" do
+    friends = groups(:friends)
+    assert friends.update(name: "Pals")
+    assert_equal [ groups(:everyone) ], friends.reload.parent_groups.to_a
+  end
+
+  test "cannot pick a group that is already inside this one as a parent" do
+    everyone = groups(:everyone)
+    assert_not everyone.update(selected_parent_group_ids: [ groups(:friends).id ])
+    assert_includes everyone.errors[:base], "Everyone can't go inside Friends, because Friends is already inside Everyone"
+    assert_empty everyone.reload.parent_groups
+  end
+
+  test "cannot pick a deeply nested descendant as a parent" do
+    everyone = groups(:everyone)
+    inner = users(:one).groups.create!(name: "Inner", selected_parent_group_ids: [ groups(:friends).id ])
+    assert_not everyone.update(selected_parent_group_ids: [ inner.id ])
+    assert_empty everyone.reload.parent_groups
+  end
+
+  test "cannot pick itself as a parent" do
+    friends = groups(:friends)
+    assert_not friends.update(selected_parent_group_ids: [ friends.id ])
+    assert_includes friends.errors[:base], "A group can't be inside itself"
+  end
+
+  test "cannot pick another user's group as a parent" do
+    group = users(:one).groups.build(name: "Sneaky", selected_parent_group_ids: [ groups(:family).id ])
+    assert_not group.save
+    assert_includes group.errors[:base], "Some of the selected groups could not be found"
+  end
+
+  test "unavailable_parent_group_ids covers self and descendants" do
+    everyone = groups(:everyone)
+    assert_includes everyone.unavailable_parent_group_ids, everyone.id
+    assert_includes everyone.unavailable_parent_group_ids, groups(:friends).id
+    assert_empty users(:one).groups.build(name: "New").unavailable_parent_group_ids
+  end
+
   # -- descendant_group_ids / reachable_group_ids ---
 
   test "descendant_group_ids includes self" do

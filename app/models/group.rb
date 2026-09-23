@@ -29,10 +29,29 @@ class Group < ApplicationRecord
   has_many :chat_channel_default_postables, as: :postable, class_name: "Chat::ChannelDefaultPostable", dependent: :destroy
 
   before_create :generate_uuid
+  after_save :sync_selected_parent_groups
+  after_save :prune_stale_inclusion_overrides, unless: :previously_new_record?
+  after_commit :clear_selected_parent_group_ids
+  after_destroy :prune_stale_inclusion_overrides
 
   validates :name, presence: true
   validates :uuid, uniqueness: true
+  validate :selected_parent_groups_are_valid
 
+  # Parent groups chosen on the group form. Unlike the association's own
+  # parent_group_ids= (which writes immediately), these are validated for
+  # circular references first and only saved alongside the group itself.
+  attr_reader :selected_parent_group_ids
+
+  def selected_parent_group_ids=(ids)
+    @selected_parent_group_ids = Array(ids).reject(&:blank?).map(&:to_i).uniq
+  end
+
+  # Groups that can't be picked as a parent because this group already
+  # contains them (or is them) — picking one would create a loop.
+  def unavailable_parent_group_ids
+    persisted? ? reachable_group_ids : []
+  end
 
   def to_param
     uuid
@@ -738,5 +757,55 @@ class Group < ApplicationRecord
 
   def generate_uuid
     self.uuid = PluralProfilesUuid.generate
+  end
+
+  # Every new link points *into* this group, so a loop can only happen if a
+  # chosen parent is already somewhere inside this group. Checking each
+  # choice against the existing tree is therefore enough — no combination of
+  # choices can create a loop that the individual checks miss.
+  def selected_parent_groups_are_valid
+    return if selected_parent_group_ids.nil? || user.nil?
+
+    chosen = user.groups.where(id: selected_parent_group_ids).to_a
+    if chosen.size != selected_parent_group_ids.size
+      errors.add(:base, "Some of the selected groups could not be found")
+    end
+
+    unavailable = unavailable_parent_group_ids
+    chosen.each do |parent|
+      next unless unavailable.include?(parent.id)
+
+      if parent.id == id
+        errors.add(:base, "A group can't be inside itself")
+      else
+        errors.add(:base, "#{name} can't go inside #{parent.name}, because #{parent.name} is already inside #{name}")
+      end
+    end
+  end
+
+  def sync_selected_parent_groups
+    return if selected_parent_group_ids.nil?
+
+    parent_links.where.not(parent_group_id: selected_parent_group_ids).destroy_all
+    existing_ids = parent_links.pluck(:parent_group_id)
+    (selected_parent_group_ids - existing_ids).each do |parent_id|
+      # create! re-runs GroupGroup's own circular-reference check as a backstop;
+      # a failure raises and rolls back the whole save.
+      parent_links.create!(parent_group_id: parent_id)
+    end
+    parent_links.reset
+    parent_groups.reset
+  end
+
+  def prune_stale_inclusion_overrides
+    InclusionOverride.prune_stale!(user)
+  end
+
+  # The selection is a one-off instruction for a single save. Clearing it
+  # stops a later save of the same object from re-applying it and undoing
+  # link changes made in between. Done on commit rather than in after_save
+  # so a rolled-back save keeps the selection for re-rendering the form.
+  def clear_selected_parent_group_ids
+    @selected_parent_group_ids = nil
   end
 end

@@ -27,6 +27,26 @@
     = form.label :description
     = heart_field(form, :description, as: :text_area, rows: 18)
 
+  - parent_options = @parent_group_options.reject { |g| g.id == group.id }
+  - if parent_options.any?
+    - unavailable_ids = group.unavailable_parent_group_ids
+    - checked_ids = group.selected_parent_group_ids || group.parent_group_ids
+    %fieldset.form-group
+      %legend In groups
+      .checkbox-list
+        = hidden_field_tag "group[selected_parent_group_ids][]", ""
+        - parent_options.each do |parent|
+          - unavailable = unavailable_ids.include?(parent.id)
+          %label.checkbox-label{class: ("checkbox-label--disabled" if unavailable)}
+            = check_box_tag "group[selected_parent_group_ids][]", parent.id, checked_ids.include?(parent.id), id: "group_selected_parent_group_ids_#{parent.id}", disabled: unavailable
+            %span.checkbox-label__text
+              %span= formatted_inline(parent.name)
+              - if parent.labels.any?
+                - parent.labels.each do |label|
+                  %span.label-badge.label-badge--inline= label
+              - if parent.subtitle.present?
+                %span.checkbox-label__subtitle= formatted_inline(parent.subtitle)
+
   .form-group
     = form.label :labels_text, "Labels (optional, comma-separated)"
     = form.text_field :labels_text, value: group.labels_text, placeholder: "e.g. safe, work, close friends"
