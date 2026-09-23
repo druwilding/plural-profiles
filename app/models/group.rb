@@ -31,6 +31,7 @@ class Group < ApplicationRecord
   before_create :generate_uuid
   after_save :sync_selected_parent_groups
   after_save :prune_stale_inclusion_overrides, unless: :previously_new_record?
+  after_commit :clear_selected_parent_group_ids
   after_destroy :prune_stale_inclusion_overrides
 
   validates :name, presence: true
@@ -798,5 +799,13 @@ class Group < ApplicationRecord
 
   def prune_stale_inclusion_overrides
     InclusionOverride.prune_stale!(user)
+  end
+
+  # The selection is a one-off instruction for a single save. Clearing it
+  # stops a later save of the same object from re-applying it and undoing
+  # link changes made in between. Done on commit rather than in after_save
+  # so a rolled-back save keeps the selection for re-rendering the form.
+  def clear_selected_parent_group_ids
+    @selected_parent_group_ids = nil
   end
 end

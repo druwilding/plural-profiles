@@ -64,6 +64,23 @@ class GroupTest < ActiveSupport::TestCase
     assert_empty friends.reload.parent_groups
   end
 
+  test "saving the same object again does not re-apply an old selection" do
+    friends = groups(:friends)
+    other = users(:one).groups.create!(name: "Other")
+    friends.update!(selected_parent_group_ids: [ other.id ])
+    assert_nil friends.selected_parent_group_ids
+
+    GroupGroup.create!(parent_group: groups(:everyone), child_group: friends)
+    friends.update!(name: "Pals")
+    assert_equal [ groups(:everyone), other ].sort_by(&:id), friends.reload.parent_groups.sort_by(&:id)
+  end
+
+  test "a failed save keeps the selection for re-rendering the form" do
+    everyone = groups(:everyone)
+    assert_not everyone.update(selected_parent_group_ids: [ groups(:friends).id ])
+    assert_equal [ groups(:friends).id ], everyone.selected_parent_group_ids
+  end
+
   test "leaving selected parents unset does not touch existing parents" do
     friends = groups(:friends)
     assert friends.update(name: "Pals")
