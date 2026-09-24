@@ -23,20 +23,20 @@ v1 has site-wide emotes only. The schema and code are shaped so that **chat-serv
 
 ## Decisions so far
 
-| Question               | Decision                                                                                                                                                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Who can manage emotes  | Users with the existing `users.admin` flag, guarded by `ApplicationController#require_admin`                                                                                                                             |
-| Typed code             | Both `:spring_heart:` and `:02_spring_heart:` work. The code that gets suggested and inserted drops the number prefix, except for names like `100` or `1st_place`. It's derived automatically and admins can override it |
-| Renames                | The old code is kept as an alias automatically and keeps rendering. Stored text (including profiles' emotes) is never rewritten                                                                                          |
-| Profile emotes         | A plain **Emotes** text field, like pronouns, so emotes can repeat and go in any order. Replaced the checkbox grid                                                                                                       |
-| Deleting               | Archive by default: an archived emote is hidden from pickers but keeps rendering. Permanent delete is a separate action that needs confirming                                                                            |
-| Image processing       | The original upload is stored unchanged. A resized, **static** webp is generated for display, so animated uploads show their first frame                                                                                 |
-| Bulk upload clashes    | Only clashing files ask for a choice: replace image, skip, or add under a new name                                                                                                                                        |
-| Delimiters             | `:x:` and `;x;` (mixed too) for **all** emotes, not only hearts                                                                                                                                                          |
-| Profile field label    | "Emotes". New columns `emotes`, `mini_profile_emotes`, `mini_profile_emotes_inherited`                                                                                                                                   |
-| Limit on emotes        | None                                                                                                                                                                                                                     |
-| Plain-text stand-in    | Every group **must** set a `plain_text` symbol (e.g. ♥ for Hearts)                                                                                                                                                       |
-| Activity log           | Not needed                                                                                                                                                                                                               |
+| Question              | Decision                                                                                                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Who can manage emotes | Users with the existing `users.admin` flag, guarded by `ApplicationController#require_admin`                                                                                                                             |
+| Typed code            | Both `:spring_heart:` and `:02_spring_heart:` work. The code that gets suggested and inserted drops the number prefix, except for names like `100` or `1st_place`. It's derived automatically and admins can override it |
+| Renames               | The old code is kept as an alias automatically and keeps rendering. Stored text (including profiles' emotes) is never rewritten                                                                                          |
+| Profile emotes        | A plain **Emotes** text field, like pronouns, so emotes can repeat and go in any order. Replaced the checkbox grid                                                                                                       |
+| Deleting              | Archive by default: an archived emote is hidden from pickers but keeps rendering. Permanent delete is a separate action that needs confirming                                                                            |
+| Image processing      | The original upload is stored unchanged. A resized, **static** webp is generated for display, so animated uploads show their first frame                                                                                 |
+| Bulk upload clashes   | Only clashing files ask for a choice: replace image, skip, or add under a new name                                                                                                                                       |
+| Delimiters            | `:x:` and `;x;` (mixed too) for **all** emotes, not only hearts                                                                                                                                                          |
+| Profile field label   | "Emotes". New columns `emotes`, `mini_profile_emotes`, `mini_profile_emotes_inherited`                                                                                                                                   |
+| Limit on emotes       | None                                                                                                                                                                                                                     |
+| Plain-text stand-in   | Every group **must** set a `plain_text` symbol (e.g. ♥ for Hearts)                                                                                                                                                       |
+| Activity log          | Not needed                                                                                                                                                                                                               |
 
 ---
 
@@ -204,7 +204,7 @@ EmoteRegistry.current   # site-wide in v1; later EmoteRegistry.for(server:, user
   Rendered chat HTML embeds these URLs, so they must not expire. `theme_helper.rb` already uses the proxy for backgrounds.
 - Replacing an emote's image creates a new blob, so the URL changes and nothing serves a stale image from cache.
 - **The original SVG is never served to browsers.** Everything shown uses the rasterised webp variant, which avoids SVG script/XSS problems entirely. Originals are kept only in storage, for later reprocessing.
-- The `<img>` keeps `class="heart-inline"` (themes may target it) and adds `emote-inline`. Non-square emotes: the variant keeps its aspect ratio (`resize_to_limit`). The inline `<img>` sets `height="24"` and the CSS adds `width: auto; max-width: …`, so a wide emote isn't squashed.
+- The `<img>` has `class="emote-inline"`. Non-square emotes: the variant keeps its aspect ratio (`resize_to_limit`). The inline `<img>` sets `height="24"` and the CSS adds `width: auto; max-width: …`, so a wide emote isn't squashed.
 
 SVG support on the server (librsvg) isn't needed: SVGs are converted in the browser.
 
@@ -435,12 +435,7 @@ Once live, check that:
 
 ### After deploy: cleanup PR
 
-- [ ] **Keep one copy of the heart images** in a data folder (e.g. `db/emotes/hearts/`, named like `01_dewdrop_heart.webp`), and point three things at it:
-  - the `ImportHeartsAsEmotes` migration;
-  - a new `db/seeds.rb` that imports them when there are no emotes;
-  - the test fixtures (`EmoteFixtureHelper`), replacing `test/fixtures/files/emotes/`.
-
-  Then delete `public/images/hearts/`. The seeds also close a gap: a fresh `db:setup` / `db:prepare` loads `schema.rb` and never runs the import migration, so a new dev database currently gets no emotes.
-- [ ] **Remove the `HeartEmoji` facade.** Its only remaining caller is `HeartEmoji.code` in `ApplicationHelper#heart_emojis_json_tag`, plus a comment in `heart_input_controller.js`. The registry tests already cover what `heart_emoji_test.rb` tests.
-- [ ] **Drop the old profile columns** once the migrated emotes look right in production: `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited`. Remove them from `Profile.ignored_columns` in the same PR. Until then they're what makes `AddEmotesTextToProfiles` safe to roll back.
-- [ ] **Optionally, rename "heart" to "emote"** in the code: `heart_input_controller.js`, `heart_field`, `heart_emojis_json_tag` (and the `#heart-emojis` element), the `.heart-dialog` / `.heart-input` CSS classes, and test names like `heart_input_test.rb`. Keep the `heart-inline` class on inline images alongside `emote-inline`, in case custom CSS targets it. Best as its own PR, since it touches many files.
+- [x] **One copy of the heart images**, in `db/emotes/hearts/` (named like `01_dewdrop_heart.webp`). The `ImportHeartsAsEmotes` migration, a new `db/seeds.rb` and the test fixtures (`EmoteFixtureHelper`) all read from it. `public/images/hearts/` and `test/fixtures/files/emotes/` are gone. The seeds import the hearts into a fresh database (`db:setup` / `db:prepare` load the schema and never run the migration), skipping it once any emotes exist.
+- [x] **The `HeartEmoji` facade is gone.** The helper builds the `:code:` itself; tests use an `emote_src` helper. The old-paste cases from `heart_emoji_test.rb` moved into `emote_registry_test.rb`.
+- [x] **The old profile columns are dropped** (`RemoveHeartEmojisFromProfiles`): `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited`, along with their `ignored_columns` entry.
+- [x] **"Heart" renamed to "emote" in the code:** `emote_input_controller.js` (Stimulus `emote-input`), `emote_field`, `emote_list_json_tag` (element `#emote-list`), `replace_emote_codes`, the `.emote-input` / `.emote-dialog` CSS classes and `--emote-scrollbar-*` properties, and the `emote_input_test.rb` / `emote_input_composer_test.rb` system tests. Inline images use `emote-inline` only; the old `heart-inline` class is gone.

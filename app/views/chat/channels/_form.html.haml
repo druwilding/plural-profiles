@@ -6,15 +6,15 @@
 = form_with model: channel, url: channel.persisted? ? chat_server_channel_path(@server, channel) : chat_server_channels_path(@server), scope: :chat_channel do |form|
   .form-group
     = form.label :name
-    = heart_field(form, :name, required: true, placeholder: "e.g. general")
+    = emote_field(form, :name, required: true, placeholder: "e.g. general")
 
   .form-group
     = form.label :subtitle
-    = heart_field(form, :subtitle)
+    = emote_field(form, :subtitle)
 
   .form-group
     = form.label :description
-    = heart_field(form, :description)
+    = emote_field(form, :description)
 
   .form-group
     = form.label :theme_id, "Display theme"

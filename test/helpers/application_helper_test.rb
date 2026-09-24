@@ -283,29 +283,29 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces a valid heart emoji code regardless of case" do
     text = "I love this :11_AQUA_HEART: so much"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_includes result, 'class="emote-inline"'
     assert_not_includes result, ":11_AQUA_HEART:"
   end
 
   test "replaces a valid heart emoji code with an image" do
     text = "I love this :11_aqua_heart: so much"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_includes result, 'class="emote-inline"'
     assert_not_includes result, ":11_aqua_heart:"
   end
 
   test "replaces multiple adjacent heart emojis" do
     text = ":11_aqua_heart::12_ocean_heart::13_storm_heart:"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("ocean_heart")}\""
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("storm_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("ocean_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("storm_heart")}\""
   end
 
   test "leaves unknown heart codes as plain text" do
@@ -325,7 +325,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "mixes heart emojis with regular text and spoilers" do
     text = "hello :40_red_heart: and ||secret|| bye"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("red_heart")}\""
     assert_includes result, SPOILER_OPEN
   end
 
@@ -344,7 +344,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces cadbury heart code regardless of number prefix style" do
     [ "50cadbury_heart", "51cadbury_heart", "50_cadbury_heart" ].each do |code|
       result = formatted_description(":#{code}:")
-      assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\"", "expected #{code} to resolve"
+      assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\"", "expected #{code} to resolve"
       assert_includes result, 'alt="cadbury heart"'
     end
   end
@@ -352,7 +352,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces heart code given as a bare name without a number prefix" do
     text = "I love this :aqua_heart: so much"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_not_includes result, ":aqua_heart:"
@@ -361,7 +361,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces cadbury heart code" do
     text = "here is :cadbury_heart: for you"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\""
     assert_includes result, 'alt="cadbury heart"'
     assert_not_includes result, ":cadbury_heart:"
   end
@@ -369,7 +369,7 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces a heart code that still carries an old number prefix" do
     text = "here is :25_shadow_heart: even though it's now 26"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("shadow_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("shadow_heart")}\""
     assert_includes result, 'alt="shadow heart"'
     assert_not_includes result, ":25_shadow_heart:"
   end
@@ -377,28 +377,28 @@ class ApplicationHelperTest < ActionView::TestCase
   test "replaces bare heart code case-insensitively" do
     text = ":AQUA_HEART:"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_not_includes result, ":AQUA_HEART:"
   end
 
   test "replaces heart code delimited by semicolons" do
     text = "here is ;cadbury_heart; for you"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\""
     assert_not_includes result, ";cadbury_heart;"
   end
 
   test "replaces heart code with hyphens instead of underscores" do
     text = "here is :cadbury-heart: for you"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\""
     assert_not_includes result, ":cadbury-heart:"
   end
 
   test "replaces heart code with mismatched delimiters and separators" do
     [ ";cadbury-heart;", ":cadbury_heart;", ";cadbury-heart:", ":cadbury-heart;" ].each do |code|
       result = formatted_description(code)
-      assert_includes result, "<img src=\"#{HeartEmoji.image_path("cadbury_heart")}\"", "expected #{code} to resolve"
+      assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\"", "expected #{code} to resolve"
     end
   end
 
@@ -406,24 +406,24 @@ class ApplicationHelperTest < ActionView::TestCase
     text = "Use <code>:11_aqua_heart:</code> to show a heart"
     result = formatted_description(text)
     assert_includes result, "<code>:11_aqua_heart:</code>"
-    assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_not_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
   end
 
   test "converts hearts outside code but not inside" do
     text = ":40_red_heart: and <code>:11_aqua_heart:</code> and :13_storm_heart:"
     result = formatted_description(text)
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("storm_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("red_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("storm_heart")}\""
     assert_includes result, "<code>:11_aqua_heart:</code>"
-    assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_not_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
   end
 
   test "does not replace heart emoji codes inside HTML tag attributes" do
     text = '<span class="spoiler" aria-label=":11_aqua_heart:">:40_red_heart:</span>'
     result = formatted_description(text)
     assert_includes result, 'aria-label=":11_aqua_heart:"'
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("red_heart")}\""
-    assert_not_includes result, "<img src=\"#{HeartEmoji.image_path("aqua_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("red_heart")}\""
+    assert_not_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
   end
 
   test "replaces an emote code that doesn't end in _heart" do
@@ -432,26 +432,26 @@ class ApplicationHelperTest < ActionView::TestCase
     emote.save!
 
     result = formatted_inline("that's :100:!")
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("100")}\""
-    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_includes result, "<img src=\"#{emote_src("100")}\""
+    assert_includes result, 'class="emote-inline"'
     assert_not_includes result, ":100:"
   end
 
   test "replaces an emote typed by its name" do
     result = formatted_inline(":02_spring_heart:")
-    assert_includes result, "<img src=\"#{HeartEmoji.image_path("spring_heart")}\""
+    assert_includes result, "<img src=\"#{emote_src("spring_heart")}\""
     assert_includes result, 'alt="spring heart"'
   end
 
   test "an unknown code doesn't stop the next emote from rendering" do
     result = formatted_inline("see you at 12:30:red_heart:")
-    assert_includes result, "see you at 12:30<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+    assert_includes result, "see you at 12:30<img src=\"#{emote_src("red_heart")}\""
   end
 
   test "the semicolon ending an HTML entity doesn't open an emote code" do
     assert_equal "&amp;red_heart;", formatted_inline("&amp;red_heart;")
     result = formatted_inline("Tom & Jerry;red_heart;")
-    assert_includes result, "Tom &amp; Jerry<img src=\"#{HeartEmoji.image_path("red_heart")}\""
+    assert_includes result, "Tom &amp; Jerry<img src=\"#{emote_src("red_heart")}\""
   end
 
   test "leaves unknown codes as typed" do
@@ -796,54 +796,54 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "padding: 10px"
     assert_includes result, "Some text alongside"
   end
-  # -- Heart input --
+  # -- Emote input --
 
-  test "heart_emojis_json_tag lists every heart in order" do
-    script = Nokogiri::HTML::DocumentFragment.parse(heart_emojis_json_tag).at_css("script#heart-emojis[type='application/json']")
+  test "emote_list_json_tag lists every heart in order" do
+    script = Nokogiri::HTML::DocumentFragment.parse(emote_list_json_tag).at_css("script#emote-list[type='application/json']")
     assert script, "expected a JSON script tag with id heart-emojis"
 
     hearts = JSON.parse(script.text)
-    assert_equal HeartEmoji.all, hearts.map { |heart| heart["code"].delete(":") }
+    assert_equal EmoteRegistry.current.pickable.map(&:code), hearts.map { |heart| heart["code"].delete(":") }
     assert_equal(
-      { "name" => "13_abyss_heart", "label" => "abyss heart", "src" => HeartEmoji.image_path("abyss_heart"), "code" => ":abyss_heart:", "group" => "Hearts" },
+      { "name" => "13_abyss_heart", "label" => "abyss heart", "src" => emote_src("abyss_heart"), "code" => ":abyss_heart:", "group" => "Hearts" },
       hearts.find { |heart| heart["code"] == ":abyss_heart:" }
     )
   end
 
-  test "heart_field wraps a text field with a hidden heart picker button" do
+  test "emote_field wraps a text field with a hidden emote picker button" do
     form = ActionView::Helpers::FormBuilder.new(:profile, Profile.new(subtitle: "the creative one"), self, {})
-    wrapper = Nokogiri::HTML::DocumentFragment.parse(heart_field(form, :subtitle)).at_css(".heart-input")
+    wrapper = Nokogiri::HTML::DocumentFragment.parse(emote_field(form, :subtitle)).at_css(".emote-input")
 
-    assert_includes wrapper["class"], "heart-input--line"
-    assert_equal "heart-input", wrapper["data-controller"]
-    assert_equal "below", wrapper["data-heart-input-placement-value"]
+    assert_includes wrapper["class"], "emote-input--line"
+    assert_equal "emote-input", wrapper["data-controller"]
+    assert_equal "below", wrapper["data-emote-input-placement-value"]
 
     field = wrapper.at_css("input#profile_subtitle[type='text'][name='profile[subtitle]']")
     assert field, "expected the field to keep its normal id and name"
     assert_equal "the creative one", field["value"]
-    assert_equal "field", field["data-heart-input-target"]
+    assert_equal "field", field["data-emote-input-target"]
 
-    button = wrapper.at_css("button.heart-input__button")
+    button = wrapper.at_css("button.emote-input__button")
     assert_equal "button", button["type"]
     assert button.key?("hidden"), "expected the button to stay hidden until JS connects"
-    assert_equal "Insert a heart", button["aria-label"]
-    assert_equal "heart-input#openPicker", button["data-action"]
+    assert_equal "Insert an emote", button["aria-label"]
+    assert_equal "emote-input#openPicker", button["data-action"]
     assert button.at_css("svg[aria-hidden='true']")
   end
 
-  test "heart_field renders a textarea and merges data onto the field" do
+  test "emote_field renders a textarea and merges data onto the field" do
     form = ActionView::Helpers::FormBuilder.new(:chat_message, Chat::Message.new, self, {})
-    html = heart_field(form, :body, as: :text_area, menu_placement: "above", rows: 1,
+    html = emote_field(form, :body, as: :text_area, menu_placement: "above", rows: 1,
       data: { "composer-target": "textarea", action: "keydown->composer#submitOnEnter" })
-    wrapper = Nokogiri::HTML::DocumentFragment.parse(html).at_css(".heart-input")
+    wrapper = Nokogiri::HTML::DocumentFragment.parse(html).at_css(".emote-input")
 
-    assert_includes wrapper["class"], "heart-input--area"
-    assert_equal "above", wrapper["data-heart-input-placement-value"]
+    assert_includes wrapper["class"], "emote-input--area"
+    assert_equal "above", wrapper["data-emote-input-placement-value"]
 
     field = wrapper.at_css("textarea#chat_message_body[rows='1']")
     assert field
     assert_equal "textarea", field["data-composer-target"]
     assert_equal "keydown->composer#submitOnEnter", field["data-action"]
-    assert_equal "field", field["data-heart-input-target"]
+    assert_equal "field", field["data-emote-input-target"]
   end
 end

@@ -2855,15 +2855,15 @@ input[type="submit"].btn--small,
   }
 }
 
-/* ── Inline heart emojis ────────────────── */
+/* ── Inline emotes ─────────────────────── */
 
-.heart-inline {
+.emote-inline {
   display: inline;
   vertical-align: -0.35em;
   width: auto;
 }
 
-h1 .heart-inline {
+h1 .emote-inline {
   vertical-align: -0.1em;
 }
 
@@ -5814,35 +5814,35 @@ button.profile-picker__option {
   }
 }
 
-/* ── Heart input: picker button, autocomplete menu, picker dialog ──────────
-   ApplicationHelper#heart_field wraps a text field that accepts heart codes;
-   heart_input_controller.js adds the autocomplete menu inside the wrapper and
+/* ── Emote input: picker button, autocomplete menu, picker dialog ──────────
+   ApplicationHelper#emote_field wraps a text field that accepts emote codes;
+   emote_input_controller.js adds the autocomplete menu inside the wrapper and
    one shared picker dialog at the end of <body>. */
 
-.heart-input {
+.emote-input {
   position: relative;
 }
 
 /* Room for the button, only once JS is there to show it. A field that failed
    validation is wrapped in .field_with_errors (Rails' default
    field_error_proc), so allow for that wrapper too. */
-.js .heart-input--line > input,
-.js .heart-input--line > .field_with_errors > input {
+.js .emote-input--line > input,
+.js .emote-input--line > .field_with_errors > input {
   padding-right: 2.75rem;
 }
 
-.js .heart-input--area > textarea,
-.js .heart-input--area > .field_with_errors > textarea {
+.js .emote-input--area > textarea,
+.js .emote-input--area > .field_with_errors > textarea {
   padding-right: 3.25rem;
 }
 
 /* Block, so the wrapper is exactly the field's height and the button lines up. */
-.heart-input > textarea,
-.heart-input > .field_with_errors > textarea {
+.emote-input > textarea,
+.emote-input > .field_with_errors > textarea {
   display: block;
 }
 
-.heart-input__button {
+.emote-input__button {
   position: absolute;
   top: 50%;
   right: 0.4rem;
@@ -5861,25 +5861,25 @@ button.profile-picker__option {
   opacity: 0.7;
 }
 
-.heart-input__button:hover,
-.heart-input__button:focus-visible {
+.emote-input__button:hover,
+.emote-input__button:focus-visible {
   background-color: color-mix(in srgb, var(--input-text) 12%, transparent);
   opacity: 1;
 }
 
-.heart-input__button:focus-visible {
+.emote-input__button:focus-visible {
   outline: 2px solid var(--pane-link);
   outline-offset: 1px;
 }
 
 /* Top corner of a textarea, clear of the resize handle and most scrollbars. */
-.heart-input--area .heart-input__button {
+.emote-input--area .emote-input__button {
   top: 0.4rem;
   right: 1rem;
   transform: none;
 }
 
-.heart-input__menu {
+.emote-input__menu {
   position: absolute;
   z-index: 20;
   width: max-content;
@@ -5898,7 +5898,7 @@ button.profile-picker__option {
   color: var(--pane-text);
 }
 
-.heart-input__option {
+.emote-input__option {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -5910,60 +5910,60 @@ button.profile-picker__option {
   white-space: nowrap;
 }
 
-.heart-input__option img {
+.emote-input__option img {
   flex-shrink: 0;
 }
 
-.heart-input__option:hover {
+.emote-input__option:hover {
   background-color: color-mix(in srgb, var(--pane-text) 8%, transparent);
 }
 
-.heart-input__option--active,
-.heart-input__option--active:hover {
+.emote-input__option--active,
+.emote-input__option--active:hover {
   background-color: color-mix(in srgb, var(--pane-link) 25%, transparent);
   color: var(--pane-title-text);
 }
 
 /* The composer: the wrapper takes the textarea's place in the flex row, and
    the button sits on the last line as the textarea grows. */
-.composer-input-row .heart-input {
+.composer-input-row .emote-input {
   flex: 1;
   min-width: 0;
 }
 
-.composer-input-row .heart-input__button {
+.composer-input-row .emote-input__button {
   top: auto;
   bottom: 0.3rem;
   right: 0.4rem;
   color: var(--chat-input-text);
 }
 
-.composer-input-row .heart-input__button:hover,
-.composer-input-row .heart-input__button:focus-visible {
+.composer-input-row .emote-input__button:hover,
+.composer-input-row .emote-input__button:focus-visible {
   background-color: color-mix(in srgb, var(--chat-input-text) 12%, transparent);
 }
 
-.composer-input-row .heart-input__button:focus-visible {
+.composer-input-row .emote-input__button:focus-visible {
   outline-color: var(--chat-pane-link);
 }
 
-.composer .heart-input__menu {
+.composer .emote-input__menu {
   background-color: var(--chat-composer-bg);
   border-color: var(--chat-divider);
   color: var(--chat-composer-text);
 }
 
-.composer .heart-input__option:hover {
+.composer .emote-input__option:hover {
   background-color: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
 }
 
-.composer .heart-input__option--active,
-.composer .heart-input__option--active:hover {
+.composer .emote-input__option--active,
+.composer .emote-input__option--active:hover {
   background-color: color-mix(in srgb, var(--chat-pane-link) 30%, transparent);
   color: var(--chat-composer-text);
 }
 
-.heart-dialog {
+.emote-dialog {
   width: min(560px, 92vw);
   /* A fixed height, so the dialog doesn't shrink and jump around the screen
      as a search narrows the grid. */
@@ -5975,30 +5975,30 @@ button.profile-picker__option {
   color: var(--pane-text);
 }
 
-.heart-dialog[open] {
+.emote-dialog[open] {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.heart-dialog::backdrop {
+.emote-dialog::backdrop {
   background-color: color-mix(in srgb, var(--page-bg) 60%, transparent);
 }
 
-.heart-dialog__header {
+.emote-dialog__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.heart-dialog__title {
+.emote-dialog__title {
   margin: 0;
   font-size: 1.2rem;
   color: var(--pane-title-text);
 }
 
-.heart-dialog__close {
+.emote-dialog__close {
   padding: 0.1rem 0.6rem;
   background-color: transparent;
   border-color: transparent;
@@ -6007,36 +6007,36 @@ button.profile-picker__option {
   line-height: 1;
 }
 
-.heart-dialog__close:hover {
+.emote-dialog__close:hover {
   background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
 /* The scrolling area: one section per emote group (or one of search results),
    each with its own grid. */
-.heart-dialog__grid {
+.emote-dialog__grid {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   padding: 3px;
 }
 
-.heart-dialog__group + .heart-dialog__group {
+.emote-dialog__group + .emote-dialog__group {
   margin-top: 1rem;
 }
 
-.heart-dialog__group-title {
+.emote-dialog__group-title {
   margin: 0 0 0.35rem;
   font-size: 0.95rem;
   color: var(--pane-title-text);
 }
 
-.heart-dialog__group-grid {
+.emote-dialog__group-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   gap: 0.35rem;
 }
 
-.heart-dialog__heart {
+.emote-dialog__emote {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6052,100 +6052,100 @@ button.profile-picker__option {
   white-space: normal;
 }
 
-.heart-dialog__heart:hover {
+.emote-dialog__emote:hover {
   background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
-.heart-dialog__heart:focus-visible {
+.emote-dialog__emote:focus-visible {
   outline: 2px solid var(--pane-link);
   outline-offset: 0;
 }
 
-.heart-dialog__heart-name {
+.emote-dialog__emote-name {
   overflow-wrap: anywhere;
   text-align: center;
 }
 
-.heart-dialog__empty {
+.emote-dialog__empty {
   margin: 0;
 }
 
-.chat-body .heart-dialog {
+.chat-body .emote-dialog {
   background-color: var(--chat-pane-bg);
   border-color: var(--chat-divider);
   color: var(--chat-pane-text);
 }
 
-.chat-body .heart-dialog__title,
-.chat-body .heart-dialog__group-title,
-.chat-body .heart-dialog__close,
-.chat-body .heart-dialog__heart {
+.chat-body .emote-dialog__title,
+.chat-body .emote-dialog__group-title,
+.chat-body .emote-dialog__close,
+.chat-body .emote-dialog__emote {
   color: var(--chat-pane-text);
 }
 
-.chat-body .heart-dialog__heart:focus-visible {
+.chat-body .emote-dialog__emote:focus-visible {
   outline-color: var(--chat-pane-link);
 }
 
 /* Always-visible scrollbars on the picker grid and the autocomplete menu —
    with macOS's default overlay scrollbars there's otherwise no sign that
-   more hearts are hidden below. Styling ::-webkit-scrollbar is what makes
+   more emotes are hidden below. Styling ::-webkit-scrollbar is what makes
    Chrome and Safari keep them showing; Chrome ignores it on any element that
    also sets the standard scrollbar-color/scrollbar-width, so those are only
    applied where the pseudo-element isn't supported (Firefox). */
-.heart-dialog__grid,
-.heart-input__menu {
-  --heart-scrollbar-thumb: color-mix(in srgb, var(--pane-text) 45%, transparent);
-  --heart-scrollbar-track: color-mix(in srgb, var(--pane-text) 10%, transparent);
+.emote-dialog__grid,
+.emote-input__menu {
+  --emote-scrollbar-thumb: color-mix(in srgb, var(--pane-text) 45%, transparent);
+  --emote-scrollbar-track: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
-.chat-body .heart-dialog__grid {
-  --heart-scrollbar-thumb: color-mix(in srgb, var(--chat-pane-text) 45%, transparent);
-  --heart-scrollbar-track: color-mix(in srgb, var(--chat-pane-text) 10%, transparent);
+.chat-body .emote-dialog__grid {
+  --emote-scrollbar-thumb: color-mix(in srgb, var(--chat-pane-text) 45%, transparent);
+  --emote-scrollbar-track: color-mix(in srgb, var(--chat-pane-text) 10%, transparent);
 }
 
-.composer .heart-input__menu {
-  --heart-scrollbar-thumb: color-mix(in srgb, var(--chat-composer-text) 45%, transparent);
-  --heart-scrollbar-track: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
+.composer .emote-input__menu {
+  --emote-scrollbar-thumb: color-mix(in srgb, var(--chat-composer-text) 45%, transparent);
+  --emote-scrollbar-track: color-mix(in srgb, var(--chat-composer-text) 10%, transparent);
 }
 
-.heart-dialog__grid::-webkit-scrollbar,
-.heart-input__menu::-webkit-scrollbar {
+.emote-dialog__grid::-webkit-scrollbar,
+.emote-input__menu::-webkit-scrollbar {
   width: 10px;
 }
 
-.heart-dialog__grid::-webkit-scrollbar-track,
-.heart-input__menu::-webkit-scrollbar-track {
-  background-color: var(--heart-scrollbar-track);
+.emote-dialog__grid::-webkit-scrollbar-track,
+.emote-input__menu::-webkit-scrollbar-track {
+  background-color: var(--emote-scrollbar-track);
   border-radius: 5px;
 }
 
-.heart-dialog__grid::-webkit-scrollbar-thumb,
-.heart-input__menu::-webkit-scrollbar-thumb {
-  background-color: var(--heart-scrollbar-thumb);
+.emote-dialog__grid::-webkit-scrollbar-thumb,
+.emote-input__menu::-webkit-scrollbar-thumb {
+  background-color: var(--emote-scrollbar-thumb);
   border-radius: 5px;
 }
 
 @supports not selector(::-webkit-scrollbar) {
-  .heart-dialog__grid,
-  .heart-input__menu {
+  .emote-dialog__grid,
+  .emote-input__menu {
     scrollbar-width: thin;
-    scrollbar-color: var(--heart-scrollbar-thumb) var(--heart-scrollbar-track);
+    scrollbar-color: var(--emote-scrollbar-thumb) var(--emote-scrollbar-track);
   }
 }
 
 @media (forced-colors: active) {
   /* Text colour for the heart icon and both focus rings, rather than
      ButtonText or Highlight, so they read as part of the field. */
-  .heart-input__button {
+  .emote-input__button {
     color: CanvasText;
     opacity: 1;
   }
 
-  .heart-input__button:focus-visible,
-  .composer-input-row .heart-input__button:focus-visible,
-  .heart-dialog__heart:focus-visible,
-  .chat-body .heart-dialog__heart:focus-visible {
+  .emote-input__button:focus-visible,
+  .composer-input-row .emote-input__button:focus-visible,
+  .emote-dialog__emote:focus-visible,
+  .chat-body .emote-dialog__emote:focus-visible {
     outline: 2px solid CanvasText;
   }
 
@@ -6153,36 +6153,36 @@ button.profile-picker__option {
      filled CanvasText buttons), and these borderless buttons override its
      colours — so without this they'd keep their theme colours in
      high-contrast mode. A CanvasText border marks hover instead. */
-  .heart-input__button,
-  .heart-input__button:hover,
-  .heart-input__button:focus-visible,
-  .composer-input-row .heart-input__button,
-  .composer-input-row .heart-input__button:hover,
-  .composer-input-row .heart-input__button:focus-visible,
-  .heart-dialog__close,
-  .heart-dialog__close:hover,
-  .heart-dialog__heart,
-  .heart-dialog__heart:hover,
-  .chat-body .heart-dialog__close,
-  .chat-body .heart-dialog__heart {
+  .emote-input__button,
+  .emote-input__button:hover,
+  .emote-input__button:focus-visible,
+  .composer-input-row .emote-input__button,
+  .composer-input-row .emote-input__button:hover,
+  .composer-input-row .emote-input__button:focus-visible,
+  .emote-dialog__close,
+  .emote-dialog__close:hover,
+  .emote-dialog__emote,
+  .emote-dialog__emote:hover,
+  .chat-body .emote-dialog__close,
+  .chat-body .emote-dialog__emote {
     background-color: Canvas;
     color: CanvasText;
   }
 
-  .heart-input__button:hover,
-  .composer-input-row .heart-input__button:hover,
-  .heart-dialog__close:hover,
-  .heart-dialog__heart:hover {
+  .emote-input__button:hover,
+  .composer-input-row .emote-input__button:hover,
+  .emote-dialog__close:hover,
+  .emote-dialog__emote:hover {
     border-color: CanvasText;
   }
 
-  .heart-input__menu,
-  .heart-dialog {
+  .emote-input__menu,
+  .emote-dialog {
     border-color: CanvasText;
   }
 
-  .heart-input__option--active,
-  .heart-input__option--active:hover {
+  .emote-input__option--active,
+  .emote-input__option--active:hover {
     forced-color-adjust: none;
     background-color: Highlight;
     color: HighlightText;

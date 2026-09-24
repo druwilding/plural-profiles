@@ -1,5 +1,7 @@
-# Moves the hardcoded hearts (formerly HeartEmoji::ALL, with images in
-# public/images/hearts) into the database, as a "Hearts" emote group.
+# Moves the hardcoded hearts (formerly HeartEmoji::ALL) into the database, as
+# a "Hearts" emote group. The images are in db/emotes/hearts, named after each
+# heart's emote (e.g. 01_dewdrop_heart.webp); db/seeds.rb imports the same
+# folder into a fresh database, which loads the schema without running this.
 #
 # Each heart's code stays exactly as before (e.g. "dewdrop_heart"), so every
 # heart code already written in text or picked on a profile keeps resolving.
@@ -41,7 +43,7 @@ class ImportHeartsAsEmotes < ActiveRecord::Migration[8.1]
 
       emote = group.emotes.new(name: name)
       emote.image.attach(
-        io: File.open(Rails.public_path.join("images/hearts/#{heart}.webp")),
+        io: File.open(Rails.root.join("db/emotes/hearts/#{name}.webp")),
         filename: "#{heart}.webp",
         content_type: "image/webp"
       )

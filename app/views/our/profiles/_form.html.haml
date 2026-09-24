@@ -12,28 +12,28 @@
 
   .form-group
     = form.label :name
-    = heart_field(form, :name, required: true, "data-1p-ignore": "true")
+    = emote_field(form, :name, required: true, "data-1p-ignore": "true")
 
   .form-group
     = form.label :subtitle
-    = heart_field(form, :subtitle)
+    = emote_field(form, :subtitle)
 
   .form-group
     = form.label :pronouns
-    = heart_field(form, :pronouns)
+    = emote_field(form, :pronouns)
 
   .form-group
     = form.label :tag_line
-    = heart_field(form, :tag_line)
+    = emote_field(form, :tag_line)
 
   .form-group
     = form.label :emotes
-    = heart_field(form, :emotes, "aria-describedby": "profile_emotes_hint")
+    = emote_field(form, :emotes, "aria-describedby": "profile_emotes_hint")
     %p.form-hint#profile_emotes_hint Type codes like :spring_heart: or use the button to select emotes.
 
   .form-group
     = form.label :description
-    = heart_field(form, :description, as: :text_area, rows: 18)
+    = emote_field(form, :description, as: :text_area, rows: 18)
 
   - if @groups.any?
     %fieldset.form-group

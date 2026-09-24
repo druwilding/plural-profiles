@@ -155,4 +155,18 @@ class EmoteRegistryTest < ActiveSupport::TestCase
 
     assert_equal "cadbury", registry.resolve("50cadbury_heart").code
   end
+
+  # Every way heart codes were written before emotes moved into the database,
+  # so existing profiles and messages keep rendering.
+  test "resolves every form old heart codes were written in" do
+    {
+      "aqua_heart" => %w[aqua_heart AQUA_HEART Aqua_Heart 11_AQUA_HEART aqua-heart 11-aqua-heart 11_aqua_heart],
+      "cadbury_heart" => %w[cadbury_heart 50cadbury_heart 51cadbury_heart 50_cadbury_heart],
+      "red_heart" => %w[36_red_heart 999_red_heart],
+      "dewdrop_heart" => %w[01_dewdrop_heart]
+    }.each do |code, typed_forms|
+      typed_forms.each { |typed| assert_equal code, registry.resolve(typed)&.code, "expected #{typed} to resolve to #{code}" }
+    end
+    assert_nil registry.resolve("99_fake_heart")
+  end
 end
