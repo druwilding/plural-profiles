@@ -286,7 +286,7 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_includes result, 'class="emote-inline"'
     assert_not_includes result, ":11_AQUA_HEART:"
   end
 
@@ -296,7 +296,7 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_includes result, 'class="emote-inline"'
     assert_not_includes result, ":11_aqua_heart:"
   end
 
@@ -433,7 +433,7 @@ class ApplicationHelperTest < ActionView::TestCase
 
     result = formatted_inline("that's :100:!")
     assert_includes result, "<img src=\"#{emote_src("100")}\""
-    assert_includes result, 'class="heart-inline emote-inline"'
+    assert_includes result, 'class="emote-inline"'
     assert_not_includes result, ":100:"
   end
 

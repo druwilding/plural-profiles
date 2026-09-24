@@ -2857,8 +2857,6 @@ input[type="submit"].btn--small,
 
 /* ── Inline emotes ─────────────────────── */
 
-/* Inline emote images also carry the older heart-inline class, kept in case
-   anyone's custom CSS targets it. */
 .emote-inline {
   display: inline;
   vertical-align: -0.35em;

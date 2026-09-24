@@ -204,7 +204,7 @@ EmoteRegistry.current   # site-wide in v1; later EmoteRegistry.for(server:, user
   Rendered chat HTML embeds these URLs, so they must not expire. `theme_helper.rb` already uses the proxy for backgrounds.
 - Replacing an emote's image creates a new blob, so the URL changes and nothing serves a stale image from cache.
 - **The original SVG is never served to browsers.** Everything shown uses the rasterised webp variant, which avoids SVG script/XSS problems entirely. Originals are kept only in storage, for later reprocessing.
-- The `<img>` keeps `class="heart-inline"` (themes may target it) and adds `emote-inline`. Non-square emotes: the variant keeps its aspect ratio (`resize_to_limit`). The inline `<img>` sets `height="24"` and the CSS adds `width: auto; max-width: …`, so a wide emote isn't squashed.
+- The `<img>` has `class="emote-inline"`. Non-square emotes: the variant keeps its aspect ratio (`resize_to_limit`). The inline `<img>` sets `height="24"` and the CSS adds `width: auto; max-width: …`, so a wide emote isn't squashed.
 
 SVG support on the server (librsvg) isn't needed: SVGs are converted in the browser.
 
@@ -438,4 +438,4 @@ Once live, check that:
 - [x] **One copy of the heart images**, in `db/emotes/hearts/` (named like `01_dewdrop_heart.webp`). The `ImportHeartsAsEmotes` migration, a new `db/seeds.rb` and the test fixtures (`EmoteFixtureHelper`) all read from it. `public/images/hearts/` and `test/fixtures/files/emotes/` are gone. The seeds import the hearts into a fresh database (`db:setup` / `db:prepare` load the schema and never run the migration), skipping it once any emotes exist.
 - [x] **The `HeartEmoji` facade is gone.** The helper builds the `:code:` itself; tests use an `emote_src` helper. The old-paste cases from `heart_emoji_test.rb` moved into `emote_registry_test.rb`.
 - [x] **The old profile columns are dropped** (`RemoveHeartEmojisFromProfiles`): `heart_emojis`, `mini_profile_heart_emojis` and `mini_profile_heart_emojis_inherited`, along with their `ignored_columns` entry.
-- [x] **"Heart" renamed to "emote" in the code:** `emote_input_controller.js` (Stimulus `emote-input`), `emote_field`, `emote_list_json_tag` (element `#emote-list`), `replace_emote_codes`, the `.emote-input` / `.emote-dialog` CSS classes and `--emote-scrollbar-*` properties, and the `emote_input_test.rb` / `emote_input_composer_test.rb` system tests. Inline images keep the `heart-inline` class alongside `emote-inline` (which the CSS now targets), in case custom CSS uses it.
+- [x] **"Heart" renamed to "emote" in the code:** `emote_input_controller.js` (Stimulus `emote-input`), `emote_field`, `emote_list_json_tag` (element `#emote-list`), `replace_emote_codes`, the `.emote-input` / `.emote-dialog` CSS classes and `--emote-scrollbar-*` properties, and the `emote_input_test.rb` / `emote_input_composer_test.rb` system tests. Inline images use `emote-inline` only; the old `heart-inline` class is gone.

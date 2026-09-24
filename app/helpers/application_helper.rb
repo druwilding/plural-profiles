@@ -240,7 +240,7 @@ module ApplicationHelper
     registry = EmoteRegistry.current
     result = parts.map do |part|
       registry.replace_codes(part) do |emote|
-        '<img src="%s" title="%s" alt="%s" class="heart-inline emote-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
+        '<img src="%s" title="%s" alt="%s" class="emote-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
       end
     end
     non_text.each_with_index { |segment, i| result.insert((i * 2) + 1, segment) }
