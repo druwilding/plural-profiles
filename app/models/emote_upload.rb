@@ -57,9 +57,10 @@ class EmoteUpload
     end
   end
 
-  Result = Data.define(:added, :replaced, :skipped) do
+  # group_ids: the groups that gained an emote or had one's image replaced.
+  Result = Data.define(:added, :replaced, :skipped, :group_ids) do
     def self.none
-      new(added: 0, replaced: 0, skipped: 0)
+      new(added: 0, replaced: 0, skipped: 0, group_ids: [])
     end
   end
 
@@ -167,7 +168,8 @@ class EmoteUpload
       raise ActiveRecord::Rollback if rows.any? { |row| row.errors_list.any? }
 
       counts = rows.map(&:action).tally
-      result = Result.new(added: counts.fetch("create", 0), replaced: counts.fetch("replace", 0), skipped: counts.fetch("skip", 0))
+      group_ids = rows.filter_map { |row| row.emote&.emote_group_id || (row.clash&.emote_group_id if row.action == "replace") }.uniq
+      result = Result.new(added: counts.fetch("create", 0), replaced: counts.fetch("replace", 0), skipped: counts.fetch("skip", 0), group_ids: group_ids)
     end
 
     rows.select { |row| row.action == "skip" }.each { |row| row.blob.purge_later } if result

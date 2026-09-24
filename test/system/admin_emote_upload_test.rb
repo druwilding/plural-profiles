@@ -50,4 +50,22 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
     assert_selector ".flash--notice", text: "1 emote added."
     assert Emote.exists?(code: "rouge_heart")
   end
+
+  test "uploading opens the group the emotes went into" do
+    visit admin_emotes_path
+    find("summary", text: "Hearts").click
+    assert_selector "details.emote-section:not([open])", text: "Hearts"
+
+    visit upload_admin_emotes_path
+    attach_file "Images", [ file("07_party.png", png_bytes(8, 8)) ]
+    click_button "Upload"
+
+    assert_selector ".flash--notice", text: "1 emote added."
+    assert_selector "details.emote-section[open]", text: "Hearts"
+    assert_field with: "07_party"
+
+    # It stays open, as if it had been opened by hand.
+    visit admin_emotes_path
+    assert_selector "details.emote-section[open]", text: "Hearts"
+  end
 end

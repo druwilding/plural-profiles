@@ -10,6 +10,7 @@ class Admin::EmotesController < Admin::BaseController
 
   def index
     load_sections
+    @opened_group_ids = Array(flash[:opened_emote_groups])
   end
 
   # Upload page: pick (or drop) files and the group they go into.
@@ -31,6 +32,7 @@ class Admin::EmotesController < Admin::BaseController
 
     if outcome.pending.empty?
       flash[:alert] = rejected if rejected
+      flash[:opened_emote_groups] = outcome.result.group_ids
       redirect_to admin_emotes_path, notice: import_summary(outcome.result)
     else
       @rows = outcome.pending
@@ -45,6 +47,7 @@ class Admin::EmotesController < Admin::BaseController
     if rows.empty?
       redirect_to upload_admin_emotes_path, alert: "Those files have expired. Try uploading them again."
     elsif result
+      flash[:opened_emote_groups] = result.group_ids
       redirect_to admin_emotes_path, notice: import_summary(result)
     else
       @rows = EmoteUpload.classify(rows)
