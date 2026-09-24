@@ -437,6 +437,65 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_not_includes result, ":100:"
   end
 
+  # -- Large emotes on a line of their own --
+
+  test "shows an emote alone in a description large" do
+    result = formatted_description(":40_red_heart:")
+    assert_includes result, 'class="emote-inline emote-inline--large" width="48" height="48"'
+  end
+
+  test "shows several emotes alone on a line large" do
+    result = formatted_description(" :40_red_heart: :11_aqua_heart:  ")
+    assert_equal 2, result.scan("emote-inline--large").size
+  end
+
+  test "keeps an emote next to text small" do
+    result = formatted_description("I love this :11_aqua_heart:")
+    assert_includes result, 'class="emote-inline" width="24" height="24"'
+    assert_not_includes result, "emote-inline--large"
+  end
+
+  test "shows only the emote on its own description line large" do
+    result = formatted_description("hello :40_red_heart:\n:11_aqua_heart:\nbye")
+    assert_equal 1, result.scan("emote-inline--large").size
+    assert_match(/alt="aqua heart" class="emote-inline emote-inline--large"/, result)
+    assert_match(/alt="red heart" class="emote-inline" /, result)
+  end
+
+  test "shows an emote inside inline markup on its own line large" do
+    result = formatted_description("<b>:40_red_heart:</b>\n||:11_aqua_heart:||")
+    assert_equal 2, result.scan("emote-inline--large").size
+  end
+
+  test "treats block tags as line breaks" do
+    result = formatted_description("<table><tr><td>:40_red_heart:</td><td>text</td></tr></table>")
+    assert_includes result, "emote-inline--large"
+  end
+
+  test "keeps an emote next to inline code or an entity small" do
+    assert_not_includes formatted_description(":40_red_heart: <code>x</code>"), "emote-inline--large"
+    assert_not_includes formatted_description(":40_red_heart: &amp;"), "emote-inline--large"
+  end
+
+  test "does not replace emote codes in a multi-line code block" do
+    result = formatted_description("<code>:40_red_heart:\n:11_aqua_heart:</code>")
+    assert_not_includes result, "<img"
+  end
+
+  test "keeps emotes small past the large emote limit" do
+    result = formatted_description(":40_red_heart: " * (ApplicationHelper::LARGE_EMOTE_LIMIT + 1))
+    assert_not_includes result, "emote-inline--large"
+  end
+
+  test "shows an emote alone on a chat message line large" do
+    result = formatted_inline("hi\n:40_red_heart:\nbye", large_emotes: true)
+    assert_equal 1, result.scan("emote-inline--large").size
+  end
+
+  test "never shows emotes large in inline fields by default" do
+    assert_not_includes formatted_inline(":40_red_heart:"), "emote-inline--large"
+  end
+
   test "replaces an emote typed by its name" do
     result = formatted_inline(":02_spring_heart:")
     assert_includes result, "<img src=\"#{emote_src("spring_heart")}\""
