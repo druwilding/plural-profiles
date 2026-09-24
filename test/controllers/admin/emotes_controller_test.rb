@@ -42,7 +42,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     names = css_select("#emote-sections .emote-row input[name='emote[name]']").map { |input| input["value"] }
     assert_equal "01_dewdrop_heart", names.first
     assert_equal "50_sunshine_heart", names.last
-    assert_select "h3.emote-section__heading", text: /Hearts/
+    assert_select "summary.emote-section__heading", text: /Hearts/
   end
 
   test "index shows the derived code, disabled until overridden" do

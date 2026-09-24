@@ -1,8 +1,8 @@
 #emote-sections
   - @groups.each do |group|
     - emotes = @emotes_by_group.fetch(group.id, [])
-    %section.emote-section{"aria-labelledby": dom_id(group, :heading)}
-      %h3.emote-section__heading{id: dom_id(group, :heading)}
+    %details.emote-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-#{dom_id(group)}" }}
+      %summary.emote-section__heading
         = group.name
         %span.emote-section__count= "(#{emotes.size})"
       - if emotes.any?
