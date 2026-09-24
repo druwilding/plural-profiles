@@ -6,7 +6,7 @@
   .card__header
     %h1 Emote groups
   %p.admin-emotes__intro
-    Groups are shown as sections in every emote picker, in this order. The symbol stands in for the group's emotes where images can't be shown, such as page titles.
+    Groups are shown as sections in every emote picker, in this order.
   .card__actions
     = link_to "Back to emotes", admin_emotes_path, class: "btn btn--secondary"
 
@@ -21,9 +21,6 @@
           .emote-groups__field
             = form.label :name, "Name", for: dom_id(group, :name)
             = form.text_field :name, id: dom_id(group, :name), required: true
-          .emote-groups__field.emote-groups__field--symbol
-            = form.label :plain_text, "Symbol", for: dom_id(group, :plain_text)
-            = form.text_field :plain_text, id: dom_id(group, :plain_text), required: true, maxlength: 16
           = form.submit "Save", class: "btn btn--small"
         .emote-groups__actions
           %span.emote-groups__count= pluralize(emote_count, "emote")
@@ -41,7 +38,4 @@
     .emote-groups__field
       = form.label :name, "Name", for: "new_emote_group_name"
       = form.text_field :name, id: "new_emote_group_name", required: true
-    .emote-groups__field.emote-groups__field--symbol
-      = form.label :plain_text, "Symbol", for: "new_emote_group_plain_text"
-      = form.text_field :plain_text, id: "new_emote_group_plain_text", required: true, maxlength: 16
     = form.submit "Add group", class: "btn btn--small"

@@ -59,6 +59,6 @@ class Admin::EmoteGroupsController < Admin::BaseController
   end
 
   def group_params
-    params.require(:emote_group).permit(:name, :plain_text)
+    params.require(:emote_group).permit(:name)
   end
 end

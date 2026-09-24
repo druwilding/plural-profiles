@@ -95,7 +95,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "moving an emote to another group" do
-    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    other = EmoteGroup.create!(name: "Other", position: 1)
     sign_in_as @admin
     patch admin_emote_path(@emote), params: { emote: { emote_group_id: other.id } }, headers: TURBO_STREAM
 

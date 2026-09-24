@@ -529,13 +529,13 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "a :fake_heart: b :note:", formatted_inline("a :fake_heart: b :note:")
   end
 
-  test "plain_field replaces emotes with their group's plain text symbol" do
-    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+  test "plain_field replaces emotes with their names in brackets" do
+    other = EmoteGroup.create!(name: "Other", position: 1)
     emote = Emote.new(emote_group: other, name: "100")
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
     emote.save!
 
-    assert_equal "Hello ♥ and ★", plain_field("Hello :11_aqua_heart: and ;100;")
+    assert_equal "Hello [aqua heart] and [100]", plain_field("Hello :11_aqua_heart: and ;100;")
   end
 
   test "plain_field leaves unknown codes as typed" do

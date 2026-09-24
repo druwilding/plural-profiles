@@ -15,7 +15,7 @@ class EmoteRegistryTest < ActiveSupport::TestCase
   test "entries are in group order, then natural name order" do
     add_emote("9_nine")
     add_emote("100_hundred")
-    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    other = EmoteGroup.create!(name: "Other", position: 1)
     add_emote("01_first_other", group: other)
 
     names = registry.entries.map(&:name)
