@@ -11,7 +11,7 @@ import { Controller } from "@hotwired/stimulus"
 //    <body>, so it sits outside any <form> and can never submit one.
 //  - Typing `:` or `;` and at least two name characters opens an autocomplete
 //    menu at the caret: hearts whose name starts with what's typed first,
-//    then any whose name contains it, each group in HeartEmoji.all order.
+//    then any whose name contains it, each group in display order.
 //    Up/Down move the highlight, Enter/Tab insert, Escape dismisses.
 //
 // The heart list itself comes from ApplicationHelper#heart_emojis_json_tag.

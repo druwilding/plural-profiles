@@ -1,7 +1,4 @@
 class Profile < ApplicationRecord
-  # Replaced by the emotes text field; dropped once that's settled in.
-  self.ignored_columns += %w[heart_emojis mini_profile_heart_emojis mini_profile_heart_emojis_inherited]
-
   include HasAvatar
   include HasLabels
   include ChatProxyable

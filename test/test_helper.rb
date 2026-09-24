@@ -14,6 +14,12 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
 
+    # The display image path of the emote a code resolves to, as rendered in
+    # <img src>.
+    def emote_src(code)
+      EmoteRegistry.current.resolve(code).src
+    end
+
     # Builds a tiny, valid PNG of the given pixel dimensions, for exercising
     # dimension validations without needing fixture files for every size.
     def png_bytes(width, height)

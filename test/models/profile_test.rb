@@ -129,11 +129,6 @@ class ProfileTest < ActiveSupport::TestCase
     assert_equal ":red_heart: :dewdrop_heart: :red_heart: and friends", profile.reload.emotes
   end
 
-  test "the old heart columns are ignored" do
-    assert_not_includes Profile.column_names, "heart_emojis"
-    assert_not_includes Profile.column_names, "mini_profile_heart_emojis"
-  end
-
   # -- chat identity (mini-profile) --
 
   test "chat fields default to inheriting the main field" do

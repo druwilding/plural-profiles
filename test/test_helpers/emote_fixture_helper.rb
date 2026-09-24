@@ -1,7 +1,8 @@
-# Helpers available inside fixture ERB for the emote fixtures, whose images
-# live in test/fixtures/files/emotes/ (one file per emote, named after it).
+# Helpers available inside fixture ERB for the emote fixtures. They use the
+# heart images in db/emotes/hearts/ (one file per emote, named after it), the
+# same ones production imported and db/seeds.rb imports.
 module EmoteFixtureHelper
-  EMOTE_IMAGES = Rails.root.join("test/fixtures/files/emotes")
+  EMOTE_IMAGES = Rails.root.join("db/emotes/hearts")
 
   # [[name, code], ...] for every fixture emote image, in name order.
   def emote_fixture_names

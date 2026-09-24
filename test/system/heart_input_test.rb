@@ -278,7 +278,7 @@ class HeartInputTest < ApplicationSystemTestCase
     assert_equal [ "abyss heart", "vulnerable heart" ], option_labels(field)
     assert_equal "true", field[:"aria-expanded"]
     assert_images = menu_for(field).all("img").map { |img| URI(img[:src]).path }
-    assert_equal [ HeartEmoji.image_path("abyss_heart"), HeartEmoji.image_path("vulnerable_heart") ], assert_images
+    assert_equal [ emote_src("abyss_heart"), emote_src("vulnerable_heart") ], assert_images
 
     field.send_keys(:enter)
 

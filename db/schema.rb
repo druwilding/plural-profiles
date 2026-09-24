@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_24_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -271,7 +271,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.string "emotes"
-    t.jsonb "heart_emojis", default: [], null: false
     t.jsonb "labels", default: [], null: false
     t.string "mini_profile_avatar_alt_text"
     t.boolean "mini_profile_avatar_inherited", default: true, null: false
@@ -280,8 +279,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_100000) do
     t.boolean "mini_profile_description_inherited", default: false, null: false
     t.string "mini_profile_emotes"
     t.boolean "mini_profile_emotes_inherited", default: true, null: false
-    t.jsonb "mini_profile_heart_emojis", default: [], null: false
-    t.boolean "mini_profile_heart_emojis_inherited", default: true, null: false
     t.boolean "mini_profile_link_enabled", default: false, null: false
     t.string "mini_profile_name"
     t.boolean "mini_profile_name_inherited", default: true, null: false

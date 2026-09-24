@@ -94,7 +94,7 @@ module ApplicationHelper
   def heart_emojis_json_tag
     registry = EmoteRegistry.current
     hearts = registry.pickable.map do |emote|
-      { name: emote.name, label: emote.label, src: emote.src, code: HeartEmoji.code(emote.code), group: registry.group(emote.group_id)&.name }
+      { name: emote.name, label: emote.label, src: emote.src, code: ":#{emote.code}:", group: registry.group(emote.group_id)&.name }
     end
     tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
   end
