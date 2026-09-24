@@ -454,7 +454,7 @@ class Our::ProfilesControllerTest < ActionDispatch::IntegrationTest
   test "the edit form has an emotes field with the emote picker" do
     sign_in_as @user
     get edit_our_profile_path(@profile)
-    assert_select ".heart-input input[name='profile[emotes]']"
+    assert_select ".emote-input input[name='profile[emotes]']"
     assert_select "label[for=profile_emotes]", text: "Emotes"
   end
 

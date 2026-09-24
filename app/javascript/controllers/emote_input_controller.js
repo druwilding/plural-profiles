@@ -1,26 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Heart emoji entry for any field that renders heart codes. The field is
-// wrapped by ApplicationHelper#heart_field, which also renders the (hidden
-// until connected) heart button. Two ways in, both inserting the canonical
-// `:name_heart:` code plus a trailing space, so what's saved is always the
+// Emote entry for any field that renders emote codes. The field is wrapped by
+// ApplicationHelper#emote_field, which also renders the (hidden until
+// connected) emote button. Two ways in, both inserting the canonical code
+// (`:spring_heart:`) plus a trailing space, so what's saved is always the
 // plain code:
 //
-//  - The heart button opens a dialog of every heart. One dialog is shared by
+//  - The emote button opens a dialog of every emote. One dialog is shared by
 //    every field on the page; it's built on first use and appended to
 //    <body>, so it sits outside any <form> and can never submit one.
-//  - Typing `:` or `;` and at least two name characters opens an autocomplete
-//    menu at the caret: hearts whose name starts with what's typed first,
-//    then any whose name contains it, each group in display order.
-//    Up/Down move the highlight, Enter/Tab insert, Escape dismisses.
+//  - Typing `:` or `;` and at least two characters opens an autocomplete menu
+//    at the caret, with the best matches first (see matchEmotes). Up/Down
+//    move the highlight, Enter/Tab insert, Escape dismisses.
 //
-// The heart list itself comes from ApplicationHelper#heart_emojis_json_tag.
+// The emote list itself comes from ApplicationHelper#emote_list_json_tag.
 
 const MIN_QUERY_LENGTH = 2
 
-// An open heart code right before the caret: a delimiter and the name typed
+// An open emote code right before the caret: a delimiter and the name typed
 // so far. What comes before the delimiter is checked separately in
-// openCodeAtCaret — a letter or number there means it's not a heart code at
+// openCodeAtCaret — a letter or number there means it's not an emote code at
 // all (10:30, https://ab, note:ab).
 const OPEN_CODE = /[:;]([\p{L}\p{N}_-]+)$/u
 const COMPLETE_CODE = /[:;]([a-z0-9_-]+)[:;]$/i
@@ -42,26 +41,26 @@ const MIRRORED_PROPERTIES = [
   "textAlign", "textTransform", "textIndent", "letterSpacing", "wordSpacing", "tabSize"
 ]
 
-let heartList = null
-let heartSource = null
+let emoteList = null
+let emoteSource = null
 let sharedDialog = null
 let nextId = 0
 
 // Parsed again whenever the JSON element changes: it's in the body, which
 // Turbo replaces on every visit, so the list stays current when emotes change
 // (e.g. after an admin uploads some) without a full page load.
-function hearts() {
-  const source = document.getElementById("heart-emojis")
-  if (source !== heartSource) {
-    heartSource = source
-    heartList = source ? JSON.parse(source.textContent) : []
+function emotes() {
+  const source = document.getElementById("emote-list")
+  if (source !== emoteSource) {
+    emoteSource = source
+    emoteList = source ? JSON.parse(source.textContent) : []
   }
-  return heartList
+  return emoteList
 }
 
 // "spring_heart" from ":spring_heart:"
-function codeOf(heart) {
-  return heart.code.slice(1, -1)
+function codeOf(emote) {
+  return emote.code.slice(1, -1)
 }
 
 // Same normalisation as EmoteRegistry#resolve: case-insensitive, and hyphens
@@ -77,18 +76,18 @@ function normaliseQuery(query) {
 // 4. codes containing it anywhere, without the "_heart" suffix so "he"
 //    doesn't match every single heart
 // An old Discord number prefix ("11_aq") also matches by what follows it.
-function matchHearts(query) {
+function matchEmotes(query) {
   const typed = normaliseQuery(query)
   if (!typed) return []
   const bare = typed.replace(LEGACY_NUMBER_PREFIX, "")
 
   const tiers = [ [], [], [], [] ]
-  for (const heart of hearts()) {
-    const code = codeOf(heart)
-    if (heart.name === typed || code === typed) tiers[0].push(heart)
-    else if (code.startsWith(typed) || code.startsWith(bare)) tiers[1].push(heart)
-    else if (heart.name.startsWith(typed)) tiers[2].push(heart)
-    else if (code.replace(/_heart$/, "").includes(bare)) tiers[3].push(heart)
+  for (const emote of emotes()) {
+    const code = codeOf(emote)
+    if (emote.name === typed || code === typed) tiers[0].push(emote)
+    else if (code.startsWith(typed) || code.startsWith(bare)) tiers[1].push(emote)
+    else if (emote.name.startsWith(typed)) tiers[2].push(emote)
+    else if (code.replace(/_heart$/, "").includes(bare)) tiers[3].push(emote)
   }
   return tiers.flat()
 }
@@ -98,7 +97,7 @@ function matchHearts(query) {
 function isEmoteCode(value) {
   const typed = normaliseQuery(value)
   const bare = typed.replace(LEGACY_NUMBER_PREFIX, "")
-  return hearts().some((heart) => heart.name === typed || codeOf(heart) === typed || codeOf(heart) === bare)
+  return emotes().some((emote) => emote.name === typed || codeOf(emote) === typed || codeOf(emote) === bare)
 }
 
 function openCodeAtCaret(field) {
@@ -219,12 +218,12 @@ export default class extends Controller {
     this.pickerSelection = this.fieldFocused
       ? { start: field.selectionStart ?? end, end: field.selectionEnd ?? end }
       : { start: end, end }
-    heartDialog().open(this)
+    emoteDialog().open(this)
   }
 
-  insertFromPicker(heart) {
+  insertFromPicker(emote) {
     const { start, end } = this.pickerSelection
-    this.insert(heart, start, end)
+    this.insert(emote, start, end)
   }
 
   restoreFocus() {
@@ -310,7 +309,7 @@ export default class extends Controller {
     }
     if (fromInput) this.dismissedToken = null
 
-    const matches = matchHearts(token.query)
+    const matches = matchEmotes(token.query)
     if (matches.length === 0) {
       this.closeMenu()
       return
@@ -333,8 +332,8 @@ export default class extends Controller {
   get menu() {
     if (!this.menuElement) {
       const menu = document.createElement("ul")
-      menu.id = `heart-input-menu-${this.id}`
-      menu.className = "heart-input__menu"
+      menu.id = `emote-input-menu-${this.id}`
+      menu.className = "emote-input__menu"
       menu.setAttribute("role", "listbox")
       menu.setAttribute("aria-label", "Matching emotes")
       menu.hidden = true
@@ -358,21 +357,21 @@ export default class extends Controller {
   }
 
   renderMenu() {
-    const options = this.matches.map((heart, index) => {
+    const options = this.matches.map((emote, index) => {
       const option = document.createElement("li")
       option.id = `${this.menu.id}-option-${index}`
-      option.className = "heart-input__option"
+      option.className = "emote-input__option"
       option.setAttribute("role", "option")
       option.dataset.index = index
 
       const image = document.createElement("img")
-      image.src = heart.src
+      image.src = emote.src
       image.alt = ""
       image.width = 24
       image.height = 24
 
       const label = document.createElement("span")
-      label.textContent = heart.label
+      label.textContent = emote.label
 
       option.append(image, label)
       return option
@@ -388,7 +387,7 @@ export default class extends Controller {
     menu.querySelectorAll("[role='option']").forEach((option, optionIndex) => {
       const active = optionIndex === index
       option.setAttribute("aria-selected", active ? "true" : "false")
-      option.classList.toggle("heart-input__option--active", active)
+      option.classList.toggle("emote-input__option--active", active)
       if (!active) return
 
       this.fieldTarget.setAttribute("aria-activedescendant", option.id)
@@ -447,17 +446,17 @@ export default class extends Controller {
   }
 
   choose(index) {
-    const heart = this.matches[index]
+    const emote = this.matches[index]
     const { start, end } = this.token
     this.closeMenu()
-    this.insert(heart, start, end)
+    this.insert(emote, start, end)
   }
 
   // -- Shared --
 
-  insert(heart, start, end) {
+  insert(emote, start, end) {
     const field = this.fieldTarget
-    const text = /\s/.test(field.value.charAt(end)) ? heart.code : `${heart.code} `
+    const text = /\s/.test(field.value.charAt(end)) ? emote.code : `${emote.code} `
 
     field.focus()
     field.setSelectionRange(start, end)
@@ -480,12 +479,12 @@ export default class extends Controller {
 
 // [[group name, [emote, …]], …] in the order the emotes arrive, which is
 // already group order then name order.
-function groupHearts(list) {
+function groupEmotes(list) {
   const groups = new Map()
-  for (const heart of list) {
-    const group = heart.group || "Emotes"
+  for (const emote of list) {
+    const group = emote.group || "Emotes"
     if (!groups.has(group)) groups.set(group, [])
-    groups.get(group).push(heart)
+    groups.get(group).push(emote)
   }
   return [ ...groups ]
 }
@@ -523,67 +522,67 @@ function nearestInRow(buttons, current, direction) {
   return best
 }
 
-function heartDialog() {
-  if (sharedDialog && sharedDialog.heartList !== hearts()) sharedDialog.destroy()
-  if (!sharedDialog || !sharedDialog.element.isConnected) sharedDialog = new HeartDialog()
+function emoteDialog() {
+  if (sharedDialog && sharedDialog.emoteList !== emotes()) sharedDialog.destroy()
+  if (!sharedDialog || !sharedDialog.element.isConnected) sharedDialog = new EmoteDialog()
   return sharedDialog
 }
 
-class HeartDialog {
+class EmoteDialog {
   constructor() {
     const dialog = document.createElement("dialog")
-    dialog.className = "heart-dialog"
-    dialog.setAttribute("aria-labelledby", "heart-dialog-title")
+    dialog.className = "emote-dialog"
+    dialog.setAttribute("aria-labelledby", "emote-dialog-title")
     dialog.innerHTML = `
-      <div class="heart-dialog__header">
-        <h2 class="heart-dialog__title" id="heart-dialog-title">Choose an emote</h2>
-        <button type="button" class="heart-dialog__close" aria-label="Close">×</button>
+      <div class="emote-dialog__header">
+        <h2 class="emote-dialog__title" id="emote-dialog-title">Choose an emote</h2>
+        <button type="button" class="emote-dialog__close" aria-label="Close">×</button>
       </div>
-      <label class="visually-hidden" for="heart-dialog-search">Search emotes</label>
-      <input type="search" id="heart-dialog-search" class="heart-dialog__search" placeholder="Search emotes…" autocomplete="off" spellcheck="false">
-      <div class="heart-dialog__grid"></div>
-      <p class="heart-dialog__empty" hidden>No emotes match that search.</p>
+      <label class="visually-hidden" for="emote-dialog-search">Search emotes</label>
+      <input type="search" id="emote-dialog-search" class="emote-dialog__search" placeholder="Search emotes…" autocomplete="off" spellcheck="false">
+      <div class="emote-dialog__grid"></div>
+      <p class="emote-dialog__empty" hidden>No emotes match that search.</p>
     `
 
     this.element = dialog
-    this.search = dialog.querySelector(".heart-dialog__search")
-    this.grid = dialog.querySelector(".heart-dialog__grid")
-    this.empty = dialog.querySelector(".heart-dialog__empty")
-    this.heartList = hearts()
-    this.buttons = new Map(this.heartList.map((heart) => [ heart.name, this.buildButton(heart) ]))
+    this.search = dialog.querySelector(".emote-dialog__search")
+    this.grid = dialog.querySelector(".emote-dialog__grid")
+    this.empty = dialog.querySelector(".emote-dialog__empty")
+    this.emoteList = emotes()
+    this.buttons = new Map(this.emoteList.map((emote) => [ emote.name, this.buildButton(emote) ]))
 
-    dialog.querySelector(".heart-dialog__close").addEventListener("click", () => dialog.close())
+    dialog.querySelector(".emote-dialog__close").addEventListener("click", () => dialog.close())
     dialog.addEventListener("click", (event) => this.onDialogClick(event))
     dialog.addEventListener("close", () => this.onClose())
     this.search.addEventListener("input", () => this.filter())
     this.search.addEventListener("keydown", (event) => this.onSearchKeydown(event))
     this.grid.addEventListener("click", (event) => {
-      const button = event.target.closest(".heart-dialog__heart")
-      if (button) this.choose(button.dataset.heart)
+      const button = event.target.closest(".emote-dialog__emote")
+      if (button) this.choose(button.dataset.emote)
     })
     this.grid.addEventListener("keydown", (event) => this.onGridKeydown(event))
 
     document.body.append(dialog)
   }
 
-  buildButton(heart) {
+  buildButton(emote) {
     const button = document.createElement("button")
     button.type = "button"
-    button.className = "heart-dialog__heart"
-    button.dataset.heart = heart.name
-    button.title = heart.label
-    button.setAttribute("aria-label", heart.label)
+    button.className = "emote-dialog__emote"
+    button.dataset.emote = emote.name
+    button.title = emote.label
+    button.setAttribute("aria-label", emote.label)
 
     const image = document.createElement("img")
-    image.src = heart.src
+    image.src = emote.src
     image.alt = ""
     image.width = 32
     image.height = 32
     image.loading = "lazy"
 
     const name = document.createElement("span")
-    name.className = "heart-dialog__heart-name"
-    name.textContent = heart.label
+    name.className = "emote-dialog__emote-name"
+    name.textContent = emote.label
 
     button.append(image, name)
     return button
@@ -600,7 +599,7 @@ class HeartDialog {
 
   // Removed entirely (open or not) before Turbo snapshots the page. Left in,
   // it would be restored from the cache as a lifeless copy with the same ids,
-  // alongside the fresh dialog heartDialog() then builds.
+  // alongside the fresh dialog emoteDialog() then builds.
   destroy() {
     this.controller = null
     if (this.element.open) this.element.close()
@@ -613,8 +612,8 @@ class HeartDialog {
   filter() {
     const query = this.search.value
     const sections = query.trim()
-      ? [ this.buildSection(null, matchHearts(query)) ]
-      : groupHearts(hearts()).map(([ group, members ]) => this.buildSection(group, members))
+      ? [ this.buildSection(null, matchEmotes(query)) ]
+      : groupEmotes(emotes()).map(([ group, members ]) => this.buildSection(group, members))
     this.grid.replaceChildren(...sections.filter(Boolean))
 
     const buttons = this.allButtons()
@@ -626,15 +625,15 @@ class HeartDialog {
     if (members.length === 0) return null
 
     const section = document.createElement("section")
-    section.className = "heart-dialog__group"
+    section.className = "emote-dialog__group"
     const grid = document.createElement("div")
-    grid.className = "heart-dialog__group-grid"
+    grid.className = "emote-dialog__group-grid"
     grid.setAttribute("role", "group")
 
     if (group) {
       const heading = document.createElement("h3")
-      heading.className = "heart-dialog__group-title"
-      heading.id = `heart-dialog-group-${this.sectionCount = (this.sectionCount || 0) + 1}`
+      heading.className = "emote-dialog__group-title"
+      heading.id = `emote-dialog-group-${this.sectionCount = (this.sectionCount || 0) + 1}`
       heading.textContent = group
       grid.setAttribute("aria-labelledby", heading.id)
       section.append(heading)
@@ -642,13 +641,13 @@ class HeartDialog {
       grid.setAttribute("aria-label", "Matching emotes")
     }
 
-    grid.append(...members.map((heart) => this.buttons.get(heart.name)))
+    grid.append(...members.map((emote) => this.buttons.get(emote.name)))
     section.append(grid)
     return section
   }
 
   allButtons() {
-    return [ ...this.grid.querySelectorAll(".heart-dialog__heart") ]
+    return [ ...this.grid.querySelectorAll(".emote-dialog__emote") ]
   }
 
   // Only one emote is in the tab order at a time; arrow keys move between
@@ -658,15 +657,15 @@ class HeartDialog {
   }
 
   choose(name) {
-    const heart = hearts().find((candidate) => candidate.name === name)
+    const emote = emotes().find((candidate) => candidate.name === name)
     const controller = this.controller
     this.controller = null
     this.element.close()
     // Inserted straight away, not from the close event (which fires
-    // asynchronously), so the heart is in the field the moment the dialog's
-    // gone. close() has already restored focus to the heart button by now;
+    // asynchronously), so the emote is in the field the moment the dialog's
+    // gone. close() has already restored focus to the emote button by now;
     // inserting moves it on to the field.
-    if (heart && controller?.element.isConnected) controller.insertFromPicker(heart)
+    if (emote && controller?.element.isConnected) controller.insertFromPicker(emote)
   }
 
   // Closed without choosing: Escape, the close button, or the backdrop.
@@ -694,7 +693,7 @@ class HeartDialog {
       first.focus()
     } else if (event.key === "Enter") {
       event.preventDefault()
-      this.choose(first.dataset.heart)
+      this.choose(first.dataset.emote)
     }
   }
 

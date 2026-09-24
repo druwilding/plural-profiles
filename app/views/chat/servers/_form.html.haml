@@ -9,15 +9,15 @@
 
   .form-group
     = form.label :name
-    = heart_field(form, :name, required: true, "data-1p-ignore": "true")
+    = emote_field(form, :name, required: true, "data-1p-ignore": "true")
 
   .form-group
     = form.label :subtitle
-    = heart_field(form, :subtitle)
+    = emote_field(form, :subtitle)
 
   .form-group
     = form.label :description
-    = heart_field(form, :description)
+    = emote_field(form, :description)
 
   .form-group
     = form.label :theme_id, "Display theme"

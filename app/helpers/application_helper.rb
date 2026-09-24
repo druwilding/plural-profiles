@@ -66,7 +66,7 @@ module ApplicationHelper
     html = newlines_to_br(html)
     html = sanitize_inline_styles(html)
     html = html.gsub("</details>", '<button type="button" class="details-close" aria-label="Close details">(click to close)</button></details>')
-    html = replace_heart_emojis(html)
+    html = replace_emote_codes(html)
     html.html_safe
   end
 
@@ -77,7 +77,7 @@ module ApplicationHelper
     attrs = safe_list_class.allowed_attributes + INLINE_EXTRA_ATTRS
     html = convert_spoilers_outside_code(text)
     html = sanitize(html, tags: tags, attributes: attrs)
-    html = replace_heart_emojis(html)
+    html = replace_emote_codes(html)
     html.html_safe
   end
 
@@ -88,34 +88,34 @@ module ApplicationHelper
     strip_tags(text)
   end
 
-  # Every pickable emote as JSON for heart_input_controller.js, in display
+  # Every pickable emote as JSON for emote_input_controller.js, in display
   # order, rendered once per page (at the end of the body) so the registry
   # stays the single source of truth.
-  def heart_emojis_json_tag
+  def emote_list_json_tag
     registry = EmoteRegistry.current
-    hearts = registry.pickable.map do |emote|
+    emotes = registry.pickable.map do |emote|
       { name: emote.name, label: emote.label, src: emote.src, code: ":#{emote.code}:", group: registry.group(emote.group_id)&.name }
     end
-    tag.script(hearts.to_json.html_safe, type: "application/json", id: "heart-emojis")
+    tag.script(emotes.to_json.html_safe, type: "application/json", id: "emote-list")
   end
 
-  # A text field (or textarea, with as: :text_area) that accepts heart codes,
-  # wrapped so heart_input_controller.js can add the heart picker button and
+  # A text field (or textarea, with as: :text_area) that accepts emote codes,
+  # wrapped so emote_input_controller.js can add the emote picker button and
   # the :ab autocomplete menu. The field keeps its normal id, so form.label
   # still points at it. `data` is merged onto the field, not the wrapper.
   # menu_placement: "above" opens the autocomplete menu upwards, for fields
   # pinned to the bottom of the screen (the chat composer).
-  def heart_field(form, method, as: :text_field, menu_placement: "below", **options)
-    field_data = (options.delete(:data) || {}).merge("heart-input-target": "field")
-    modifier = as == :text_area ? "heart-input--area" : "heart-input--line"
+  def emote_field(form, method, as: :text_field, menu_placement: "below", **options)
+    field_data = (options.delete(:data) || {}).merge("emote-input-target": "field")
+    modifier = as == :text_area ? "emote-input--area" : "emote-input--line"
 
-    tag.div(class: [ "heart-input", modifier ], data: { controller: "heart-input", "heart-input-placement-value": menu_placement }) do
+    tag.div(class: [ "emote-input", modifier ], data: { controller: "emote-input", "emote-input-placement-value": menu_placement }) do
       safe_join([
         form.public_send(as, method, **options, data: field_data),
         # Hidden until the controller connects, so there's no dead button without JS.
-        tag.button(heart_button_icon, type: "button", class: "heart-input__button", hidden: true,
-          title: "Insert a heart", "aria-label": "Insert a heart", "aria-haspopup": "dialog",
-          data: { action: "heart-input#openPicker", "heart-input-target": "button" })
+        tag.button(emote_button_icon, type: "button", class: "emote-input__button", hidden: true,
+          title: "Insert an emote", "aria-label": "Insert an emote", "aria-haspopup": "dialog",
+          data: { action: "emote-input#openPicker", "emote-input-target": "button" })
       ])
     end
   end
@@ -185,10 +185,10 @@ module ApplicationHelper
 
   # An outlined heart that follows the text colour, so it suits every theme
   # and forced-colors mode (a coloured heart image would clash with some).
-  def heart_button_icon
+  def emote_button_icon
     tag.svg(
       tag.path(d: "M12 20.5s-7.5-4.6-9.4-9.3C1.2 7.6 3.4 4 6.9 4c2.1 0 3.8 1.2 5.1 3 1.3-1.8 3-3 5.1-3 3.5 0 5.7 3.6 4.3 7.2-1.9 4.7-9.4 9.3-9.4 9.3z"),
-      class: "heart-input__icon", viewBox: "0 0 24 24", width: 18, height: 18, fill: "none",
+      class: "emote-input__icon", viewBox: "0 0 24 24", width: 18, height: 18, fill: "none",
       stroke: "currentColor", "stroke-width": 2, "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"
     )
   end
@@ -229,7 +229,7 @@ module ApplicationHelper
         .gsub(BLOCK_TAG_LEADING_NEWLINE_RE, "")
   end
 
-  def replace_heart_emojis(html)
+  def replace_emote_codes(html)
     # Only replace emotes in text nodes — skip <code>...</code> blocks and HTML tags
     # so that emote codes inside attributes (e.g. title=":11_aqua_heart:") are preserved.
     # Entities are skipped too, so the ; ending one (&amp;) can't open an emote code.

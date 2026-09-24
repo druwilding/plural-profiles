@@ -50,8 +50,8 @@ export default class extends Controller {
 
   submitOnEnter(event) {
     if (event.key !== "Enter" || event.shiftKey) return
-    // Already handled — the heart autocomplete menu (heart_input_controller.js)
-    // claims Enter to insert the highlighted heart while it's open.
+    // Already handled — the emote autocomplete menu (emote_input_controller.js)
+    // claims Enter to insert the highlighted emote while it's open.
     if (event.defaultPrevented) return
 
     event.preventDefault()

@@ -111,7 +111,7 @@ class Our::GroupsControllerTest < ActionDispatch::IntegrationTest
   test "the group form has an emotes field with the emote picker" do
     sign_in_as @user
     get edit_our_group_path(groups(:friends))
-    assert_select ".heart-input input[name='group[emotes]']"
+    assert_select ".emote-input input[name='group[emotes]']"
     assert_select "label[for=group_emotes]", text: "Emotes"
   end
 
