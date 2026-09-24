@@ -4,8 +4,10 @@
 
 # The original hearts, as the site-wide "Hearts" emote group, for a fresh
 # database: db:setup and db:prepare load the schema rather than running
-# migrations, so ImportHeartsAsEmotes never runs there. Skipped once any
-# emotes exist, so it never brings back hearts an admin has deleted.
+# migrations, so ImportHeartsAsEmotes never runs there. Skipped while any
+# emotes exist, so it doesn't bring back hearts an admin has deleted. (If every
+# emote is deleted, seeding imports the hearts again; deploys only migrate, so
+# that only happens if someone runs db:seed by hand.)
 if Emote.none?
   hearts = EmoteGroup.site_wide.find_or_create_by!(name: "Hearts") do |group|
     group.position = 0
