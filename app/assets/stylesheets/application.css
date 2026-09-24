@@ -2867,6 +2867,11 @@ h1 .emote-inline {
   vertical-align: -0.1em;
 }
 
+/* An emote on a line of its own is shown larger (see replace_emote_codes) */
+.emote-inline--large {
+  vertical-align: middle;
+}
+
 /* ── Admin ─────────────────────────────── */
 
 .admin-breadcrumbs {

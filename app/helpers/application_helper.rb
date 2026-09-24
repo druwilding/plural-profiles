@@ -55,6 +55,18 @@ module ApplicationHelper
     Regexp::IGNORECASE
   ).freeze
 
+  # What replace_emote_codes skips over when looking for emote codes: <code>
+  # blocks, HTML tags and entities. Captured so split keeps them.
+  EMOTE_SKIP_PATTERN = /(#{CODE_BLOCK_PATTERN}|<[^>]*>|&(?:[a-z][a-z0-9]*|#\d+|#x\h+);)/mi
+
+  # Tags that start a new line, for finding emotes on a line of their own.
+  # Includes button for the block-level "(click to close)" added to <details>.
+  LINE_BREAK_TAG_PATTERN = %r{\A</?(?:br|hr|p|div|pre|address|blockquote|ul|ol|li|dl|dt|dd|h[1-6]|details|summary|button|#{BLOCK_TAG_NAMES})\b}i
+
+  # Emotes on a line of their own are shown large, unless there are more
+  # than this many of them (as Discord does).
+  LARGE_EMOTE_LIMIT = 30
+
   def formatted_description(text)
     text = text.gsub(/\r\n?/, "\n")
     safe_list_class = self.class.safe_list_sanitizer.class
@@ -66,18 +78,20 @@ module ApplicationHelper
     html = newlines_to_br(html)
     html = sanitize_inline_styles(html)
     html = html.gsub("</details>", '<button type="button" class="details-close" aria-label="Close details">(click to close)</button></details>')
-    html = replace_emote_codes(html)
+    html = replace_emote_codes(html, large_emotes: true)
     html.html_safe
   end
 
-  def formatted_inline(text)
+  # Single-line fields leave large_emotes off, since every emote in them would
+  # otherwise be on a line of its own. Chat messages turn it on.
+  def formatted_inline(text, large_emotes: false)
     return "".html_safe if text.blank?
     safe_list_class = self.class.safe_list_sanitizer.class
     tags = safe_list_class.allowed_tags + INLINE_EXTRA_TAGS
     attrs = safe_list_class.allowed_attributes + INLINE_EXTRA_ATTRS
     html = convert_spoilers_outside_code(text)
     html = sanitize(html, tags: tags, attributes: attrs)
-    html = replace_emote_codes(html)
+    html = replace_emote_codes(html, large_emotes: large_emotes)
     html.html_safe
   end
 
@@ -229,22 +243,68 @@ module ApplicationHelper
         .gsub(BLOCK_TAG_LEADING_NEWLINE_RE, "")
   end
 
-  def replace_emote_codes(html)
+  def replace_emote_codes(html, large_emotes: false)
     # Only replace emotes in text nodes — skip <code>...</code> blocks and HTML tags
     # so that emote codes inside attributes (e.g. title=":11_aqua_heart:") are preserved.
     # Entities are skipped too, so the ; ending one (&amp;) can't open an emote code.
-    skip_pattern = /#{CODE_BLOCK_PATTERN}|<[^>]*>|&(?:[a-z][a-z0-9]*|#\d+|#x\h+);/mi
-    parts = html.split(skip_pattern)
-    non_text = html.scan(skip_pattern)
-
     registry = EmoteRegistry.current
-    result = parts.map do |part|
-      registry.replace_codes(part) do |emote|
-        '<img src="%s" title="%s" alt="%s" class="emote-inline" width="24" height="24" loading="lazy">' % [ emote.src, emote.label, emote.label ]
+    lines = emote_pieces(html).slice_after { |_, kind| kind == :break }
+    lines.map do |line|
+      large = large_emotes && emote_only_line?(line, registry)
+      line.map do |piece, kind|
+        next piece unless kind == :text
+        registry.replace_codes(piece) { |emote| emote_image_tag(emote, large: large) }
+      end.join
+    end.join
+  end
+
+  # Splits HTML into [string, kind] pairs:
+  #   :text    to look for emote codes in
+  #   :break   a newline or tag that starts a new line
+  #   :content code, images and entities, which count as something else on the line
+  #   :markup  tags that don't (b, span, ...) and non-breaking spaces
+  def emote_pieces(html)
+    html.split(EMOTE_SKIP_PATTERN).each_with_index.flat_map do |token, index|
+      if index.even?
+        token.split(/(\n)/).reject(&:empty?).map { |text| [ text, text == "\n" ? :break : :text ] }
+      else
+        [ [ token, emote_piece_kind(token) ] ]
       end
     end
-    non_text.each_with_index { |segment, i| result.insert((i * 2) + 1, segment) }
-    result.join
+  end
+
+  def emote_piece_kind(token)
+    case token
+    when LINE_BREAK_TAG_PATTERN then :break
+    when /\A<(?:code|img)\b/i then :content
+    when /\A&(?:nbsp|#160|#xa0);\z/i then :markup
+    when /\A&/ then :content
+    else :markup
+    end
+  end
+
+  # Whether a line holds emotes and nothing else but whitespace and markup.
+  def emote_only_line?(line, registry)
+    count = 0
+    only_emotes = line.all? do |piece, kind|
+      case kind
+      when :content then false
+      when :text
+        rest = registry.replace_codes(piece) do
+          count += 1
+          ""
+        end
+        rest.match?(/\A[[:space:]]*\z/)
+      else true
+      end
+    end
+    only_emotes && count.between?(1, LARGE_EMOTE_LIMIT)
+  end
+
+  def emote_image_tag(emote, large: false)
+    size = large ? 48 : 24
+    css_class = large ? "emote-inline emote-inline--large" : "emote-inline"
+    '<img src="%s" title="%s" alt="%s" class="%s" width="%d" height="%d" loading="lazy">' % [ emote.src, emote.label, emote.label, css_class, size, size ]
   end
 
   def convert_spoilers_outside_code(text)

@@ -35,7 +35,7 @@
     - if postable&.chat_subtitle&.present?
       %span.chat-message__subtitle= formatted_inline(postable.chat_subtitle)
 
-    .chat-message__body{style: "white-space: pre-wrap"}= formatted_inline(message.body)
+    .chat-message__body{style: "white-space: pre-wrap"}= formatted_inline(message.body, large_emotes: true)
 
   - if postable
     %turbo-frame.mini-profile-popover{id: frame_id, popover: "auto", data: {"mini-profile-popover-target": "frame panel", action: "turbo:frame-load->mini-profile-popover#reposition"}}
