@@ -8,10 +8,10 @@
 # in one process reach every other process on its next request. The cache store
 # is per-process (memory_store), so a Rails.cache counter wouldn't do that.
 class EmoteRegistry
-  Entry = Data.define(:id, :name, :code, :label, :src, :group_id, :plain_text, :archived) do
+  Entry = Data.define(:id, :name, :code, :label, :src, :group_id, :archived) do
     alias_method :archived?, :archived
   end
-  Group = Data.define(:id, :name, :plain_text, :position)
+  Group = Data.define(:id, :name, :position)
 
   # A typed code: a delimiter (: or ;) and a name, with the closing delimiter
   # only looked ahead at. See #replace_codes for why it isn't consumed here.
@@ -55,7 +55,7 @@ class EmoteRegistry
 
     def build(version)
       groups = EmoteGroup.site_wide.ordered.map do |group|
-        Group.new(id: group.id, name: group.name, plain_text: group.plain_text, position: group.position)
+        Group.new(id: group.id, name: group.name, position: group.position)
       end
       group_order = groups.each_with_index.to_h { |group, index| [ group.id, index ] }
 
@@ -137,7 +137,6 @@ class EmoteRegistry
   end
 
   def entry_for(emote)
-    group = @groups_by_id[emote.emote_group_id]
     Entry.new(
       id: emote.id,
       name: emote.name,
@@ -145,7 +144,6 @@ class EmoteRegistry
       label: emote.code.tr("_", " "),
       src: emote.display_image_path,
       group_id: emote.emote_group_id,
-      plain_text: group&.plain_text,
       archived: emote.archived?
     )
   end

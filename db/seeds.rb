@@ -9,10 +9,7 @@
 # emote is deleted, seeding imports the hearts again; deploys only migrate, so
 # that only happens if someone runs db:seed by hand.)
 if Emote.none?
-  hearts = EmoteGroup.site_wide.find_or_create_by!(name: "Hearts") do |group|
-    group.position = 0
-    group.plain_text = "♥"
-  end
+  hearts = EmoteGroup.site_wide.find_or_create_by!(name: "Hearts") { |group| group.position = 0 }
 
   Dir[Rails.root.join("db/emotes/hearts/*.webp")].sort.each do |path|
     name = File.basename(path, ".webp")

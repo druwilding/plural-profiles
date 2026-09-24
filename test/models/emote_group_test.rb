@@ -1,19 +1,14 @@
 require "test_helper"
 
 class EmoteGroupTest < ActiveSupport::TestCase
-  test "requires a plain text symbol" do
-    group = EmoteGroup.new(name: "Other", plain_text: " ")
+  test "requires a name" do
+    group = EmoteGroup.new(name: " ")
     assert_not group.valid?
-    assert_includes group.errors[:plain_text], "can't be blank"
-  end
-
-  test "plain text counts a multi-codepoint emoji as one character" do
-    assert EmoteGroup.new(name: "Other", plain_text: "🏳️‍🌈").valid?
-    assert_not EmoteGroup.new(name: "Other", plain_text: "♥♥♥♥♥").valid?
+    assert_includes group.errors[:name], "can't be blank"
   end
 
   test "site-wide group names are unique" do
-    group = EmoteGroup.new(name: "hearts", plain_text: "♥")
+    group = EmoteGroup.new(name: "hearts")
     assert_not group.valid?
     assert_includes group.errors[:name], "has already been taken"
   end

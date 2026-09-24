@@ -35,7 +35,7 @@ v1 has site-wide emotes only. The schema and code are shaped so that **chat-serv
 | Delimiters            | `:x:` and `;x;` (mixed too) for **all** emotes, not only hearts                                                                                                                                                          |
 | Profile field label   | "Emotes". New columns `emotes`, `mini_profile_emotes`, `mini_profile_emotes_inherited`                                                                                                                                   |
 | Limit on emotes       | None                                                                                                                                                                                                                     |
-| Plain-text stand-in   | Every group **must** set a `plain_text` symbol (e.g. ♥ for Hearts)                                                                                                                                                       |
+| Plain-text stand-in   | An emote's name in brackets (its code with spaces, e.g. "[aqua heart]")                                                                                                                                              |
 | Activity log          | Not needed                                                                                                                                                                                                               |
 
 ---
@@ -122,7 +122,7 @@ False positives need an exact emote match. `10:100:` would render a 💯 only if
 
 `plain_field` is used for page titles and confirm dialogs. Today it replaces every pattern match with `♥`. With a generic pattern, that would turn `:foo:` into `♥`. New behaviour:
 
-- **Known emotes** become their group's `plain_text` symbol. The Hearts group has `♥`. Every group has one, because the field is required.
+- **Known emotes** become their name in brackets (the `label`, i.e. the code with spaces: `[aqua heart]`), so they read as emotes rather than part of the name.
 - **Unknown codes** are left as they are.
 
 ---
@@ -133,7 +133,6 @@ False positives need an exact emote match. `10:100:` would render a 💯 only if
 create_table :emote_groups do |t|
   t.string  :name, null: false                 # "Hearts"
   t.integer :position, null: false, default: 0 # group order in pickers and on the admin page
-  t.string  :plain_text, null: false           # "♥": plain-text stand-in for page titles
   t.references :owner, polymorphic: true       # NULL = site-wide. Future: Chat::Server, User
   t.timestamps
 end
@@ -214,7 +213,7 @@ SVG support on the server (librsvg) isn't needed: SVGs are converted in the brow
 
 A **data migration** (`ImportHeartsAsEmotes`), so it runs automatically in `postdeploy` and exactly once per environment. A rake task could be forgotten, and one re-run on every deploy would bring back hearts an admin had since deleted. It:
 
-1. Create the group **Hearts** (`position: 0`, `plain_text: "♥"`).
+1. Create the group **Hearts** (`position: 0`).
 2. For each entry in the current `HeartEmoji::ALL` order, create an emote with:
    - `name`: `"%02d_%s" % [index + 1, heart]`, giving `01_dewdrop_heart`, `02_spring_heart`, `03_hunter_heart`, and so on. That matches the admin's own naming convention.
    - `code`: the current name, e.g. `dewdrop_heart`, so everything already stored keeps resolving without aliases.
@@ -264,7 +263,7 @@ Add an "Emotes" link in the account/sidebar area, visible only to admins, next t
   A `preserve-focus` controller puts focus back on the element with the same id after the re-render. Enter keeps focus in the renamed field, which has moved with its row. Tab keeps it on whatever field the admin moved to.
 - A filter box at the top narrows the rows client-side by name, code or alias.
 - An **Archived** section at the bottom, collapsed, has Restore and **Delete permanently** buttons. The delete button uses `turbo_confirm` to spell out the consequence: codes in text will show as plain text again, and the emote is removed from profiles.
-- A group management card lets admins add, rename or reorder groups (move up/down) and set `plain_text`. These use ordinary Save buttons and redirects rather than auto-submit, since group edits are rare. The symbol is required and limited to a few characters (validated as 1–4 grapheme clusters, so a single emoji or ♥ fits). A group can only be deleted when it's empty.
+- A group management card lets admins add, rename or reorder groups (move up/down). These use ordinary Save buttons and redirects rather than auto-submit, since group edits are rare. A group can only be deleted when it's empty.
 
 ### Upload and bulk upload (one flow)
 

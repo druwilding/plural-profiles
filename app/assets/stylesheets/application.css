@@ -2974,10 +2974,6 @@ h1 .emote-inline {
   font-size: 0.95rem;
 }
 
-.emote-groups__field--symbol input[type="text"] {
-  width: 5rem;
-}
-
 .emote-groups__actions {
   display: flex;
   flex-wrap: wrap;

@@ -84,7 +84,7 @@ module ApplicationHelper
   def plain_field(text)
     return "" if text.blank?
     text = text.gsub(SPOILER_PLAIN_PATTERN, "▓▓▓▓")
-    text = EmoteRegistry.current.replace_codes(text, &:plain_text)
+    text = EmoteRegistry.current.replace_codes(text) { |emote| "[#{emote.label}]" }
     strip_tags(text)
   end
 

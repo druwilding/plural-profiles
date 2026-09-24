@@ -8,14 +8,14 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
 
   test "non-admins are redirected" do
     sign_in_as users(:two)
-    post admin_emote_groups_path, params: { emote_group: { name: "Other", plain_text: "★" } }
+    post admin_emote_groups_path, params: { emote_group: { name: "Other" } }
 
     assert_redirected_to root_path
     assert_not EmoteGroup.exists?(name: "Other")
   end
 
   test "index lists groups in order with their emote counts" do
-    EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    EmoteGroup.create!(name: "Other", position: 1)
     sign_in_as @admin
     get admin_emote_groups_path
 
@@ -33,7 +33,7 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
 
   test "create adds a group at the end" do
     sign_in_as @admin
-    post admin_emote_groups_path, params: { emote_group: { name: "Other", plain_text: "★" } }
+    post admin_emote_groups_path, params: { emote_group: { name: "Other" } }
 
     assert_redirected_to admin_emote_groups_path
     group = EmoteGroup.find_by!(name: "Other")
@@ -43,23 +43,21 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
 
   test "create reports validation errors" do
     sign_in_as @admin
-    post admin_emote_groups_path, params: { emote_group: { name: "Other", plain_text: "" } }
+    post admin_emote_groups_path, params: { emote_group: { name: "" } }
 
     assert_redirected_to admin_emote_groups_path
-    assert_match "Plain text can't be blank", flash[:alert]
+    assert_match "Name can't be blank", flash[:alert]
   end
 
-  test "update renames a group and changes its symbol" do
+  test "update renames a group" do
     sign_in_as @admin
-    patch admin_emote_group_path(@hearts), params: { emote_group: { name: "Love", plain_text: "❤" } }
+    patch admin_emote_group_path(@hearts), params: { emote_group: { name: "Love" } }
 
-    @hearts.reload
-    assert_equal "Love", @hearts.name
-    assert_equal "❤", @hearts.plain_text
+    assert_equal "Love", @hearts.reload.name
   end
 
   test "move swaps a group with its neighbour and renumbers positions" do
-    other = EmoteGroup.create!(name: "Other", position: 7, plain_text: "★")
+    other = EmoteGroup.create!(name: "Other", position: 7)
     sign_in_as @admin
     patch move_admin_emote_group_path(other, direction: "up")
 
@@ -81,7 +79,7 @@ class Admin::EmoteGroupsControllerTest < ActionDispatch::IntegrationTest
     assert EmoteGroup.exists?(@hearts.id)
     assert_match "Only an empty group", flash[:alert]
 
-    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    other = EmoteGroup.create!(name: "Other", position: 1)
     delete admin_emote_group_path(other)
     assert_not EmoteGroup.exists?(other.id)
   end

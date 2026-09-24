@@ -42,7 +42,7 @@ class EmoteInputTest < ApplicationSystemTestCase
   end
 
   test "the picker shows every emote by group, with full names, and arrows move between groups" do
-    other = EmoteGroup.create!(name: "Other", position: 1, plain_text: "★")
+    other = EmoteGroup.create!(name: "Other", position: 1)
     hundred = Emote.new(emote_group: other, name: "100")
     hundred.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
     hundred.save!
