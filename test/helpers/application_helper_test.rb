@@ -472,6 +472,18 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, "emote-inline--large"
   end
 
+  test "treats other block-level tags as line breaks" do
+    [ "<hr>", "<pre>", "<address>", "<dl><dt>", "<dd>" ].each do |tag|
+      result = formatted_description("text#{tag}:40_red_heart:")
+      assert_includes result, "emote-inline--large", "expected #{tag} to start a new line"
+    end
+  end
+
+  test "shows an emote at the end of a details block large" do
+    result = formatted_description("<details><summary>hi</summary>:40_red_heart:</details>")
+    assert_includes result, "emote-inline--large"
+  end
+
   test "keeps an emote next to inline code or an entity small" do
     assert_not_includes formatted_description(":40_red_heart: <code>x</code>"), "emote-inline--large"
     assert_not_includes formatted_description(":40_red_heart: &amp;"), "emote-inline--large"

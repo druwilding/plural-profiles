@@ -60,7 +60,8 @@ module ApplicationHelper
   EMOTE_SKIP_PATTERN = /(#{CODE_BLOCK_PATTERN}|<[^>]*>|&(?:[a-z][a-z0-9]*|#\d+|#x\h+);)/mi
 
   # Tags that start a new line, for finding emotes on a line of their own.
-  LINE_BREAK_TAG_PATTERN = %r{\A</?(?:br|p|div|li|ul|ol|h[1-6]|blockquote|details|summary|#{BLOCK_TAG_NAMES})\b}i
+  # Includes button for the block-level "(click to close)" added to <details>.
+  LINE_BREAK_TAG_PATTERN = %r{\A</?(?:br|hr|p|div|pre|address|blockquote|ul|ol|li|dl|dt|dd|h[1-6]|details|summary|button|#{BLOCK_TAG_NAMES})\b}i
 
   # Emotes on a line of their own are shown large, unless there are more
   # than this many of them (as Discord does).
