@@ -86,4 +86,19 @@ class AdminEmotesTest < ApplicationSystemTestCase
     assert_includes row_names, "36_red_heart"
     assert_not red.reload.archived?
   end
+
+  test "a collapsed group stays collapsed when the list re-renders" do
+    find("a[aria-label='Archive 36_red_heart']").click
+    assert_selector "#emote-status", text: "Archived 36_red_heart."
+
+    find("summary", text: "Hearts").click
+    assert_selector "details.emote-section:not([open])", text: "Hearts"
+
+    find("summary", text: "Archived").click
+    within(".emote-section--archived") { find("a[aria-label='Restore 36_red_heart']").click }
+
+    assert_selector "#emote-status", text: "Restored 36_red_heart."
+    assert_selector "details.emote-section:not([open])", text: "Hearts"
+    assert_no_selector "input[name='emote[name]'][value='36_red_heart']"
+  end
 end
