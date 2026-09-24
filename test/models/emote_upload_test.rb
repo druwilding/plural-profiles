@@ -26,7 +26,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
   test "new files are imported straight away, named from the filename" do
     outcome = process_files(upload("07 Party.png"), upload("100.webp", webp_bytes, "image/webp"))
 
-    assert_equal EmoteUpload::Result.new(added: 2, replaced: 0, skipped: 0), outcome.result
+    assert_equal EmoteUpload::Result.new(added: 2, replaced: 0, skipped: 0, group_ids: [ emote_groups(:hearts).id ]), outcome.result
     assert_empty outcome.pending
     party = Emote.find_by!(name: "07_party")
     assert_equal "party", party.code
@@ -107,7 +107,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
 
     result, = EmoteUpload.resolve([ decision(row) ])
 
-    assert_equal EmoteUpload::Result.new(added: 0, replaced: 1, skipped: 0), result
+    assert_equal EmoteUpload::Result.new(added: 0, replaced: 1, skipped: 0, group_ids: [ emote_groups(:hearts).id ]), result
     assert_equal row.blob, emotes(:red_heart).reload.image.blob
     assert_not_equal old_blob, emotes(:red_heart).image.blob
   end

@@ -1,7 +1,7 @@
 #emote-sections
   - @groups.each do |group|
     - emotes = @emotes_by_group.fetch(group.id, [])
-    %details.emote-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-#{dom_id(group)}" }}
+    %details.emote-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-#{dom_id(group)}", "details-persist-force-open-value": @opened_group_ids.to_a.include?(group.id), "emote-filter-target": "section" }}
       %summary.emote-section__heading
         = group.name
         %span.emote-section__count= "(#{emotes.size})"
@@ -13,7 +13,7 @@
         %p.emote-section__empty No emotes in this group.
 
   - if @archived_emotes.any?
-    %details.emote-section.emote-section--archived{data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-archived" }}
+    %details.emote-section.emote-section--archived{data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-archived", "emote-filter-target": "section" }}
       %summary.emote-section__heading
         Archived
         %span.emote-section__count= "(#{@archived_emotes.size})"
