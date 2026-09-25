@@ -2938,7 +2938,7 @@ h1 .emote-inline {
   min-height: 1.4em;
 }
 
-.emote-groups {
+.emote-sets {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2947,7 +2947,7 @@ h1 .emote-inline {
   gap: 0.75rem;
 }
 
-.emote-groups__group {
+.emote-sets__set {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -2957,36 +2957,36 @@ h1 .emote-inline {
   border-bottom: 1px solid var(--input-border);
 }
 
-.emote-groups__group:last-child {
+.emote-sets__set:last-child {
   padding-bottom: 0;
   border-bottom: none;
 }
 
-.emote-groups__form {
+.emote-sets__form {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.5rem;
 }
 
-.emote-groups__field label {
+.emote-sets__field label {
   margin-bottom: 0.2rem;
   font-size: 0.8rem;
 }
 
-.emote-groups__field input[type="text"] {
+.emote-sets__field input[type="text"] {
   padding: 0.35rem 0.5rem;
   font-size: 0.95rem;
 }
 
-.emote-groups__actions {
+.emote-sets__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
 
-.emote-groups__count {
+.emote-sets__count {
   font-size: 0.85rem;
   opacity: 0.85;
 }
@@ -3061,7 +3061,7 @@ summary.emote-section__heading {
   flex-grow: 1.3;
 }
 
-.emote-row__field--group {
+.emote-row__field--set {
   flex: 0.7 1 8rem;
 }
 
@@ -6012,7 +6012,7 @@ button.profile-picker__option {
   background-color: color-mix(in srgb, var(--pane-text) 10%, transparent);
 }
 
-/* The scrolling area: one section per emote group (or one of search results),
+/* The scrolling area: one section per emote set (or one of search results),
    each with its own grid. */
 .emote-dialog__grid {
   flex: 1;
@@ -6021,17 +6021,17 @@ button.profile-picker__option {
   padding: 3px;
 }
 
-.emote-dialog__group + .emote-dialog__group {
+.emote-dialog__set + .emote-dialog__set {
   margin-top: 1rem;
 }
 
-.emote-dialog__group-title {
+.emote-dialog__set-title {
   margin: 0 0 0.35rem;
   font-size: 0.95rem;
   color: var(--pane-title-text);
 }
 
-.emote-dialog__group-grid {
+.emote-dialog__set-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   gap: 0.35rem;
@@ -6078,7 +6078,7 @@ button.profile-picker__option {
 }
 
 .chat-body .emote-dialog__title,
-.chat-body .emote-dialog__group-title,
+.chat-body .emote-dialog__set-title,
 .chat-body .emote-dialog__close,
 .chat-body .emote-dialog__emote {
   color: var(--chat-pane-text);

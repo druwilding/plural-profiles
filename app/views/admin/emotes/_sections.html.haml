@@ -1,16 +1,16 @@
 #emote-sections
-  - @groups.each do |group|
-    - emotes = @emotes_by_group.fetch(group.id, [])
-    %details.emote-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-#{dom_id(group)}", "details-persist-force-open-value": @opened_group_ids.to_a.include?(group.id), "emote-filter-target": "section" }}
+  - @emote_sets.each do |emote_set|
+    - emotes = @emotes_by_set.fetch(emote_set.id, [])
+    %details.emote-section{open: true, data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-#{dom_id(emote_set)}", "details-persist-force-open-value": @opened_emote_set_ids.to_a.include?(emote_set.id), "emote-filter-target": "section" }}
       %summary.emote-section__heading
-        = group.name
+        = emote_set.name
         %span.emote-section__count= "(#{emotes.size})"
       - if emotes.any?
         %ul.emote-list
           - emotes.each do |emote|
-            = render "admin/emotes/emote", emote: emote, groups: @groups
+            = render "admin/emotes/emote", emote: emote, emote_sets: @emote_sets
       - else
-        %p.emote-section__empty No emotes in this group.
+        %p.emote-section__empty No emotes in this set.
 
   - if @archived_emotes.any?
     %details.emote-section.emote-section--archived{data: { controller: "details-persist", "details-persist-key-value": "admin-emotes-archived", "emote-filter-target": "section" }}

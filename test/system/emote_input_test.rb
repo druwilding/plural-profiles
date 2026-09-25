@@ -41,9 +41,9 @@ class EmoteInputTest < ApplicationSystemTestCase
     assert_no_selector "#profile_labels_text + .emote-input__button"
   end
 
-  test "the picker shows every emote by group, with full names, and arrows move between groups" do
-    other = EmoteGroup.create!(name: "Other", position: 1)
-    hundred = Emote.new(emote_group: other, name: "100")
+  test "the picker shows every emote by set, with full names, and arrows move between sets" do
+    other = EmoteSet.create!(name: "Other", position: 1)
+    hundred = Emote.new(emote_set: other, name: "100")
     hundred.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
     hundred.save!
 
@@ -53,18 +53,18 @@ class EmoteInputTest < ApplicationSystemTestCase
     within("dialog.emote-dialog[open]") do
       assert_selector "h2", text: "Choose an emote"
       assert_equal "Search emotes…", find(".emote-dialog__search")[:placeholder]
-      assert_equal [ "Hearts", "Other" ], all(".emote-dialog__group-title").map(&:text)
+      assert_equal [ "Hearts", "Other" ], all(".emote-dialog__set-title").map(&:text)
       assert_selector ".emote-dialog__emote-name", text: "spring heart"
 
       find("button[aria-label='sunshine heart']").send_keys(:down)
       assert_equal "100", evaluate_script("document.activeElement.getAttribute('aria-label')")
       find("button[aria-label='100']").send_keys(:up)
-      assert_equal "Hearts", evaluate_script("document.activeElement.closest('.emote-dialog__group').querySelector('h3').textContent")
+      assert_equal "Hearts", evaluate_script("document.activeElement.closest('.emote-dialog__set').querySelector('h3').textContent")
       find("button[aria-label='100']").send_keys(:left)
       assert_equal "sunshine heart", evaluate_script("document.activeElement.getAttribute('aria-label')")
 
       find(".emote-dialog__search").fill_in with: "sun"
-      assert_no_selector ".emote-dialog__group-title"
+      assert_no_selector ".emote-dialog__set-title"
       assert_equal [ "sunlit heart", "sunshine heart" ], all(".emote-dialog__emote").map { |button| button[:title] }
     end
   end
@@ -85,8 +85,8 @@ class EmoteInputTest < ApplicationSystemTestCase
     assert_equal [ "red heart", "aqua heart", "red heart" ], all(".pronouns__emotes img").map { |img| img[:alt] }
   end
 
-  def add_emote(name, group: emote_groups(:hearts))
-    emote = Emote.new(emote_group: group, name: name)
+  def add_emote(name, emote_set: emote_sets(:hearts))
+    emote = Emote.new(emote_set: emote_set, name: name)
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
     emote.save!
   end
@@ -309,7 +309,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     assert_selector "#profile_subtitle:focus"
   end
 
-  test "suggestions keep the heart list order within each group" do
+  test "suggestions keep the heart list order within each set" do
     visit edit_our_profile_path(@profile)
     field = find_field("Subtitle")
     field.fill_in with: ""

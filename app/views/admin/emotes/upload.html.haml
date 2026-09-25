@@ -25,7 +25,7 @@
       %p.emote-upload__status{role: "status", data: { "emote-upload-target": "status" }}
 
     .form-group
-      = form.label :emote_group_id, "Add them to this group"
-      = form.select :emote_group_id, @groups.map { |group| [ group.name, group.id ] }
+      = form.label :emote_set_id, "Add them to this set"
+      = form.select :emote_set_id, @emote_sets.map { |emote_set| [ emote_set.name, emote_set.id ] }
 
     = form.submit "Upload", class: "btn", data: { "emote-upload-target": "submit" }

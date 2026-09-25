@@ -7,7 +7,7 @@
     %h1 Emotes
   .admin-emotes__intro
     %p
-      An emote's name sets its order in its group: #{tag.code("02-spring-heart")} comes before #{tag.code("03-hunter-heart")}.
+      An emote's name sets its order in its set: #{tag.code("02-spring-heart")} comes before #{tag.code("03-hunter-heart")}.
       The code people type drops that number, so #{tag.code("02-spring-heart")} is typed as #{tag.code(":spring-heart:")}
       (typing the full name works too).
     %p
@@ -15,7 +15,7 @@
       Archiving hides an emote from pickers but keeps it showing wherever it's already used.
   .card__actions
     = link_to "Upload emotes", upload_admin_emotes_path, class: "btn"
-    = link_to "Manage groups", admin_emote_groups_path, class: "btn btn--secondary"
+    = link_to "Manage sets", admin_emote_sets_path, class: "btn btn--secondary"
 
 %section.card{"aria-labelledby": "emote-list-heading", data: { controller: "emote-filter preserve-focus" }}
   .card__header

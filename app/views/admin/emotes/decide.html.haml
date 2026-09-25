@@ -16,7 +16,7 @@
   %section.card{"aria-label": "Files to decide on"}
     %ol.upload-review
       - @rows.each_with_index do |row, index|
-        = render "admin/emotes/decision", row: row, index: index, groups: @groups
+        = render "admin/emotes/decision", row: row, index: index, emote_sets: @emote_sets
     .card__actions
       = form.submit "Save", class: "btn"
       = link_to "Cancel", admin_emotes_path, class: "btn btn--secondary"

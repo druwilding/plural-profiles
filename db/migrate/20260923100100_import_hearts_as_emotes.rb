@@ -7,11 +7,16 @@
 # Each heart's code stays exactly as before (e.g. "dewdrop_heart"), so every
 # heart code already written in text or picked on a profile keeps resolving.
 # Names get a number prefix in the old display order ("01_dewdrop_heart"), the
-# naming convention admins use to order emotes.
+# naming convention admins use to order emotes. (Later migrations turn the
+# underscores into hyphens and the groups into sets.)
 #
 # This runs as a migration rather than a rake task so it happens exactly once
 # per environment: re-running an import on every deploy would bring back
 # hearts an admin had since deleted.
+#
+# It uses its own models for the tables as they were at this point, so it
+# still runs from an empty database after the app's models have moved on
+# (EmoteGroup is now EmoteSet).
 class ImportHeartsAsEmotes < ActiveRecord::Migration[8.1]
   HEARTS = %w[
     dewdrop_heart spring_heart hunter_heart woods_heart seafoam_heart
@@ -28,10 +33,29 @@ class ImportHeartsAsEmotes < ActiveRecord::Migration[8.1]
 
   GROUP_NAME = "Hearts".freeze
 
+  class EmoteGroup < ActiveRecord::Base
+    self.table_name = "emote_groups"
+    has_many :emotes, class_name: "ImportHeartsAsEmotes::Emote", foreign_key: :emote_group_id
+  end
+
+  class Emote < ActiveRecord::Base
+    self.table_name = "emotes"
+    has_one_attached :image
+
+    # Attachments are stored against the app's Emote, not this class.
+    def self.polymorphic_name
+      "Emote"
+    end
+  end
+
+  class EmoteAlias < ActiveRecord::Base
+    self.table_name = "emote_aliases"
+  end
+
   def up
     [ EmoteGroup, Emote, EmoteAlias ].each(&:reset_column_information)
 
-    group = EmoteGroup.site_wide.find_or_create_by!(name: GROUP_NAME) do |new_group|
+    group = EmoteGroup.find_or_create_by!(owner_type: nil, owner_id: nil, name: GROUP_NAME) do |new_group|
       new_group.position = 0
       new_group.plain_text = "♥"
     end
@@ -40,11 +64,9 @@ class ImportHeartsAsEmotes < ActiveRecord::Migration[8.1]
       next if Emote.exists?(code: heart) || EmoteAlias.exists?(code: heart)
 
       name = format("%02d_%s", number, heart)
-      raise "expected #{name} to derive the code #{heart}" unless Emote.default_code(name) == Emote.normalize_identifier(heart)
-
-      emote = group.emotes.new(name: name)
+      emote = group.emotes.new(name: name, code: heart)
       emote.image.attach(
-        io: File.open(Rails.root.join("db/emotes/hearts/#{Emote.normalize_identifier(name)}.webp")),
+        io: File.open(Rails.root.join("db/emotes/hearts/#{name.tr("_", "-")}.webp")),
         filename: "#{heart}.webp",
         content_type: "image/webp"
       )
@@ -53,7 +75,9 @@ class ImportHeartsAsEmotes < ActiveRecord::Migration[8.1]
   end
 
   def down
-    group = EmoteGroup.site_wide.find_by(name: GROUP_NAME)
+    [ EmoteGroup, Emote, EmoteAlias ].each(&:reset_column_information)
+
+    group = EmoteGroup.find_by(owner_type: nil, owner_id: nil, name: GROUP_NAME)
     return unless group
 
     group.emotes.where(code: HEARTS).find_each do |emote|

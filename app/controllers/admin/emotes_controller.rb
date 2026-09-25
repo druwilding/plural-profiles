@@ -1,5 +1,5 @@
-# The admin page listing every site-wide emote by group, for quick renaming,
-# moving between groups, overriding codes, removing old codes (aliases), and
+# The admin page listing every site-wide emote by set, for quick renaming,
+# moving between sets, overriding codes, removing old codes (aliases), and
 # archiving, restoring or permanently deleting emotes.
 #
 # Every change re-renders the whole list (#emote-sections) with a Turbo Stream,
@@ -10,12 +10,12 @@ class Admin::EmotesController < Admin::BaseController
 
   def index
     load_sections
-    @opened_group_ids = Array(flash[:opened_emote_groups])
+    @opened_emote_set_ids = Array(flash[:opened_emote_sets])
   end
 
-  # Upload page: pick (or drop) files and the group they go into.
+  # Upload page: pick (or drop) files and the set they go into.
   def upload
-    @groups = site_groups
+    @emote_sets = site_emote_sets
   end
 
   # Imports every file it can straight away. Files whose name is already in
@@ -26,13 +26,13 @@ class Admin::EmotesController < Admin::BaseController
       return
     end
 
-    outcome = EmoteUpload.process(params[:files], group_id: params[:emote_group_id])
+    outcome = EmoteUpload.process(params[:files], emote_set_id: params[:emote_set_id])
     rejected = rejected_message(outcome.rejected)
     rejected = [ rejected, "Only the first #{EmoteUpload::MAX_FILES} files were uploaded." ].compact.join(" ") if outcome.truncated
 
     if outcome.pending.empty?
       flash[:alert] = rejected if rejected
-      flash[:opened_emote_groups] = outcome.result.group_ids
+      flash[:opened_emote_sets] = outcome.result.emote_set_ids
       redirect_to admin_emotes_path, notice: import_summary(outcome.result)
     else
       @rows = outcome.pending
@@ -47,7 +47,7 @@ class Admin::EmotesController < Admin::BaseController
     if rows.empty?
       redirect_to upload_admin_emotes_path, alert: "Those files have expired. Try uploading them again."
     elsif result
-      flash[:opened_emote_groups] = result.group_ids
+      flash[:opened_emote_sets] = result.emote_set_ids
       redirect_to admin_emotes_path, notice: import_summary(result)
     else
       @rows = EmoteUpload.classify(rows)
@@ -63,7 +63,7 @@ class Admin::EmotesController < Admin::BaseController
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(helpers.dom_id(@emote),
-            partial: "admin/emotes/emote", locals: { emote: @emote, groups: site_groups })
+            partial: "admin/emotes/emote", locals: { emote: @emote, emote_sets: site_emote_sets })
         end
         format.html { redirect_to admin_emotes_path, alert: @emote.errors.full_messages.to_sentence }
       end
@@ -105,9 +105,9 @@ class Admin::EmotesController < Admin::BaseController
   end
 
   def emote_params
-    params.require(:emote).permit(:name, :code, :code_overridden, :emote_group_id).tap do |permitted|
-      if permitted.key?(:emote_group_id) && !site_groups.map(&:id).include?(permitted[:emote_group_id].to_i)
-        permitted.delete(:emote_group_id)
+    params.require(:emote).permit(:name, :code, :code_overridden, :emote_set_id).tap do |permitted|
+      if permitted.key?(:emote_set_id) && !site_emote_sets.map(&:id).include?(permitted[:emote_set_id].to_i)
+        permitted.delete(:emote_set_id)
       end
       # The code box is disabled while the code is derived, so it isn't sent.
       permitted.delete(:code) if permitted[:code_overridden] == "0"
@@ -115,23 +115,23 @@ class Admin::EmotesController < Admin::BaseController
   end
 
   def site_emotes
-    Emote.joins(:emote_group).merge(EmoteGroup.site_wide)
+    Emote.joins(:emote_set).merge(EmoteSet.site_wide)
   end
 
-  def site_groups
-    @site_groups ||= EmoteGroup.site_wide.ordered.to_a
+  def site_emote_sets
+    @site_emote_sets ||= EmoteSet.site_wide.ordered.to_a
   end
 
   def load_sections
-    @groups = site_groups
+    @emote_sets = site_emote_sets
     emotes = site_emotes.includes(:aliases, image_attachment: :blob).to_a
     archived, active = emotes.partition(&:archived?)
-    @emotes_by_group = Emote.natural_sort(active).group_by(&:emote_group_id)
+    @emotes_by_set = Emote.natural_sort(active).group_by(&:emote_set_id)
     @archived_emotes = Emote.natural_sort(archived)
   end
 
   def render_decisions(status: :ok)
-    @groups = site_groups
+    @emote_sets = site_emote_sets
     @taken_identifiers = EmoteUpload.taken_identifiers
     render :decide, status: status
   end

@@ -33,7 +33,7 @@ class EmoteUpload
   class Row
     include ActiveModel::AttributeAssignment
 
-    attr_accessor :blob, :filename, :name, :group_id, :action, :status, :clash, :error, :emote
+    attr_accessor :blob, :filename, :name, :emote_set_id, :action, :status, :clash, :error, :emote
     attr_writer :errors_list
 
     def initialize(**attributes)
@@ -57,10 +57,10 @@ class EmoteUpload
     end
   end
 
-  # group_ids: the groups that gained an emote or had one's image replaced.
-  Result = Data.define(:added, :replaced, :skipped, :group_ids) do
+  # emote_set_ids: the sets that gained an emote or had one's image replaced.
+  Result = Data.define(:added, :replaced, :skipped, :emote_set_ids) do
     def self.none
-      new(added: 0, replaced: 0, skipped: 0, group_ids: [])
+      new(added: 0, replaced: 0, skipped: 0, emote_set_ids: [])
     end
   end
 
@@ -69,9 +69,9 @@ class EmoteUpload
   # were sent, and the rest were ignored).
   Outcome = Data.define(:result, :pending, :rejected, :truncated)
 
-  def self.process(files, group_id:)
+  def self.process(files, emote_set_id:)
     files = Array(files).select { |file| file.respond_to?(:original_filename) }
-    rows = classify(files.first(MAX_FILES).map { |file| stage_file(file, group_id) })
+    rows = classify(files.first(MAX_FILES).map { |file| stage_file(file, emote_set_id) })
     rejected = rows.select(&:invalid?)
 
     clean = rows.select { |row| row.status == "new" }
@@ -107,7 +107,7 @@ class EmoteUpload
         blob: blob,
         filename: blob.filename.to_s,
         name: Emote.normalize_identifier(params[:name]),
-        group_id: site_group_id(params[:group_id]),
+        emote_set_id: site_emote_set_id(params[:emote_set_id]),
         action: ACTIONS.include?(params[:action]) ? params[:action] : "skip",
         clash: params[:replace_id].presence && site_emotes.find_by(id: params[:replace_id])
       )
@@ -168,8 +168,8 @@ class EmoteUpload
       raise ActiveRecord::Rollback if rows.any? { |row| row.errors_list.any? }
 
       counts = rows.map(&:action).tally
-      group_ids = rows.filter_map { |row| row.emote&.emote_group_id || (row.clash&.emote_group_id if row.action == "replace") }.uniq
-      result = Result.new(added: counts.fetch("create", 0), replaced: counts.fetch("replace", 0), skipped: counts.fetch("skip", 0), group_ids: group_ids)
+      emote_set_ids = rows.filter_map { |row| row.emote&.emote_set_id || (row.clash&.emote_set_id if row.action == "replace") }.uniq
+      result = Result.new(added: counts.fetch("create", 0), replaced: counts.fetch("replace", 0), skipped: counts.fetch("skip", 0), emote_set_ids: emote_set_ids)
     end
 
     rows.select { |row| row.action == "skip" }.each { |row| row.blob.purge_later } if result
@@ -179,7 +179,7 @@ class EmoteUpload
   def self.apply(row)
     case row.action
     when "create"
-      row.emote = Emote.new(emote_group_id: row.group_id, name: row.name, image: row.blob)
+      row.emote = Emote.new(emote_set_id: row.emote_set_id, name: row.name, image: row.blob)
       row.errors_list = row.emote.errors.full_messages unless row.emote.save
     when "replace"
       if row.clash.nil?
@@ -190,9 +190,9 @@ class EmoteUpload
     end
   end
 
-  def self.stage_file(file, group_id)
+  def self.stage_file(file, emote_set_id)
     filename = file.original_filename.to_s
-    row = Row.new(filename: filename, name: Emote.name_from_filename(filename), group_id: site_group_id(group_id))
+    row = Row.new(filename: filename, name: Emote.name_from_filename(filename), emote_set_id: site_emote_set_id(emote_set_id))
 
     content_type = Marcel::MimeType.for(file.tempfile, name: filename)
     error =
@@ -228,13 +228,13 @@ class EmoteUpload
   end
 
   def self.site_emotes
-    Emote.joins(:emote_group).merge(EmoteGroup.site_wide)
+    Emote.joins(:emote_set).merge(EmoteSet.site_wide)
   end
 
-  def self.site_group_id(id)
-    groups = EmoteGroup.site_wide.ordered.pluck(:id)
-    groups.include?(id.to_i) ? id.to_i : groups.first
+  def self.site_emote_set_id(id)
+    ids = EmoteSet.site_wide.ordered.pluck(:id)
+    ids.include?(id.to_i) ? id.to_i : ids.first
   end
 
-  private_class_method :apply, :stage_file, :invalid, :site_emotes, :site_group_id
+  private_class_method :apply, :stage_file, :invalid, :site_emotes, :site_emote_set_id
 end

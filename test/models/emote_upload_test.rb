@@ -14,11 +14,11 @@ class EmoteUploadTest < ActiveSupport::TestCase
   end
 
   def process_files(*files)
-    EmoteUpload.process(files, group_id: emote_groups(:hearts).id)
+    EmoteUpload.process(files, emote_set_id: emote_sets(:hearts).id)
   end
 
   def decision(row, **overrides)
-    { signed_id: row.signed_id, name: row.name, group_id: row.group_id, action: row.action, replace_id: row.clash&.id }.merge(overrides)
+    { signed_id: row.signed_id, name: row.name, emote_set_id: row.emote_set_id, action: row.action, replace_id: row.clash&.id }.merge(overrides)
   end
 
   # -- process --
@@ -26,11 +26,11 @@ class EmoteUploadTest < ActiveSupport::TestCase
   test "new files are imported straight away, named from the filename" do
     outcome = process_files(upload("07 Party.png"), upload("100.webp", webp_bytes, "image/webp"))
 
-    assert_equal EmoteUpload::Result.new(added: 2, replaced: 0, skipped: 0, group_ids: [ emote_groups(:hearts).id ]), outcome.result
+    assert_equal EmoteUpload::Result.new(added: 2, replaced: 0, skipped: 0, emote_set_ids: [ emote_sets(:hearts).id ]), outcome.result
     assert_empty outcome.pending
     party = Emote.find_by!(name: "07-party")
     assert_equal "party", party.code
-    assert_equal emote_groups(:hearts), party.emote_group
+    assert_equal emote_sets(:hearts), party.emote_set
     assert_equal "image/webp", Emote.find_by!(name: "100").image.content_type
   end
 
@@ -92,7 +92,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
 
   test "only the first MAX_FILES files are used" do
     stub_const(EmoteUpload, :MAX_FILES, 2) do
-      outcome = EmoteUpload.process([ upload("a.png"), upload("b.png"), upload("c.png") ], group_id: nil)
+      outcome = EmoteUpload.process([ upload("a.png"), upload("b.png"), upload("c.png") ], emote_set_id: nil)
       assert_equal 2, outcome.result.added
       assert outcome.truncated
       assert_not Emote.exists?(name: "c")
@@ -107,7 +107,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
 
     result, = EmoteUpload.resolve([ decision(row) ])
 
-    assert_equal EmoteUpload::Result.new(added: 0, replaced: 1, skipped: 0, group_ids: [ emote_groups(:hearts).id ]), result
+    assert_equal EmoteUpload::Result.new(added: 0, replaced: 1, skipped: 0, emote_set_ids: [ emote_sets(:hearts).id ]), result
     assert_equal row.blob, emotes(:red_heart).reload.image.blob
     assert_not_equal old_blob, emotes(:red_heart).image.blob
   end

@@ -3,7 +3,7 @@
 # fixture label is the code with underscores ("dewdrop_heart").
 <% emote_fixture_names.each do |name, code, label| %>
 <%= label %>:
-  emote_group: hearts
+  emote_set: hearts
   name: <%= name %>
   code: <%= code %>
 <% end %>

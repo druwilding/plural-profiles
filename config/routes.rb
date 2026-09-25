@@ -73,7 +73,7 @@ Rails.application.routes.draw do
         post :resolve
       end
     end
-    resources :emote_groups, only: %i[index create update destroy] do
+    resources :emote_sets, only: %i[index create update destroy] do
       member do
         patch :move
       end

@@ -3,7 +3,7 @@
 -#
 -# Locals:
 -#   emote  — the Emote, possibly with validation errors from a failed update
--#   groups — the site-wide EmoteGroups, for the group select
+-#   emote_sets — the site-wide EmoteSets, for the set select
 %li.emote-row{id: dom_id(emote), data: { "emote-filter-target": "row", search: [ emote.name, emote.code, *emote.aliases.map(&:code) ].join(" ") }}
   = image_tag emote.display_image_path, class: "emote-row__image", width: 48, height: 48, alt: "", loading: "lazy"
 
@@ -22,9 +22,9 @@
         = form.check_box :code_overridden, id: dom_id(emote, :code_overridden), data: { action: "change->auto-submit#submit" }
         Custom code
 
-    .emote-row__field.emote-row__field--group
-      = form.label :emote_group_id, "Group", for: dom_id(emote, :group)
-      = form.select :emote_group_id, groups.map { |group| [ group.name, group.id ] }, {}, id: dom_id(emote, :group), data: { action: "change->auto-submit#submit" }
+    .emote-row__field.emote-row__field--set
+      = form.label :emote_set_id, "Set", for: dom_id(emote, :emote_set)
+      = form.select :emote_set_id, emote_sets.map { |emote_set| [ emote_set.name, emote_set.id ] }, {}, id: dom_id(emote, :emote_set), data: { action: "change->auto-submit#submit" }
 
     - if emote.errors.any?
       .emote-row__errors{role: "alert"}

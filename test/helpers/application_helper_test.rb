@@ -427,7 +427,7 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "replaces an emote code that doesn't end in _heart" do
-    emote = Emote.new(emote_group: emote_groups(:hearts), name: "100")
+    emote = Emote.new(emote_set: emote_sets(:hearts), name: "100")
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
     emote.save!
 
@@ -530,8 +530,8 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "plain_field replaces emotes with their names in brackets" do
-    other = EmoteGroup.create!(name: "Other", position: 1)
-    emote = Emote.new(emote_group: other, name: "100")
+    other = EmoteSet.create!(name: "Other", position: 1)
+    emote = Emote.new(emote_set: other, name: "100")
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
     emote.save!
 
@@ -876,7 +876,7 @@ class ApplicationHelperTest < ActionView::TestCase
     hearts = JSON.parse(script.text)
     assert_equal EmoteRegistry.current.pickable.map(&:code), hearts.map { |heart| heart["code"].delete(":") }
     assert_equal(
-      { "name" => "13-abyss-heart", "label" => "abyss heart", "src" => emote_src("abyss-heart"), "code" => ":abyss-heart:", "group" => "Hearts" },
+      { "name" => "13-abyss-heart", "label" => "abyss heart", "src" => emote_src("abyss-heart"), "code" => ":abyss-heart:", "set" => "Hearts" },
       hearts.find { |heart| heart["code"] == ":abyss-heart:" }
     )
   end

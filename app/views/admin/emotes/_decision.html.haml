@@ -4,7 +4,7 @@
 -# Locals:
 -#   row    — an EmoteUpload::Row with status "clash", "duplicate", "unnamed" or "new"
 -#   index  — its position, for field names and ids
--#   groups — the site-wide EmoteGroups
+-#   emote_sets — the site-wide EmoteSets
 - prefix = "rows[#{index}]"
 - id = ->(field) { "upload_row_#{index}_#{field}" }
 
@@ -39,8 +39,8 @@
             "aria-describedby": id.(:status), data: { field: "name", action: "input->emote-upload-decision#nameChanged" }
           %p.upload-review__code{id: id.(:status), data: { field: "status" }}
         .upload-review__field
-          = label_tag id.(:group), "Group"
-          = select_tag "#{prefix}[group_id]", options_from_collection_for_select(groups, :id, :name, row.group_id), id: id.(:group)
+          = label_tag id.(:emote_set), "Set"
+          = select_tag "#{prefix}[emote_set_id]", options_from_collection_for_select(emote_sets, :id, :name, row.emote_set_id), id: id.(:emote_set)
       %label.upload-review__choice
         = radio_button_tag "#{prefix}[action]", "skip", row.action == "skip", id: id.(:skip), data: { action: "change->emote-upload-decision#update" }
         Skip this file

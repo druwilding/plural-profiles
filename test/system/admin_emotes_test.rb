@@ -73,7 +73,7 @@ class AdminEmotesTest < ApplicationSystemTestCase
     assert_equal [ "48-cadbury-heart" ], all(".emote-row", visible: true).map { |row| row.find("input[name='emote[name]']").value }
   end
 
-  test "filtering opens collapsed groups with a match, and clearing it closes them again" do
+  test "filtering opens collapsed sets with a match, and clearing it closes them again" do
     find("summary", text: "Hearts").click
     assert_selector "details.emote-section:not([open])", text: "Hearts"
 
@@ -103,7 +103,7 @@ class AdminEmotesTest < ApplicationSystemTestCase
     assert_not red.reload.archived?
   end
 
-  test "a collapsed group stays collapsed when the list re-renders" do
+  test "a collapsed set stays collapsed when the list re-renders" do
     find("a[aria-label='Archive 36-red-heart']").click
     assert_selector "#emote-status", text: "Archived 36-red-heart."
 

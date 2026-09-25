@@ -5,18 +5,18 @@ class EmoteRegistryTest < ActiveSupport::TestCase
     EmoteRegistry.current
   end
 
-  def add_emote(name, group: emote_groups(:hearts))
-    emote = Emote.new(emote_group: group, name: name)
+  def add_emote(name, emote_set: emote_sets(:hearts))
+    emote = Emote.new(emote_set: emote_set, name: name)
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
     emote.save!
     emote
   end
 
-  test "entries are in group order, then natural name order" do
+  test "entries are in set order, then natural name order" do
     add_emote("9-nine")
     add_emote("100-hundred")
-    other = EmoteGroup.create!(name: "Other", position: 1)
-    add_emote("01-first-other", group: other)
+    other = EmoteSet.create!(name: "Other", position: 1)
+    add_emote("01-first-other", emote_set: other)
 
     names = registry.entries.map(&:name)
     assert_equal "01-dewdrop-heart", names.first

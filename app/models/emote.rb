@@ -2,7 +2,7 @@
 # or picked for a profile. Each emote has:
 #
 # - name: what admins edit, e.g. "02-spring-heart". Sorts the emote within its
-#   group, and can itself be typed (:02-spring-heart:).
+#   set, and can itself be typed (:02-spring-heart:).
 # - code: the canonical code that pickers insert and profiles store, e.g.
 #   "spring-heart". Derived from the name unless code_overridden is set.
 # - aliases: old codes, recorded whenever the code changes, so text written
@@ -23,7 +23,7 @@ class Emote < ApplicationRecord
   # (the 32px picker) at 2x.
   DISPLAY_VARIANT = { resize_to_limit: [ 64, 64 ], format: :webp }.freeze
 
-  belongs_to :emote_group
+  belongs_to :emote_set
   has_many :aliases, class_name: "EmoteAlias", dependent: :destroy
 
   # The original upload is kept as-is; only this static webp is ever shown,

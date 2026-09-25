@@ -1,0 +1,41 @@
+- content_for(:title) { "Emote sets — Plural Profiles" }
+
+= render "admin/breadcrumbs", current: "Emote sets"
+
+.card
+  .card__header
+    %h1 Emote sets
+  %p.admin-emotes__intro
+    Sets are shown as sections in every emote picker, in this order.
+  .card__actions
+    = link_to "Back to emotes", admin_emotes_path, class: "btn btn--secondary"
+
+%section.card{"aria-labelledby": "emote-sets-heading"}
+  .card__header
+    %h2#emote-sets-heading Sets
+  %ol.emote-sets
+    - @emote_sets.each_with_index do |emote_set, index|
+      - emote_count = @emote_counts.fetch(emote_set.id, 0)
+      %li.emote-sets__set
+        = form_with model: emote_set, url: admin_emote_set_path(emote_set), class: "emote-sets__form" do |form|
+          .emote-sets__field
+            = form.label :name, "Name", for: dom_id(emote_set, :name)
+            = form.text_field :name, id: dom_id(emote_set, :name), required: true
+          = form.submit "Save", class: "btn btn--small"
+        .emote-sets__actions
+          %span.emote-sets__count= pluralize(emote_count, "emote")
+          - unless index.zero?
+            = link_to "Move up", move_admin_emote_set_path(emote_set, direction: "up"), data: { turbo_method: :patch }, class: "btn btn--small btn--secondary", "aria-label": "Move #{emote_set.name} up"
+          - unless index == @emote_sets.size - 1
+            = link_to "Move down", move_admin_emote_set_path(emote_set, direction: "down"), data: { turbo_method: :patch }, class: "btn btn--small btn--secondary", "aria-label": "Move #{emote_set.name} down"
+          - if emote_count.zero?
+            = link_to "Delete", admin_emote_set_path(emote_set), data: { turbo_method: :delete, turbo_confirm: "Delete the #{emote_set.name} set?" }, class: "btn btn--small btn--danger", "aria-label": "Delete the #{emote_set.name} set"
+
+%section.card{"aria-labelledby": "new-emote-set-heading"}
+  .card__header
+    %h2#new-emote-set-heading Add a set
+  = form_with model: EmoteSet.new, url: admin_emote_sets_path, class: "emote-sets__form" do |form|
+    .emote-sets__field
+      = form.label :name, "Name", for: "new_emote_set_name"
+      = form.text_field :name, id: "new_emote_set_name", required: true
+    = form.submit "Add set", class: "btn btn--small"

@@ -18,6 +18,6 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", admin_emotes_path, text: "Emotes"
-    assert_select "a[href=?]", admin_emote_groups_path, text: "Emote groups"
+    assert_select "a[href=?]", admin_emote_sets_path, text: "Emote sets"
   end
 end
