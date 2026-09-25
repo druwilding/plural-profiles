@@ -4,11 +4,14 @@
 module EmoteFixtureHelper
   EMOTE_IMAGES = Rails.root.join("db/emotes/hearts")
 
-  # [[name, code], ...] for every fixture emote image, in name order.
+  # [[name, code, label], ...] for every fixture emote image, in name order.
+  # The label is the code with underscores ("dewdrop_heart"), so fixtures can
+  # be referred to as emotes(:dewdrop_heart).
   def emote_fixture_names
     Dir[EMOTE_IMAGES.join("*.webp")].sort.map do |path|
       name = File.basename(path, ".webp")
-      [ name, Emote.default_code(name) ]
+      code = Emote.default_code(name)
+      [ name, code, code.tr("-", "_") ]
     end
   end
 

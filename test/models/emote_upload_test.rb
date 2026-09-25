@@ -28,15 +28,15 @@ class EmoteUploadTest < ActiveSupport::TestCase
 
     assert_equal EmoteUpload::Result.new(added: 2, replaced: 0, skipped: 0, group_ids: [ emote_groups(:hearts).id ]), outcome.result
     assert_empty outcome.pending
-    party = Emote.find_by!(name: "07_party")
+    party = Emote.find_by!(name: "07-party")
     assert_equal "party", party.code
     assert_equal emote_groups(:hearts), party.emote_group
     assert_equal "image/webp", Emote.find_by!(name: "100").image.content_type
   end
 
   test "a file whose name, code or old code is in use waits for a decision, defaulting to replacing that emote's image" do
-    emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
-    outcome = process_files(upload("07_party.png"), upload("36_red_heart.png"), upload("spring_heart.png"), upload("cadbury_heart.png"))
+    emotes(:cadbury_heart).update!(name: "48-chocolate-heart")
+    outcome = process_files(upload("07-party.png"), upload("36-red-heart.png"), upload("spring-heart.png"), upload("cadbury-heart.png"))
 
     assert_equal 1, outcome.result.added
     assert_equal %w[clash clash clash], outcome.pending.map(&:status)
@@ -46,11 +46,11 @@ class EmoteUploadTest < ActiveSupport::TestCase
   end
 
   test "two files with the same name: the first is added, the second waits, defaulting to skip" do
-    outcome = process_files(upload("07_party.png"), upload("08_party.png"))
+    outcome = process_files(upload("07-party.png"), upload("08-party.png"))
 
     assert_equal 1, outcome.result.added
-    assert_equal [ "08_party" ], outcome.pending.map(&:name)
-    assert_equal Emote.find_by!(name: "07_party"), outcome.pending.first.clash
+    assert_equal [ "08-party" ], outcome.pending.map(&:name)
+    assert_equal Emote.find_by!(name: "07-party"), outcome.pending.first.clash
     assert_equal "skip", outcome.pending.first.action
   end
 
@@ -102,7 +102,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
   # -- resolve --
 
   test "replacing a clashing emote's image" do
-    row = process_files(upload("36_red_heart.png")).pending.first
+    row = process_files(upload("36-red-heart.png")).pending.first
     old_blob = emotes(:red_heart).image.blob
 
     result, = EmoteUpload.resolve([ decision(row) ])
@@ -113,24 +113,24 @@ class EmoteUploadTest < ActiveSupport::TestCase
   end
 
   test "adding a clash as a new emote under a new name" do
-    row = process_files(upload("36_red_heart.png")).pending.first
-    result, = EmoteUpload.resolve({ "0" => decision(row, name: "37_rouge_heart", action: "create") })
+    row = process_files(upload("36-red-heart.png")).pending.first
+    result, = EmoteUpload.resolve({ "0" => decision(row, name: "37-rouge-heart", action: "create") })
 
     assert_equal 1, result.added
-    assert Emote.exists?(code: "rouge_heart")
+    assert Emote.exists?(code: "rouge-heart")
   end
 
   test "if any decision fails, nothing is saved and the row has errors" do
-    pending = process_files(upload("36_red_heart.png"), upload("spring_heart.png")).pending
+    pending = process_files(upload("36-red-heart.png"), upload("spring-heart.png")).pending
     result, rows = EmoteUpload.resolve([ decision(pending.first), decision(pending.second, action: "create") ])
 
     assert_nil result
     assert_not_equal pending.first.blob, emotes(:red_heart).reload.image.blob
-    assert_includes rows.second.errors_list, "Code “spring_heart” is already used by 02_spring_heart"
+    assert_includes rows.second.errors_list, "Code “spring-heart” is already used by 02-spring-heart"
   end
 
   test "skipped files are purged" do
-    row = process_files(upload("36_red_heart.png")).pending.first
+    row = process_files(upload("36-red-heart.png")).pending.first
 
     assert_enqueued_with(job: ActiveStorage::PurgeJob) do
       result, = EmoteUpload.resolve([ decision(row, action: "skip") ])
@@ -140,7 +140,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
 
   test "decisions for blobs that weren't emote uploads, or with unknown actions, are ignored or skipped" do
     other_blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(png_bytes(8, 8)), filename: "other.png")
-    row = process_files(upload("36_red_heart.png")).pending.first
+    row = process_files(upload("36-red-heart.png")).pending.first
 
     rows = EmoteUpload.rows_from_params([
       { signed_id: other_blob.signed_id, name: "sneaky", action: "create" },
@@ -148,7 +148,7 @@ class EmoteUploadTest < ActiveSupport::TestCase
       decision(row, action: "destroy_everything")
     ])
 
-    assert_equal [ "36_red_heart" ], rows.map(&:name)
+    assert_equal [ "36-red-heart" ], rows.map(&:name)
     assert_equal "skip", rows.first.action
   end
 

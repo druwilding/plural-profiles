@@ -30,13 +30,13 @@ class EmoteInputComposerTest < ApplicationSystemTestCase
     assert_selector ".composer .emote-input__option--active", text: "abyss heart"
 
     composer.send_keys(:enter)
-    assert_equal ":abyss_heart: ", composer.value
+    assert_equal ":abyss-heart: ", composer.value
     assert_text "No messages yet. Say hello!"
     assert_equal 0, @channel.messages.count
 
     composer.send_keys("hello", :enter)
     assert_selector ".chat-message__body img.emote-inline[alt='abyss heart']"
-    assert_equal ":abyss_heart: hello", @channel.messages.last.body.strip
+    assert_equal ":abyss-heart: hello", @channel.messages.last.body.strip
   end
 
   test "Shift+Enter still adds a new line while the menu is open" do
@@ -69,7 +69,7 @@ class EmoteInputComposerTest < ApplicationSystemTestCase
     find(".composer-input-row .emote-input__button").click
     within("dialog.emote-dialog[open]") { click_button "red heart" }
 
-    assert_field with: ":red_heart: "
+    assert_field with: ":red-heart: "
     assert_equal 0, @channel.messages.count
   end
 end

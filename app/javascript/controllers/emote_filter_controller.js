@@ -58,7 +58,7 @@ export default class extends Controller {
   }
 }
 
-// ":Spring Heart:" → "spring_heart", matching how names and codes are stored.
+// ":Spring Heart:" → "spring-heart", matching how names and codes are stored.
 function normalise(value) {
-  return value.trim().toLowerCase().replace(/^[:;]+|[:;]+$/g, "").replace(/[\s-]+/g, "_")
+  return value.trim().toLowerCase().replace(/^[:;]+|[:;]+$/g, "").replace(/[\s_]+/g, "-")
 }

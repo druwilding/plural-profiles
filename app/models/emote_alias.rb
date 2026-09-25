@@ -3,6 +3,8 @@
 class EmoteAlias < ApplicationRecord
   belongs_to :emote, touch: true
 
+  normalizes :code, with: ->(value) { Emote.normalize_identifier(value) }
+
   validates :code, presence: true, uniqueness: true, format: { with: Emote::IDENTIFIER_FORMAT }
 
   after_commit { EmoteRegistry.expire_current }

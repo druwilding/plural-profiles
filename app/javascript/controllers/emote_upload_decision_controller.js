@@ -21,7 +21,7 @@ export default class extends Controller {
   update() {
     const seen = new Map()
     this.rowTargets.forEach((row, index) => {
-      const name = row.querySelector("[data-field='name']").value.trim().toLowerCase()
+      const name = row.querySelector("[data-field='name']").value.trim().toLowerCase().replace(/_/g, "-")
       const code = defaultCode(name)
       const identifiers = [ ...new Set([ name, code ].filter(Boolean)) ]
       const creating = row.querySelector("[data-field='create']").checked
@@ -45,9 +45,9 @@ export default class extends Controller {
 }
 
 // Mirrors Emote.default_code: drop the number prefix that sets the order,
-// unless the number is the emote itself (100, 1st_place).
+// unless the number is the emote itself (100, 1st-place).
 function defaultCode(name) {
   if (/^\d+$/.test(name)) return name
-  if (/^\d+(st|nd|rd|th)(_|$)/.test(name)) return name
-  return name.replace(/^\d+_?/, "") || name
+  if (/^\d+(st|nd|rd|th)(-|$)/.test(name)) return name
+  return name.replace(/^\d+-?/, "") || name
 }

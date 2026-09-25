@@ -1,16 +1,20 @@
-# An emote that can be typed as a code (:spring_heart:) into formatted text
+# An emote that can be typed as a code (:spring-heart:) into formatted text
 # or picked for a profile. Each emote has:
 #
-# - name: what admins edit, e.g. "02_spring_heart". Sorts the emote within its
-#   group, and can itself be typed (:02_spring_heart:).
+# - name: what admins edit, e.g. "02-spring-heart". Sorts the emote within its
+#   group, and can itself be typed (:02-spring-heart:).
 # - code: the canonical code that pickers insert and profiles store, e.g.
-#   "spring_heart". Derived from the name unless code_overridden is set.
+#   "spring-heart". Derived from the name unless code_overridden is set.
 # - aliases: old codes, recorded whenever the code changes, so text written
 #   with them keeps rendering.
 #
 # Names, codes and aliases share one namespace: none may be used twice.
+#
+# Identifiers are stored with hyphens. Underscores are accepted anywhere one is
+# given (and in typed codes, see EmoteRegistry#resolve) and become hyphens, so
+# codes from before the switch, like :spring_heart:, keep working.
 class Emote < ApplicationRecord
-  IDENTIFIER_FORMAT = /\A[a-z0-9_]+\z/
+  IDENTIFIER_FORMAT = /\A[a-z0-9-]+\z/
   MAX_IDENTIFIER_LENGTH = 64
 
   # The static webp shown everywhere. 64px covers the largest display size
@@ -27,7 +31,11 @@ class Emote < ApplicationRecord
     attachable.variant :display, **DISPLAY_VARIANT, preprocessed: true
   end
 
-  normalizes :name, :code, with: ->(value) { value.strip.downcase }
+  def self.normalize_identifier(value)
+    value.to_s.strip.downcase.tr("_", "-")
+  end
+
+  normalizes :name, :code, with: ->(value) { normalize_identifier(value) }
 
   scope :active, -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
@@ -36,34 +44,34 @@ class Emote < ApplicationRecord
   before_update :record_previous_code_as_alias, if: :will_save_change_to_code?
 
   validates :name, :code, presence: true, length: { maximum: MAX_IDENTIFIER_LENGTH },
-    format: { with: IDENTIFIER_FORMAT, message: "can only contain lowercase letters, numbers and underscores", allow_blank: true }
+    format: { with: IDENTIFIER_FORMAT, message: "can only contain lowercase letters, numbers and hyphens", allow_blank: true }
   validates :image, presence: true
   validate :identifiers_are_unique
 
   after_commit { EmoteRegistry.expire_current }
 
-  # "02 Spring-Heart.webp" → "02_spring_heart". Blank when nothing usable is
+  # "02 Spring_Heart.webp" → "02-spring-heart". Blank when nothing usable is
   # left, e.g. "♥♥♥.png".
   def self.name_from_filename(filename)
     File.basename(filename.to_s, ".*").downcase
-      .gsub(/[\s.-]+/, "_")
-      .gsub(/[^a-z0-9_]/, "")
-      .squeeze("_")
-      .delete_prefix("_").delete_suffix("_")
+      .gsub(/[\s._-]+/, "-")
+      .gsub(/[^a-z0-9-]/, "")
+      .squeeze("-")
+      .delete_prefix("-").delete_suffix("-")
   end
 
   # The code suggested for a name: the number prefix that sets the sort order
-  # is dropped, unless the number is the emote itself (100, 1st_place).
-  #   "02_spring_heart" → "spring_heart", "50cadbury_heart" → "cadbury_heart",
-  #   "100" → "100", "1st_place" → "1st_place"
+  # is dropped, unless the number is the emote itself (100, 1st-place).
+  #   "02-spring-heart" → "spring-heart", "50cadbury-heart" → "cadbury-heart",
+  #   "100" → "100", "1st-place" → "1st-place"
   def self.default_code(name)
-    name = name.to_s
+    name = normalize_identifier(name)
     return name if name.match?(/\A\d+\z/)
-    return name if name.match?(/\A\d+(st|nd|rd|th)(_|\z)/)
-    name.sub(/\A\d+_?/, "").presence || name
+    return name if name.match?(/\A\d+(st|nd|rd|th)(-|\z)/)
+    name.sub(/\A\d+-?/, "").presence || name
   end
 
-  # Sorts names the way people read numbers: "2_x" before "10_y".
+  # Sorts names the way people read numbers: "2-x" before "10-y".
   def self.natural_sort_key(name)
     name.scan(/\d+|\D+/).map { |part| part.match?(/\A\d/) ? [ 0, part.to_i ] : [ 1, part ] }
   end

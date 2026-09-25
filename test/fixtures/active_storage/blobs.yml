@@ -1,3 +1,3 @@
-<% emote_fixture_names.each do |name, code| %>
-<%= code %>_image_blob: <%= emote_image_blob(name) %>
+<% emote_fixture_names.each do |name, _code, label| %>
+<%= label %>_image_blob: <%= emote_image_blob(name) %>
 <% end %>

@@ -13,30 +13,30 @@ class EmoteRegistryTest < ActiveSupport::TestCase
   end
 
   test "entries are in group order, then natural name order" do
-    add_emote("9_nine")
-    add_emote("100_hundred")
+    add_emote("9-nine")
+    add_emote("100-hundred")
     other = EmoteGroup.create!(name: "Other", position: 1)
-    add_emote("01_first_other", group: other)
+    add_emote("01-first-other", group: other)
 
     names = registry.entries.map(&:name)
-    assert_equal "01_dewdrop_heart", names.first
-    assert_operator names.index("9_nine"), :<, names.index("100_hundred")
-    assert_equal "01_first_other", names.last
+    assert_equal "01-dewdrop-heart", names.first
+    assert_operator names.index("9-nine"), :<, names.index("100-hundred")
+    assert_equal "01-first-other", names.last
   end
 
   test "resolves by name, code and alias" do
-    emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
+    emotes(:cadbury_heart).update!(name: "48-chocolate-heart")
 
-    assert_equal "spring_heart", registry.resolve("02_spring_heart").code
-    assert_equal "spring_heart", registry.resolve("spring_heart").code
-    assert_equal "chocolate_heart", registry.resolve("cadbury_heart").code
+    assert_equal "spring-heart", registry.resolve("02-spring-heart").code
+    assert_equal "spring-heart", registry.resolve("spring-heart").code
+    assert_equal "chocolate-heart", registry.resolve("cadbury-heart").code
   end
 
   test "resolves old Discord-numbered codes and aliases" do
-    emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
+    emotes(:cadbury_heart).update!(name: "48-chocolate-heart")
 
-    assert_equal "aqua_heart", registry.resolve("11_aqua_heart").code
-    assert_equal "chocolate_heart", registry.resolve("50cadbury_heart").code
+    assert_equal "aqua-heart", registry.resolve("11-aqua-heart").code
+    assert_equal "chocolate-heart", registry.resolve("50cadbury-heart").code
   end
 
   test "a number is only stripped when a letter follows it" do
@@ -47,12 +47,21 @@ class EmoteRegistryTest < ActiveSupport::TestCase
     assert_equal "100", registry.resolve("100").code
   end
 
-  test "resolves ignoring case and hyphens" do
-    assert_equal "aqua_heart", registry.resolve("Aqua-Heart").code
+  test "resolves ignoring case, and underscores for hyphens" do
+    assert_equal "aqua-heart", registry.resolve("Aqua-Heart").code
+    assert_equal "aqua-heart", registry.resolve("aqua_heart").code
+    assert_equal "spring-heart", registry.resolve("02_spring_heart").code
+  end
+
+  test "resolves aliases written with underscores" do
+    emotes(:cadbury_heart).update!(name: "48-chocolate-heart")
+
+    assert_equal "chocolate-heart", registry.resolve("cadbury_heart").code
+    assert_equal "chocolate-heart", registry.resolve("50_cadbury_heart").code
   end
 
   test "resolve returns nil for unknown or blank codes" do
-    assert_nil registry.resolve("fake_heart")
+    assert_nil registry.resolve("fake-heart")
     assert_nil registry.resolve("")
     assert_nil registry.resolve(nil)
   end
@@ -60,30 +69,30 @@ class EmoteRegistryTest < ActiveSupport::TestCase
   test "archived emotes resolve but aren't pickable" do
     emotes(:red_heart).update!(archived_at: Time.current)
 
-    assert registry.resolve("red_heart").archived?
-    assert_includes registry.entries.map(&:code), "red_heart"
-    assert_not_includes registry.pickable.map(&:code), "red_heart"
+    assert registry.resolve("red-heart").archived?
+    assert_includes registry.entries.map(&:code), "red-heart"
+    assert_not_includes registry.pickable.map(&:code), "red-heart"
   end
 
   test "entries have a label and a display image path" do
-    entry = registry.resolve("cadbury_heart")
+    entry = registry.resolve("cadbury-heart")
     assert_equal "cadbury heart", entry.label
     assert_match %r{\A/rails/active_storage/representations/proxy/}, entry.src
   end
 
   test "a committed change is visible straight away in the same request" do
     assert_nil registry.resolve("party")
-    add_emote("07_party")
+    add_emote("07-party")
     assert_equal "party", registry.resolve("party").code
   end
 
   test "is rebuilt when the database changes, even without a callback" do
     before = registry
-    Emote.where(code: "red_heart").update_all(code: "rouge_heart", updated_at: 1.minute.from_now)
+    Emote.where(code: "red-heart").update_all(code: "rouge-heart", updated_at: 1.minute.from_now)
     EmoteRegistry.expire_current
 
     assert_not_equal before.version, registry.version
-    assert_equal "rouge_heart", registry.resolve("36_red_heart").code
+    assert_equal "rouge-heart", registry.resolve("36-red-heart").code
   end
 
   test "is reused while nothing changes" do
@@ -99,16 +108,16 @@ class EmoteRegistryTest < ActiveSupport::TestCase
   end
 
   test "replace_codes accepts every delimiter and separator combination" do
-    [ ":cadbury_heart:", ";cadbury-heart;", ":cadbury_heart;", ";cadbury_heart:" ].each do |code|
-      assert_equal "a [cadbury_heart] b", replace("a #{code} b"), "expected #{code} to be replaced"
+    [ ":cadbury-heart:", ";cadbury_heart;", ":cadbury-heart;", ";cadbury_heart:" ].each do |code|
+      assert_equal "a [cadbury-heart] b", replace("a #{code} b"), "expected #{code} to be replaced"
     end
   end
 
   test "replace_codes accepts names, aliases and old numbered codes" do
-    emotes(:cadbury_heart).update!(name: "48_chocolate_heart")
+    emotes(:cadbury_heart).update!(name: "48-chocolate-heart")
 
-    assert_equal "[spring_heart] [chocolate_heart] [chocolate_heart] [aqua_heart]",
-      replace(":02_spring_heart: :cadbury_heart: :50cadbury_heart: :11_aqua_heart:")
+    assert_equal "[spring-heart] [chocolate-heart] [chocolate-heart] [aqua-heart]",
+      replace(":02-spring-heart: :cadbury-heart: :50cadbury-heart: :11-aqua-heart:")
   end
 
   test "replace_codes replaces codes that don't end in _heart" do
@@ -117,13 +126,13 @@ class EmoteRegistryTest < ActiveSupport::TestCase
   end
 
   test "replace_codes replaces codes side by side" do
-    assert_equal "[red_heart][red_heart]", replace(":red_heart::red_heart:")
+    assert_equal "[red-heart][red-heart]", replace(":red-heart::red-heart:")
   end
 
   test "replace_codes leaves the closing delimiter of an unknown code to open the next one" do
-    assert_equal "12:30[red_heart]", replace("12:30:red_heart:")
-    assert_equal "ratio 3:2[red_heart]", replace("ratio 3:2:red_heart:")
-    assert_equal ":nope[red_heart]", replace(":nope:red_heart:")
+    assert_equal "12:30[red-heart]", replace("12:30:red-heart:")
+    assert_equal "ratio 3:2[red-heart]", replace("ratio 3:2:red-heart:")
+    assert_equal ":nope[red-heart]", replace(":nope:red-heart:")
   end
 
   test "replace_codes leaves unknown codes and stray delimiters alone" do
@@ -140,30 +149,31 @@ class EmoteRegistryTest < ActiveSupport::TestCase
 
   test "replacing an emote's image changes the version and its image path, so every process picks it up" do
     before = registry
-    old_src = before.resolve("red_heart").src
+    old_src = before.resolve("red-heart").src
 
     emotes(:red_heart).image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "new_red.png", content_type: "image/png")
     EmoteRegistry.expire_current
 
     assert_not_equal before.version, registry.version
-    assert_not_equal old_src, registry.resolve("red_heart").src
-    assert_match %r{/new_red\.png\z}, registry.resolve("red_heart").src
+    assert_not_equal old_src, registry.resolve("red-heart").src
+    assert_match %r{/new_red\.png\z}, registry.resolve("red-heart").src
   end
 
   test "an old Discord number before a name resolves too" do
-    emotes(:cadbury_heart).update!(code: "cadbury", code_overridden: true, name: "cadbury_heart")
+    emotes(:cadbury_heart).update!(code: "cadbury", code_overridden: true, name: "cadbury-heart")
 
-    assert_equal "cadbury", registry.resolve("50cadbury_heart").code
+    assert_equal "cadbury", registry.resolve("50cadbury-heart").code
   end
 
-  # Every way heart codes were written before emotes moved into the database,
-  # so existing profiles and messages keep rendering.
+  # Every way heart codes were written before emotes moved into the database
+  # (and before identifiers switched to hyphens), so existing profiles and
+  # messages keep rendering.
   test "resolves every form old heart codes were written in" do
     {
-      "aqua_heart" => %w[aqua_heart AQUA_HEART Aqua_Heart 11_AQUA_HEART aqua-heart 11-aqua-heart 11_aqua_heart],
-      "cadbury_heart" => %w[cadbury_heart 50cadbury_heart 51cadbury_heart 50_cadbury_heart],
-      "red_heart" => %w[36_red_heart 999_red_heart],
-      "dewdrop_heart" => %w[01_dewdrop_heart]
+      "aqua-heart" => %w[aqua_heart AQUA_HEART Aqua_Heart 11_AQUA_HEART aqua-heart 11-aqua-heart 11_aqua_heart],
+      "cadbury-heart" => %w[cadbury_heart 50cadbury_heart 51cadbury_heart 50_cadbury_heart],
+      "red-heart" => %w[36_red_heart 999_red_heart],
+      "dewdrop-heart" => %w[01_dewdrop_heart]
     }.each do |code, typed_forms|
       typed_forms.each { |typed| assert_equal code, registry.resolve(typed)&.code, "expected #{typed} to resolve to #{code}" }
     end
