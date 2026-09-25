@@ -287,21 +287,21 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_includes result, 'class="emote-inline"'
-    assert_not_includes result, ":11_AQUA_HEART:"
+    assert_not_includes result, ":11-AQUA-HEART:"
   end
 
   test "replaces a valid heart emoji code with an image" do
-    text = "I love this :11_aqua_heart: so much"
+    text = "I love this :11-aqua-heart: so much"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
     assert_includes result, 'class="emote-inline"'
-    assert_not_includes result, ":11_aqua_heart:"
+    assert_not_includes result, ":11-aqua-heart:"
   end
 
   test "replaces multiple adjacent heart emojis" do
-    text = ":11_aqua_heart::12_ocean_heart::13_storm_heart:"
+    text = ":11-aqua-heart::12-ocean-heart::13-storm-heart:"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, "<img src=\"#{emote_src("ocean_heart")}\""
@@ -309,9 +309,9 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "leaves unknown heart codes as plain text" do
-    text = "look :99_fake_heart: here"
+    text = "look :99-fake-heart: here"
     result = formatted_description(text)
-    assert_includes result, ":99_fake_heart:"
+    assert_includes result, ":99-fake-heart:"
     assert_not_includes result, "<img"
   end
 
@@ -323,26 +323,26 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "mixes heart emojis with regular text and spoilers" do
-    text = "hello :40_red_heart: and ||secret|| bye"
+    text = "hello :40-red-heart: and ||secret|| bye"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("red_heart")}\""
     assert_includes result, SPOILER_OPEN
   end
 
   test "heart emoji alt text strips number prefix and uses spaces" do
-    text = ":01_dewdrop_heart:"
+    text = ":01-dewdrop-heart:"
     result = formatted_description(text)
     assert_includes result, 'alt="dewdrop heart"'
   end
 
   test "heart emoji alt text handles cadbury style prefix" do
-    text = ":50cadbury_heart:"
+    text = ":50cadbury-heart:"
     result = formatted_description(text)
     assert_includes result, 'alt="cadbury heart"'
   end
 
   test "replaces cadbury heart code regardless of number prefix style" do
-    [ "50cadbury_heart", "51cadbury_heart", "50_cadbury_heart" ].each do |code|
+    [ "50cadbury-heart", "51cadbury-heart", "50-cadbury-heart" ].each do |code|
       result = formatted_description(":#{code}:")
       assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\"", "expected #{code} to resolve"
       assert_includes result, 'alt="cadbury heart"'
@@ -350,42 +350,42 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "replaces heart code given as a bare name without a number prefix" do
-    text = "I love this :aqua_heart: so much"
+    text = "I love this :aqua-heart: so much"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
     assert_includes result, 'title="aqua heart"'
     assert_includes result, 'alt="aqua heart"'
-    assert_not_includes result, ":aqua_heart:"
+    assert_not_includes result, ":aqua-heart:"
   end
 
   test "replaces cadbury heart code" do
-    text = "here is :cadbury_heart: for you"
+    text = "here is :cadbury-heart: for you"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\""
     assert_includes result, 'alt="cadbury heart"'
-    assert_not_includes result, ":cadbury_heart:"
+    assert_not_includes result, ":cadbury-heart:"
   end
 
   test "replaces a heart code that still carries an old number prefix" do
-    text = "here is :25_shadow_heart: even though it's now 26"
+    text = "here is :25-shadow-heart: even though it's now 26"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("shadow_heart")}\""
     assert_includes result, 'alt="shadow heart"'
-    assert_not_includes result, ":25_shadow_heart:"
+    assert_not_includes result, ":25-shadow-heart:"
   end
 
   test "replaces bare heart code case-insensitively" do
-    text = ":AQUA_HEART:"
+    text = ":AQUA-HEART:"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
-    assert_not_includes result, ":AQUA_HEART:"
+    assert_not_includes result, ":AQUA-HEART:"
   end
 
   test "replaces heart code delimited by semicolons" do
-    text = "here is ;cadbury_heart; for you"
+    text = "here is ;cadbury-heart; for you"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\""
-    assert_not_includes result, ";cadbury_heart;"
+    assert_not_includes result, ";cadbury-heart;"
   end
 
   test "replaces heart code with hyphens instead of underscores" do
@@ -396,32 +396,32 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "replaces heart code with mismatched delimiters and separators" do
-    [ ";cadbury-heart;", ":cadbury_heart;", ";cadbury-heart:", ":cadbury-heart;" ].each do |code|
+    [ ";cadbury-heart;", ":cadbury_heart;", ";cadbury-heart:", ":cadbury_heart:" ].each do |code|
       result = formatted_description(code)
       assert_includes result, "<img src=\"#{emote_src("cadbury_heart")}\"", "expected #{code} to resolve"
     end
   end
 
   test "does not convert heart emoji code inside a code block" do
-    text = "Use <code>:11_aqua_heart:</code> to show a heart"
+    text = "Use <code>:11-aqua-heart:</code> to show a heart"
     result = formatted_description(text)
-    assert_includes result, "<code>:11_aqua_heart:</code>"
+    assert_includes result, "<code>:11-aqua-heart:</code>"
     assert_not_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
   end
 
   test "converts hearts outside code but not inside" do
-    text = ":40_red_heart: and <code>:11_aqua_heart:</code> and :13_storm_heart:"
+    text = ":40-red-heart: and <code>:11-aqua-heart:</code> and :13-storm-heart:"
     result = formatted_description(text)
     assert_includes result, "<img src=\"#{emote_src("red_heart")}\""
     assert_includes result, "<img src=\"#{emote_src("storm_heart")}\""
-    assert_includes result, "<code>:11_aqua_heart:</code>"
+    assert_includes result, "<code>:11-aqua-heart:</code>"
     assert_not_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
   end
 
   test "does not replace heart emoji codes inside HTML tag attributes" do
-    text = '<span class="spoiler" aria-label=":11_aqua_heart:">:40_red_heart:</span>'
+    text = '<span class="spoiler" aria-label=":11-aqua-heart:">:40-red-heart:</span>'
     result = formatted_description(text)
-    assert_includes result, 'aria-label=":11_aqua_heart:"'
+    assert_includes result, 'aria-label=":11-aqua-heart:"'
     assert_includes result, "<img src=\"#{emote_src("red_heart")}\""
     assert_not_includes result, "<img src=\"#{emote_src("aqua_heart")}\""
   end
@@ -440,93 +440,93 @@ class ApplicationHelperTest < ActionView::TestCase
   # -- Large emotes on a line of their own --
 
   test "shows an emote alone in a description large" do
-    result = formatted_description(":40_red_heart:")
+    result = formatted_description(":40-red-heart:")
     assert_includes result, 'class="emote-inline emote-inline--large" width="48" height="48"'
   end
 
   test "shows several emotes alone on a line large" do
-    result = formatted_description(" :40_red_heart: :11_aqua_heart:  ")
+    result = formatted_description(" :40-red-heart: :11-aqua-heart:  ")
     assert_equal 2, result.scan("emote-inline--large").size
   end
 
   test "keeps an emote next to text small" do
-    result = formatted_description("I love this :11_aqua_heart:")
+    result = formatted_description("I love this :11-aqua-heart:")
     assert_includes result, 'class="emote-inline" width="24" height="24"'
     assert_not_includes result, "emote-inline--large"
   end
 
   test "shows only the emote on its own description line large" do
-    result = formatted_description("hello :40_red_heart:\n:11_aqua_heart:\nbye")
+    result = formatted_description("hello :40-red-heart:\n:11-aqua-heart:\nbye")
     assert_equal 1, result.scan("emote-inline--large").size
     assert_match(/alt="aqua heart" class="emote-inline emote-inline--large"/, result)
     assert_match(/alt="red heart" class="emote-inline" /, result)
   end
 
   test "shows an emote inside inline markup on its own line large" do
-    result = formatted_description("<b>:40_red_heart:</b>\n||:11_aqua_heart:||")
+    result = formatted_description("<b>:40-red-heart:</b>\n||:11-aqua-heart:||")
     assert_equal 2, result.scan("emote-inline--large").size
   end
 
   test "treats block tags as line breaks" do
-    result = formatted_description("<table><tr><td>:40_red_heart:</td><td>text</td></tr></table>")
+    result = formatted_description("<table><tr><td>:40-red-heart:</td><td>text</td></tr></table>")
     assert_includes result, "emote-inline--large"
   end
 
   test "treats other block-level tags as line breaks" do
     [ "<hr>", "<pre>", "<address>", "<dl><dt>", "<dd>" ].each do |tag|
-      result = formatted_description("text#{tag}:40_red_heart:")
+      result = formatted_description("text#{tag}:40-red-heart:")
       assert_includes result, "emote-inline--large", "expected #{tag} to start a new line"
     end
   end
 
   test "shows an emote at the end of a details block large" do
-    result = formatted_description("<details><summary>hi</summary>:40_red_heart:</details>")
+    result = formatted_description("<details><summary>hi</summary>:40-red-heart:</details>")
     assert_includes result, "emote-inline--large"
   end
 
   test "keeps an emote next to inline code or an entity small" do
-    assert_not_includes formatted_description(":40_red_heart: <code>x</code>"), "emote-inline--large"
-    assert_not_includes formatted_description(":40_red_heart: &amp;"), "emote-inline--large"
+    assert_not_includes formatted_description(":40-red-heart: <code>x</code>"), "emote-inline--large"
+    assert_not_includes formatted_description(":40-red-heart: &amp;"), "emote-inline--large"
   end
 
   test "does not replace emote codes in a multi-line code block" do
-    result = formatted_description("<code>:40_red_heart:\n:11_aqua_heart:</code>")
+    result = formatted_description("<code>:40-red-heart:\n:11-aqua-heart:</code>")
     assert_not_includes result, "<img"
   end
 
   test "keeps emotes small past the large emote limit" do
-    result = formatted_description(":40_red_heart: " * (ApplicationHelper::LARGE_EMOTE_LIMIT + 1))
+    result = formatted_description(":40-red-heart: " * (ApplicationHelper::LARGE_EMOTE_LIMIT + 1))
     assert_not_includes result, "emote-inline--large"
   end
 
   test "shows an emote alone on a chat message line large" do
-    result = formatted_inline("hi\n:40_red_heart:\nbye", large_emotes: true)
+    result = formatted_inline("hi\n:40-red-heart:\nbye", large_emotes: true)
     assert_equal 1, result.scan("emote-inline--large").size
   end
 
   test "never shows emotes large in inline fields by default" do
-    assert_not_includes formatted_inline(":40_red_heart:"), "emote-inline--large"
+    assert_not_includes formatted_inline(":40-red-heart:"), "emote-inline--large"
   end
 
   test "replaces an emote typed by its name" do
-    result = formatted_inline(":02_spring_heart:")
+    result = formatted_inline(":02-spring-heart:")
     assert_includes result, "<img src=\"#{emote_src("spring_heart")}\""
     assert_includes result, 'alt="spring heart"'
   end
 
   test "an unknown code doesn't stop the next emote from rendering" do
-    result = formatted_inline("see you at 12:30:red_heart:")
+    result = formatted_inline("see you at 12:30:red-heart:")
     assert_includes result, "see you at 12:30<img src=\"#{emote_src("red_heart")}\""
   end
 
   test "the semicolon ending an HTML entity doesn't open an emote code" do
-    assert_equal "&amp;red_heart;", formatted_inline("&amp;red_heart;")
-    result = formatted_inline("Tom & Jerry;red_heart;")
+    assert_equal "&amp;red-heart;", formatted_inline("&amp;red-heart;")
+    result = formatted_inline("Tom & Jerry;red-heart;")
     assert_includes result, "Tom &amp; Jerry<img src=\"#{emote_src("red_heart")}\""
   end
 
   test "leaves unknown codes as typed" do
-    assert_equal "a :fake_heart: b :note:", formatted_inline("a :fake_heart: b :note:")
+    assert_equal "a :fake-heart: b :note:", formatted_inline("a :fake-heart: b :note:")
   end
 
   test "plain_field replaces emotes with their names in brackets" do
@@ -535,11 +535,11 @@ class ApplicationHelperTest < ActionView::TestCase
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "100.png", content_type: "image/png")
     emote.save!
 
-    assert_equal "Hello [aqua heart] and [100]", plain_field("Hello :11_aqua_heart: and ;100;")
+    assert_equal "Hello [aqua heart] and [100]", plain_field("Hello :11-aqua-heart: and ;100;")
   end
 
   test "plain_field leaves unknown codes as typed" do
-    assert_equal "Ratio 3:2 :fake_heart:", plain_field("Ratio 3:2 :fake_heart:")
+    assert_equal "Ratio 3:2 :fake-heart:", plain_field("Ratio 3:2 :fake-heart:")
   end
 
   # -- Multiple blank lines --
@@ -876,8 +876,8 @@ class ApplicationHelperTest < ActionView::TestCase
     hearts = JSON.parse(script.text)
     assert_equal EmoteRegistry.current.pickable.map(&:code), hearts.map { |heart| heart["code"].delete(":") }
     assert_equal(
-      { "name" => "13_abyss_heart", "label" => "abyss heart", "src" => emote_src("abyss_heart"), "code" => ":abyss_heart:", "group" => "Hearts" },
-      hearts.find { |heart| heart["code"] == ":abyss_heart:" }
+      { "name" => "13-abyss-heart", "label" => "abyss heart", "src" => emote_src("abyss-heart"), "code" => ":abyss-heart:", "group" => "Hearts" },
+      hearts.find { |heart| heart["code"] == ":abyss-heart:" }
     )
   end
 

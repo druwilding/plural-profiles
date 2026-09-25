@@ -28,7 +28,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     delete admin_emote_path(@emote)
     assert_redirected_to root_path
 
-    assert_equal "48_cadbury_heart", @emote.reload.name
+    assert_equal "48-cadbury-heart", @emote.reload.name
     assert_not @emote.archived?
   end
 
@@ -40,8 +40,8 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     names = css_select("#emote-sections .emote-row input[name='emote[name]']").map { |input| input["value"] }
-    assert_equal "01_dewdrop_heart", names.first
-    assert_equal "50_sunshine_heart", names.last
+    assert_equal "01-dewdrop-heart", names.first
+    assert_equal "50-sunshine-heart", names.last
     assert_select "summary.emote-section__heading", text: /Hearts/
   end
 
@@ -49,40 +49,40 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     get admin_emotes_path
 
-    assert_select "##{ActionView::RecordIdentifier.dom_id(@emote, :code)}[value='cadbury_heart'][disabled]"
+    assert_select "##{ActionView::RecordIdentifier.dom_id(@emote, :code)}[value='cadbury-heart'][disabled]"
   end
 
   # -- Update --
 
   test "renaming re-renders the list and keeps the old code as an alias" do
     sign_in_as @admin
-    patch admin_emote_path(@emote), params: { emote: { name: "48_chocolate_heart", code_overridden: "0" } }, headers: TURBO_STREAM
+    patch admin_emote_path(@emote), params: { emote: { name: "48-chocolate-heart", code_overridden: "0" } }, headers: TURBO_STREAM
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_match 'target="emote-sections"', response.body
-    assert_match "Saved 48_chocolate_heart.", response.body
-    assert_equal "chocolate_heart", @emote.reload.code
-    assert_equal [ "cadbury_heart" ], @emote.aliases.pluck(:code)
+    assert_match "Saved 48-chocolate-heart.", response.body
+    assert_equal "chocolate-heart", @emote.reload.code
+    assert_equal [ "cadbury-heart" ], @emote.aliases.pluck(:code)
   end
 
   test "a failed rename re-renders just that row with errors" do
     sign_in_as @admin
-    patch admin_emote_path(@emote), params: { emote: { name: "36_red_heart", code_overridden: "0" } }, headers: TURBO_STREAM
+    patch admin_emote_path(@emote), params: { emote: { name: "36-red-heart", code_overridden: "0" } }, headers: TURBO_STREAM
 
     assert_response :success
     assert_match %(target="#{ActionView::RecordIdentifier.dom_id(@emote)}"), response.body
-    assert_match "is already used by 36_red_heart", response.body
-    assert_equal "48_cadbury_heart", @emote.reload.name
+    assert_match "is already used by 36-red-heart", response.body
+    assert_equal "48-cadbury-heart", @emote.reload.name
   end
 
   test "overriding the code keeps it through renames" do
     sign_in_as @admin
     patch admin_emote_path(@emote), params: { emote: { code_overridden: "1", code: "cadbury" } }, headers: TURBO_STREAM
-    patch admin_emote_path(@emote), params: { emote: { name: "01_cadbury_heart", code_overridden: "1", code: "cadbury" } }, headers: TURBO_STREAM
+    patch admin_emote_path(@emote), params: { emote: { name: "01-cadbury-heart", code_overridden: "1", code: "cadbury" } }, headers: TURBO_STREAM
 
     @emote.reload
-    assert_equal "01_cadbury_heart", @emote.name
+    assert_equal "01-cadbury-heart", @emote.name
     assert_equal "cadbury", @emote.code
   end
 
@@ -91,7 +91,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     patch admin_emote_path(@emote), params: { emote: { code_overridden: "0", code: "ignored" } }, headers: TURBO_STREAM
 
-    assert_equal "cadbury_heart", @emote.reload.code
+    assert_equal "cadbury-heart", @emote.reload.code
   end
 
   test "moving an emote to another group" do
@@ -111,10 +111,10 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
 
   test "html requests redirect back to the list" do
     sign_in_as @admin
-    patch admin_emote_path(@emote), params: { emote: { name: "48_chocolate_heart" } }
+    patch admin_emote_path(@emote), params: { emote: { name: "48-chocolate-heart" } }
 
     assert_redirected_to admin_emotes_path
-    assert_equal "Saved 48_chocolate_heart.", flash[:notice]
+    assert_equal "Saved 48-chocolate-heart.", flash[:notice]
   end
 
   # -- Archive, restore, delete --
@@ -144,20 +144,20 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_not Emote.exists?(@emote.id)
-    assert_nil EmoteRegistry.current.resolve("cadbury_heart")
+    assert_nil EmoteRegistry.current.resolve("cadbury-heart")
   end
 
   # -- Aliases --
 
   test "removing an old code stops it resolving" do
-    @emote.update!(name: "48_chocolate_heart")
-    emote_alias = @emote.aliases.find_by!(code: "cadbury_heart")
+    @emote.update!(name: "48-chocolate-heart")
+    emote_alias = @emote.aliases.find_by!(code: "cadbury-heart")
     sign_in_as @admin
     delete remove_alias_admin_emote_path(@emote, alias_id: emote_alias.id), headers: TURBO_STREAM
 
     assert_response :success
     assert_empty @emote.aliases.reload
-    assert_nil EmoteRegistry.current.resolve("cadbury_heart")
+    assert_nil EmoteRegistry.current.resolve("cadbury-heart")
   end
 
   # -- Upload --
@@ -172,10 +172,10 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     get upload_admin_emotes_path
     assert_redirected_to root_path
     assert_no_difference -> { ActiveStorage::Blob.count } do
-      post upload_admin_emotes_path, params: { files: [ png_upload("07_party.png") ] }
+      post upload_admin_emotes_path, params: { files: [ png_upload("07-party.png") ] }
     end
     assert_redirected_to root_path
-    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: "x", name: "07_party", action: "create" } } }
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: "x", name: "07-party", action: "create" } } }
     assert_redirected_to root_path
   end
 
@@ -199,43 +199,43 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
   test "new files are added straight away, and rejected ones reported" do
     sign_in_as @admin
     post upload_admin_emotes_path, params: { emote_group_id: emote_groups(:hearts).id, files: [
-      png_upload("07_party.png"), png_upload("100.png"),
+      png_upload("07-party.png"), png_upload("100.png"),
       Rack::Test::UploadedFile.new(StringIO.new("hi"), "text/plain", original_filename: "notes.txt")
     ] }
 
     assert_redirected_to admin_emotes_path
     assert_equal "2 emotes added.", flash[:notice]
     assert_equal "Not uploaded: notes.txt isn't a PNG or WebP image.", flash[:alert]
-    assert Emote.exists?(name: "07_party")
+    assert Emote.exists?(name: "07-party")
     assert Emote.exists?(code: "100")
   end
 
   test "a clash shows the decision page, and saving applies the decision" do
     sign_in_as @admin
-    post upload_admin_emotes_path, params: { files: [ png_upload("07_party.png"), png_upload("36_red_heart.png") ] }
+    post upload_admin_emotes_path, params: { files: [ png_upload("07-party.png"), png_upload("36-red-heart.png") ] }
 
     assert_response :success
     assert_select "p", text: "1 emote added."
     assert_select ".upload-review__row", 1
-    assert_select ".upload-review__heading", text: /36_red_heart.png\s+is named like an emote that already exists/
+    assert_select ".upload-review__heading", text: /36-red-heart.png\s+is named like an emote that already exists/
     assert_select "input[type=radio][name='rows[0][action]'][value=replace][checked]"
 
     signed_id = css_select("input[name='rows[0][signed_id]']").first["value"]
-    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: signed_id, name: "36_red_heart", action: "replace", replace_id: emotes(:red_heart).id } } }
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: signed_id, name: "36-red-heart", action: "replace", replace_id: emotes(:red_heart).id } } }
 
     assert_redirected_to admin_emotes_path
     assert_equal "1 image replaced.", flash[:notice]
-    assert_equal "36_red_heart.png", emotes(:red_heart).reload.image.filename.to_s
+    assert_equal "36-red-heart.png", emotes(:red_heart).reload.image.filename.to_s
   end
 
   test "a failed decision re-renders the page with errors and saves nothing" do
-    row = EmoteUpload.process([ png_upload("36_red_heart.png") ], group_id: nil).pending.first
+    row = EmoteUpload.process([ png_upload("36-red-heart.png") ], group_id: nil).pending.first
     sign_in_as @admin
-    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: row.signed_id, name: "36_red_heart", action: "create" } } }
+    post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: row.signed_id, name: "36-red-heart", action: "create" } } }
 
     assert_response :unprocessable_content
     assert_select ".flash--alert", text: /Nothing was saved/
-    assert_select ".upload-review__errors", text: /already used by 36_red_heart/
+    assert_select ".upload-review__errors", text: /already used by 36-red-heart/
     assert_select "input[name='rows[0][signed_id]'][value=?]", row.signed_id
   end
 

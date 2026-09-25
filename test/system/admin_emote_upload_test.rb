@@ -18,7 +18,7 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
   end
 
   test "PNG and SVG files are added straight away, with SVGs converted to PNG in the browser" do
-    png = file("07_party.png", png_bytes(8, 8))
+    png = file("07-party.png", png_bytes(8, 8))
     svg = file("100.svg", %(<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20"><rect width="10" height="20" fill="red"/></svg>))
 
     visit upload_admin_emotes_path
@@ -35,20 +35,20 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
 
   test "a clash asks what to do, and a new name adds it as a new emote" do
     visit upload_admin_emotes_path
-    attach_file "Images", [ file("36_red_heart.png", png_bytes(8, 8)) ]
+    attach_file "Images", [ file("36-red-heart.png", png_bytes(8, 8)) ]
     click_button "Upload"
 
     assert_selector "h1", text: "Choose what to do"
-    assert_checked_field "Give 36_red_heart this image instead"
-    fill_in "Name", with: "02_spring_heart"
+    assert_checked_field "Give 36-red-heart this image instead"
+    fill_in "Name", with: "02-spring-heart"
     assert_checked_field "Add it as a new emote"
-    assert_text "“02_spring_heart” is already used by 02_spring_heart."
-    fill_in "Name", with: "37_rouge_heart"
-    assert_text "It will be typed as :rouge_heart:"
+    assert_text "“02-spring-heart” is already used by 02-spring-heart."
+    fill_in "Name", with: "37-rouge-heart"
+    assert_text "It will be typed as :rouge-heart:"
     click_button "Save"
 
     assert_selector ".flash--notice", text: "1 emote added."
-    assert Emote.exists?(code: "rouge_heart")
+    assert Emote.exists?(code: "rouge-heart")
   end
 
   test "uploading opens the group the emotes went into" do
@@ -57,12 +57,12 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
     assert_selector "details.emote-section:not([open])", text: "Hearts"
 
     visit upload_admin_emotes_path
-    attach_file "Images", [ file("07_party.png", png_bytes(8, 8)) ]
+    attach_file "Images", [ file("07-party.png", png_bytes(8, 8)) ]
     click_button "Upload"
 
     assert_selector ".flash--notice", text: "1 emote added."
     assert_selector "details.emote-section[open]", text: "Hearts"
-    assert_field with: "07_party"
+    assert_field with: "07-party"
 
     # It stays open, as if it had been opened by hand.
     visit admin_emotes_path

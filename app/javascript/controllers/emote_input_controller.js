@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Emote entry for any field that renders emote codes. The field is wrapped by
 // ApplicationHelper#emote_field, which also renders the (hidden until
 // connected) emote button. Two ways in, both inserting the canonical code
-// (`:spring_heart:`) plus a trailing space, so what's saved is always the
+// (`:spring-heart:`) plus a trailing space, so what's saved is always the
 // plain code:
 //
 //  - The emote button opens a dialog of every emote. One dialog is shared by
@@ -24,10 +24,10 @@ const MIN_QUERY_LENGTH = 2
 const OPEN_CODE = /[:;]([\p{L}\p{N}_-]+)$/u
 const COMPLETE_CODE = /[:;]([a-z0-9_-]+)[:;]$/i
 
-// A number before the name in an old Discord-numbered code, e.g. the "11_" in
-// "11_aqua_heart". Only stripped when a letter follows, so "100" stays "100".
+// A number before the name in an old Discord-numbered code, e.g. the "11-" in
+// "11-aqua-heart". Only stripped when a letter follows, so "100" stays "100".
 // Mirrors EmoteRegistry::LEGACY_NUMBER_PREFIX.
-const LEGACY_NUMBER_PREFIX = /^\d+_?(?=[a-z])/
+const LEGACY_NUMBER_PREFIX = /^\d+-?(?=[a-z])/
 const WORD_CHARACTER = /[\p{L}\p{N}_]/u
 
 const CARET_KEYS = [ "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown" ]
@@ -58,24 +58,24 @@ function emotes() {
   return emoteList
 }
 
-// "spring_heart" from ":spring_heart:"
+// "spring-heart" from ":spring-heart:"
 function codeOf(emote) {
   return emote.code.slice(1, -1)
 }
 
-// Same normalisation as EmoteRegistry#resolve: case-insensitive, and hyphens
-// (or spaces, from the dialog search) for underscores.
+// Same normalisation as EmoteRegistry#resolve: case-insensitive, and
+// underscores (or spaces, from the dialog search) for hyphens.
 function normaliseQuery(query) {
-  return query.trim().toLowerCase().replace(/[\s-]+/g, "_")
+  return query.trim().toLowerCase().replace(/[\s_]+/g, "-")
 }
 
 // Matches in tiers, each in display order:
 // 1. an exact name or code (":100" puts 100 first)
-// 2. codes starting with the query ("abyss_he" finds abyss, ":10" finds 100)
-// 3. names starting with it (":02" finds 02_spring_heart, ":10" 10_aqua_heart)
-// 4. codes containing it anywhere, without the "_heart" suffix so "he"
+// 2. codes starting with the query ("abyss-he" finds abyss, ":10" finds 100)
+// 3. names starting with it (":02" finds 02-spring-heart, ":10" 10-aqua-heart)
+// 4. codes containing it anywhere, without the "-heart" suffix so "he"
 //    doesn't match every single heart
-// An old Discord number prefix ("11_aq") also matches by what follows it.
+// An old Discord number prefix ("11-aq") also matches by what follows it.
 function matchEmotes(query) {
   const typed = normaliseQuery(query)
   if (!typed) return []
@@ -87,7 +87,7 @@ function matchEmotes(query) {
     if (emote.name === typed || code === typed) tiers[0].push(emote)
     else if (code.startsWith(typed) || code.startsWith(bare)) tiers[1].push(emote)
     else if (emote.name.startsWith(typed)) tiers[2].push(emote)
-    else if (code.replace(/_heart$/, "").includes(bare)) tiers[3].push(emote)
+    else if (code.replace(/-heart$/, "").includes(bare)) tiers[3].push(emote)
   }
   return tiers.flat()
 }
@@ -112,7 +112,7 @@ function openCodeAtCaret(field) {
   const preceding = before.slice(0, start)
   const characterBefore = preceding.slice(-1)
   if (characterBefore === ":" || characterBefore === ";") {
-    // Only straight after a finished emote code (:red_heart::ab), so emotes
+    // Only straight after a finished emote code (:red-heart::ab), so emotes
     // can sit side by side — not after a stray delimiter (::ab).
     const complete = preceding.match(COMPLETE_CODE)
     if (!complete || !isEmoteCode(complete[1])) return null

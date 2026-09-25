@@ -72,13 +72,13 @@ class EmoteInputTest < ApplicationSystemTestCase
   test "the Emotes field takes the same emote more than once, in any order, shown next to the pronouns" do
     visit edit_our_profile_path(@profile)
     field = find_field("Emotes")
-    field.fill_in with: ":red_heart: "
+    field.fill_in with: ":red-heart: "
 
     emote_button_for(field).click
     within("dialog.emote-dialog[open]") { click_button "aqua heart" }
     emote_button_for(field).click
     within("dialog.emote-dialog[open]") { click_button "red heart" }
-    assert_field "Emotes", with: ":red_heart: :aqua_heart: :red_heart: "
+    assert_field "Emotes", with: ":red-heart: :aqua-heart: :red-heart: "
 
     click_button "Update profile"
     assert_text "Profile updated."
@@ -100,13 +100,13 @@ class EmoteInputTest < ApplicationSystemTestCase
     field.send_keys(":02")
     assert_equal [ "spring heart" ], option_labels(field)
     field.send_keys(:enter)
-    assert_equal ":spring_heart: ", field.value
+    assert_equal ":spring-heart: ", field.value
 
     field.send_keys(":10")
     assert_selector ".emote-input__option--active", text: "100"
     assert_equal [ "100", "aqua heart" ], option_labels(field)
     field.send_keys(:enter)
-    assert_equal ":spring_heart: :100: ", field.value
+    assert_equal ":spring-heart: :100: ", field.value
   end
 
   test "autocomplete opens straight after a finished code that isn't a heart" do
@@ -126,7 +126,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     within("dialog.emote-dialog[open]") { assert_no_selector "button[aria-label='party']" }
     find(".emote-dialog__search").send_keys(:escape)
 
-    add_emote("07_party")
+    add_emote("07-party")
     within(".sidebar") { click_link "Alice", match: :first }
     click_link "Edit"
     # Turbo shows its cached copy of the edit page first; wait for the real one.
@@ -145,12 +145,12 @@ class EmoteInputTest < ApplicationSystemTestCase
     within("dialog.emote-dialog[open]") { click_button "abyss heart" }
 
     assert_no_selector "dialog.emote-dialog[open]"
-    assert_field "Subtitle", with: "hello :abyss_heart: world"
+    assert_field "Subtitle", with: "hello :abyss-heart: world"
     assert_selector "#profile_subtitle:focus"
 
     click_button "Update profile"
     assert_text "Profile updated."
-    assert_equal "hello :abyss_heart: world", @profile.reload.subtitle
+    assert_equal "hello :abyss-heart: world", @profile.reload.subtitle
     assert_selector ".subtitle img.emote-inline[alt='abyss heart']"
   end
 
@@ -161,7 +161,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     emote_button_for(field).click
     within("dialog.emote-dialog[open]") { click_button "red heart" }
 
-    assert_field "Tag line", with: "Always stargazing:red_heart: "
+    assert_field "Tag line", with: "Always stargazing:red-heart: "
   end
 
   test "searching the picker filters hearts and Enter picks the first match" do
@@ -176,7 +176,7 @@ class EmoteInputTest < ApplicationSystemTestCase
       find(".emote-dialog__search").send_keys(:enter)
     end
 
-    assert_field "Pronouns", with: ":haunted_heart: "
+    assert_field "Pronouns", with: ":haunted-heart: "
   end
 
   test "closing the picker with Escape inserts nothing and returns focus to the field" do
@@ -278,11 +278,11 @@ class EmoteInputTest < ApplicationSystemTestCase
     assert_equal [ "abyss heart", "vulnerable heart" ], option_labels(field)
     assert_equal "true", field[:"aria-expanded"]
     assert_images = menu_for(field).all("img").map { |img| URI(img[:src]).path }
-    assert_equal [ emote_src("abyss_heart"), emote_src("vulnerable_heart") ], assert_images
+    assert_equal [ emote_src("abyss-heart"), emote_src("vulnerable-heart") ], assert_images
 
     field.send_keys(:enter)
 
-    assert_equal ":abyss_heart: ", field.value
+    assert_equal ":abyss-heart: ", field.value
     assert_no_selector ".emote-input__menu[role='listbox']", visible: true
     assert_current_path edit_our_profile_path(@profile), ignore_query: true
   end
@@ -296,7 +296,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     assert_selector ".emote-input__option--active", text: "vulnerable heart"
     field.send_keys(:enter)
 
-    assert_equal ":vulnerable_heart: ", field.value
+    assert_equal ":vulnerable-heart: ", field.value
   end
 
   test "Tab also inserts the highlighted heart, and up wraps to the last option" do
@@ -305,7 +305,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     field.fill_in with: "so "
     field.send_keys(":ab", :up, :tab)
 
-    assert_equal "so :vulnerable_heart: ", field.value
+    assert_equal "so :vulnerable-heart: ", field.value
     assert_selector "#profile_subtitle:focus"
   end
 
@@ -329,7 +329,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     field.send_keys("d")
     assert_selector ".emote-input__option", count: 1, text: "shadow heart"
 
-    field.send_keys("ow_heart:")
+    field.send_keys("ow-heart:")
     assert_no_selector ".emote-input__menu", visible: true
   end
 
@@ -355,7 +355,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     visit edit_our_profile_path(@profile)
     field = find_field("Subtitle")
     field.fill_in with: ""
-    field.send_keys(":red_heart::ab")
+    field.send_keys(":red-heart::ab")
 
     assert_selector ".emote-input__option--active", text: "abyss heart"
   end
@@ -390,7 +390,7 @@ class EmoteInputTest < ApplicationSystemTestCase
     assert menu_top < field_top + (field_bottom - field_top) / 2, "expected the menu near the caret, not below the whole textarea"
 
     field.send_keys(:enter)
-    assert_equal "line one\nline two :abyss_heart: ", field.value
+    assert_equal "line one\nline two :abyss-heart: ", field.value
   end
 
   test "group form fields get the emote button and autocomplete too" do
@@ -400,7 +400,7 @@ class EmoteInputTest < ApplicationSystemTestCase
 
     field.fill_in with: ""
     field.send_keys(";ab", :enter)
-    assert_equal ":abyss_heart: ", field.value
+    assert_equal ":abyss-heart: ", field.value
   end
 
   # -- Edge cases --

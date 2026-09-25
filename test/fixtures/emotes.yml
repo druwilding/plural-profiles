@@ -1,8 +1,8 @@
 # One emote per image in db/emotes/hearts, mirroring the hearts that
-# production imported: the filename is the name ("01_dewdrop_heart"), and the
-# fixture label is the code ("dewdrop_heart").
-<% emote_fixture_names.each do |name, code| %>
-<%= code %>:
+# production imported: the filename is the name ("01-dewdrop-heart"), and the
+# fixture label is the code with underscores ("dewdrop_heart").
+<% emote_fixture_names.each do |name, code, label| %>
+<%= label %>:
   emote_group: hearts
   name: <%= name %>
   code: <%= code %>

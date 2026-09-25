@@ -245,7 +245,7 @@ module ApplicationHelper
 
   def replace_emote_codes(html, large_emotes: false)
     # Only replace emotes in text nodes — skip <code>...</code> blocks and HTML tags
-    # so that emote codes inside attributes (e.g. title=":11_aqua_heart:") are preserved.
+    # so that emote codes inside attributes (e.g. title=":11-aqua-heart:") are preserved.
     # Entities are skipped too, so the ; ending one (&amp;) can't open an emote code.
     registry = EmoteRegistry.current
     lines = emote_pieces(html).slice_after { |_, kind| kind == :break }

@@ -1,6 +1,7 @@
 # Moves the hardcoded hearts (formerly HeartEmoji::ALL) into the database, as
 # a "Hearts" emote group. The images are in db/emotes/hearts, named after each
-# heart's emote (e.g. 01_dewdrop_heart.webp); db/seeds.rb imports the same
+# heart's emote (e.g. 01-dewdrop-heart.webp, since emote identifiers switched to
+# hyphens in ConvertEmoteIdentifiersToHyphens); db/seeds.rb imports the same
 # folder into a fresh database, which loads the schema without running this.
 #
 # Each heart's code stays exactly as before (e.g. "dewdrop_heart"), so every
@@ -39,11 +40,11 @@ class ImportHeartsAsEmotes < ActiveRecord::Migration[8.1]
       next if Emote.exists?(code: heart) || EmoteAlias.exists?(code: heart)
 
       name = format("%02d_%s", number, heart)
-      raise "expected #{name} to derive the code #{heart}" unless Emote.default_code(name) == heart
+      raise "expected #{name} to derive the code #{heart}" unless Emote.default_code(name) == Emote.normalize_identifier(heart)
 
       emote = group.emotes.new(name: name)
       emote.image.attach(
-        io: File.open(Rails.root.join("db/emotes/hearts/#{name}.webp")),
+        io: File.open(Rails.root.join("db/emotes/hearts/#{Emote.normalize_identifier(name)}.webp")),
         filename: "#{heart}.webp",
         content_type: "image/webp"
       )
