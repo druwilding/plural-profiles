@@ -91,7 +91,22 @@ class EmoteTest < ActiveSupport::TestCase
   test "names must only contain lowercase letters, numbers and hyphens" do
     emote = build_emote(name: "party time!")
     assert_not emote.valid?
-    assert_includes emote.errors[:name], "can only contain lowercase letters, numbers and hyphens"
+    assert_includes emote.errors[:name], "can only contain lowercase letters, numbers and hyphens, and can’t start or end with a hyphen"
+  end
+
+  test "names and codes can't start or end with a hyphen" do
+    [ "-party", "party-", "_party", "-" ].each do |name|
+      emote = build_emote(name: name, code: "party", code_overridden: true)
+      assert_not emote.valid?, "expected #{name.inspect} to be invalid"
+      assert emote.errors[:name].any?
+    end
+
+    emote = build_emote(name: "07-party", code: "party-", code_overridden: true)
+    assert_not emote.valid?
+    assert emote.errors[:code].any?
+
+    assert build_emote(name: "7").valid?
+    assert build_emote(name: "big--party").valid?
   end
 
   test "requires an image" do

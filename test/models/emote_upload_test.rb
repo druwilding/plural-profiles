@@ -152,6 +152,16 @@ class EmoteUploadTest < ActiveSupport::TestCase
     assert_equal "skip", rows.first.action
   end
 
+  test "names typed on the decision page are normalised like emote names, so clashes are still found" do
+    row = process_files(upload("36-red-heart.png")).pending.first
+
+    rows = EmoteUpload.classify(EmoteUpload.rows_from_params([ decision(row, name: " 36_Red_Heart ", action: nil) ]))
+
+    assert_equal "36-red-heart", rows.first.name
+    assert_equal "clash", rows.first.status
+    assert_equal emotes(:red_heart), rows.first.clash
+  end
+
   private
 
   def stub_const(klass, name, value)

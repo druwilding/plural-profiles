@@ -14,7 +14,9 @@
 # given (and in typed codes, see EmoteRegistry#resolve) and become hyphens, so
 # codes from before the switch, like :spring_heart:, keep working.
 class Emote < ApplicationRecord
-  IDENTIFIER_FORMAT = /\A[a-z0-9-]+\z/
+  # Starting or ending with a hyphen isn't allowed: a typed code has to start
+  # with a letter or number (EmoteRegistry::CODE_PATTERN).
+  IDENTIFIER_FORMAT = /\A[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z/
   MAX_IDENTIFIER_LENGTH = 64
 
   # The static webp shown everywhere. 64px covers the largest display size
@@ -44,7 +46,7 @@ class Emote < ApplicationRecord
   before_update :record_previous_code_as_alias, if: :will_save_change_to_code?
 
   validates :name, :code, presence: true, length: { maximum: MAX_IDENTIFIER_LENGTH },
-    format: { with: IDENTIFIER_FORMAT, message: "can only contain lowercase letters, numbers and hyphens", allow_blank: true }
+    format: { with: IDENTIFIER_FORMAT, message: "can only contain lowercase letters, numbers and hyphens, and can’t start or end with a hyphen", allow_blank: true }
   validates :image, presence: true
   validate :identifiers_are_unique
 

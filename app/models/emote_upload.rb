@@ -106,7 +106,7 @@ class EmoteUpload
       Row.new(
         blob: blob,
         filename: blob.filename.to_s,
-        name: params[:name].to_s.strip.downcase,
+        name: Emote.normalize_identifier(params[:name]),
         group_id: site_group_id(params[:group_id]),
         action: ACTIONS.include?(params[:action]) ? params[:action] : "skip",
         clash: params[:replace_id].presence && site_emotes.find_by(id: params[:replace_id])
