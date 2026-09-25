@@ -8,10 +8,11 @@
 # in one process reach every other process on its next request. The cache store
 # is per-process (memory_store), so a Rails.cache counter wouldn't do that.
 class EmoteRegistry
-  Entry = Data.define(:id, :name, :code, :label, :src, :group_id, :archived) do
+  Entry = Data.define(:id, :name, :code, :label, :src, :emote_set_id, :archived) do
     alias_method :archived?, :archived
   end
-  Group = Data.define(:id, :name, :position)
+  # Not called Set, which would hide Ruby's ::Set inside this class.
+  SetEntry = Data.define(:id, :name, :position)
 
   # A typed code: a delimiter (: or ;) and a name, with the closing delimiter
   # only looked ahead at. See #replace_codes for why it isn't consumed here.
@@ -24,7 +25,7 @@ class EmoteRegistry
 
   VERSION_SQL = <<~SQL.squish.freeze
     SELECT concat_ws('/',
-      (SELECT count(*) FROM emote_groups), (SELECT max(updated_at) FROM emote_groups),
+      (SELECT count(*) FROM emote_sets), (SELECT max(updated_at) FROM emote_sets),
       (SELECT count(*) FROM emotes), (SELECT max(updated_at) FROM emotes),
       (SELECT count(*) FROM emote_aliases), (SELECT max(updated_at) FROM emote_aliases))
   SQL
@@ -54,25 +55,25 @@ class EmoteRegistry
     private
 
     def build(version)
-      groups = EmoteGroup.site_wide.ordered.map do |group|
-        Group.new(id: group.id, name: group.name, position: group.position)
+      emote_sets = EmoteSet.site_wide.ordered.map do |emote_set|
+        SetEntry.new(id: emote_set.id, name: emote_set.name, position: emote_set.position)
       end
-      group_order = groups.each_with_index.to_h { |group, index| [ group.id, index ] }
+      set_order = emote_sets.each_with_index.to_h { |emote_set, index| [ emote_set.id, index ] }
 
-      emotes = Emote.joins(:emote_group).merge(EmoteGroup.site_wide)
+      emotes = Emote.joins(:emote_set).merge(EmoteSet.site_wide)
         .includes(:aliases, image_attachment: :blob).to_a
-      emotes.sort_by! { |emote| [ group_order.fetch(emote.emote_group_id, groups.size), Emote.natural_sort_key(emote.name), emote.name ] }
+      emotes.sort_by! { |emote| [ set_order.fetch(emote.emote_set_id, emote_sets.size), Emote.natural_sort_key(emote.name), emote.name ] }
 
-      new(version: version, groups: groups, emotes: emotes)
+      new(version: version, emote_sets: emote_sets, emotes: emotes)
     end
   end
 
-  attr_reader :version, :groups, :entries
+  attr_reader :version, :emote_sets, :entries
 
-  def initialize(version:, groups:, emotes:)
+  def initialize(version:, emote_sets:, emotes:)
     @version = version
-    @groups = groups.freeze
-    @groups_by_id = @groups.index_by(&:id)
+    @emote_sets = emote_sets.freeze
+    @emote_sets_by_id = @emote_sets.index_by(&:id)
     @entries = emotes.map { |emote| entry_for(emote) }.freeze
     @by_name = @entries.index_by(&:name)
     @by_code = @entries.index_by(&:code)
@@ -102,8 +103,8 @@ class EmoteRegistry
     end
   end
 
-  def group(id)
-    @groups_by_id[id]
+  def emote_set(id)
+    @emote_sets_by_id[id]
   end
 
   # Replaces every code in text that resolves to an emote with the block's
@@ -144,7 +145,7 @@ class EmoteRegistry
       code: emote.code,
       label: emote.code.tr("-", " "),
       src: emote.display_image_path,
-      group_id: emote.emote_group_id,
+      emote_set_id: emote.emote_set_id,
       archived: emote.archived?
     )
   end

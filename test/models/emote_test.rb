@@ -2,7 +2,7 @@ require "test_helper"
 
 class EmoteTest < ActiveSupport::TestCase
   def build_emote(name:, **attributes)
-    emote = Emote.new(emote_group: emote_groups(:hearts), name: name, **attributes)
+    emote = Emote.new(emote_set: emote_sets(:hearts), name: name, **attributes)
     emote.image.attach(io: StringIO.new(png_bytes(8, 8)), filename: "#{name}.png", content_type: "image/png")
     emote
   end
@@ -110,7 +110,7 @@ class EmoteTest < ActiveSupport::TestCase
   end
 
   test "requires an image" do
-    emote = Emote.new(emote_group: emote_groups(:hearts), name: "07-party")
+    emote = Emote.new(emote_set: emote_sets(:hearts), name: "07-party")
     assert_not emote.valid?
     assert emote.errors.added?(:image, :blank)
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_25_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -152,15 +152,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_090000) do
     t.index ["emote_id"], name: "index_emote_aliases_on_emote_id"
   end
 
-  create_table "emote_groups", force: :cascade do |t|
+  create_table "emote_sets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.bigint "owner_id"
     t.string "owner_type"
     t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["owner_type", "owner_id", "name"], name: "index_emote_groups_on_owner_type_and_owner_id_and_name", unique: true
-    t.index ["owner_type", "owner_id"], name: "index_emote_groups_on_owner"
+    t.index ["owner_type", "owner_id", "name"], name: "index_emote_sets_on_owner_type_and_owner_id_and_name", unique: true
+    t.index ["owner_type", "owner_id"], name: "index_emote_sets_on_owner"
   end
 
   create_table "emotes", force: :cascade do |t|
@@ -168,11 +168,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_090000) do
     t.string "code", null: false
     t.boolean "code_overridden", default: false, null: false
     t.datetime "created_at", null: false
-    t.bigint "emote_group_id", null: false
+    t.bigint "emote_set_id", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_emotes_on_code", unique: true
-    t.index ["emote_group_id"], name: "index_emotes_on_emote_group_id"
+    t.index ["emote_set_id"], name: "index_emotes_on_emote_set_id"
     t.index ["name"], name: "index_emotes_on_name", unique: true
   end
 
@@ -503,7 +503,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_090000) do
   add_foreign_key "duplication_wizards", "groups"
   add_foreign_key "duplication_wizards", "users"
   add_foreign_key "emote_aliases", "emotes"
-  add_foreign_key "emotes", "emote_groups"
+  add_foreign_key "emotes", "emote_sets"
   add_foreign_key "group_groups", "groups", column: "child_group_id"
   add_foreign_key "group_groups", "groups", column: "parent_group_id"
   add_foreign_key "group_profiles", "groups"

@@ -51,7 +51,7 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
     assert Emote.exists?(code: "rouge-heart")
   end
 
-  test "uploading opens the group the emotes went into" do
+  test "uploading opens the set the emotes went into" do
     visit admin_emotes_path
     find("summary", text: "Hearts").click
     assert_selector "details.emote-section:not([open])", text: "Hearts"

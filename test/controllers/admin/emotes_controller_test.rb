@@ -34,7 +34,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
 
   # -- Index --
 
-  test "index lists emotes by group in natural name order" do
+  test "index lists emotes by set in natural name order" do
     sign_in_as @admin
     get admin_emotes_path
 
@@ -94,19 +94,19 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "cadbury-heart", @emote.reload.code
   end
 
-  test "moving an emote to another group" do
-    other = EmoteGroup.create!(name: "Other", position: 1)
+  test "moving an emote to another set" do
+    other = EmoteSet.create!(name: "Other", position: 1)
     sign_in_as @admin
-    patch admin_emote_path(@emote), params: { emote: { emote_group_id: other.id } }, headers: TURBO_STREAM
+    patch admin_emote_path(@emote), params: { emote: { emote_set_id: other.id } }, headers: TURBO_STREAM
 
-    assert_equal other, @emote.reload.emote_group
+    assert_equal other, @emote.reload.emote_set
   end
 
-  test "an unknown group is ignored" do
+  test "an unknown set is ignored" do
     sign_in_as @admin
-    patch admin_emote_path(@emote), params: { emote: { emote_group_id: 0 } }, headers: TURBO_STREAM
+    patch admin_emote_path(@emote), params: { emote: { emote_set_id: 0 } }, headers: TURBO_STREAM
 
-    assert_equal emote_groups(:hearts), @emote.reload.emote_group
+    assert_equal emote_sets(:hearts), @emote.reload.emote_set
   end
 
   test "html requests redirect back to the list" do
@@ -179,13 +179,13 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "upload page offers the groups" do
+  test "upload page offers the sets" do
     sign_in_as @admin
     get upload_admin_emotes_path
 
     assert_response :success
     assert_select "input[type=file][name='files[]'][multiple]"
-    assert_select "select[name=emote_group_id] option", text: "Hearts"
+    assert_select "select[name=emote_set_id] option", text: "Hearts"
   end
 
   test "uploading with no files sends the admin back" do
@@ -198,7 +198,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
 
   test "new files are added straight away, and rejected ones reported" do
     sign_in_as @admin
-    post upload_admin_emotes_path, params: { emote_group_id: emote_groups(:hearts).id, files: [
+    post upload_admin_emotes_path, params: { emote_set_id: emote_sets(:hearts).id, files: [
       png_upload("07-party.png"), png_upload("100.png"),
       Rack::Test::UploadedFile.new(StringIO.new("hi"), "text/plain", original_filename: "notes.txt")
     ] }
@@ -229,7 +229,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "a failed decision re-renders the page with errors and saves nothing" do
-    row = EmoteUpload.process([ png_upload("36-red-heart.png") ], group_id: nil).pending.first
+    row = EmoteUpload.process([ png_upload("36-red-heart.png") ], emote_set_id: nil).pending.first
     sign_in_as @admin
     post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: row.signed_id, name: "36-red-heart", action: "create" } } }
 

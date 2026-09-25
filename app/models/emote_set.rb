@@ -1,7 +1,7 @@
-# A named section of emotes ("Hearts", "Other"), shown as a heading in the
-# pickers. A NULL owner means the group is site-wide; the polymorphic owner is
-# reserved for future server (Chat::Server) and personal (User) emote groups.
-class EmoteGroup < ApplicationRecord
+# A named set of emotes ("Hearts", "Other"), shown as a section with a heading
+# in the pickers. A NULL owner means the set is site-wide; the polymorphic owner is
+# reserved for future server (Chat::Server) and personal (User) emote sets.
+class EmoteSet < ApplicationRecord
   belongs_to :owner, polymorphic: true, optional: true
   has_many :emotes, -> { order(:name) }, dependent: :restrict_with_error
 

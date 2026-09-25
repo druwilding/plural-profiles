@@ -477,16 +477,16 @@ export default class extends Controller {
   }
 }
 
-// [[group name, [emote, …]], …] in the order the emotes arrive, which is
-// already group order then name order.
-function groupEmotes(list) {
-  const groups = new Map()
+// [[set name, [emote, …]], …] in the order the emotes arrive, which is
+// already set order then name order.
+function emotesBySet(list) {
+  const sets = new Map()
   for (const emote of list) {
-    const group = emote.group || "Emotes"
-    if (!groups.has(group)) groups.set(group, [])
-    groups.get(group).push(emote)
+    const setName = emote.set || "Emotes"
+    if (!sets.has(setName)) sets.set(setName, [])
+    sets.get(setName).push(emote)
   }
-  return [ ...groups ]
+  return [ ...sets ]
 }
 
 // The button in the nearest row above (direction -1) or below (1) whose centre
@@ -607,13 +607,13 @@ class EmoteDialog {
     if (sharedDialog === this) sharedDialog = null
   }
 
-  // Browsing shows every emote in a section per group, in group order. A
+  // Browsing shows every emote in a section per set, in set order. A
   // search shows one list of matches, best first, so Enter picks the best.
   filter() {
     const query = this.search.value
     const sections = query.trim()
       ? [ this.buildSection(null, matchEmotes(query)) ]
-      : groupEmotes(emotes()).map(([ group, members ]) => this.buildSection(group, members))
+      : emotesBySet(emotes()).map(([ setName, members ]) => this.buildSection(setName, members))
     this.grid.replaceChildren(...sections.filter(Boolean))
 
     const buttons = this.allButtons()
@@ -621,20 +621,20 @@ class EmoteDialog {
     this.setTabStop(buttons[0])
   }
 
-  buildSection(group, members) {
+  buildSection(setName, members) {
     if (members.length === 0) return null
 
     const section = document.createElement("section")
-    section.className = "emote-dialog__group"
+    section.className = "emote-dialog__set"
     const grid = document.createElement("div")
-    grid.className = "emote-dialog__group-grid"
+    grid.className = "emote-dialog__set-grid"
     grid.setAttribute("role", "group")
 
-    if (group) {
+    if (setName) {
       const heading = document.createElement("h3")
-      heading.className = "emote-dialog__group-title"
-      heading.id = `emote-dialog-group-${this.sectionCount = (this.sectionCount || 0) + 1}`
-      heading.textContent = group
+      heading.className = "emote-dialog__set-title"
+      heading.id = `emote-dialog-set-${this.sectionCount = (this.sectionCount || 0) + 1}`
+      heading.textContent = setName
       grid.setAttribute("aria-labelledby", heading.id)
       section.append(heading)
     } else {
@@ -697,9 +697,9 @@ class EmoteDialog {
     }
   }
 
-  // Left/Right move through emotes in order, across group boundaries.
+  // Left/Right move through emotes in order, across set boundaries.
   // Up/Down move to the nearest emote in the row above or below, found by
-  // position since each group's grid has its own rows; Up from the top row
+  // position since each set's grid has its own rows; Up from the top row
   // goes back to the search box.
   onGridKeydown(event) {
     const buttons = this.allButtons()
