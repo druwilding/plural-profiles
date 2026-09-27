@@ -7,12 +7,9 @@
     %h1 Emotes
   .admin-emotes__intro
     %p
-      An emote's name sets its order in its set: #{tag.code("02-spring-heart")} comes before #{tag.code("03-hunter-heart")}.
-      The code people type drops that number, so #{tag.code("02-spring-heart")} is typed as #{tag.code(":spring-heart:")}
-      (typing the full name works too).
-    %p
-      Renaming an emote keeps its old code working, so nothing already written breaks.
-      Archiving hides an emote from pickers but keeps it showing wherever it's already used.
+      A number at the start of an emote's name sets its order in the set, and is left out of the code people type:
+      #{tag.code("02-spring-heart")} is typed as #{tag.code(":spring-heart:")}.
+      Renaming keeps old codes working, and archiving hides an emote from pickers without breaking places it's already used.
   .card__actions
     = link_to "Manage sets", admin_emote_sets_path, class: "btn btn--secondary"
 
