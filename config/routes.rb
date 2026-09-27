@@ -68,8 +68,7 @@ Rails.application.routes.draw do
         delete :remove_alias
       end
       collection do
-        get :upload
-        post :upload, action: :upload_files
+        post :upload
         post :resolve
       end
     end

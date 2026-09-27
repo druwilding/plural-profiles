@@ -169,8 +169,6 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
   test "non-admins can't upload" do
     sign_in_as @member
 
-    get upload_admin_emotes_path
-    assert_redirected_to root_path
     assert_no_difference -> { ActiveStorage::Blob.count } do
       post upload_admin_emotes_path, params: { files: [ png_upload("07-party.png") ] }
     end
@@ -179,9 +177,9 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "upload page offers the sets" do
+  test "the emotes page has the upload form, offering the sets" do
     sign_in_as @admin
-    get upload_admin_emotes_path
+    get admin_emotes_path
 
     assert_response :success
     assert_select "input[type=file][name='files[]'][multiple]"
@@ -192,7 +190,7 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
     post upload_admin_emotes_path, params: { files: [ "" ] }
 
-    assert_redirected_to upload_admin_emotes_path
+    assert_redirected_to admin_emotes_path
     assert_equal "Choose at least one image to upload.", flash[:alert]
   end
 
@@ -239,10 +237,10 @@ class Admin::EmotesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='rows[0][signed_id]'][value=?]", row.signed_id
   end
 
-  test "decisions for expired or tampered files send the admin back to upload" do
+  test "decisions for expired or tampered files send the admin back to the emotes page" do
     sign_in_as @admin
     post resolve_admin_emotes_path, params: { rows: { "0" => { signed_id: "tampered", name: "x", action: "create" } } }
 
-    assert_redirected_to upload_admin_emotes_path
+    assert_redirected_to admin_emotes_path
   end
 end

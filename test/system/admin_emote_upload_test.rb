@@ -21,7 +21,7 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
     png = file("07-party.png", png_bytes(8, 8))
     svg = file("100.svg", %(<svg xmlns="http://www.w3.org/2000/svg" width="10" height="20"><rect width="10" height="20" fill="red"/></svg>))
 
-    visit upload_admin_emotes_path
+    visit admin_emotes_path
     attach_file "Images", [ png, svg ]
     assert_selector ".emote-upload__status", text: "SVGs were converted to PNG"
     click_button "Upload"
@@ -34,7 +34,7 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
   end
 
   test "a clash asks what to do, and a new name adds it as a new emote" do
-    visit upload_admin_emotes_path
+    visit admin_emotes_path
     attach_file "Images", [ file("36-red-heart.png", png_bytes(8, 8)) ]
     click_button "Upload"
 
@@ -56,7 +56,6 @@ class AdminEmoteUploadTest < ApplicationSystemTestCase
     find("summary", text: "Hearts").click
     assert_selector "details.emote-section:not([open])", text: "Hearts"
 
-    visit upload_admin_emotes_path
     attach_file "Images", [ file("07-party.png", png_bytes(8, 8)) ]
     click_button "Upload"
 

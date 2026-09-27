@@ -6,23 +6,18 @@
 # so a renamed emote moves to its new sorted position. The preserve-focus
 # controller puts focus back where the admin was.
 class Admin::EmotesController < Admin::BaseController
-  before_action :set_emote, except: %i[index upload upload_files resolve]
+  before_action :set_emote, except: %i[index upload resolve]
 
   def index
     load_sections
     @opened_emote_set_ids = Array(flash[:opened_emote_sets])
   end
 
-  # Upload page: pick (or drop) files and the set they go into.
-  def upload
-    @emote_sets = site_emote_sets
-  end
-
   # Imports every file it can straight away. Files whose name is already in
   # use (or that have no usable name) wait on a decision page instead.
-  def upload_files
+  def upload
     if Array(params[:files]).none? { |file| file.respond_to?(:original_filename) }
-      redirect_to upload_admin_emotes_path, alert: "Choose at least one image to upload."
+      redirect_to admin_emotes_path, alert: "Choose at least one image to upload."
       return
     end
 
@@ -45,7 +40,7 @@ class Admin::EmotesController < Admin::BaseController
   def resolve
     result, rows = EmoteUpload.resolve(params[:rows])
     if rows.empty?
-      redirect_to upload_admin_emotes_path, alert: "Those files have expired. Try uploading them again."
+      redirect_to admin_emotes_path, alert: "Those files have expired. Try uploading them again."
     elsif result
       flash[:opened_emote_sets] = result.emote_set_ids
       redirect_to admin_emotes_path, notice: import_summary(result)
