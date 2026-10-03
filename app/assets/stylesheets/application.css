@@ -3606,15 +3606,24 @@ label.upload-review__choice {
 
 /* ── Theme designer: inherit toggles ─────────────────────── */
 
+/* The Override box always stays beside the colour's name. When space runs
+   short (a narrow screen, or larger text), the name wraps onto more lines
+   rather than pushing the box onto a line of its own, which broke the flow
+   from name to box to colour. */
 .theme-designer__color-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  flex-wrap: wrap;
+}
+
+.theme-designer__color-head > label:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .theme-designer__override-label {
+  flex: none;
   font-size: 0.78rem;
   margin: 0;
   white-space: nowrap;
