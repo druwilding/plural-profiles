@@ -294,6 +294,29 @@ body {
   right: -0.5rem;
 }
 
+/* Reorder mode's on/off button (sidebar_reorder_controller.js), in the
+   same round style just left of the hide button. It shows a tick while
+   reordering, to finish. */
+.js .sidebar-reorder-toggle {
+  display: flex;
+}
+
+.sidebar-reorder-toggle {
+  position: absolute;
+  z-index: 1;
+  top: -0.5rem;
+  right: 2rem;
+}
+
+.sidebar-reorder-toggle__done,
+.sidebar-reorder-toggle[aria-pressed="true"] .sidebar-reorder-toggle__start {
+  display: none;
+}
+
+.sidebar-reorder-toggle[aria-pressed="true"] .sidebar-reorder-toggle__done {
+  display: block;
+}
+
 /* Follows the page as it scrolls, as the sidebar itself would. */
 .sidebar-toggle--show {
   position: sticky;
@@ -709,23 +732,19 @@ details[open] > .form-section-summary::before {
 }
 
 /* Reorder mode (sidebar_reorder_controller.js). It needs JavaScript, so
-   the toggle only shows under html.js; the handles are added by the
-   controller, and the Sort A–Z buttons only show while reordering. */
+   its hint and messages only show under html.js; the handles are added by
+   the controller, and the Sort A–Z buttons only show while reordering. */
 .sidebar__reorder {
   display: none;
-  padding: 0.25rem 0.5rem 0;
+  padding: 0 0.5rem;
 }
 
 .js .sidebar__reorder {
   display: block;
 }
 
-.sidebar__reorder > .sidebar-tree__control-btn {
-  padding: 0.2rem;
-}
-
 .sidebar__reorder-hint {
-  margin: 0.25rem 0 0;
+  margin: 0.5rem 0 0;
   font-size: 0.75rem;
   color: color-mix(in srgb, var(--pane-text) 75%, transparent);
 }

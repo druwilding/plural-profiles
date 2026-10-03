@@ -16,7 +16,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
 
   test "reorder mode adds a handle to each item, and Done takes them away" do
     assert_no_selector ".reorder-handle"
-    click_button "Reorder"
+    start_reordering
 
     assert_selector ".sidebar--reordering"
     assert_selector "[data-sidebar-reorder-target='status']", text: "Reorder mode on.", visible: :all
@@ -28,13 +28,13 @@ class SidebarReorderTest < ApplicationSystemTestCase
     # Just the handles: no other buttons on the rows
     assert_no_selector "li[data-reorder-item] button:not(.reorder-handle)"
 
-    click_button "Done reordering"
+    finish_reordering
     assert_no_selector ".reorder-handle"
-    assert_button "Reorder"
+    assert_selector ".sidebar-reorder-toggle[aria-pressed='false']"
   end
 
   test "arrow keys on a handle reorder a group's profiles, keep focus, announce and save" do
-    click_button "Reorder"
+    start_reordering
     # Alphabetical to start with: Bob, then Everyone Profile
     assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
 
@@ -53,7 +53,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
   end
 
   test "moving past the end of a list says so and saves nothing" do
-    click_button "Reorder"
+    start_reordering
 
     handle(item("group_profiles", @bob, group: @everyone)).send_keys(:up)
 
@@ -66,7 +66,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
     partners = @user.groups.create!(name: "Partners")
     partners.group_profiles.create!(profile: @alice)
     visit our_profiles_path
-    click_button "Reorder"
+    start_reordering
 
     partners_handle = handle(item("groups", partners))
     partners_handle.send_keys(:enter)
@@ -80,7 +80,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
   end
 
   test "dragging a handle reorders the list" do
-    click_button "Reorder"
+    start_reordering
     assert_equal [ "Alice", "Bob" ], names_in("profiles").first(2)
 
     drag(item("profiles", @alice), below: item("profiles", @bob))
@@ -90,7 +90,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
   end
 
   test "an item can't be dragged into another list" do
-    click_button "Reorder"
+    start_reordering
 
     # A profile dragged over its group's child group stays among the profiles
     drag(item("group_profiles", @everyone_profile, group: @everyone), below: item("group_groups", @friends, group: @everyone), offset: -5)
@@ -100,20 +100,20 @@ class SidebarReorderTest < ApplicationSystemTestCase
   end
 
   test "reorder mode stays on across pages until it's switched off" do
-    click_button "Reorder"
+    start_reordering
     assert_selector ".reorder-handle"
 
     visit our_groups_path
     assert_selector ".reorder-handle"
-    assert_button "Done reordering"
+    assert_selector ".sidebar-reorder-toggle[aria-pressed='true']"
 
-    click_button "Done reordering"
+    finish_reordering
     visit our_profiles_path
     assert_no_selector ".reorder-handle"
   end
 
   test "a list that changed elsewhere isn't saved, and goes back to how it was" do
-    click_button "Reorder"
+    start_reordering
     # Another tab removes Bob from the group after this page loaded
     @everyone.group_profiles.find_by(profile: @bob).destroy!
 
@@ -126,7 +126,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
   end
 
   test "when a save fails, moves queued behind it are dropped rather than saved" do
-    click_button "Reorder"
+    start_reordering
     # The first save fails slowly, so the second move is queued behind it
     page.execute_script(<<~JS)
       const realFetch = window.fetch
@@ -156,7 +156,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
     @everyone.child_links.create!(child_group: shared)
     @friends.child_links.create!(child_group: shared)
     visit our_profiles_path
-    click_button "Reorder"
+    start_reordering
 
     copies = all("li[data-reorder-list='group_groups'][data-reorder-id='#{shared.uuid}']")
     assert_equal 2, copies.size
@@ -174,7 +174,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
     @alice.update!(position: 1)
     visit our_profiles_path
     assert_no_button "Sort A–Z" # only while reordering
-    click_button "Reorder"
+    start_reordering
     assert_equal [ "Bob", "Alice" ], names_in("profiles").first(2)
 
     accept_confirm do
@@ -188,7 +188,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
   end
 
   test "handles are visible in forced-colors mode" do
-    click_button "Reorder"
+    start_reordering
 
     with_forced_colors do
       selector = "#{item_selector('group_profiles', @bob, group: @everyone)} > .reorder-handle"
@@ -197,7 +197,33 @@ class SidebarReorderTest < ApplicationSystemTestCase
     end
   end
 
+  test "the toggle is a round button beside the hide button, showing a tick while reordering" do
+    toggle = find("button.sidebar-reorder-toggle", text: "Reorder groups and profiles")
+    assert_equal "false", toggle["aria-pressed"]
+    assert_equal "Reorder groups and profiles", toggle["title"]
+    assert_selector ".sidebar-reorder-toggle__start", visible: true
+    assert_no_selector ".sidebar-reorder-toggle__done", visible: true
+
+    hide_top = find("button.sidebar-toggle--hide").native.rect.y
+    assert_in_delta hide_top, toggle.native.rect.y, 1
+
+    start_reordering
+    assert_equal "Done reordering", toggle["title"]
+    assert_selector ".sidebar-reorder-toggle__done", visible: true
+    assert_no_selector ".sidebar-reorder-toggle__start", visible: true
+  end
+
   private
+
+  def start_reordering
+    find("button.sidebar-reorder-toggle[aria-pressed='false']").click
+    assert_selector ".sidebar-reorder-toggle[aria-pressed='true']"
+  end
+
+  def finish_reordering
+    find("button.sidebar-reorder-toggle[aria-pressed='true']").click
+    assert_selector ".sidebar-reorder-toggle[aria-pressed='false']"
+  end
 
   def item_selector(list, record, group: nil)
     selector = "li[data-reorder-list='#{list}'][data-reorder-id='#{record.uuid}']"

@@ -1,16 +1,24 @@
 -# The wrapper, not the nav, is what's hidden and what sticks as the page
 -# scrolls (see sidebar_toggle_controller.js), so the hide button can overlap the nav's edge without being
 -# clipped by its scrolling.
-.sidebar-wrap
+.sidebar-wrap{data: { controller: "sidebar-reorder", "sidebar-reorder-url-value": our_ordering_path }}
   = render "shared/sidebar_toggle_button", action: :hide, controls: "sidebar"
-  %nav.sidebar#sidebar{"aria-label" => "Your content", data: { controller: "sidebar-reorder", "sidebar-reorder-url-value": our_ordering_path }}
+  -# Switches reorder mode (sidebar_reorder_controller.js) on and off. It sits
+  -# beside the hide button in the same round style, and shows a tick while
+  -# reordering. Like the hide button, it needs JavaScript, so it only shows
+  -# under html.js.
+  %button.btn--secondary.sidebar-toggle.sidebar-reorder-toggle{type: "button", title: "Reorder groups and profiles", "aria-pressed": "false", "aria-describedby": "sidebar-reorder-hint", data: { "sidebar-reorder-target": "toggle", action: "sidebar-reorder#toggle" }}
+    %svg.sidebar-reorder-toggle__start{viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"}
+      %path{d: "M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"}
+    %svg.sidebar-reorder-toggle__done{viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"}
+      %path{d: "M5 12.5l4.5 4.5L19 7"}
+    %span.visually-hidden Reorder groups and profiles
+  %nav.sidebar#sidebar{"aria-label" => "Your content"}
     = form_with url: our_search_path, method: :get, class: "sidebar__search" do |form|
       = form.text_field :q, type: "search", value: params[:q], placeholder: "Search...", "aria-label": "Search your groups and profiles"
 
-    -# Reorder mode (sidebar_reorder_controller.js) needs JavaScript, so this
-    -# only shows under html.js.
+    -# Shown while reordering, under the search box
     .sidebar__reorder
-      %button.sidebar-tree__control-btn{type: "button", "aria-describedby": "sidebar-reorder-hint", data: { "sidebar-reorder-target": "toggle", action: "sidebar-reorder#toggle" }} Reorder
       %p.sidebar__reorder-hint#sidebar-reorder-hint{hidden: true, data: { "sidebar-reorder-target": "hint" }}
         Drag the handles to move things within their own list. With a keyboard, use the arrow keys on a handle.
       %span.visually-hidden#sidebar-reorder-keys Use the up and down arrow keys to move it.

@@ -60,8 +60,8 @@ Each list's order lives in the table that defines membership of that list:
 | --- | --- | --- |
 | `group_profiles.position` | Profiles inside a particular group | Sidebar group contents, public tree and cards, our group page, manage profiles |
 | `group_groups.position` | Child groups inside a particular parent | Sidebar, public tree and cards, our group page, manage groups |
-| `groups.position` | Account-wide group order | Top-level sidebar groups, chat pickers, groups index, "groups this profile is in" |
-| `profiles.position` | Account-wide profile order | Sidebar "Profiles" list, chat pickers, profiles index |
+| `groups.position` | Account-wide group order | Top-level sidebar groups, groups index, "groups this profile is in" |
+| `profiles.position` | Account-wide profile order | Sidebar "Profiles" list, profiles index |
 
 The migration notes:
 
@@ -115,12 +115,13 @@ These already load `GroupGroup` edges in one query (`build_children_map`, `all_e
 The places to change:
 
 - `SidebarTree#sidebar_tree`: top-level groups by `groups.position`, the flat profiles list by `profiles.position`.
+- The chat pickers stay alphabetical, so a name is quick to find in a long list.
 - `SidebarTree#build_sidebar_node`: child groups by edge position, profiles by link position.
 - `Group#build_tree`, `#walk_descendants`, `#build_management_tree`, `#build_duplication_preview`.
 - `Group#visible_root_profiles`, `#profiles_visible_at_path`, `#management_root_profiles`: join `group_profiles` and order by it.
 - `Group#visible_direct_child_groups`: order by `group_groups.position`.
 - `Our::GroupsController#duplicate_confirm`: replace `.order(:name)`.
-- Views: our/groups/show, manage_profiles, our/profiles/show, chat pickers, index pages.
+- Views: our/groups/show, manage_profiles, our/profiles/show, index pages.
 
 Search results also switch to the account-wide order, for consistency.
 
@@ -165,13 +166,14 @@ The logic lives in `ListOrder` ([list_order.rb](../app/models/list_order.rb)); t
 
 The sidebar only shows top-level groups at the top level, so the `groups` list is the user's **top-level** groups.
 
-Saving it also clears any position left on a group that has since been nested inside another. Otherwise, such a group would jump ahead of other nested groups in account-wide lists like the chat pickers. Nested groups therefore follow the positioned top-level groups in those lists, alphabetically.
+Saving it also clears any position left on a group that has since been nested inside another. Otherwise, such a group would jump ahead of other nested groups in account-wide lists like the groups index. Nested groups therefore follow the positioned top-level groups in those lists, alphabetically.
 
 ## Interaction design
 
 ### Reorder mode
 
-- The sidebar gets a small "Reorder" button under the search box. Reorder mode is remembered for the tab, in `sessionStorage`, so someone can work through several groups across pages without switching it on each time.
+- The sidebar gets a round "Reorder groups and profiles" button in its top-right corner, just left of the hide button and in the same style. It shows up-and-down arrows, then a tick while reordering. It's a toggle (`aria-pressed`), so its name stays the same; the tooltip reads "Done reordering" while it's on.
+- Reorder mode is remembered for the tab, in `sessionStorage`, so someone can work through several groups across pages without switching it on each time.
 - **In reorder mode:**
   - Each row shows a drag handle (grip icon) and nothing else.
   - "Sort A–Z" buttons for the top-level groups and the flat profiles list appear next to "Expand all / Collapse all".
@@ -179,7 +181,6 @@ Saving it also clears any position left on a group that has since been nested in
   - A short hint explains the handles and buttons.
   - Links stay clickable.
   - `<details>` stay open/closable via their arrows. Clicks on the handle and buttons inside a `<summary>` don't open or close it.
-  - The toggle reads "Done reordering".
 - **Outside reorder mode:** the sidebar looks and behaves exactly as before. The controls are added by the controller when the mode starts, rather than rendered for everyone.
 
 ### Dragging
@@ -250,7 +251,7 @@ No visible change yet: every list is still alphabetical until positions exist.
 4. System tests:
    - Dragging to reorder.
    - Keyboard move buttons, including keeping focus and the announcement.
-   - The order surviving reloads and showing on the public group page and in the chat picker.
+   - The order surviving reloads and showing on the public group page.
    - Forced-colors appearance.
 
 ### Commit 5 (optional, not done): Add reordering to the manage pages

@@ -87,7 +87,8 @@ export default class extends Controller {
   #start() {
     this.active = true
     this.element.classList.add("sidebar--reordering")
-    this.toggleTarget.textContent = "Done reordering"
+    this.toggleTarget.setAttribute("aria-pressed", "true")
+    this.toggleTarget.title = "Done reordering"
     this.hintTarget.hidden = false
     this.saved = new Map()
 
@@ -119,7 +120,10 @@ export default class extends Controller {
     this.sortables?.forEach(sortable => sortable.destroy())
     this.sortables = []
     this.element.classList.remove("sidebar--reordering")
-    if (this.hasToggleTarget) this.toggleTarget.textContent = "Reorder"
+    if (this.hasToggleTarget) {
+      this.toggleTarget.setAttribute("aria-pressed", "false")
+      this.toggleTarget.title = "Reorder groups and profiles"
+    }
     if (this.hasHintTarget) this.hintTarget.hidden = true
     this.#removeControls()
   }
