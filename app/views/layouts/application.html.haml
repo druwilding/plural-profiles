@@ -25,9 +25,12 @@
 
     %main{class: "container #{content_for(:container_class)}", data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       - if @sidebar_trees
-        .layout
+        .layout{class: ("layout--sidebar-hidden" if sidebar_hidden?), data: { controller: "sidebar-toggle" }}
           = render "our/sidebar"
           .main-content
+            %button.btn.btn--small.btn--secondary.sidebar-show{type: "button", hidden: !sidebar_hidden?, "aria-controls": "sidebar", "aria-expanded": "false", data: { "sidebar-toggle-target": "showButton", action: "sidebar-toggle#show" }}
+              %span{"aria-hidden": "true"} »
+              Show sidebar
             - if flash[:notice]
               .flash.flash--notice= flash[:notice]
             - if flash[:alert]

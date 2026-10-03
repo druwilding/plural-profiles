@@ -1,4 +1,9 @@
-%nav.sidebar{"aria-label" => "Your content"}
+%nav.sidebar#sidebar{"aria-label" => "Your content", hidden: sidebar_hidden?, data: { "sidebar-toggle-target": "sidebar" }}
+  .sidebar__hide-row
+    %button.sidebar__hide{type: "button", "aria-controls": "sidebar", "aria-expanded": "true", data: { "sidebar-toggle-target": "hideButton", action: "sidebar-toggle#hide" }}
+      %span{"aria-hidden": "true"} «
+      Hide sidebar
+
   = form_with url: our_search_path, method: :get, class: "sidebar__search" do |form|
     = form.text_field :q, type: "search", value: params[:q], placeholder: "Search...", "aria-label": "Search your groups and profiles"
 

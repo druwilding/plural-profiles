@@ -233,8 +233,42 @@ body {
   background-color: var(--pane-bg);
   border-radius: 8px;
   padding: 0.75rem;
-  padding-top: 2rem;
   border: 1px solid var(--pane-border);
+}
+
+/* Hiding the sidebar (sidebar_toggle_controller.js) gives the main content
+   the whole width, which matters most with large text on a small screen. */
+.layout.layout--sidebar-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sidebar__hide-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar__hide {
+  background: none;
+  border: none;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.8rem;
+  color: var(--pane-link);
+}
+
+.sidebar__hide:hover {
+  background: none;
+  color: var(--pane-title-text);
+}
+
+.sidebar-show {
+  margin-bottom: 1rem;
+}
+
+@media (forced-colors: active) {
+  .sidebar__hide {
+    color: LinkText;
+  }
 }
 
 .sidebar hr {
