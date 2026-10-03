@@ -272,7 +272,7 @@ body {
 }
 
 /* Nestled in the sidebar's top-right corner, just overlapping its edges,
-   in the padding above the search box. */
+   in the padding above its contents. */
 .sidebar-toggle--hide {
   position: absolute;
   z-index: 1;
@@ -1792,17 +1792,30 @@ html:not(.js) .avatar-editor-dialog__actions {
   display: none;
 }
 
-.explorer__sidebar {
+/* As with .sidebar-wrap: the wrapper draws the box, and only the tree inside
+   it scrolls, below the top padding, clear of the hide button. */
+.explorer__sidebar-wrap {
   background-color: var(--pane-bg);
   border: 1px solid var(--pane-border);
   border-radius: 8px;
-  padding: 0.5rem;
   padding-top: 1.5rem;
-  overflow-y: auto;
-  max-height: 80vh;
   position: sticky;
   top: 2rem;
   align-self: start;
+}
+
+.explorer__sidebar {
+  padding: 0 0.5rem 0.5rem;
+  border-radius: 0 0 8px 8px;
+  overflow-y: auto;
+  max-height: calc(80vh - 1.5rem);
+}
+
+/* Hidden with its toggle button (sidebar_toggle_controller.js), as
+   .layout--sidebar-hidden does for the signed-in pages' sidebar. */
+.explorer.explorer--sidebar-hidden {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
 }
 
 .explorer__content {
@@ -2760,13 +2773,15 @@ input[type="submit"].btn--small,
     position: relative;
   }
 
-
   .explorer--active {
     grid-template-columns: 1fr;
   }
 
+  .explorer__sidebar-wrap {
+    position: relative;
+  }
+
   .explorer__sidebar {
-    position: static;
     max-height: none;
   }
 

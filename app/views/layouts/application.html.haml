@@ -25,12 +25,9 @@
 
     %main{class: "container #{content_for(:container_class)}", data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       - if @sidebar_trees
-        .layout{class: ("layout--sidebar-hidden" if sidebar_hidden?), data: { controller: "sidebar-toggle" }}
+        .layout{class: ("layout--sidebar-hidden" if sidebar_hidden?), data: { controller: "sidebar-toggle", "sidebar-toggle-cookie-value": "sidebar", "sidebar-toggle-hidden-class": "layout--sidebar-hidden" }}
           = render "our/sidebar"
-          %button.btn--secondary.sidebar-toggle.sidebar-toggle--show{type: "button", title: "Show sidebar", hidden: !sidebar_hidden?, "aria-controls": "sidebar", "aria-expanded": "false", data: { "sidebar-toggle-target": "showButton", action: "sidebar-toggle#show" }}
-            %svg{viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"}
-              %path{d: "M5 6l6 6-6 6M13 6l6 6-6 6"}
-            %span.visually-hidden Show sidebar
+          = render "shared/sidebar_toggle_button", action: :show, controls: "sidebar", hidden: !sidebar_hidden?
           .main-content
             - if flash[:notice]
               .flash.flash--notice= flash[:notice]

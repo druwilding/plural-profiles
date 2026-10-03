@@ -2,10 +2,7 @@
 -# scrolls, so the hide button can overlap the nav's edge without being
 -# clipped by its scrolling.
 .sidebar-wrap{hidden: sidebar_hidden?, data: { "sidebar-toggle-target": "sidebar" }}
-  %button.btn--secondary.sidebar-toggle.sidebar-toggle--hide{type: "button", title: "Hide sidebar", "aria-controls": "sidebar", "aria-expanded": "true", data: { "sidebar-toggle-target": "hideButton", action: "sidebar-toggle#hide" }}
-    %svg{viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"}
-      %path{d: "M11 6l-6 6 6 6M19 6l-6 6 6 6"}
-    %span.visually-hidden Hide sidebar
+  = render "shared/sidebar_toggle_button", action: :hide, controls: "sidebar", hidden: false
   %nav.sidebar#sidebar{"aria-label" => "Your content"}
     = form_with url: our_search_path, method: :get, class: "sidebar__search" do |form|
       = form.text_field :q, type: "search", value: params[:q], placeholder: "Search...", "aria-label": "Search your groups and profiles"

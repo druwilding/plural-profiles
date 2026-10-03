@@ -1,0 +1,11 @@
+-# A round button that hides or shows a sidebar (sidebar_toggle_controller.js).
+-#
+-# Locals:
+-#   action   — :hide (sits in the sidebar's corner) or :show (beside the content)
+-#   controls — the id of the sidebar it hides or shows
+-#   hidden   — whether the button starts hidden
+- label = action == :hide ? "Hide sidebar" : "Show sidebar"
+%button{type: "button", class: "btn--secondary sidebar-toggle sidebar-toggle--#{action}", title: label, hidden: hidden, "aria-controls": controls, "aria-expanded": (action == :hide).to_s, data: { "sidebar-toggle-target": "#{action}Button", action: "sidebar-toggle##{action}" }}
+  %svg{viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"}
+    %path{d: action == :hide ? "M11 6l-6 6 6 6M19 6l-6 6 6 6" : "M5 6l6 6-6 6M13 6l6 6-6 6"}
+  %span.visually-hidden= label

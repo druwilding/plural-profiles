@@ -30,6 +30,37 @@ class SidebarToggleTest < ApplicationSystemTestCase
     assert_selector "nav.sidebar"
   end
 
+  test "a public group page's sidebar hides and shows on its own, separately from ours" do
+    group_page = group_path(groups(:alpha_clan).uuid)
+    visit group_page
+    assert_selector ".explorer__sidebar"
+    click_button "Hide sidebar"
+
+    assert_no_selector ".explorer__sidebar"
+    assert_selector ".explorer--sidebar-hidden"
+    assert_selector "button.sidebar-toggle--show:focus"
+    within(".explorer__content") { assert_selector ".profile-card h3", text: "Grove" }
+
+    refresh
+    assert_no_selector ".explorer__sidebar"
+
+    # Our own sidebar is still shown...
+    visit our_profiles_path
+    assert_selector "nav.sidebar"
+
+    # ...and hiding it doesn't bring back the group page's.
+    click_button "Hide sidebar"
+    visit group_page
+    assert_no_selector ".explorer__sidebar"
+
+    click_button "Show sidebar"
+    assert_selector ".explorer__sidebar"
+    assert_selector "button.sidebar-toggle--hide:focus"
+
+    visit our_profiles_path
+    assert_no_selector "nav.sidebar"
+  end
+
   test "in forced colors the round hide and show buttons are drawn like default buttons" do
     with_forced_colors do
       probe = page.evaluate_script(<<~JS)
