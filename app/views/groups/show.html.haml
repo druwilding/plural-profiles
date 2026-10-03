@@ -19,8 +19,8 @@
       -# The wrapper, not the tree, is what's hidden and what sticks as the
       -# page scrolls, so the hide button can overlap the tree's edge without
       -# being clipped by its scrolling.
-      .explorer__sidebar-wrap{hidden: sidebar_hidden?("group_sidebar"), data: { "sidebar-toggle-target": "sidebar" }}
-        = render "shared/sidebar_toggle_button", action: :hide, controls: "group-sidebar", hidden: false
+      .explorer__sidebar-wrap
+        = render "shared/sidebar_toggle_button", action: :hide, controls: "group-sidebar"
         .explorer__sidebar#group-sidebar{role: "tree", "aria-label": "#{plain_field(@group.name)} navigation"}
           %ul.tree
             -# Root group node
@@ -59,7 +59,7 @@
                           %span.tree__label= formatted_inline(profile.name)
                         - if profile.subtitle.present?
                           %span.tree__subtitle= formatted_inline(profile.subtitle)
-      = render "shared/sidebar_toggle_button", action: :show, controls: "group-sidebar", hidden: !sidebar_hidden?("group_sidebar")
+      = render "shared/sidebar_toggle_button", action: :show, controls: "group-sidebar"
 
       .explorer__content{"data-tree-target": "content", "aria-live": "polite"}
         -# Default: show root group content

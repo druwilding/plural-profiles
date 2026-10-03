@@ -1,8 +1,8 @@
 -# The wrapper, not the nav, is what's hidden and what sticks as the page
--# scrolls, so the hide button can overlap the nav's edge without being
+-# scrolls (see sidebar_toggle_controller.js), so the hide button can overlap the nav's edge without being
 -# clipped by its scrolling.
-.sidebar-wrap{hidden: sidebar_hidden?, data: { "sidebar-toggle-target": "sidebar" }}
-  = render "shared/sidebar_toggle_button", action: :hide, controls: "sidebar", hidden: false
+.sidebar-wrap
+  = render "shared/sidebar_toggle_button", action: :hide, controls: "sidebar"
   %nav.sidebar#sidebar{"aria-label" => "Your content"}
     = form_with url: our_search_path, method: :get, class: "sidebar__search" do |form|
       = form.text_field :q, type: "search", value: params[:q], placeholder: "Search...", "aria-label": "Search your groups and profiles"

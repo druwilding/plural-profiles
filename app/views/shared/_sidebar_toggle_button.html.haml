@@ -3,9 +3,11 @@
 -# Locals:
 -#   action   — :hide (sits in the sidebar's corner) or :show (beside the content)
 -#   controls — the id of the sidebar it hides or shows
--#   hidden   — whether the button starts hidden
+-#
+-# Which button shows is up to CSS, from the hidden class on the element
+-# holding the sidebar; neither shows without JavaScript.
 - label = action == :hide ? "Hide sidebar" : "Show sidebar"
-%button{type: "button", class: "btn--secondary sidebar-toggle sidebar-toggle--#{action}", title: label, hidden: hidden, "aria-controls": controls, "aria-expanded": (action == :hide).to_s, data: { "sidebar-toggle-target": "#{action}Button", action: "sidebar-toggle##{action}" }}
+%button{type: "button", class: "btn--secondary sidebar-toggle sidebar-toggle--#{action}", title: label, "aria-controls": controls, "aria-expanded": (action == :hide).to_s, data: { "sidebar-toggle-target": "#{action}Button", action: "sidebar-toggle##{action}" }}
   %svg{viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor", "stroke-width": 2.5, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false"}
     %path{d: action == :hide ? "M11 6l-6 6 6 6M19 6l-6 6 6 6" : "M5 6l6 6-6 6M13 6l6 6-6 6"}
   %span.visually-hidden= label

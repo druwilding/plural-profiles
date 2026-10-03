@@ -244,13 +244,21 @@ body {
   border-radius: 0 0 8px 8px;
 }
 
-/* Hiding the sidebar (sidebar_toggle_controller.js) gives the main content
+/* Hiding a sidebar (sidebar_toggle_controller.js) gives the main content
    the whole width, which matters most with large text on a small screen.
    Its show button then takes a slim column of its own, so it never covers
-   anything. */
-.layout.layout--sidebar-hidden {
+   anything. All of this is under html.js: the server renders the hidden
+   class from a cookie, and without JavaScript nothing could bring the
+   sidebar back, so it stays shown and the toggle buttons stay away. */
+.js .layout.layout--sidebar-hidden,
+.js .explorer.explorer--sidebar-hidden {
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.75rem;
+}
+
+.js .layout--sidebar-hidden > .sidebar-wrap,
+.js .explorer--sidebar-hidden > .explorer__sidebar-wrap {
+  display: none;
 }
 
 /* Round buttons in the default (.btn--secondary) button colours, and so its
@@ -258,13 +266,19 @@ body {
    matching title as a tooltip. 2rem is still comfortably above the 24px
    minimum target size. */
 .sidebar-toggle {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 2rem;
   height: 2rem;
   padding: 0;
   border-radius: 50%;
+}
+
+.js .sidebar-toggle--hide,
+.js .layout--sidebar-hidden > .sidebar-toggle--show,
+.js .explorer--sidebar-hidden > .sidebar-toggle--show {
+  display: flex;
 }
 
 .sidebar-toggle svg {
@@ -1811,13 +1825,6 @@ html:not(.js) .avatar-editor-dialog__actions {
   max-height: calc(80vh - 1.5rem);
 }
 
-/* Hidden with its toggle button (sidebar_toggle_controller.js), as
-   .layout--sidebar-hidden does for the signed-in pages' sidebar. */
-.explorer.explorer--sidebar-hidden {
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.75rem;
-}
-
 .explorer__content {
   min-width: 0;
 }
@@ -2769,8 +2776,12 @@ input[type="submit"].btn--small,
     grid-template-columns: 1fr;
   }
 
+  /* Relative, not sticky, but still holding the hide button in its corner.
+     top goes back to auto, or relative positioning would shift the sidebar
+     down over the content below it. */
   .sidebar-wrap {
     position: relative;
+    top: auto;
   }
 
   .explorer--active {
@@ -2779,6 +2790,7 @@ input[type="submit"].btn--small,
 
   .explorer__sidebar-wrap {
     position: relative;
+    top: auto;
   }
 
   .explorer__sidebar {

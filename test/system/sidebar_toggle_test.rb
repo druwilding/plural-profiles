@@ -61,6 +61,20 @@ class SidebarToggleTest < ApplicationSystemTestCase
     assert_no_selector "nav.sidebar"
   end
 
+  test "without JavaScript a sidebar hidden by its cookie still shows, with no toggle buttons" do
+    click_button "Hide sidebar"
+
+    # The server still renders the hidden class from the cookie. Taking away
+    # html.js, as a browser without JavaScript would have it, must bring the
+    # sidebar back and drop the buttons, which would do nothing.
+    visit our_profiles_path
+    assert_selector ".layout--sidebar-hidden"
+    page.execute_script("document.documentElement.classList.remove('js')")
+    assert_selector "nav.sidebar"
+    assert_no_button "Hide sidebar"
+    assert_no_button "Show sidebar"
+  end
+
   test "in forced colors the round hide and show buttons are drawn like default buttons" do
     with_forced_colors do
       probe = page.evaluate_script(<<~JS)
