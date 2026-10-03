@@ -9,7 +9,7 @@ class Our::ProfilesController < ApplicationController
   before_action :validate_theme_choice, only: %i[create update]
 
   def index
-    @profiles = Current.user.profiles.order_by_name_and_labels
+    @profiles = Current.user.profiles.order_by_position_then_name
     if params[:label].present?
       @profiles = @profiles.where("labels @> ?", [ params[:label] ].to_json)
     end
@@ -74,7 +74,7 @@ class Our::ProfilesController < ApplicationController
   end
 
   def set_groups
-    @groups = Current.user.groups.order_by_name_and_labels
+    @groups = Current.user.groups.order_by_position_then_name
   end
 
   def set_return_to

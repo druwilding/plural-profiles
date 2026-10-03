@@ -32,7 +32,7 @@
       .group-description
         = formatted_description(@group.description)
 
-  - parent_groups = @group.parent_groups.order_by_name_and_labels
+  - parent_groups = @group.parent_groups.order_by_position_then_name
   - if parent_groups.any?
     %h2 In groups
     %ul
@@ -82,10 +82,10 @@
 
 - if @group.child_groups.any?
   .profile-grid
-    - @group.child_groups.order_by_name_and_labels.each do |child|
+    - @group.ordered_child_groups.each do |child|
       = render "group_card", group: child
 
 - if @group.profiles.any?
   .profile-grid
-    - @group.profiles.order_by_name_and_labels.each do |profile|
+    - @group.ordered_profiles.each do |profile|
       = render "our/profiles/profile_card", profile: profile

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -180,18 +180,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
     t.bigint "child_group_id", null: false
     t.datetime "created_at", null: false
     t.bigint "parent_group_id", null: false
+    t.integer "position"
     t.datetime "updated_at", null: false
     t.index ["child_group_id"], name: "index_group_groups_on_child_group_id"
     t.index ["parent_group_id", "child_group_id"], name: "index_group_groups_on_parent_group_id_and_child_group_id", unique: true
+    t.index ["parent_group_id", "position"], name: "index_group_groups_on_parent_group_id_and_position"
     t.index ["parent_group_id"], name: "index_group_groups_on_parent_group_id"
   end
 
   create_table "group_profiles", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "group_id", null: false
+    t.integer "position"
     t.bigint "profile_id", null: false
     t.datetime "updated_at", null: false
     t.index ["group_id", "profile_id"], name: "index_group_profiles_on_group_id_and_profile_id", unique: true
+    t.index ["group_id", "position"], name: "index_group_profiles_on_group_id_and_position"
     t.index ["group_id"], name: "index_group_profiles_on_group_id"
     t.index ["profile_id"], name: "index_group_profiles_on_profile_id"
   end
@@ -223,6 +227,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
     t.string "mini_profile_tag_line"
     t.boolean "mini_profile_tag_line_inherited", default: true, null: false
     t.string "name", null: false
+    t.integer "position"
     t.string "pronouns"
     t.string "subtitle"
     t.string "tag_line"
@@ -288,6 +293,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_100000) do
     t.string "mini_profile_tag_line"
     t.boolean "mini_profile_tag_line_inherited", default: true, null: false
     t.string "name", null: false
+    t.integer "position"
     t.string "pronouns"
     t.string "subtitle"
     t.string "tag_line"

@@ -29,6 +29,8 @@ Rails.application.routes.draw do
       post :duplicate_execute
     end
   end
+  patch "our/ordering", to: "our/orderings#update", as: :our_ordering
+
   get "our/chat_identity/:postable_type/:postable_uuid/edit", to: "our/chat_identities#edit",
     as: :edit_our_chat_identity, constraints: { postable_type: /Profile|Group/ }
   patch "our/chat_identity/:postable_type/:postable_uuid", to: "our/chat_identities#update",

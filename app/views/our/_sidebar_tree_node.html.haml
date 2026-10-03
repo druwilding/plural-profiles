@@ -1,13 +1,16 @@
 -# Recursive sidebar tree node.
--# Locals: node (hash with :group, :profiles, :children, :repeated)
+-# Locals: node (hash with :group, :profiles, :children, :repeated),
+-#   parent (the group this node sits inside; nil at the top level)
 - group = node[:group]
 - profiles = Array(node[:profiles])
 - children = Array(node[:children])
 - is_active = (@group && @group.id == group.id)
 - has_children = children.any? || profiles.any?
+- parent = local_assigns[:parent]
+- reorder_data = parent ? reorder_item_data(group, list: "group_groups", group: parent, within: plain_field(parent.name), position: node[:position]) : reorder_item_data(group, list: "groups", within: "Groups", position: node[:position])
 
 - if has_children
-  %li.sidebar-tree__folder
+  %li.sidebar-tree__folder{data: reorder_data}
     %details{open: true, data: { controller: "details-persist", "details-persist-key-value": "sidebar-group-#{group.id}" }}
       %summary.sidebar-tree__row{class: ("sidebar-tree__row--active" if is_active)}
         - if group.avatar.attached?
@@ -23,10 +26,10 @@
           %span.label-badge.label-badge--sidebar= label
       %ul.sidebar-tree__children
         - children.each do |child_node|
-          = render "our/sidebar_tree_node", node: child_node
+          = render "our/sidebar_tree_node", node: child_node, parent: group
         - profiles.each do |entry|
           - profile = entry[:profile]
-          %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if @profile && @profile.id == profile.id)}
+          %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if @profile && @profile.id == profile.id), data: reorder_item_data(profile, list: "group_profiles", group: group, within: plain_field(group.name), position: entry[:position])}
             - if profile.avatar.attached?
               = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar-tree__avatar #{avatar_shape_class(profile, prefix: 'sidebar-tree__avatar')}".strip, width: 24, height: 24, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
             - else
@@ -43,7 +46,7 @@
               %span.label-badge.label-badge--sidebar= label
 - else
   -# Group with no children and no profiles — render as a simple leaf
-  %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if is_active)}
+  %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if is_active), data: reorder_data}
     - if group.avatar.attached?
       = image_tag group.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar-tree__avatar #{avatar_shape_class(group, prefix: 'sidebar-tree__avatar')}".strip, width: 24, height: 24, alt: group.avatar_alt_text.presence || "", loading: "lazy"
     = link_to our_group_path(group), class: "sidebar-tree__link" do

@@ -8,7 +8,7 @@ class Our::GroupsController < ApplicationController
   before_action :validate_theme_choice, only: %i[create update]
 
   def index
-    @groups = Current.user.groups.order_by_name_and_labels
+    @groups = Current.user.groups.order_by_position_then_name
     if params[:label].present?
       @groups = @groups.where("labels @> ?", [ params[:label] ].to_json)
     end
@@ -66,7 +66,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def manage_profiles
-    @available_profiles = Current.user.profiles.where.not(id: @group.profile_ids).order_by_name_and_labels
+    @available_profiles = Current.user.profiles.where.not(id: @group.profile_ids).order_by_position_then_name
   end
 
   def add_profile
@@ -112,7 +112,7 @@ class Our::GroupsController < ApplicationController
     @available_groups = Current.user.groups
       .where.not(id: excluded_ids)
       .includes(avatar_attachment: :blob)
-      .order_by_name_and_labels
+      .order_by_position_then_name
   end
 
   def toggle_visibility
@@ -298,9 +298,8 @@ class Our::GroupsController < ApplicationController
 
     # Root-level profiles, with hidden flags from overrides
     overrides = @group.send(:overrides_index)
-    @root_profiles = @group.profiles
+    @root_profiles = @group.ordered_profiles
                            .includes(avatar_attachment: :blob)
-                           .order(:name)
                            .map do |p|
                              if @profile_resolutions[p.id.to_s] == "reuse"
                                reuse_target = p.copies_with_labels(@labels).first
@@ -506,7 +505,7 @@ class Our::GroupsController < ApplicationController
   end
 
   def set_parent_group_options
-    @parent_group_options = Current.user.groups.order_by_name_and_labels
+    @parent_group_options = Current.user.groups.order_by_position_then_name
   end
 
   def load_theme_options

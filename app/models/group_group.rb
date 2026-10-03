@@ -7,7 +7,16 @@ class GroupGroup < ApplicationRecord
   validate :not_self_referencing
   validate :no_circular_reference
 
+  after_create :clear_child_top_level_position
+
   private
+
+  # groups.position is the order among top-level groups (see ListOrder), so
+  # a group that's just been nested doesn't keep its old place there.
+  def clear_child_top_level_position
+    # In SQL, as the position may have been set since child_group was loaded
+    Group.where(id: child_group_id).where.not(position: nil).update_all(position: nil)
+  end
 
   def same_user
     return unless parent_group && child_group

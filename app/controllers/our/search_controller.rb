@@ -24,8 +24,8 @@ class Our::SearchController < ApplicationController
 
     if @query.present?
       term = "%#{ActiveRecord::Base.sanitize_sql_like(@query)}%"
-      @groups = Current.user.groups.where(GROUP_CONDITIONS, term: term).order_by_name_and_labels.to_a
-      @profiles = Current.user.profiles.where(PROFILE_CONDITIONS, term: term).order_by_name_and_labels.to_a
+      @groups = Current.user.groups.where(GROUP_CONDITIONS, term: term).order_by_position_then_name.to_a
+      @profiles = Current.user.profiles.where(PROFILE_CONDITIONS, term: term).order_by_position_then_name.to_a
     else
       @groups = []
       @profiles = []
