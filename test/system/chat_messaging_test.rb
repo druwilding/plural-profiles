@@ -226,4 +226,112 @@ class ChatMessagingTest < ApplicationSystemTestCase
       within(".server-rail") { assert_no_selector ".unread-dot--rail" }
     end
   end
+
+  test "a page whose live connection dropped catches up on what it missed once it reconnects" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    assert_text "No messages yet. Say hello!"
+    wait_for_live_connection
+    fill_in placeholder: "Message ##{@channel.name} (Enter to send, Shift+Enter for a new line)", with: "Half a thought"
+
+    # As when a laptop sleeps: the socket goes, and Action Cable reopens it
+    # a few seconds later by itself
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
+
+    # Broadcast while nobody was listening, so it can only appear by the page
+    # catching up
+    @channel.messages.create!(user: @member, postable: profiles(:carol), postable_name: "Carol", body: "Sent while you were away")
+
+    assert_text "Sent while you were away", wait: 30
+    assert_equal "Half a thought", find("textarea[data-composer-target='textarea']").value
+    wait_for_live_connection
+  end
+
+  test "a page doesn't reload over unsaved changes in another form when it reconnects" do
+    sign_in_via_browser(@owner)
+    visit chat_url("/servers/#{@server.uuid}/channels/#{@channel.uuid}/edit")
+    wait_for_live_connection
+    fill_in "Name", with: "renamed"
+
+    drop_connection_and_wait_for_it_to_come_back_without_reloading
+
+    assert_equal "renamed", find_field("Name").value
+  end
+
+  test "a page doesn't reload over a profile picked but not yet saved when it reconnects" do
+    sign_in_via_browser(@owner)
+    visit chat_url("/servers/#{@server.uuid}/membership/edit")
+    wait_for_live_connection
+    find(".profile-picker__trigger").click
+    find(".profile-picker__option", text: "Bob").click
+    assert_equal profiles(:bob).id.to_s, find("input[name='default_postable_id']", visible: false).value
+
+    drop_connection_and_wait_for_it_to_come_back_without_reloading
+
+    assert_equal profiles(:bob).id.to_s, find("input[name='default_postable_id']", visible: false).value
+  end
+
+  test "a page doesn't reload over a message it couldn't keep for afterwards" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    wait_for_live_connection
+    fill_in placeholder: "Message ##{@channel.name} (Enter to send, Shift+Enter for a new line)", with: "Nowhere to put this"
+    # As with storage switched off or full
+    page.execute_script("Storage.prototype.setItem = () => { throw new DOMException('full', 'QuotaExceededError') }")
+
+    drop_connection_and_wait_for_it_to_come_back_without_reloading
+
+    assert_equal "Nowhere to put this", find("textarea[data-composer-target='textarea']").value
+  end
+
+  test "a message kept over a reload only comes back for the account that typed it" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    wait_for_live_connection
+
+    # As if someone else had been signed in to this tab when it reloaded
+    page.execute_script(<<~JS, @member.id.to_s)
+      sessionStorage.setItem("chat-reconnect-draft", JSON.stringify({ user: arguments[0], url: window.location.href, value: "Someone else's words" }))
+    JS
+    visit chat_url(channel_path)
+    wait_for_live_connection
+
+    # Taken out of storage in the same step as it would be put back
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.1 until page.evaluate_script("sessionStorage.getItem('chat-reconnect-draft')").nil?
+    end
+    assert_equal "", find("textarea[data-composer-target='textarea']").value
+  end
+
+  test "a page whose session ended while it was away goes to sign in" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    wait_for_live_connection
+
+    # Signed out elsewhere: the server now refuses to reconnect this page, and
+    # Action Cable gives up
+    @owner.sessions.destroy_all
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+
+    assert_field "Email address or account name", wait: 40
+  end
+
+  private
+
+  def drop_connection_and_wait_for_it_to_come_back_without_reloading
+    page.execute_script("document.body.dataset.notReloaded = 'true'")
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
+    assert_selector "turbo-cable-stream-source[connected]", visible: false, wait: 30
+    # A reload would start straight after reconnecting; give it time to land
+    sleep 2
+    assert_selector "body[data-not-reloaded]"
+  end
+
+  # Every turbo_stream_from on the page has subscribed
+  def wait_for_live_connection
+    assert_no_selector "turbo-cable-stream-source:not([connected])", visible: false
+    assert_selector "turbo-cable-stream-source[connected]", visible: false
+  end
 end
