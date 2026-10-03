@@ -707,6 +707,116 @@ details[open] > .form-section-summary::before {
   }
 }
 
+/* Reorder mode (sidebar_reorder_controller.js). It needs JavaScript, so
+   the toggle only shows under html.js; the handles and arrow buttons are
+   added by the controller, and the A–Z buttons only show while reordering. */
+.sidebar__reorder {
+  display: none;
+  padding: 0.25rem 0.5rem 0;
+}
+
+.js .sidebar__reorder {
+  display: block;
+}
+
+.sidebar__reorder > .sidebar-tree__control-btn {
+  padding: 0.2rem;
+}
+
+.sidebar__reorder-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--pane-text) 75%, transparent);
+}
+
+.sidebar__reorder-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--error);
+}
+
+.sidebar__reorder-error:empty {
+  display: none;
+}
+
+.reorder-only {
+  display: none;
+}
+
+.sidebar--reordering .sidebar-tree__controls.reorder-only {
+  display: flex;
+}
+
+.sidebar--reordering button.reorder-only {
+  display: inline-block;
+}
+
+.reorder-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--pane-text);
+  cursor: grab;
+  /* Leaves touch dragging to SortableJS instead of scrolling the sidebar */
+  touch-action: none;
+}
+
+.reorder-handle:active {
+  cursor: grabbing;
+}
+
+.reorder-controls {
+  display: flex;
+  flex: none;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.sidebar .reorder-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+}
+
+.sidebar .reorder-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* SortableJS: the gap where the dragged item will land */
+.sidebar .sortable-ghost {
+  opacity: 0.4;
+}
+
+@media (forced-colors: active) {
+  .reorder-handle {
+    color: CanvasText;
+  }
+
+  .sidebar .reorder-btn[aria-disabled="true"] {
+    opacity: 1;
+    background-color: Canvas;
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .sidebar .sortable-ghost {
+    opacity: 1;
+    outline: 2px dashed CanvasText;
+  }
+}
+
 .main-content {
   min-width: 0;
 }

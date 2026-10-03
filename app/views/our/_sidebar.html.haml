@@ -3,9 +3,18 @@
 -# clipped by its scrolling.
 .sidebar-wrap
   = render "shared/sidebar_toggle_button", action: :hide, controls: "sidebar"
-  %nav.sidebar#sidebar{"aria-label" => "Your content"}
+  %nav.sidebar#sidebar{"aria-label" => "Your content", data: { controller: "sidebar-reorder", "sidebar-reorder-url-value": our_ordering_path }}
     = form_with url: our_search_path, method: :get, class: "sidebar__search" do |form|
       = form.text_field :q, type: "search", value: params[:q], placeholder: "Search...", "aria-label": "Search your groups and profiles"
+
+    -# Reorder mode (sidebar_reorder_controller.js) needs JavaScript, so this
+    -# only shows under html.js.
+    .sidebar__reorder
+      %button.sidebar-tree__control-btn{type: "button", data: { "sidebar-reorder-target": "toggle", action: "sidebar-reorder#toggle" }} Reorder
+      %p.sidebar__reorder-hint{hidden: true, data: { "sidebar-reorder-target": "hint" }}
+        Drag the handles or use the arrow buttons. Things move within their own list.
+      %p.sidebar__reorder-error{role: "alert", data: { "sidebar-reorder-target": "error" }}
+      .visually-hidden{"aria-live": "polite", data: { "sidebar-reorder-target": "status" }}
 
     %hr
 
@@ -15,6 +24,7 @@
         .sidebar-tree__controls
           %button.sidebar-tree__control-btn{type: "button", data: { action: "sidebar-tree-controls#expandAll" }} Expand all
           %button.sidebar-tree__control-btn{type: "button", data: { action: "sidebar-tree-controls#collapseAll" }} Collapse all
+          %button.sidebar-tree__control-btn.reorder-only{type: "button", data: { action: "sidebar-reorder#reset", "reorder-reset": "groups", "reorder-within": "Groups" }} Sort A–Z
       %ul.sidebar-tree
         - @sidebar_trees.each do |node|
           = render "our/sidebar_tree_node", node: node
@@ -23,9 +33,12 @@
 
     %details{open: true, data: { controller: "details-persist", "details-persist-key-value": "sidebar-profiles" }}
       %summary Profiles
+      - if @sidebar_all_profiles.many?
+        .sidebar-tree__controls.reorder-only
+          %button.sidebar-tree__control-btn{type: "button", data: { action: "sidebar-reorder#reset", "reorder-reset": "profiles", "reorder-within": "Profiles" }} Sort A–Z
       %ul.sidebar-tree
         - @sidebar_all_profiles.each do |profile|
-          %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if @profile && @profile.id == profile.id)}
+          %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if @profile && @profile.id == profile.id), data: reorder_item_data(profile, list: "profiles", within: "Profiles")}
             - if profile.avatar.attached?
               = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar-tree__avatar #{avatar_shape_class(profile, prefix: 'sidebar-tree__avatar')}".strip, width: 24, height: 24, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
             - else
