@@ -226,4 +226,46 @@ class ChatMessagingTest < ApplicationSystemTestCase
       within(".server-rail") { assert_no_selector ".unread-dot--rail" }
     end
   end
+
+  test "a page whose live connection dropped catches up on what it missed once it reconnects" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    assert_text "No messages yet. Say hello!"
+    wait_for_live_connection
+    fill_in placeholder: "Message ##{@channel.name} (Enter to send, Shift+Enter for a new line)", with: "Half a thought"
+
+    # As when a laptop sleeps: the socket goes, and Action Cable reopens it
+    # a few seconds later by itself
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
+
+    # Broadcast while nobody was listening, so it can only appear by the page
+    # catching up
+    @channel.messages.create!(user: @member, postable: profiles(:carol), postable_name: "Carol", body: "Sent while you were away")
+
+    assert_text "Sent while you were away", wait: 30
+    assert_equal "Half a thought", find("textarea[data-composer-target='textarea']").value
+    wait_for_live_connection
+  end
+
+  test "a page doesn't reload over unsaved changes in another form when it reconnects" do
+    sign_in_via_browser(@owner)
+    visit chat_url("/servers/#{@server.uuid}/channels/#{@channel.uuid}/edit")
+    wait_for_live_connection
+    fill_in "Name", with: "renamed"
+
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
+    assert_selector "turbo-cable-stream-source[connected]", visible: false, wait: 30
+
+    assert_equal "renamed", find_field("Name").value
+  end
+
+  private
+
+  # Every turbo_stream_from on the page has subscribed
+  def wait_for_live_connection
+    assert_no_selector "turbo-cable-stream-source:not([connected])", visible: false
+    assert_selector "turbo-cable-stream-source[connected]", visible: false
+  end
 end
