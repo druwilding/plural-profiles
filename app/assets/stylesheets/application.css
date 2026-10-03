@@ -1039,11 +1039,16 @@ button:hover,
 }
 
 /* Card */
+/* --card-padding, not a plain padding, because edge-to-edge parts (the
+   .card__header banner, .theme-list) cancel it with a negative margin: on
+   smaller screens the padding shrinks, and they need to shrink with it or
+   they stick out past the card's sides. */
 .card {
+  --card-padding: 2rem;
   background-color: var(--pane-bg);
   border: 1px solid var(--pane-border);
   border-radius: 8px;
-  padding: 2rem;
+  padding: var(--card-padding);
   margin-bottom: 1.5rem;
 }
 
@@ -1236,8 +1241,8 @@ button:hover,
   align-items: center;
   flex-wrap: wrap;
   gap: 1.25rem;
-  margin: -2rem -2rem 1.5rem -2rem;
-  padding: 2rem;
+  margin: calc(-1 * var(--card-padding)) calc(-1 * var(--card-padding)) 1.5rem;
+  padding: var(--card-padding);
   border-radius: 7px 7px 0 0;
 }
 
@@ -2762,7 +2767,7 @@ input[type="submit"].btn--small,
   }
 
   .card {
-    padding: 1.5rem;
+    --card-padding: 1.5rem;
   }
 
   .site-header {
@@ -2803,7 +2808,7 @@ input[type="submit"].btn--small,
   }
 
   .card {
-    padding: 1.25rem;
+    --card-padding: 1.25rem;
   }
 
   h1 { font-size: 1.4rem; }
@@ -4379,7 +4384,7 @@ label.upload-review__choice {
 
 /* ── Theme section cards (collapsible) ──────────────────── */
 
-/* padding: 2rem inherited from .card — do NOT override to 0 or the
+/* Padding inherited from .card — do NOT override to 0 or the
    card__header negative-margin trick breaks. Instead, .theme-list
    uses negative margins to bleed its rows to the card edges. */
 .theme-section-card {
@@ -4423,10 +4428,10 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   border-radius: 7px;
 }
 
-/* Bleed theme rows to the card edges, cancelling the 2rem card padding
-   on left, right, and bottom. Do NOT use overflow:hidden — it clips dropdowns. */
+/* Bleed theme rows to the card edges, cancelling the card padding on left,
+   right, and bottom. Do NOT use overflow:hidden — it clips dropdowns. */
 .theme-list {
-  margin: 0 -2rem -2rem;
+  margin: 0 calc(-1 * var(--card-padding)) calc(-1 * var(--card-padding));
 }
 
 .theme-section-card__empty {
