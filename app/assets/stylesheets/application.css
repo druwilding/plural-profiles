@@ -224,20 +224,24 @@ body {
   gap: 2rem;
 }
 
+/* The wrapper draws the sidebar's box, and only the nav inside it scrolls,
+   below the top padding. That keeps the scrollbar (which Firefox draws over
+   the content) clear of the hide button in the corner. */
 .sidebar-wrap {
   position: sticky;
   top: 2rem;
   align-self: start;
+  background-color: var(--pane-bg);
+  border-radius: 8px;
+  padding-top: 2rem;
+  border: 1px solid var(--pane-border);
 }
 
 .sidebar {
   overflow-y: auto;
-  max-height: calc(100vh - 4rem);
-  background-color: var(--pane-bg);
-  border-radius: 8px;
-  padding: 0.75rem;
-  padding-top: 2rem;
-  border: 1px solid var(--pane-border);
+  max-height: calc(100vh - 6rem);
+  padding: 0 0.75rem 0.75rem;
+  border-radius: 0 0 8px 8px;
 }
 
 /* Hiding the sidebar (sidebar_toggle_controller.js) gives the main content
