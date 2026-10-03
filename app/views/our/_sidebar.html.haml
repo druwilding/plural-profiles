@@ -10,8 +10,8 @@
     -# Reorder mode (sidebar_reorder_controller.js) needs JavaScript, so this
     -# only shows under html.js.
     .sidebar__reorder
-      %button.sidebar-tree__control-btn{type: "button", data: { "sidebar-reorder-target": "toggle", action: "sidebar-reorder#toggle" }} Reorder
-      %p.sidebar__reorder-hint{hidden: true, data: { "sidebar-reorder-target": "hint" }}
+      %button.sidebar-tree__control-btn{type: "button", "aria-describedby": "sidebar-reorder-hint", data: { "sidebar-reorder-target": "toggle", action: "sidebar-reorder#toggle" }} Reorder
+      %p.sidebar__reorder-hint#sidebar-reorder-hint{hidden: true, data: { "sidebar-reorder-target": "hint" }}
         Drag the handles or use the arrow buttons. Things move within their own list.
       %p.sidebar__reorder-error{role: "alert", data: { "sidebar-reorder-target": "error" }}
       .visually-hidden{"aria-live": "polite", data: { "sidebar-reorder-target": "status" }}

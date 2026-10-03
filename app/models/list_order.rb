@@ -30,7 +30,8 @@ class ListOrder
     uuids = Array(uuids).map(&:to_s)
 
     ActiveRecord::Base.transaction do
-      ids_by_uuid = members.lock.pluck(member_uuid_column, :id).to_h
+      # Locks only the rows being written, not the groups or profiles joined in
+      ids_by_uuid = members.lock("FOR UPDATE OF #{rows.quoted_table_name}").pluck(member_uuid_column, "#{rows.quoted_table_name}.id").to_h
       raise StaleList unless uuids.size == ids_by_uuid.size && uuids.to_set == ids_by_uuid.keys.to_set
 
       write_positions(uuids.map { |uuid| ids_by_uuid.fetch(uuid) })
@@ -40,8 +41,10 @@ class ListOrder
 
   # Clears the list's positions, so it falls back to alphabetical order.
   def reset!
-    rows.update_all(position: nil)
-    clear_positions_outside_list if @list == "groups"
+    ActiveRecord::Base.transaction do
+      rows.update_all(position: nil)
+      clear_positions_outside_list if @list == "groups"
+    end
   end
 
   private

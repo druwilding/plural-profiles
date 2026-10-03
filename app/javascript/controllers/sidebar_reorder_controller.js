@@ -22,8 +22,14 @@ export default class extends Controller {
   connect() {
     this.sortables = []
     this.queue = Promise.resolve()
-    // A Turbo snapshot taken while reordering is still in reorder mode
+    // Bumped when a list's save fails, so saves already queued for that list
+    // (built on the order that failed) are dropped rather than sent
+    this.generations = new Map()
+    // A Turbo snapshot taken while reordering is still in reorder mode, and
+    // still has whatever was last announced or shown as an error
     this.#stop()
+    this.statusTarget.textContent = ""
+    this.#clearError()
     if (this.#stored()) this.#start()
   }
 
@@ -34,6 +40,11 @@ export default class extends Controller {
   toggle() {
     this.active ? this.#stop() : this.#start()
     this.#store(this.active)
+    // The new controls appear silently, and a changed button name isn't
+    // always read out on the focused button
+    this.#announce(this.active
+      ? "Reorder mode on. Each group and profile now has Move up and Move down buttons."
+      : "Reorder mode off.")
   }
 
   moveUp(event) {
@@ -56,12 +67,23 @@ export default class extends Controller {
       ? [ { list: "group_groups", group: button.dataset.reorderGroup }, { list: "group_profiles", group: button.dataset.reorderGroup } ]
       : [ { list: button.dataset.reorderReset } ]
 
+    // Let moves already on their way land first, or one could undo the sort
+    await this.queue
+
+    let sorted = 0
     try {
-      for (const params of lists) await this.#send({ ...params, reset: "true" })
-      window.Turbo ? Turbo.visit(window.location.href, { action: "replace" }) : window.location.reload()
+      for (const params of lists) {
+        await this.#send({ ...params, reset: "true" })
+        sorted++
+      }
     } catch (status) {
       this.#showError(status)
+      // Nothing changed, so the page is still right
+      if (sorted === 0) return
     }
+    // Reload even after a partly failed group sort, so the page shows what
+    // the server now has
+    window.Turbo ? Turbo.visit(window.location.href, { action: "replace" }) : window.location.reload()
   }
 
   // --- private ---
@@ -145,18 +167,24 @@ export default class extends Controller {
   // order on the server.
   #save(key, item, ids) {
     const params = { list: item.dataset.reorderList, group: item.dataset.reorderGroup, ids }
-    this.queue = this.queue
-      .then(() => this.#send(params))
-      .then(() => {
+    const generation = this.generations.get(key) || 0
+
+    this.queue = this.queue.then(async () => {
+      // An earlier save for this list failed and it's been put back since
+      if ((this.generations.get(key) || 0) !== generation) return
+
+      try {
+        await this.#send(params)
         this.saved.set(key, ids)
-        this.#clearError()
-      })
-      .catch(status => {
+        if (this.errorKey === key) this.#clearError()
+      } catch (status) {
+        this.generations.set(key, generation + 1)
         // Put the list back the way it was last saved
         this.#syncCopies(key, this.saved.get(key) || [])
         this.#updateButtons()
-        this.#showError(status)
-      })
+        this.#showError(status, key)
+      }
+    })
   }
 
   async #send(params) {
@@ -177,21 +205,30 @@ export default class extends Controller {
   // for each, so its contents do too. Every copy of a list follows the
   // newest order.
   #syncCopies(key, ids, except = null) {
+    const focused = document.activeElement
+
     this.#containers().forEach(container => {
       if (container === except) return
       const items = Array.from(container.children).filter(child => child.matches("li[data-reorder-item]") && this.#key(child) === key)
       if (items.length === 0) return
 
       const byId = new Map(items.map(child => [ child.dataset.reorderId, child ]))
-      // Keep the list's place among the other list sharing this container
+      // Keep the list's place among the other list sharing this container,
+      // and only move items that are out of place
       const marker = document.createComment("reorder")
       items[0].before(marker)
+      let previous = marker
       ids.forEach(id => {
         const child = byId.get(id)
-        if (child) marker.before(child)
+        if (!child) return
+        if (previous.nextSibling !== child) previous.after(child)
+        previous = child
       })
       marker.remove()
     })
+
+    // Moving an item takes focus out of it; give it back
+    if (focused?.isConnected && document.activeElement !== focused) focused.focus()
   }
 
   #addControls(item) {
@@ -281,19 +318,25 @@ export default class extends Controller {
   }
 
   #announce(message) {
+    if (!this.hasStatusTarget) return
     // Clearing first makes a repeated message (two moves in a row to the
     // same position) be read out again
     this.statusTarget.textContent = ""
     requestAnimationFrame(() => { this.statusTarget.textContent = message })
   }
 
-  #showError(status) {
-    this.errorTarget.textContent = status === 409
+  #showError(status, key = null) {
+    this.errorKey = key
+    const message = status === 409
       ? "This list has changed since the page loaded. Reload the page to reorder it."
       : "Couldn't save the new order. Please try again."
+    // Cleared first, so the same message twice in a row is still read out
+    this.errorTarget.textContent = ""
+    requestAnimationFrame(() => { this.errorTarget.textContent = message })
   }
 
   #clearError() {
+    this.errorKey = null
     this.errorTarget.textContent = ""
   }
 

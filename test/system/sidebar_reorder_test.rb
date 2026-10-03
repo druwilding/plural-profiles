@@ -19,6 +19,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
     click_button "Reorder"
 
     assert_selector ".sidebar--reordering"
+    assert_selector "[data-sidebar-reorder-target='status']", text: "Reorder mode on.", visible: :all
     within(item("group_profiles", @bob, group: @everyone)) do
       assert_button "Move Bob up"
       assert_button "Move Bob down"
@@ -107,6 +108,71 @@ class SidebarReorderTest < ApplicationSystemTestCase
 
     assert_selector "[role='alert']", text: "This list has changed since the page loaded"
     assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
+    # Putting the list back doesn't lose the keyboard user's place
+    assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} .reorder-btn:focus"
+  end
+
+  test "when a save fails, moves queued behind it are dropped rather than saved" do
+    click_button "Reorder"
+    # The first save fails slowly, so the second move is queued behind it
+    page.execute_script(<<~JS)
+      const realFetch = window.fetch
+      let calls = 0
+      window.fetch = (...args) => {
+        calls++
+        if (calls === 1) return new Promise(resolve => setTimeout(() => resolve(new Response(null, { status: 500 })), 500))
+        return realFetch(...args)
+      }
+    JS
+
+    target = item_selector("profiles", profiles(:everyone_profile))
+    find("#{target} .reorder-btn--up").click
+    find("#{target} .reorder-btn--up").click
+
+    assert_selector "[role='alert']", text: "Couldn't save the new order"
+    assert_equal [ "Alice", "Bob", "Everyone Profile" ], names_in("profiles").first(3)
+    sleep 0.5 # long enough for a wrongly queued save to land
+    assert @user.profiles.reload.all? { |profile| profile.position.nil? }
+    assert_selector "[role='alert']", text: "Couldn't save the new order"
+  end
+
+  test "Enter and Space on a group's move buttons move it without opening or closing it" do
+    partners = @user.groups.create!(name: "Partners")
+    partners.group_profiles.create!(profile: @alice)
+    visit our_profiles_path
+    click_button "Reorder"
+
+    # A group's <li> holds its children's buttons too; its own come first
+    find("#{item_selector('groups', partners)} .reorder-btn--up", match: :first).send_keys(:enter)
+    assert_equal [ "Partners", "Everyone" ], top_level_names
+    assert_selector "#{item_selector('groups', partners)} > details[open]"
+
+    find("#{item_selector('groups', partners)} .reorder-btn--down", match: :first).send_keys(:space)
+    assert_equal [ "Everyone", "Partners" ], top_level_names
+    assert_selector "#{item_selector('groups', partners)} > details[open]"
+    wait_for_saved { partners.reload.position == 1 }
+  end
+
+  test "a group shown in two places is reordered in both" do
+    shared = @user.groups.create!(name: "Shared")
+    shared.group_profiles.create!(profile: @alice)
+    shared.group_profiles.create!(profile: @bob)
+    @everyone.child_links.create!(child_group: shared)
+    @friends.child_links.create!(child_group: shared)
+    visit our_profiles_path
+    click_button "Reorder"
+
+    copies = all("li[data-reorder-list='group_groups'][data-reorder-id='#{shared.uuid}']")
+    assert_equal 2, copies.size
+    within(copies.first) do
+      find(item_selector("group_profiles", @bob, group: shared)).find(".reorder-btn--up").click
+    end
+
+    copies.each do |copy|
+      names = copy.all("li[data-reorder-list='group_profiles']").map { |node| node["data-reorder-name"] }
+      assert_equal [ "Bob", "Alice" ], names
+    end
+    wait_for_saved { shared.ordered_profiles.map(&:name) == [ "Bob", "Alice" ] }
   end
 
   test "Sort A–Z puts a group's contents back in alphabetical order" do

@@ -100,6 +100,21 @@ class CustomOrderingTest < ActiveSupport::TestCase
     assert_equal [ @wren, @ash, @bea ], @user.sidebar_tree[:all_profiles].to_a
   end
 
+  test "ordering trees doesn't add queries per group" do
+    sidebar_before = count_queries { @user.sidebar_tree[:trees].to_a }
+    tree_before = count_queries { @household.descendant_tree }
+
+    3.times do |i|
+      group = @user.groups.create!(name: "Extra #{i}")
+      GroupGroup.create!(parent_group: @zeta, child_group: group, position: i)
+      GroupProfile.create!(group: group, profile: @ash, position: 0)
+      GroupProfile.create!(group: group, profile: @bea, position: 1)
+    end
+
+    assert_equal sidebar_before, count_queries { @user.sidebar_tree[:trees].to_a }
+    assert_equal tree_before, count_queries { @household.descendant_tree }
+  end
+
   test "deep_duplicate keeps the order inside each group" do
     copy = @household.deep_duplicate(new_labels: [ "copy" ])
 
@@ -114,5 +129,14 @@ class CustomOrderingTest < ActiveSupport::TestCase
 
     assert_nil copy.position
     assert copy.ordered_profiles.all? { |profile| profile.position.nil? }
+  end
+
+  private
+
+  def count_queries(&block)
+    count = 0
+    counter = ->(*, payload) { count += 1 unless payload[:name] == "SCHEMA" || payload[:cached] }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &block)
+    count
   end
 end

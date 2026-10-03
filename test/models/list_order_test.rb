@@ -62,6 +62,14 @@ class ListOrderTest < ActiveSupport::TestCase
     assert_nil @alpha.reload.position
   end
 
+  test "a group that gets nested leaves the top-level order" do
+    other = @user.groups.create!(name: "Another")
+    ListOrder.new(user: @user, list: "groups").save!([ other.uuid, @household.uuid ])
+
+    @household.child_links.create!(child_group: other)
+    assert_nil other.reload.position
+  end
+
   test "a list with a missing member is stale and writes nothing" do
     assert_raises(ListOrder::StaleList) do
       ListOrder.new(user: @user, list: "group_profiles", group: @household).save!([ @wren.uuid ])

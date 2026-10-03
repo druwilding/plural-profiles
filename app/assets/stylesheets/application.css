@@ -491,6 +491,7 @@ details[open] > .form-section-summary::before {
 
 .sidebar-tree__controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem;
   padding-left: 2rem;
@@ -756,8 +757,10 @@ details[open] > .form-section-summary::before {
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 24px;
-  height: 24px;
+  /* In rem, like the arrow buttons, so they grow with larger text sizes
+     and are never smaller than a 24px target */
+  width: 1.5rem;
+  height: 1.5rem;
   color: var(--pane-text);
   cursor: grab;
   /* Leaves touch dragging to SortableJS instead of scrolling the sidebar */
@@ -768,6 +771,16 @@ details[open] > .form-section-summary::before {
   cursor: grabbing;
 }
 
+.reorder-handle svg {
+  width: 0.75rem;
+  height: 1rem;
+}
+
+.reorder-btn svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 .reorder-controls {
   display: flex;
   flex: none;
@@ -775,12 +788,18 @@ details[open] > .form-section-summary::before {
   margin-left: auto;
 }
 
+/* With large text in a narrow sidebar, the buttons wrap onto a line of
+   their own rather than squeezing names until they break mid-word */
+.sidebar--reordering .sidebar-tree__link {
+  min-width: min(5em, 100%);
+}
+
 .sidebar .reorder-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 24px;
+  min-width: 1.5rem;
+  height: 1.5rem;
   padding: 0 0.3rem;
   border-radius: 4px;
   font-size: 0.7rem;
