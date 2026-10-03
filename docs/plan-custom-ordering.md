@@ -86,10 +86,18 @@ When a list is saved, every item in it gets a position (0..n-1), so the stored o
 
 ### Sorting helpers
 
-Extend `HasLabels`, or add a small `Positioned` concern alongside it, with:
+A small `Positioned` concern ([positioned.rb](../app/models/concerns/positioned.rb)), included in `Group` and `Profile` alongside `HasLabels`, with:
 
 - `order_by_position_then_name(table = table_name)`: an SQL scope qualifying `position` with the right table. A qualified column is needed because `groups.position` and `group_groups.position` can both be in a joined query.
 - `position_sort_key(position)`: a Ruby sort key `[position.nil? ? 1 : 0, position || 0, *name_and_label_sort_key]`, for in-memory tree building.
+
+`order_by_name_and_labels` now qualifies its columns with the table name, so it also works on queries joined to a link table.
+
+`Group` gains three helpers built on these:
+
+- `ordered_profiles`: the group's profiles in its own order (SQL).
+- `ordered_child_groups`: the group's child groups in its own order (SQL).
+- `ordered_profiles_from_preload`: the same order as `ordered_profiles`, worked out in memory from preloaded `group_profiles: :profile`.
 
 ### Association
 
@@ -100,7 +108,7 @@ Remove `-> { order(:name) }` from `Group has_many :profiles`. Preloading a `has_
 These already load `GroupGroup` edges in one query (`build_children_map`, `all_edges` in `SidebarTree`). Change them as follows:
 
 - Pluck `position` alongside `parent_group_id, child_group_id`, and carry it in the children map entries (`{ id:, position: }`).
-- Load `GroupProfile` positions for all groups in the tree in one query: `GroupProfile.where(group_id: ids).pluck(:group_id, :profile_id, :position)`, indexed by `[group_id, profile_id]`.
+- Preload `group_profiles: { profile: ... }` in place of `profiles`, so each link's position comes with its profile, and use `ordered_profiles_from_preload`.
 - Replace `.sort_by(&:name_and_label_sort_key)` with `position_sort_key` in each place listed below.
 
 The places to change:
@@ -147,28 +155,42 @@ patch "our/ordering", to: "our/orderings#update", as: :our_ordering
 
 - Scope everything through `Current.user`.
 - The submitted UUIDs must be exactly the current members of the list, with no extras and no missing items. Otherwise respond `409 Conflict` and write nothing. This guards against stale tabs after membership changes.
-- Write all positions in one transaction. `upsert_all`, or a single `UPDATE ... FROM (VALUES ...)`, keeps it to one query.
-- Respond `204 No Content` to fetch requests. For no-JS form posts, redirect back.
+- Lock the list's rows, check membership and write all positions in one transaction. The write is a single `UPDATE ... SET position = CASE id WHEN ... END`, built with Arel.
+- Respond with a status code only: `204 No Content` when saved, `409` for a stale list, `404` for a group that isn't the user's, `400` for an unknown list.
+
+The logic lives in `ListOrder` ([list_order.rb](../app/models/list_order.rb)); the controller only maps its outcomes to status codes.
+
+### The account-wide group order
+
+The sidebar only shows top-level groups at the top level, so the `groups` list is the user's **top-level** groups.
+
+Saving it also clears any position left on a group that has since been nested inside another. Otherwise, such a group would jump ahead of other nested groups in account-wide lists like the chat pickers. Nested groups therefore follow the positioned top-level groups in those lists, alphabetically.
 
 ## Interaction design
 
 ### Reorder mode
 
-- The sidebar gets a "Reorder" toggle button near the Groups and Profiles headings. Its state is not persisted; it is a short-lived mode.
+- The sidebar gets a small "Reorder" button under the search box. Reorder mode is remembered for the tab, in `sessionStorage`, so someone can work through several groups across pages without switching it on each time.
 - **In reorder mode:**
   - Each row shows a drag handle (grip icon) and "Move up" / "Move down" buttons with visually hidden labels naming the item, e.g. "Move Alex up".
+  - Each group row also has an "A–Z" button, which sorts that group's contents (both blocks) back to alphabetical.
+  - "Sort A–Z" buttons for the top-level groups and the flat profiles list appear next to "Expand all / Collapse all".
+  - Sorting A–Z asks for confirmation, then reloads the page, since the server owns the alphabetical order (names, then labels).
+  - A short hint explains the handles and buttons.
   - Links stay clickable.
-  - `<details>` stay open/closable via their arrows.
-  - The toggle reads "Done".
-- **Outside reorder mode:** the sidebar looks and behaves exactly as now.
+  - `<details>` stay open/closable via their arrows. Clicks on the handle and buttons inside a `<summary>` don't open or close it.
+  - The toggle reads "Done reordering".
+- **Outside reorder mode:** the sidebar looks and behaves exactly as before. The controls are added by the controller when the mode starts, rather than rendered for everyone.
 
 ### Dragging
 
 - Use SortableJS, pinned via `bin/importmap pin sortablejs`.
   - It is small and handles touch and mouse.
   - It supports a `handle` option, so only the grip starts a drag. That avoids conflicts with links, `<summary>` toggling and touch scrolling.
-- Each list (`ul.sidebar-tree__children` profile block, child-group block, top-level groups, flat profiles) is its own Sortable with a unique `group` name, so items cannot leave their list.
-- Child groups and profiles inside a group are rendered as two adjacent blocks. Each block is its own sortable container.
+- SortableJS runs in its pointer-event mode (`forceFallback`). Native HTML5 drag and drop behaves inconsistently between browsers and doesn't work on touch screens at all.
+- Every `<ul>` holding reorderable items is its own Sortable, so items can't leave their `<ul>`.
+- A group's child groups and its profiles share one `<ul>`, as before. Each item carries its list (`data-reorder-list` plus `data-reorder-group`), and `onMove` refuses a move past an item from the other list, so the two blocks stay separate.
+- A group that appears in several places in the tree is rendered once per place. After a move, every copy of that list is put in the new order.
 - On drop, `fetch` PATCH the new order with the CSRF token. On failure:
   - restore the previous DOM order
   - show an error message
@@ -179,13 +201,15 @@ patch "our/ordering", to: "our/orderings#update", as: :our_ordering
 - "Move up" / "Move down" buttons work without dragging (WCAG 2.5.7 Dragging Movements). They swap the row with its neighbour and save.
 - Focus stays on the moved item's button after a move.
 - An `aria-live="polite"` region announces "Alex moved to position 2 of 5 in Partners".
-- The first item has no "Move up" and the last has no "Move down". They are disabled, not removed, so focus doesn't jump.
-- Targets are at least 24px, and look correct in forced-colors mode, using the same `btn--secondary` approach as the sidebar toggle buttons.
+- On the first item, "Move up" is unavailable; on the last item, "Move down" is. Both use `aria-disabled` rather than `disabled`, so a button keeps focus when its item reaches the end. Focus then moves to the other button, which can still do something.
+- Saves run one at a time, in order. If one fails, the list goes back to its last saved order and a `role="alert"` message explains what happened.
+- Handles and buttons are sized in rem: 24px at the default text size, and larger with larger text.
+  - In a narrow sidebar with large text, the buttons wrap onto their own line, rather than squeezing names until they break mid-word.
+- They look correct in forced-colors mode, using `btn--secondary`. Unavailable buttons show in `GrayText`.
 
 ### No-JS fallback
 
-- The reorder toggle is gated behind `.js`.
-- Without JS, the move buttons can be plain `button_to` forms posting to the same endpoint (one step at a time). This is optional: the toggle alone may be enough, given the sidebar already needs JS for hiding.
+- The reorder toggle is gated behind `.js`, and the controls only exist once the controller adds them. Without JavaScript the sidebar is unchanged. There is no no-JS way to reorder; the stored order still applies everywhere.
 
 ### Repeated items
 
@@ -229,9 +253,9 @@ No visible change yet: every list is still alphabetical until positions exist.
    - The order surviving reloads and showing on the public group page and in the chat picker.
    - Forced-colors appearance.
 
-### Commit 5 (optional): Add reordering to the manage pages
+### Commit 5 (optional, not done): Add reordering to the manage pages
 
-Bring the same reorder controls to the manage profiles and manage groups pages, for people who prefer reordering in the main content area. This could also be a follow-up PR, if the main PR is already big enough.
+Bring the same reorder controls to the manage profiles and manage groups pages, for people who prefer reordering in the main content area. Left for a follow-up: the sidebar already reaches every list, and these pages already follow the stored order.
 
 ## Open questions
 
