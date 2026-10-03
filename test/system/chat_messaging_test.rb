@@ -254,14 +254,48 @@ class ChatMessagingTest < ApplicationSystemTestCase
     wait_for_live_connection
     fill_in "Name", with: "renamed"
 
-    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
-    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
-    assert_selector "turbo-cable-stream-source[connected]", visible: false, wait: 30
+    drop_connection_and_wait_for_it_to_come_back_without_reloading
 
     assert_equal "renamed", find_field("Name").value
   end
 
+  test "a page doesn't reload over a profile picked but not yet saved when it reconnects" do
+    sign_in_via_browser(@owner)
+    visit chat_url("/servers/#{@server.uuid}/membership/edit")
+    wait_for_live_connection
+    find(".profile-picker__trigger").click
+    find(".profile-picker__option", text: "Bob").click
+    assert_equal profiles(:bob).id.to_s, find("input[name='default_postable_id']", visible: false).value
+
+    drop_connection_and_wait_for_it_to_come_back_without_reloading
+
+    assert_equal profiles(:bob).id.to_s, find("input[name='default_postable_id']", visible: false).value
+  end
+
+  test "a page whose session ended while it was away goes to sign in" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    wait_for_live_connection
+
+    # Signed out elsewhere: the server now refuses to reconnect this page, and
+    # Action Cable gives up
+    @owner.sessions.destroy_all
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+
+    assert_field "Email address or account name", wait: 40
+  end
+
   private
+
+  def drop_connection_and_wait_for_it_to_come_back_without_reloading
+    page.execute_script("document.body.dataset.notReloaded = 'true'")
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
+    assert_selector "turbo-cable-stream-source[connected]", visible: false, wait: 30
+    # A reload would start straight after reconnecting; give it time to land
+    sleep 2
+    assert_selector "body[data-not-reloaded]"
+  end
 
   # Every turbo_stream_from on the page has subscribed
   def wait_for_live_connection
