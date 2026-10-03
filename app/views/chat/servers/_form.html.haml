@@ -24,8 +24,8 @@
     = form.select :theme_id, grouped_options_for_select(grouped_theme_options(@our_themes, @shared_themes), server.theme_id), { include_blank: "None (use default)" }, {}
     %p.form-hint Members of this server will see this theme, unless a channel overrides it. Leave blank for the site default.
 
-  - our_profiles = Current.user.profiles.order_by_position_then_name.includes(avatar_attachment: :blob)
-  - our_groups = Current.user.groups.order_by_position_then_name.includes(avatar_attachment: :blob)
+  - our_profiles = Current.user.profiles.order_by_name_and_labels.includes(avatar_attachment: :blob)
+  - our_groups = Current.user.groups.order_by_name_and_labels.includes(avatar_attachment: :blob)
   .form-group
     %label{id: "chat_server_default_postable_label"} Post as
     = render "chat/shared/profile_picker", field_name: "chat_server[default_postable]", label_id: "chat_server_default_postable_label", profiles: our_profiles, groups: our_groups, selected_postable: server.persisted? ? current_membership&.default_postable : our_profiles.first
