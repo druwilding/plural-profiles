@@ -149,6 +149,19 @@ class SidebarReorderTest < ApplicationSystemTestCase
     assert_selector "[role='alert']", text: "", visible: :all, exact_text: true
   end
 
+  test "moves after switching reorder mode off and on again aren't mistaken for another tab's" do
+    start_reordering
+    handle(item("group_profiles", @bob, group: @everyone)).send_keys(:down)
+    wait_for_saved { @everyone.ordered_profiles.map(&:name) == [ "Everyone Profile", "Bob" ] }
+
+    finish_reordering
+    start_reordering
+    handle(item("group_profiles", @bob, group: @everyone)).send_keys(:up)
+
+    wait_for_saved { @everyone.ordered_profiles.map(&:name) == [ "Bob", "Everyone Profile" ] }
+    assert_selector "[role='alert']", text: "", visible: :all, exact_text: true
+  end
+
   test "a save after being signed out says so, and puts the list back" do
     start_reordering
     Session.where(user: @user).delete_all

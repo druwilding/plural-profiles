@@ -100,22 +100,13 @@ export default class extends Controller {
     this.toggleTarget.title = "Done reordering"
     this.hintTarget.hidden = false
     this.paused = false
-    // Per list: the order last saved, and each item's stored position as the
-    // server last had it (sent with each save, see ListOrder)
+    // Per list, the order last saved
     this.saved = new Map()
-    this.positions = new Map()
 
     this.#items().forEach(item => {
       this.#addControls(item)
       const key = this.#key(item)
-      if (!this.saved.has(key)) {
-        const items = this.#siblings(item)
-        this.saved.set(key, items.map(sibling => sibling.dataset.reorderId))
-        this.positions.set(key, Object.fromEntries(items.map(sibling => [
-          sibling.dataset.reorderId,
-          sibling.dataset.reorderPosition === "" ? null : Number(sibling.dataset.reorderPosition)
-        ])))
-      }
+      if (!this.saved.has(key)) this.saved.set(key, this.#ids(item.parentElement, key))
     })
 
     this.#containers().forEach(container => {
@@ -185,9 +176,9 @@ export default class extends Controller {
 
       try {
         // As of the save before this one, so read here rather than when queued
-        await this.#send({ ...params, previous: this.positions.get(key) })
+        await this.#send({ ...params, previous: this.#storedPositions(key) })
         this.saved.set(key, ids)
-        this.positions.set(key, Object.fromEntries(ids.map((id, index) => [ id, index ])))
+        this.#setStoredPositions(key, ids)
         if (this.errorKey === key) this.#clearError()
       } catch (status) {
         this.generations.set(key, generation + 1)
@@ -213,6 +204,24 @@ export default class extends Controller {
     // follows and reports as a success
     if (response.redirected) throw "signed-out"
     if (!response.ok) throw response.status
+  }
+
+  // Each item's data-reorder-position is its position as the server last had
+  // it, sent with each save so the server can tell whether another tab has
+  // reordered the list since (see ListOrder). Kept on the items rather than
+  // in the controller, so it survives switching reorder mode off and on, and
+  // Turbo's cached copy of the page.
+  #storedPositions(key) {
+    return Object.fromEntries(this.#items()
+      .filter(item => this.#key(item) === key)
+      .map(item => [ item.dataset.reorderId, item.dataset.reorderPosition === "" ? null : Number(item.dataset.reorderPosition) ]))
+  }
+
+  // Every copy of the list, for a group shown in more than one place
+  #setStoredPositions(key, ids) {
+    this.#items()
+      .filter(item => this.#key(item) === key)
+      .forEach(item => { item.dataset.reorderPosition = ids.indexOf(item.dataset.reorderId) })
   }
 
   // While a Sort A–Z is on its way, so no move can land after it
