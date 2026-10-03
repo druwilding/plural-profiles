@@ -20,7 +20,9 @@ import { Controller } from "@hotwired/stimulus"
 // sign in, and Turbo's fetch can't follow a redirect to another origin (see
 // the sign-out button in layouts/chat.html.haml).
 //
-// A message being typed survives the reload. Other forms with unsaved
+// A message being typed survives the reload, but only for the account that
+// typed it: after signing in again, someone else could be using the tab. If
+// it can't be kept, the page doesn't reload. Other forms with unsaved
 // changes (channel or server settings) don't reload at all: a stale unread
 // dot is better than losing someone's edits, and the next visit catches up.
 //
@@ -30,6 +32,8 @@ const STILL_DOWN_AFTER = 20_000
 const DRAFT_KEY = "chat-reconnect-draft"
 
 export default class extends Controller {
+  static values = { user: String }
+
   connect() {
     this.lostAt = null
     this.refreshing = false
@@ -87,10 +91,9 @@ export default class extends Controller {
   }
 
   #refresh({ fullLoad }) {
-    if (this.refreshing || this.#hasUnsavedChanges()) return
+    if (this.refreshing || this.#hasUnsavedChanges() || !this.#saveDraft()) return
     this.refreshing = true
 
-    this.#saveDraft()
     if (fullLoad || !window.Turbo) {
       window.location.reload()
     } else {
@@ -103,20 +106,26 @@ export default class extends Controller {
   }
 
   // In sessionStorage rather than memory, so it survives a full page load,
-  // including a detour through signing in again
+  // including a detour through signing in again. False if there's a draft
+  // that couldn't be kept.
   #saveDraft() {
     const textarea = this.#composer()
-    if (!textarea?.value) return
+    if (!textarea?.value) return true
 
     try {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        user: this.userValue,
         url: window.location.href,
         value: textarea.value,
         focused: document.activeElement === textarea,
         selectionStart: textarea.selectionStart,
         selectionEnd: textarea.selectionEnd
       }))
-    } catch { /* private mode: the draft is lost, the page still catches up */ }
+      return true
+    } catch {
+      // Storage switched off or full
+      return false
+    }
   }
 
   #restoreDraft() {
@@ -127,7 +136,8 @@ export default class extends Controller {
     } catch { return }
 
     const textarea = this.#composer()
-    if (!draft || !textarea || draft.url !== window.location.href || textarea.value) return
+    if (!draft || !textarea || !this.userValue || draft.user !== this.userValue) return
+    if (draft.url !== window.location.href || textarea.value) return
 
     textarea.value = draft.value
     // Resizes the box and previews proxy brackets, as typing would

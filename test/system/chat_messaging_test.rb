@@ -272,6 +272,38 @@ class ChatMessagingTest < ApplicationSystemTestCase
     assert_equal profiles(:bob).id.to_s, find("input[name='default_postable_id']", visible: false).value
   end
 
+  test "a page doesn't reload over a message it couldn't keep for afterwards" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    wait_for_live_connection
+    fill_in placeholder: "Message ##{@channel.name} (Enter to send, Shift+Enter for a new line)", with: "Nowhere to put this"
+    # As with storage switched off or full
+    page.execute_script("Storage.prototype.setItem = () => { throw new DOMException('full', 'QuotaExceededError') }")
+
+    drop_connection_and_wait_for_it_to_come_back_without_reloading
+
+    assert_equal "Nowhere to put this", find("textarea[data-composer-target='textarea']").value
+  end
+
+  test "a message kept over a reload only comes back for the account that typed it" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    wait_for_live_connection
+
+    # As if someone else had been signed in to this tab when it reloaded
+    page.execute_script(<<~JS, @member.id.to_s)
+      sessionStorage.setItem("chat-reconnect-draft", JSON.stringify({ user: arguments[0], url: window.location.href, value: "Someone else's words" }))
+    JS
+    visit chat_url(channel_path)
+    wait_for_live_connection
+
+    # Taken out of storage in the same step as it would be put back
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.1 until page.evaluate_script("sessionStorage.getItem('chat-reconnect-draft')").nil?
+    end
+    assert_equal "", find("textarea[data-composer-target='textarea']").value
+  end
+
   test "a page whose session ended while it was away goes to sign in" do
     sign_in_via_browser(@owner)
     visit chat_url(channel_path)
