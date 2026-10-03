@@ -224,51 +224,63 @@ body {
   gap: 2rem;
 }
 
-.sidebar {
+.sidebar-wrap {
   position: sticky;
-  overflow-y: auto;
   top: 2rem;
-  max-height: calc(100vh - 4rem);
   align-self: start;
+}
+
+.sidebar {
+  overflow-y: auto;
+  max-height: calc(100vh - 4rem);
   background-color: var(--pane-bg);
   border-radius: 8px;
   padding: 0.75rem;
+  padding-top: 2rem;
   border: 1px solid var(--pane-border);
 }
 
 /* Hiding the sidebar (sidebar_toggle_controller.js) gives the main content
-   the whole width, which matters most with large text on a small screen. */
+   the whole width, which matters most with large text on a small screen.
+   Its show button then takes a slim column of its own, so it never covers
+   anything. */
 .layout.layout--sidebar-hidden {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
 }
 
-.sidebar__hide-row {
+/* Round buttons in the default (.btn--secondary) button colours, and so its
+   forced-colours styles too. Their names are in visually hidden text, with a
+   matching title as a tooltip. 2rem is still comfortably above the 24px
+   minimum target size. */
+.sidebar-toggle {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
 }
 
-.sidebar__hide {
-  background: none;
-  border: none;
-  padding: 0.1rem 0.4rem;
-  font-size: 0.8rem;
-  color: var(--pane-link);
+.sidebar-toggle svg {
+  flex: none;
 }
 
-.sidebar__hide:hover {
-  background: none;
-  color: var(--pane-title-text);
+/* Nestled in the sidebar's top-right corner, just overlapping its edges,
+   in the padding above the search box. */
+.sidebar-toggle--hide {
+  position: absolute;
+  z-index: 1;
+  top: -0.5rem;
+  right: -0.5rem;
 }
 
-.sidebar-show {
-  margin-bottom: 1rem;
-}
-
-@media (forced-colors: active) {
-  .sidebar__hide {
-    color: LinkText;
-  }
+/* Follows the page as it scrolls, as the sidebar itself would. */
+.sidebar-toggle--show {
+  position: sticky;
+  top: 2rem;
+  align-self: start;
 }
 
 .sidebar hr {
@@ -2740,9 +2752,10 @@ input[type="submit"].btn--small,
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    position: static;
+  .sidebar-wrap {
+    position: relative;
   }
+
 
   .explorer--active {
     grid-template-columns: 1fr;
