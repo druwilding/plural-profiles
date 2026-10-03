@@ -1,6 +1,7 @@
 class Group < ApplicationRecord
   include HasAvatar
   include HasLabels
+  include Positioned
   include ChatProxyable
   include ChatIdentity
 

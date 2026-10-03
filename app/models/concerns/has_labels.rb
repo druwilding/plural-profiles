@@ -8,8 +8,10 @@ module HasLabels
     # COLLATE "C" sorts by raw codepoint (byte) order rather than the database's locale-aware
     # collation, so leading punctuation participates in ordering (instead of being ignored in
     # some locales) — matching the in-memory ordering from #name_and_label_sort_key.
+    # Columns are qualified so the scope also works on queries joined to a link table.
     scope :order_by_name_and_labels, -> {
-      order(Arel.sql(%q{LOWER(name) COLLATE "C", CASE WHEN labels = '[]'::jsonb THEN 0 ELSE 1 END, LOWER(labels::text) COLLATE "C"}))
+      table = quoted_table_name
+      order(Arel.sql(%Q{LOWER(#{table}.name) COLLATE "C", CASE WHEN #{table}.labels = '[]'::jsonb THEN 0 ELSE 1 END, LOWER(#{table}.labels::text) COLLATE "C"}))
     }
   end
 
