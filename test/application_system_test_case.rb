@@ -15,12 +15,19 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   driven_by :selenium, using: browser, screen_size: [ 1400, 900 ] do |driver_option|
     driver_option.add_argument("--disable-search-engine-choice-screen")
+    # The chat tests visit lvh.me and chat.lvh.me, which public DNS points at
+    # 127.0.0.1. Resolving them in Chrome instead takes the network out of the
+    # tests: a slow or failed lookup broke every chat test on that worker.
+    driver_option.add_argument("--host-resolver-rules=MAP lvh.me 127.0.0.1, MAP *.lvh.me 127.0.0.1")
     driver_option.add_preference("credentials_enable_service", false)
     driver_option.add_preference("profile.password_manager_leak_detection", false)
   end
 
   setup do
-    Capybara.default_max_wait_time = 5
+    # Generous, because the suite runs one browser per CPU and a busy machine
+    # can take a few seconds over a save and redirect. Waits end as soon as
+    # the page is ready, so this only lengthens a test that would fail anyway.
+    Capybara.default_max_wait_time = 10
 
     if ENV["SLOWMO"]
       @slowmo = Float(ENV["SLOWMO"]) rescue 0.5
