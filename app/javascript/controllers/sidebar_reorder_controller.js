@@ -1,10 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 import Sortable from "sortablejs"
 
-// Reorder mode for the "our" sidebar. Toggling it on adds a drag handle and
-// "Move up" / "Move down" buttons to every item marked with
-// data-reorder-item (see ReorderHelper). Each change is saved to
-// Our::OrderingsController straight away.
+// Reorder mode for the "our" sidebar. Toggling it on adds a drag handle to
+// every item marked with data-reorder-item (see ReorderHelper). Each change
+// is saved to Our::OrderingsController straight away.
+//
+// The handle is also a button, so dragging isn't the only way: with it
+// focused, the up and down arrow keys move the item, and the new position is
+// announced.
 //
 // An item's list is its data-reorder-list plus data-reorder-group. Items only
 // ever move among the items of their own list: a group's child groups and its
@@ -43,16 +46,22 @@ export default class extends Controller {
     // The new controls appear silently, and a changed button name isn't
     // always read out on the focused button
     this.#announce(this.active
-      ? "Reorder mode on. Each group and profile now has Move up and Move down buttons."
+      ? "Reorder mode on. Each group and profile now has a handle: drag it, or focus it and use the up and down arrow keys."
       : "Reorder mode off.")
   }
 
-  moveUp(event) {
-    this.#move(event, -1)
+  moveWithKeys(event) {
+    const direction = { ArrowUp: -1, ArrowDown: 1 }[event.key]
+    if (!direction) return
+    // Not scroll the sidebar
+    event.preventDefault()
+    this.#move(event.currentTarget, direction)
   }
 
-  moveDown(event) {
-    this.#move(event, 1)
+  // The handle sits inside <summary> for groups, where a click (including
+  // Enter or Space on the handle) would open or close the group
+  ignoreClick(event) {
+    event.preventDefault()
   }
 
   // Sorts a list back to A–Z. The server knows the alphabetical order (names,
@@ -60,30 +69,17 @@ export default class extends Controller {
   async reset(event) {
     event.preventDefault()
     const button = event.currentTarget
-    const within = button.dataset.reorderWithin
-    if (!confirm(`Sort ${within} A–Z? This replaces the order you've chosen.`)) return
-
-    const lists = button.dataset.reorderReset === "group"
-      ? [ { list: "group_groups", group: button.dataset.reorderGroup }, { list: "group_profiles", group: button.dataset.reorderGroup } ]
-      : [ { list: button.dataset.reorderReset } ]
+    if (!confirm(`Sort ${button.dataset.reorderWithin} A–Z? This replaces the order you've chosen.`)) return
 
     // Let moves already on their way land first, or one could undo the sort
     await this.queue
 
-    let sorted = 0
     try {
-      for (const params of lists) {
-        await this.#send({ ...params, reset: "true" })
-        sorted++
-      }
+      await this.#send({ list: button.dataset.reorderReset, reset: "true" })
+      window.Turbo ? Turbo.visit(window.location.href, { action: "replace" }) : window.location.reload()
     } catch (status) {
       this.#showError(status)
-      // Nothing changed, so the page is still right
-      if (sorted === 0) return
     }
-    // Reload even after a partly failed group sort, so the page shows what
-    // the server now has
-    window.Turbo ? Turbo.visit(window.location.href, { action: "replace" }) : window.location.reload()
   }
 
   // --- private ---
@@ -116,8 +112,6 @@ export default class extends Controller {
         }
       }))
     })
-
-    this.#updateButtons()
   }
 
   #stop() {
@@ -130,26 +124,19 @@ export default class extends Controller {
     this.#removeControls()
   }
 
-  #move(event, direction) {
-    // The buttons sit inside <summary> for groups; don't open or close it
-    event.preventDefault()
-    const button = event.currentTarget
-    if (button.getAttribute("aria-disabled") === "true") return
-
-    const item = button.closest("li[data-reorder-item]")
+  #move(handle, direction) {
+    const item = handle.closest("li[data-reorder-item]")
     const siblings = this.#siblings(item)
-    const index = siblings.indexOf(item)
-    const neighbour = siblings[index + direction]
-    if (!neighbour) return
+    const neighbour = siblings[siblings.indexOf(item) + direction]
+    if (!neighbour) {
+      this.#announce(`${item.dataset.reorderName} is already ${direction < 0 ? "first" : "last"} in ${item.dataset.reorderWithin}.`)
+      return
+    }
 
     direction < 0 ? neighbour.before(item) : neighbour.after(item)
+    // Moving the item takes focus out of it; put it back
+    handle.focus()
     this.#changed(item)
-
-    // Moving the item takes focus with it; put it back on the same button,
-    // or on the other one if this item has just reached the end of its list.
-    const other = item.querySelector(direction < 0 ? ".reorder-btn--down" : ".reorder-btn--up")
-    const focusable = button.getAttribute("aria-disabled") === "true" ? other : button
-    focusable.focus()
   }
 
   #changed(item) {
@@ -158,7 +145,6 @@ export default class extends Controller {
     const position = ids.indexOf(item.dataset.reorderId) + 1
 
     this.#syncCopies(key, ids, item.parentElement)
-    this.#updateButtons()
     this.#announce(`${item.dataset.reorderName} moved to position ${position} of ${ids.length} in ${item.dataset.reorderWithin}.`)
     this.#save(key, item, ids)
   }
@@ -181,7 +167,6 @@ export default class extends Controller {
         this.generations.set(key, generation + 1)
         // Put the list back the way it was last saved
         this.#syncCopies(key, this.saved.get(key) || [])
-        this.#updateButtons()
         this.#showError(status, key)
       }
     })
@@ -232,66 +217,21 @@ export default class extends Controller {
   }
 
   #addControls(item) {
-    const name = item.dataset.reorderName
     const row = item.querySelector(":scope > details > summary") || item
-    const controls = document.createElement("span")
-    controls.className = "reorder-controls"
-
-    const handle = document.createElement("span")
+    const handle = document.createElement("button")
+    handle.type = "button"
     handle.className = "reorder-handle"
-    handle.setAttribute("aria-hidden", "true")
     handle.title = "Drag to reorder"
-    handle.innerHTML = GRIP_ICON
+    // The key instructions, read after the name (see _sidebar.html.haml)
+    handle.setAttribute("aria-describedby", "sidebar-reorder-keys")
+    handle.dataset.action = "keydown->sidebar-reorder#moveWithKeys click->sidebar-reorder#ignoreClick"
+    handle.innerHTML = `${GRIP_ICON}<span class="visually-hidden"></span>`
+    handle.querySelector(".visually-hidden").textContent = `Reorder ${item.dataset.reorderName}`
     row.prepend(handle)
-
-    // Inside a group's <summary>, a click anywhere opens or closes the group
-    for (const el of [ handle, controls ]) {
-      el.addEventListener("click", event => {
-        if (event.target.closest("a") === null) event.preventDefault()
-      })
-    }
-
-    if (item.querySelector(":scope > details") && item.dataset.reorderList !== "profiles") {
-      const group = item.dataset.reorderId
-      const reset = this.#button("reorder-btn reorder-btn--reset", `Sort ${name}'s contents A–Z`, `<span aria-hidden="true">A–Z</span>`)
-      reset.dataset.action = "sidebar-reorder#reset"
-      reset.dataset.reorderReset = "group"
-      reset.dataset.reorderGroup = group
-      reset.dataset.reorderWithin = `${name}'s contents`
-      controls.append(reset)
-    }
-
-    const up = this.#button("reorder-btn reorder-btn--up", `Move ${name} up`, ARROW_UP)
-    up.dataset.action = "sidebar-reorder#moveUp"
-    const down = this.#button("reorder-btn reorder-btn--down", `Move ${name} down`, ARROW_DOWN)
-    down.dataset.action = "sidebar-reorder#moveDown"
-    controls.append(up, down)
-    row.append(controls)
-  }
-
-  #button(className, label, content) {
-    const button = document.createElement("button")
-    button.type = "button"
-    button.className = `btn--secondary ${className}`
-    button.title = label
-    button.innerHTML = `${content}<span class="visually-hidden"></span>`
-    button.querySelector(".visually-hidden").textContent = label
-    return button
   }
 
   #removeControls() {
-    this.element.querySelectorAll(".reorder-controls, .reorder-handle").forEach(el => el.remove())
-  }
-
-  // First and last items can't move further. aria-disabled rather than
-  // disabled, so a button keeps focus when its item reaches the end.
-  #updateButtons() {
-    this.#items().forEach(item => {
-      const siblings = this.#siblings(item)
-      const index = siblings.indexOf(item)
-      item.querySelector(".reorder-btn--up")?.setAttribute("aria-disabled", index === 0)
-      item.querySelector(".reorder-btn--down")?.setAttribute("aria-disabled", index === siblings.length - 1)
-    })
+    this.element.querySelectorAll(".reorder-handle").forEach(el => el.remove())
   }
 
   #items() {
@@ -349,6 +289,4 @@ export default class extends Controller {
   }
 }
 
-const GRIP_ICON = `<svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" focusable="false"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="9" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="9" cy="13" r="1.5"/></svg>`
-const ARROW_UP = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M2 8l4-4 4 4"/></svg>`
-const ARROW_DOWN = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4"/></svg>`
+const GRIP_ICON = `<svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="8" r="1.5"/><circle cx="9" cy="8" r="1.5"/><circle cx="3" cy="13" r="1.5"/><circle cx="9" cy="13" r="1.5"/></svg>`

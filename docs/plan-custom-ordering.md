@@ -6,7 +6,7 @@ Let people choose the order their groups and profiles appear in, instead of alwa
 
 Profiles can belong to several groups, and the order is per group: a profile can be first in "Partners" and last in "Littles".
 
-Reordering happens in the sidebar. It switches into a reorder mode with drag handles and keyboard-accessible "Move up" and "Move down" buttons.
+Reordering happens in the sidebar. It switches into a reorder mode with drag handles, which also work with the keyboard.
 
 ### Request
 
@@ -23,7 +23,8 @@ Reordering happens in the sidebar. It switches into a reorder mode with drag han
 | How is dragging activated? | A "Reorder" toggle in the sidebar shows drag handles and move buttons. Otherwise links behave as normal. |
 | Can dragging move items between groups? | No. Items are reordered within their current list only. Membership changes stay on the manage pages. |
 | Is ordering per path or per group? | Per group. A group's contents have the same order wherever that group appears in a tree. Inclusion overrides stay path-scoped, but ordering does not need to be. |
-| Reset? | Each list can be reset to A–Z, which clears its positions. |
+| Reset? | The top-level groups and the profiles list each have a "Sort A–Z" button in reorder mode, which clears their positions. A group's contents are put back by dragging. |
+| Move buttons? | No. Up/down and per-group A–Z buttons were tried and felt too busy; the handle alone does both jobs, with arrow keys for keyboard users. |
 
 ## Current state
 
@@ -172,8 +173,7 @@ Saving it also clears any position left on a group that has since been nested in
 
 - The sidebar gets a small "Reorder" button under the search box. Reorder mode is remembered for the tab, in `sessionStorage`, so someone can work through several groups across pages without switching it on each time.
 - **In reorder mode:**
-  - Each row shows a drag handle (grip icon) and "Move up" / "Move down" buttons with visually hidden labels naming the item, e.g. "Move Alex up".
-  - Each group row also has an "A–Z" button, which sorts that group's contents (both blocks) back to alphabetical.
+  - Each row shows a drag handle (grip icon) and nothing else.
   - "Sort A–Z" buttons for the top-level groups and the flat profiles list appear next to "Expand all / Collapse all".
   - Sorting A–Z asks for confirmation, then reloads the page, since the server owns the alphabetical order (names, then labels).
   - A short hint explains the handles and buttons.
@@ -198,14 +198,14 @@ Saving it also clears any position left on a group that has since been nested in
 
 ### Keyboard and screen readers
 
-- "Move up" / "Move down" buttons work without dragging (WCAG 2.5.7 Dragging Movements). They swap the row with its neighbour and save.
-- Focus stays on the moved item's button after a move.
-- An `aria-live="polite"` region announces "Alex moved to position 2 of 5 in Partners".
-- On the first item, "Move up" is unavailable; on the last item, "Move down" is. Both use `aria-disabled` rather than `disabled`, so a button keeps focus when its item reaches the end. Focus then moves to the other button, which can still do something.
-- Saves run one at a time, in order. If one fails, the list goes back to its last saved order and a `role="alert"` message explains what happened.
-- Handles and buttons are sized in rem: 24px at the default text size, and larger with larger text.
-  - In a narrow sidebar with large text, the buttons wrap onto their own line, rather than squeezing names until they break mid-word.
-- They look correct in forced-colors mode, using `btn--secondary`. Unavailable buttons show in `GrayText`.
+- The handle is a button named "Reorder Alex", described by "Use the up and down arrow keys to move it."
+- With a handle focused, the up and down arrow keys swap the item with its neighbour and save. Focus stays on the handle.
+- An `aria-live="polite"` region announces "Alex moved to position 2 of 5 in Partners". At either end it announces "Alex is already first in Partners" instead.
+- Enter, Space and clicks on a handle do nothing. In particular, a handle inside a group's `<summary>` doesn't open or close the group.
+- Switching reorder mode on or off is announced, since the handles appear silently.
+- Saves run one at a time, in order. If one fails, the list goes back to its last saved order, keeping focus where it was. A `role="alert"` message explains what happened, and later saves for that list that were already queued are dropped.
+- Handles are sized in rem: 24px at the default text size, and larger with larger text. They have a visible focus ring, and show as a plain grip in forced-colors mode.
+- Without a keyboard, dragging is the only way to reorder. That falls short of WCAG 2.5.7 (Dragging Movements) for people who can tap but not drag, which was a deliberate trade-off for a quieter sidebar.
 
 ### No-JS fallback
 

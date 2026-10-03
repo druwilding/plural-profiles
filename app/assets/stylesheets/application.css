@@ -709,8 +709,8 @@ details[open] > .form-section-summary::before {
 }
 
 /* Reorder mode (sidebar_reorder_controller.js). It needs JavaScript, so
-   the toggle only shows under html.js; the handles and arrow buttons are
-   added by the controller, and the A–Z buttons only show while reordering. */
+   the toggle only shows under html.js; the handles are added by the
+   controller, and the Sort A–Z buttons only show while reordering. */
 .sidebar__reorder {
   display: none;
   padding: 0.25rem 0.5rem 0;
@@ -752,22 +752,36 @@ details[open] > .form-section-summary::before {
   display: inline-block;
 }
 
-.reorder-handle {
+.sidebar .reorder-handle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  /* In rem, like the arrow buttons, so they grow with larger text sizes
-     and are never smaller than a 24px target */
+  /* In rem so it grows with larger text sizes, and is never smaller than
+     a 24px target */
   width: 1.5rem;
   height: 1.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 4px;
   color: var(--pane-text);
+  line-height: 1;
   cursor: grab;
   /* Leaves touch dragging to SortableJS instead of scrolling the sidebar */
   touch-action: none;
 }
 
-.reorder-handle:active {
+.sidebar .reorder-handle:hover {
+  background-color: color-mix(in srgb, var(--pane-text) 15%, transparent);
+}
+
+.sidebar .reorder-handle:focus-visible {
+  outline: 2px solid var(--pane-link);
+  outline-offset: 1px;
+}
+
+.sidebar .reorder-handle:active {
   cursor: grabbing;
 }
 
@@ -776,58 +790,21 @@ details[open] > .form-section-summary::before {
   height: 1rem;
 }
 
-.reorder-btn svg {
-  width: 0.75rem;
-  height: 0.75rem;
-}
-
-.reorder-controls {
-  display: flex;
-  flex: none;
-  gap: 0.25rem;
-  margin-left: auto;
-}
-
-/* With large text in a narrow sidebar, the buttons wrap onto a line of
-   their own rather than squeezing names until they break mid-word */
-.sidebar--reordering .sidebar-tree__link {
-  min-width: min(5em, 100%);
-}
-
-.sidebar .reorder-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.5rem;
-  height: 1.5rem;
-  padding: 0 0.3rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: normal;
-  line-height: 1;
-  letter-spacing: normal;
-}
-
-.sidebar .reorder-btn[aria-disabled="true"] {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 /* SortableJS: the gap where the dragged item will land */
 .sidebar .sortable-ghost {
   opacity: 0.4;
 }
 
 @media (forced-colors: active) {
-  .reorder-handle {
+  /* Not the filled look forced colours give other buttons: just the grip */
+  .sidebar .reorder-handle {
+    background-color: Canvas;
     color: CanvasText;
+    border: none;
   }
 
-  .sidebar .reorder-btn[aria-disabled="true"] {
-    opacity: 1;
-    background-color: Canvas;
-    border-color: GrayText;
-    color: GrayText;
+  .sidebar .reorder-handle:focus-visible {
+    outline-color: Highlight;
   }
 
   .sidebar .sortable-ghost {

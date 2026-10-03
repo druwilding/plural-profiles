@@ -14,35 +14,34 @@ class SidebarReorderTest < ApplicationSystemTestCase
     visit our_profiles_path
   end
 
-  test "reorder mode adds handles and move buttons, and Done takes them away" do
+  test "reorder mode adds a handle to each item, and Done takes them away" do
     assert_no_selector ".reorder-handle"
     click_button "Reorder"
 
     assert_selector ".sidebar--reordering"
     assert_selector "[data-sidebar-reorder-target='status']", text: "Reorder mode on.", visible: :all
+    assert_text "Drag the handles to move things within their own list"
     within(item("group_profiles", @bob, group: @everyone)) do
-      assert_button "Move Bob up"
-      assert_button "Move Bob down"
+      handle = find_button("Reorder Bob")
+      assert_equal "Use the up and down arrow keys to move it.", handle_description(handle)
     end
-    assert_text "Drag the handles or use the arrow buttons"
+    # Just the handles: no other buttons on the rows
+    assert_no_selector "li[data-reorder-item] button:not(.reorder-handle)"
 
     click_button "Done reordering"
     assert_no_selector ".reorder-handle"
-    assert_no_selector ".reorder-btn"
     assert_button "Reorder"
   end
 
-  test "move buttons reorder a group's profiles, keep focus, announce and save" do
+  test "arrow keys on a handle reorder a group's profiles, keep focus, announce and save" do
     click_button "Reorder"
     # Alphabetical to start with: Bob, then Everyone Profile
     assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
 
-    within(item("group_profiles", @everyone_profile, group: @everyone)) { click_button "Move Everyone Profile up" }
+    handle(item("group_profiles", @everyone_profile, group: @everyone)).send_keys(:up)
 
     assert_equal [ "Everyone Profile", "Bob" ], names_in("group_profiles", @everyone)
-    # It's now first, so focus moves to the button that can still do something
-    assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} .reorder-btn--down:focus"
-    assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} .reorder-btn--up[aria-disabled='true']"
+    assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} > .reorder-handle:focus"
     assert_selector "[data-sidebar-reorder-target='status']", text: "Everyone Profile moved to position 1 of 2 in Everyone.", visible: :all
 
     wait_for_saved { @everyone.ordered_profiles.map(&:name) == [ "Everyone Profile", "Bob" ] }
@@ -53,14 +52,28 @@ class SidebarReorderTest < ApplicationSystemTestCase
     assert_equal [ "Friends", "Everyone Profile", "Bob" ], cards
   end
 
-  test "move buttons inside a group's row don't open or close the group" do
+  test "moving past the end of a list says so and saves nothing" do
+    click_button "Reorder"
+
+    handle(item("group_profiles", @bob, group: @everyone)).send_keys(:up)
+
+    assert_selector "[data-sidebar-reorder-target='status']", text: "Bob is already first in Everyone.", visible: :all
+    assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
+    assert @everyone.group_profiles.reload.all? { |link| link.position.nil? }
+  end
+
+  test "a group's handle moves it with the keyboard without opening or closing it" do
     partners = @user.groups.create!(name: "Partners")
     partners.group_profiles.create!(profile: @alice)
     visit our_profiles_path
     click_button "Reorder"
 
-    within(item("groups", partners)) { click_button "Move Partners up" }
+    partners_handle = handle(item("groups", partners))
+    partners_handle.send_keys(:enter)
+    partners_handle.send_keys(:space)
+    assert_selector "#{item_selector('groups', partners)} > details[open]"
 
+    partners_handle.send_keys(:up)
     assert_equal [ "Partners", "Everyone" ], top_level_names
     assert_selector "#{item_selector('groups', partners)} > details[open]"
     wait_for_saved { partners.reload.position == 0 }
@@ -104,12 +117,12 @@ class SidebarReorderTest < ApplicationSystemTestCase
     # Another tab removes Bob from the group after this page loaded
     @everyone.group_profiles.find_by(profile: @bob).destroy!
 
-    within(item("group_profiles", @everyone_profile, group: @everyone)) { click_button "Move Everyone Profile up" }
+    handle(item("group_profiles", @everyone_profile, group: @everyone)).send_keys(:up)
 
     assert_selector "[role='alert']", text: "This list has changed since the page loaded"
     assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
     # Putting the list back doesn't lose the keyboard user's place
-    assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} .reorder-btn:focus"
+    assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} > .reorder-handle:focus"
   end
 
   test "when a save fails, moves queued behind it are dropped rather than saved" do
@@ -125,32 +138,15 @@ class SidebarReorderTest < ApplicationSystemTestCase
       }
     JS
 
-    target = item_selector("profiles", profiles(:everyone_profile))
-    find("#{target} .reorder-btn--up").click
-    find("#{target} .reorder-btn--up").click
+    everyone_profile_handle = handle(item("profiles", @everyone_profile))
+    everyone_profile_handle.send_keys(:up)
+    everyone_profile_handle.send_keys(:up)
 
     assert_selector "[role='alert']", text: "Couldn't save the new order"
     assert_equal [ "Alice", "Bob", "Everyone Profile" ], names_in("profiles").first(3)
     sleep 0.5 # long enough for a wrongly queued save to land
     assert @user.profiles.reload.all? { |profile| profile.position.nil? }
     assert_selector "[role='alert']", text: "Couldn't save the new order"
-  end
-
-  test "Enter and Space on a group's move buttons move it without opening or closing it" do
-    partners = @user.groups.create!(name: "Partners")
-    partners.group_profiles.create!(profile: @alice)
-    visit our_profiles_path
-    click_button "Reorder"
-
-    # A group's <li> holds its children's buttons too; its own come first
-    find("#{item_selector('groups', partners)} .reorder-btn--up", match: :first).send_keys(:enter)
-    assert_equal [ "Partners", "Everyone" ], top_level_names
-    assert_selector "#{item_selector('groups', partners)} > details[open]"
-
-    find("#{item_selector('groups', partners)} .reorder-btn--down", match: :first).send_keys(:space)
-    assert_equal [ "Everyone", "Partners" ], top_level_names
-    assert_selector "#{item_selector('groups', partners)} > details[open]"
-    wait_for_saved { partners.reload.position == 1 }
   end
 
   test "a group shown in two places is reordered in both" do
@@ -164,9 +160,7 @@ class SidebarReorderTest < ApplicationSystemTestCase
 
     copies = all("li[data-reorder-list='group_groups'][data-reorder-id='#{shared.uuid}']")
     assert_equal 2, copies.size
-    within(copies.first) do
-      find(item_selector("group_profiles", @bob, group: shared)).find(".reorder-btn--up").click
-    end
+    handle(copies.first.find(item_selector("group_profiles", @bob, group: shared))).send_keys(:up)
 
     copies.each do |copy|
       names = copy.all("li[data-reorder-list='group_profiles']").map { |node| node["data-reorder-name"] }
@@ -175,33 +169,31 @@ class SidebarReorderTest < ApplicationSystemTestCase
     wait_for_saved { shared.ordered_profiles.map(&:name) == [ "Bob", "Alice" ] }
   end
 
-  test "Sort A–Z puts a group's contents back in alphabetical order" do
-    @everyone.group_profiles.find_by(profile: @everyone_profile).update!(position: 0)
-    @everyone.group_profiles.find_by(profile: @bob).update!(position: 1)
+  test "Sort A–Z puts the profiles list back in alphabetical order" do
+    @bob.update!(position: 0)
+    @alice.update!(position: 1)
     visit our_profiles_path
+    assert_no_button "Sort A–Z" # only while reordering
     click_button "Reorder"
-    assert_equal [ "Everyone Profile", "Bob" ], names_in("group_profiles", @everyone)
+    assert_equal [ "Bob", "Alice" ], names_in("profiles").first(2)
 
     accept_confirm do
-      within(item("groups", @everyone)) { click_button "Sort Everyone's contents A–Z" }
+      find("button[data-reorder-reset='profiles']", text: "Sort A–Z").click
     end
 
-    wait_for_saved { @everyone.group_profiles.reload.all? { |link| link.position.nil? } }
+    wait_for_saved { @user.profiles.reload.all? { |profile| profile.position.nil? } }
     # The page reloads in the new order, still in reorder mode
-    assert_selector "#{item_selector('group_profiles', @bob, group: @everyone)} + #{item_selector('group_profiles', @everyone_profile, group: @everyone)}"
+    assert_selector "#{item_selector('profiles', @alice)} + #{item_selector('profiles', @bob)}"
     assert_selector ".reorder-handle"
   end
 
-  test "move buttons work in forced-colors mode, with the ends shown as unavailable" do
+  test "handles are visible in forced-colors mode" do
     click_button "Reorder"
 
     with_forced_colors do
-      first_item = item_selector("group_profiles", @bob, group: @everyone)
-      gray_text = system_color("GrayText")
-      canvas_text = system_color("CanvasText")
-
-      assert_equal gray_text, computed("#{first_item} .reorder-btn--up", "color")
-      assert_equal canvas_text, computed("#{first_item} .reorder-btn--down", "color")
+      selector = "#{item_selector('group_profiles', @bob, group: @everyone)} > .reorder-handle"
+      assert_equal system_color("CanvasText"), computed(selector, "color")
+      assert_equal system_color("Canvas"), computed(selector, "backgroundColor")
     end
   end
 
@@ -217,6 +209,15 @@ class SidebarReorderTest < ApplicationSystemTestCase
     find(item_selector(list, record, group: group), match: :first)
   end
 
+  # A group's <li> holds its children's handles too; its own comes first
+  def handle(item)
+    item.find(".reorder-handle", match: :first)
+  end
+
+  def handle_description(handle)
+    page.evaluate_script("document.getElementById(#{handle['aria-describedby'].to_json}).textContent").strip
+  end
+
   def names_in(list, group = nil)
     selector = "li[data-reorder-list='#{list}']"
     selector += "[data-reorder-group='#{group.uuid}']" if group
@@ -230,10 +231,9 @@ class SidebarReorderTest < ApplicationSystemTestCase
   # SortableJS (in its pointer-event mode) follows the pointer across several
   # moves, so the drag goes in steps rather than one jump.
   def drag(source, below:, offset: 0)
-    handle = source.find(".reorder-handle", match: :first)
     target_height = below.native.size.height
     page.driver.browser.action
-        .click_and_hold(handle.native)
+        .click_and_hold(handle(source).native)
         .move_by(0, 4)
         .move_to(below.native)
         .move_by(0, (target_height / 2) - 4 + offset)

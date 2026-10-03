@@ -12,7 +12,8 @@
     .sidebar__reorder
       %button.sidebar-tree__control-btn{type: "button", "aria-describedby": "sidebar-reorder-hint", data: { "sidebar-reorder-target": "toggle", action: "sidebar-reorder#toggle" }} Reorder
       %p.sidebar__reorder-hint#sidebar-reorder-hint{hidden: true, data: { "sidebar-reorder-target": "hint" }}
-        Drag the handles or use the arrow buttons. Things move within their own list.
+        Drag the handles to move things within their own list. With a keyboard, use the arrow keys on a handle.
+      %span.visually-hidden#sidebar-reorder-keys Use the up and down arrow keys to move it.
       %p.sidebar__reorder-error{role: "alert", data: { "sidebar-reorder-target": "error" }}
       .visually-hidden{"aria-live": "polite", data: { "sidebar-reorder-target": "status" }}
 
