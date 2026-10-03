@@ -15,8 +15,8 @@
   .action-dropdown__menu.profile-picker__menu{data: {controller: "profile-filter"}}
     %input.profile-picker__search{type: "text", autocomplete: "off", placeholder: "Find a profile or group…", "aria-label": "Filter profiles and groups", data: {"profile-filter-target": "input", action: "input->profile-filter#apply"}}
     .profile-picker__options
-      - profiles = Current.user.profiles.order_by_name_and_labels.includes(avatar_attachment: :blob)
-      - groups = Current.user.groups.order_by_name_and_labels.includes(avatar_attachment: :blob)
+      - profiles = Current.user.profiles.order_by_position_then_name.includes(avatar_attachment: :blob)
+      - groups = Current.user.groups.order_by_position_then_name.includes(avatar_attachment: :blob)
       - if profiles.any?
         %p.profile-picker__group-label Profiles
         - profiles.each do |profile|

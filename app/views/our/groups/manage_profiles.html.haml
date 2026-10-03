@@ -24,7 +24,7 @@
 
 - if @group.profiles.any?
   .profile-grid
-    - @group.profiles.order_by_name_and_labels.each do |profile|
+    - @group.ordered_profiles.each do |profile|
       = render "our/profiles/profile_card", profile: profile,
           action_label: "Remove from group",
           action_path: remove_profile_our_group_path(@group, profile_id: profile.id),

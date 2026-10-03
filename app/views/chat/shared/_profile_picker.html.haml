@@ -3,7 +3,7 @@
 - # fills in two hidden fields instead of firing an immediate PATCH. Usage:
 - #   = render "chat/shared/profile_picker", field_name: "chat_server[default_postable]",
 - #       label_id: "chat_server_default_postable_label",
-- #       profiles: Current.user.profiles.order_by_name_and_labels, groups: Current.user.groups.order_by_name_and_labels,
+- #       profiles: Current.user.profiles.order_by_position_then_name, groups: Current.user.groups.order_by_position_then_name,
 - #       selected_postable: profiles.first
 - # Fills a "_type" and "_id" field derived from field_name — pair with a
 - # plain %label{id: label_id} (no `for`) rather than label_tag, since the

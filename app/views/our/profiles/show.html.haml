@@ -34,7 +34,7 @@
     .profile-description
       = formatted_description(@profile.description)
 
-  - profile_groups = @profile.groups.order_by_name_and_labels
+  - profile_groups = @profile.groups.order_by_position_then_name
   - if profile_groups.any?
     %h2 In groups
     %ul

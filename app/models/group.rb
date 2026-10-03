@@ -18,7 +18,9 @@ class Group < ApplicationRecord
   has_many :copies, class_name: "Group", foreign_key: :copied_from_id, dependent: :nullify
   has_many :duplication_wizards, dependent: :destroy
   has_many :group_profiles, dependent: :destroy
-  has_many :profiles, -> { order(:name) }, through: :group_profiles
+  # Unordered: use ordered_profiles, or ordered_profiles_from_preload in
+  # trees built in memory.
+  has_many :profiles, through: :group_profiles
 
   has_many :parent_links, class_name: "GroupGroup", foreign_key: :child_group_id, dependent: :destroy
   has_many :child_links, class_name: "GroupGroup", foreign_key: :parent_group_id, dependent: :destroy
@@ -188,6 +190,7 @@ class Group < ApplicationRecord
       new_profile.copied_from = original_profile
       new_profile.chat_bracket_before = nil
       new_profile.chat_bracket_after = nil
+      new_profile.position = nil # a copy joins the end of the account-wide order
       profile_map[original_profile.id] = new_profile
     end
 
@@ -209,21 +212,23 @@ class Group < ApplicationRecord
         profile.save! unless reused_profile_ids.include?(old_id)
       end
 
-      # Recreate group_groups edges for non-skipped groups
+      # Recreate group_groups edges for non-skipped groups, keeping each
+      # parent's custom order
       GroupGroup.where(parent_group_id: group_map.keys, child_group_id: group_map.keys).each do |gg|
         next if skip_ids.include?(gg.parent_group_id) || skip_ids.include?(gg.child_group_id)
         new_parent = group_map[gg.parent_group_id]
         new_child = group_map[gg.child_group_id]
         next unless new_parent && new_child
-        GroupGroup.create!(parent_group: new_parent, child_group: new_child)
+        GroupGroup.create!(parent_group: new_parent, child_group: new_child, position: gg.position)
       end
 
-      # Recreate group_profiles for freshly-copied groups
+      # Recreate group_profiles for freshly-copied groups, keeping each
+      # group's custom order
       GroupProfile.where(group_id: fresh_group_ids).each do |gp|
         new_group = group_map[gp.group_id]
         new_profile = profile_map[gp.profile_id]
         next unless new_group && new_profile
-        GroupProfile.create!(group: new_group, profile: new_profile)
+        GroupProfile.create!(group: new_group, profile: new_profile, position: gp.position)
       end
 
       # Recreate inclusion overrides for freshly-copied groups only
@@ -264,6 +269,23 @@ class Group < ApplicationRecord
     end
 
     group_map[id] # Return the new root group
+  end
+
+  # This group's profiles in the group's own custom order (see Positioned).
+  def ordered_profiles
+    profiles.order_by_position_then_name(:group_profiles)
+  end
+
+  # This group's direct child groups in the group's own custom order.
+  def ordered_child_groups
+    child_groups.order_by_position_then_name(:group_groups)
+  end
+
+  # The same order as ordered_profiles, worked out in memory from
+  # group_profiles preloaded with their profiles, so tree builders don't
+  # query once per group.
+  def ordered_profiles_from_preload
+    group_profiles.sort_by { |link| link.profile.position_sort_key(link.position) }.map(&:profile)
   end
 
   # All group IDs reachable from this group via group_groups edges (recursive).
@@ -325,7 +347,7 @@ class Group < ApplicationRecord
     collect_traversed_group_ids_recursive(id, [], children_map, overrides, traversed_ids)
 
     groups_by_id = Group.where(id: traversed_ids.to_a)
-                        .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
+                        .includes(group_profiles: { profile: { avatar_attachment: :blob } }, avatar_attachment: :blob)
                         .index_by(&:id)
 
     walk_descendants(id, [], children_map, groups_by_id, overrides)
@@ -348,7 +370,7 @@ class Group < ApplicationRecord
     collect_traversed_group_ids_recursive(id, [], children_map, overrides, traversed_ids)
 
     groups_by_id = Group.where(id: traversed_ids.to_a)
-                        .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
+                        .includes(group_profiles: { profile: { avatar_attachment: :blob } }, avatar_attachment: :blob)
                         .index_by(&:id)
 
     seen_profile_ids ||= Set.new
@@ -363,7 +385,7 @@ class Group < ApplicationRecord
       .where(group_id: root_group_id, target_type: "Profile")
       .where("path = ?::jsonb", path.to_json)
       .pluck(:target_id)
-    profiles.where.not(id: hidden_ids)
+    ordered_profiles.where.not(id: hidden_ids)
   end
 
   # Root-level profiles visible in the public view, filtering out
@@ -373,7 +395,7 @@ class Group < ApplicationRecord
       .where(target_type: "Profile")
       .where("path = '[]'::jsonb")
       .pluck(:target_id)
-    profiles.where.not(id: hidden_profile_ids).order_by_name_and_labels
+    ordered_profiles.where.not(id: hidden_profile_ids)
   end
 
   # Direct child groups visible when this group is reached via a specific traversal path
@@ -385,7 +407,7 @@ class Group < ApplicationRecord
       .where(group_id: root_group_id, target_type: "Group")
       .where("path = ?::jsonb", path.to_json)
       .pluck(:target_id)
-    child_groups.where.not(id: hidden_ids).includes(avatar_attachment: :blob).order_by_name_and_labels
+    ordered_child_groups.where.not(id: hidden_ids).includes(avatar_attachment: :blob)
   end
 
   # Collect all profiles from this group and all descendant groups,
@@ -425,7 +447,7 @@ class Group < ApplicationRecord
   def duplication_preview_tree(labels:, resolutions:, profile_resolutions: {})
     all_ids = reachable_group_ids
     groups_by_id = Group.where(id: all_ids)
-                        .includes(:profiles, avatar_attachment: :blob)
+                        .includes(group_profiles: :profile, avatar_attachment: :blob)
                         .index_by(&:id)
     children_map = build_children_map(all_ids)
     overrides = overrides_index
@@ -464,7 +486,7 @@ class Group < ApplicationRecord
     children_map = build_children_map([ id ] + all_ids)
 
     groups_by_id = Group.where(id: all_ids)
-                        .includes(profiles: { avatar_attachment: :blob }, avatar_attachment: :blob)
+                        .includes(group_profiles: { profile: { avatar_attachment: :blob } }, avatar_attachment: :blob)
                         .index_by(&:id)
 
     build_management_tree(id, [], children_map, groups_by_id, overrides, false)
@@ -475,7 +497,7 @@ class Group < ApplicationRecord
   #   { profile:, hidden:, cascade_hidden:, container_path: }
   def management_root_profiles
     overrides = overrides_index
-    profiles.includes(avatar_attachment: :blob).order_by_name_and_labels.map do |profile|
+    ordered_profiles.includes(avatar_attachment: :blob).map do |profile|
       {
         profile: profile,
         hidden: overrides.include?([ [], "Profile", profile.id ]),
@@ -498,12 +520,13 @@ class Group < ApplicationRecord
   end
 
   # Build the children_map used by tree traversal methods.
-  # Returns { parent_group_id => [ { id: child_group_id } ] }
+  # Returns { parent_group_id => [ { id: child_group_id, position: } ] }
+  # where position is the child's place in that parent's custom order.
   def build_children_map(parent_ids)
     GroupGroup.where(parent_group_id: parent_ids)
-      .pluck(:parent_group_id, :child_group_id)
+      .pluck(:parent_group_id, :child_group_id, :position)
       .group_by(&:first)
-      .transform_values { |rows| rows.map { |r| { id: r[1] } } }
+      .transform_values { |rows| rows.map { |r| { id: r[1], position: r[2] } } }
   end
 
   # -- Flat descendant list (descendant_sections) ----------------------------
@@ -512,7 +535,7 @@ class Group < ApplicationRecord
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
       .reject { |g, _| overrides.include?([ current_path, "Group", g.id ]) }
-      .sort_by { |g, _| g.name_and_label_sort_key }
+      .sort_by { |g, entry| g.position_sort_key(entry[:position]) }
       .flat_map do |g, _entry|
         child_path = current_path + [ g.id ]
         [ g, *walk_descendants(g.id, child_path, children_map, groups_by_id, overrides) ]
@@ -525,10 +548,10 @@ class Group < ApplicationRecord
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
       .reject { |g, _| overrides.include?([ current_path, "Group", g.id ]) }
-      .sort_by { |g, _| g.name_and_label_sort_key }
+      .sort_by { |g, entry| g.position_sort_key(entry[:position]) }
       .map do |g, _entry|
         child_path = current_path + [ g.id ]
-        visible_profiles = g.profiles.reject { |p| overrides.include?([ child_path, "Profile", p.id ]) }
+        visible_profiles = g.ordered_profiles_from_preload.reject { |p| overrides.include?([ child_path, "Profile", p.id ]) }
 
         {
           group: g,
@@ -544,7 +567,7 @@ class Group < ApplicationRecord
   def build_duplication_preview(parent_id, current_path, children_map, groups_by_id, labels, reused_ids, expanded_reused_ids, overrides, ancestor_hidden, profile_resolutions = {})
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
-      .sort_by { |g, _| g.name_and_label_sort_key }
+      .sort_by { |g, entry| g.position_sort_key(entry[:position]) }
       .map do |g, _entry|
         is_reused = expanded_reused_ids.include?(g.id)
         is_directly_reused = reused_ids.include?(g.id)
@@ -554,7 +577,7 @@ class Group < ApplicationRecord
         effectively_hidden = hidden || ancestor_hidden
         child_path = current_path + [ g.id ]
 
-        profile_entries = g.profiles.map do |profile|
+        profile_entries = g.ordered_profiles_from_preload.map do |profile|
           if is_reused
             profile_action = "reuse"
             directly_reused_profile = false
@@ -604,13 +627,13 @@ class Group < ApplicationRecord
   def build_management_tree(parent_id, current_path, children_map, groups_by_id, overrides, ancestor_hidden)
     (children_map[parent_id] || [])
       .filter_map { |entry| groups_by_id[entry[:id]] ? [ groups_by_id[entry[:id]], entry ] : nil }
-      .sort_by { |g, _| g.name_and_label_sort_key }
+      .sort_by { |g, entry| g.position_sort_key(entry[:position]) }
       .map do |g, _entry|
         hidden = overrides.include?([ current_path, "Group", g.id ])
         effectively_hidden = hidden || ancestor_hidden
         child_path = current_path + [ g.id ]
 
-        profile_entries = g.profiles.map do |profile|
+        profile_entries = g.ordered_profiles_from_preload.map do |profile|
           {
             profile: profile,
             hidden: overrides.include?([ child_path, "Profile", profile.id ]),
@@ -728,6 +751,7 @@ class Group < ApplicationRecord
       new_group.copied_from = original
       new_group.chat_bracket_before = nil
       new_group.chat_bracket_after = nil
+      new_group.position = nil # a copy joins the end of the account-wide order
       group_map[parent_id] = new_group
     end
 

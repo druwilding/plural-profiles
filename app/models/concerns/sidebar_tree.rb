@@ -6,7 +6,7 @@ module SidebarTree
   # Returns a hash:
   #   {
   #     trees:        [ node, ... ],      # one node per top-level group
-  #     all_profiles: ActiveRecord::Relation  # all profiles, ordered by name and labels
+  #     all_profiles: ActiveRecord::Relation  # all profiles, in the account-wide custom order
   #   }
   #
   # Each node is a hash:
@@ -19,12 +19,13 @@ module SidebarTree
   #
   # Inclusion overrides are intentionally ignored — the private sidebar shows
   # everything for the account unconditionally.
+  #
+  # Ordering follows Positioned: top-level groups by the account-wide group
+  # order, and everything inside a group by that group's own order.
   def sidebar_tree
     all_groups = groups.includes(
-      :profiles,
-      :parent_links,
       avatar_attachment: :blob,
-      profiles: { avatar_attachment: :blob }
+      group_profiles: { profile: { avatar_attachment: :blob } }
     )
 
     groups_by_id = all_groups.index_by(&:id)
@@ -32,19 +33,20 @@ module SidebarTree
     # Single query for all GroupGroup edges within this user's groups.
     # Used for both the child-ID set and the parent→children map.
     all_edges = GroupGroup.where(parent_group_id: groups.select(:id))
-                          .pluck(:parent_group_id, :child_group_id)
+                          .pluck(:parent_group_id, :child_group_id, :position)
 
-    all_child_ids = all_edges.map(&:last).to_set
+    all_child_ids = all_edges.map(&:second).to_set
 
     # Top-level groups: those that are not a child of any other group
     # belonging to this user.
     top_level = groups_by_id.values
                             .reject { |g| all_child_ids.include?(g.id) }
-                            .sort_by(&:name_and_label_sort_key)
+                            .sort_by(&:position_sort_key)
 
-    # Build a global parent → children map for all of this user's groups.
+    # Build a global parent → [ [ child_id, position ], ... ] map for all of
+    # this user's groups.
     children_map = all_edges.group_by(&:first)
-                            .transform_values { |rows| rows.map(&:last) }
+                            .transform_values { |rows| rows.map { |_, child_id, position| [ child_id, position ] } }
 
     seen_profile_ids = Set.new
     seen_group_ids   = Set.new
@@ -54,7 +56,7 @@ module SidebarTree
     end
 
     all_profiles = profiles.includes(avatar_attachment: :blob)
-                            .order_by_name_and_labels
+                            .order_by_position_then_name
                             .load
 
     { trees: trees, all_profiles: all_profiles }
@@ -67,15 +69,16 @@ module SidebarTree
     repeated = seen_group_ids.include?(group.id)
     seen_group_ids.add(group.id)
 
-    profile_entries = group.profiles.sort_by(&:name_and_label_sort_key).map do |profile|
+    profile_entries = group.ordered_profiles_from_preload.map do |profile|
       entry = { profile: profile, repeated: seen_profile_ids.include?(profile.id) }
       seen_profile_ids.add(profile.id)
       entry
     end
 
-    child_ids     = children_map.fetch(group.id, [])
-    child_groups  = child_ids.filter_map { |cid| groups_by_id[cid] }
-                             .sort_by(&:name_and_label_sort_key)
+    child_groups = children_map.fetch(group.id, [])
+                               .filter_map { |cid, position| [ groups_by_id[cid], position ] if groups_by_id[cid] }
+                               .sort_by { |child, position| child.position_sort_key(position) }
+                               .map(&:first)
 
     child_nodes = child_groups.map do |child|
       build_sidebar_node(child, children_map, groups_by_id, seen_profile_ids, seen_group_ids)

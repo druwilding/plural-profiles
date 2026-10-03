@@ -21,8 +21,8 @@ module Chat
     private
 
     def load_postable_options
-      @profiles = Current.user.profiles.order_by_name_and_labels.includes(avatar_attachment: :blob)
-      @groups = Current.user.groups.order_by_name_and_labels.includes(avatar_attachment: :blob)
+      @profiles = Current.user.profiles.order_by_position_then_name.includes(avatar_attachment: :blob)
+      @groups = Current.user.groups.order_by_position_then_name.includes(avatar_attachment: :blob)
     end
   end
 end
