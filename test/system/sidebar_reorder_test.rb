@@ -125,6 +125,40 @@ class SidebarReorderTest < ApplicationSystemTestCase
     assert_selector "#{item_selector('group_profiles', @everyone_profile, group: @everyone)} > .reorder-handle:focus"
   end
 
+  test "a list reordered in another tab isn't overwritten" do
+    start_reordering
+    # Another tab puts Everyone Profile first after this page loaded
+    @everyone.group_profiles.find_by(profile: @everyone_profile).update!(position: 0)
+    @everyone.group_profiles.find_by(profile: @bob).update!(position: 1)
+
+    handle(item("group_profiles", @bob, group: @everyone)).send_keys(:down)
+
+    assert_selector "[role='alert']", text: "This list has changed since the page loaded"
+    assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
+    assert_equal [ "Everyone Profile", "Bob" ], @everyone.ordered_profiles.map(&:name)
+  end
+
+  test "moves made one after another in the same tab aren't mistaken for another tab's" do
+    start_reordering
+    bob_handle = handle(item("group_profiles", @bob, group: @everyone))
+
+    bob_handle.send_keys(:down)
+    wait_for_saved { @everyone.ordered_profiles.map(&:name) == [ "Everyone Profile", "Bob" ] }
+    bob_handle.send_keys(:up)
+    wait_for_saved { @everyone.ordered_profiles.map(&:name) == [ "Bob", "Everyone Profile" ] }
+    assert_selector "[role='alert']", text: "", visible: :all, exact_text: true
+  end
+
+  test "a save after being signed out says so, and puts the list back" do
+    start_reordering
+    Session.where(user: @user).delete_all
+
+    handle(item("group_profiles", @everyone_profile, group: @everyone)).send_keys(:up)
+
+    assert_selector "[role='alert']", text: "You've been signed out"
+    assert_equal [ "Bob", "Everyone Profile" ], names_in("group_profiles", @everyone)
+  end
+
   test "when a save fails, moves queued behind it are dropped rather than saved" do
     start_reordering
     # The first save fails slowly, so the second move is queued behind it

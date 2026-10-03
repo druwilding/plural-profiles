@@ -10,7 +10,7 @@ class Our::OrderingsController < ApplicationController
     if params[:reset] == "true"
       order.reset!
     else
-      order.save!(ordered_ids)
+      order.save!(ordered_ids, previous: previous_positions)
     end
     head :no_content
   rescue ListOrder::StaleList
@@ -26,5 +26,13 @@ class Our::OrderingsController < ApplicationController
   def ordered_ids
     ids = params[:ids]
     ids.is_a?(Array) ? ids.grep(String) : []
+  end
+
+  # The positions the page last saw, { uuid => position or nil }, so a list
+  # another tab has reordered since is a conflict. Only compared, never
+  # written.
+  def previous_positions
+    previous = params[:previous]
+    previous.to_unsafe_h if previous.respond_to?(:to_unsafe_h)
   end
 end

@@ -13,7 +13,8 @@ module SidebarTree
   #   {
   #     group:    <Group>,
   #     repeated: true/false,   # true if this group already appeared earlier in the traversal
-  #     profiles: [ { profile: <Profile>, repeated: true/false }, ... ],
+  #     position: Integer/nil,  # its stored place in its list (see Positioned)
+  #     profiles: [ { profile: <Profile>, repeated: true/false, position: Integer/nil }, ... ],
   #     children: [ ...child nodes... ]
   #   }
   #
@@ -52,7 +53,7 @@ module SidebarTree
     seen_group_ids   = Set.new
 
     trees = top_level.map do |root|
-      build_sidebar_node(root, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
+      build_sidebar_node(root, root.position, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
     end
 
     all_profiles = profiles.includes(avatar_attachment: :blob)
@@ -64,26 +65,26 @@ module SidebarTree
 
   private
 
-  # Recursively builds a sidebar node for the given group.
-  def build_sidebar_node(group, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
+  # Recursively builds a sidebar node for the given group. position is the
+  # group's stored place in the list it's shown in.
+  def build_sidebar_node(group, position, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
     repeated = seen_group_ids.include?(group.id)
     seen_group_ids.add(group.id)
 
+    link_positions = group.group_profiles.to_h { |link| [ link.profile_id, link.position ] }
     profile_entries = group.ordered_profiles_from_preload.map do |profile|
-      entry = { profile: profile, repeated: seen_profile_ids.include?(profile.id) }
+      entry = { profile: profile, repeated: seen_profile_ids.include?(profile.id), position: link_positions[profile.id] }
       seen_profile_ids.add(profile.id)
       entry
     end
 
-    child_groups = children_map.fetch(group.id, [])
-                               .filter_map { |cid, position| [ groups_by_id[cid], position ] if groups_by_id[cid] }
-                               .sort_by { |child, position| child.position_sort_key(position) }
-                               .map(&:first)
+    child_nodes = children_map.fetch(group.id, [])
+                              .filter_map { |cid, child_position| [ groups_by_id[cid], child_position ] if groups_by_id[cid] }
+                              .sort_by { |child, child_position| child.position_sort_key(child_position) }
+                              .map do |child, child_position|
+                                build_sidebar_node(child, child_position, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
+                              end
 
-    child_nodes = child_groups.map do |child|
-      build_sidebar_node(child, children_map, groups_by_id, seen_profile_ids, seen_group_ids)
-    end
-
-    { group: group, repeated: repeated, profiles: profile_entries, children: child_nodes }
+    { group: group, repeated: repeated, position: position, profiles: profile_entries, children: child_nodes }
   end
 end

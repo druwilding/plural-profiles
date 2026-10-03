@@ -752,7 +752,8 @@ details[open] > .form-section-summary::before {
 .sidebar__reorder-error {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
-  color: var(--error);
+  /* As the manage page's save errors (.tree-editor__save-indicator--error) */
+  color: var(--danger-button-text);
 }
 
 .sidebar__reorder-error:empty {

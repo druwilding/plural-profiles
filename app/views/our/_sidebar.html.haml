@@ -47,7 +47,7 @@
           %button.sidebar-tree__control-btn{type: "button", data: { action: "sidebar-reorder#reset", "reorder-reset": "profiles", "reorder-within": "Profiles" }} Sort A–Z
       %ul.sidebar-tree
         - @sidebar_all_profiles.each do |profile|
-          %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if @profile && @profile.id == profile.id), data: reorder_item_data(profile, list: "profiles", within: "Profiles")}
+          %li.sidebar-tree__leaf{class: ("sidebar-tree__leaf--active" if @profile && @profile.id == profile.id), data: reorder_item_data(profile, list: "profiles", within: "Profiles", position: profile.position)}
             - if profile.avatar.attached?
               = image_tag profile.avatar.variant(resize_to_fill: [24, 24]), class: "sidebar-tree__avatar #{avatar_shape_class(profile, prefix: 'sidebar-tree__avatar')}".strip, width: 24, height: 24, alt: profile.avatar_alt_text.presence || "", loading: "lazy"
             - else

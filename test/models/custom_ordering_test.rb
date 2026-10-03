@@ -96,6 +96,14 @@ class CustomOrderingTest < ActiveSupport::TestCase
     assert_equal [ @bea, @ash ], household[:children].first[:profiles].map { |entry| entry[:profile] }
   end
 
+  test "sidebar_tree gives each item its stored position in the list it's shown in" do
+    sidebar = @user.sidebar_tree
+    another, household = sidebar[:trees]
+    assert_equal [ 0, nil ], [ another[:position], household[:position] ]
+    assert_equal [ 0, 1 ], household[:children].map { |node| node[:position] }
+    assert_equal [ 0, 1, nil ], household[:profiles].map { |entry| entry[:position] }
+  end
+
   test "sidebar_tree lists all profiles in the account-wide order" do
     assert_equal [ @wren, @ash, @bea ], @user.sidebar_tree[:all_profiles].to_a
   end

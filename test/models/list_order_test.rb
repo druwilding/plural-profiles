@@ -70,6 +70,25 @@ class ListOrderTest < ActiveSupport::TestCase
     assert_nil other.reload.position
   end
 
+  test "saves when the positions the caller last saw are still current" do
+    order = ListOrder.new(user: @user, list: "group_profiles", group: @household)
+    order.save!([ @wren.uuid, @ash.uuid ], previous: { @ash.uuid => nil, @wren.uuid => "" })
+    order.save!([ @ash.uuid, @wren.uuid ], previous: { @wren.uuid => 0, @ash.uuid => "1" })
+
+    assert_equal [ @ash, @wren ], @household.ordered_profiles.to_a
+  end
+
+  test "a list another tab has reordered since is stale and writes nothing" do
+    order = ListOrder.new(user: @user, list: "group_profiles", group: @household)
+    # This page loaded with the list unpositioned; another tab then saved
+    order.save!([ @wren.uuid, @ash.uuid ])
+
+    assert_raises(ListOrder::StaleList) do
+      order.save!([ @ash.uuid, @wren.uuid ], previous: { @ash.uuid => nil, @wren.uuid => nil })
+    end
+    assert_equal [ @wren, @ash ], @household.ordered_profiles.to_a
+  end
+
   test "a list with a missing member is stale and writes nothing" do
     assert_raises(ListOrder::StaleList) do
       ListOrder.new(user: @user, list: "group_profiles", group: @household).save!([ @wren.uuid ])

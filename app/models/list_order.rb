@@ -9,6 +9,9 @@
 # Items are identified by their UUIDs. A save must name exactly the list's
 # current members, so a stale page (from another tab, or from before a
 # membership change) can't half-apply an order: it raises StaleList instead.
+# A save can also say what it believes each member's stored position is;
+# if another tab has reordered the list since, that's a StaleList too, rather
+# than one tab silently overwriting the other.
 class ListOrder
   LISTS = %w[groups profiles group_groups group_profiles].freeze
 
@@ -25,14 +28,19 @@ class ListOrder
     @group = group
   end
 
-  # Positions the list's members 0..n-1 in the given order.
-  def save!(uuids)
+  # Positions the list's members 0..n-1 in the given order. previous, if
+  # given, maps each member's UUID to the position the caller last saw
+  # (nil for unpositioned).
+  def save!(uuids, previous: nil)
     uuids = Array(uuids).map(&:to_s)
+    table = rows.quoted_table_name
 
     ActiveRecord::Base.transaction do
       # Locks only the rows being written, not the groups or profiles joined in
-      ids_by_uuid = members.lock("FOR UPDATE OF #{rows.quoted_table_name}").pluck(member_uuid_column, "#{rows.quoted_table_name}.id").to_h
+      current = members.lock("FOR UPDATE OF #{table}").pluck(member_uuid_column, "#{table}.id", "#{table}.position")
+      ids_by_uuid = current.to_h { |uuid, id, _| [ uuid, id ] }
       raise StaleList unless uuids.size == ids_by_uuid.size && uuids.to_set == ids_by_uuid.keys.to_set
+      raise StaleList if previous && normalize(previous) != current.to_h { |uuid, _, position| [ uuid, position ] }
 
       write_positions(uuids.map { |uuid| ids_by_uuid.fetch(uuid) })
       clear_positions_outside_list if @list == "groups"
@@ -48,6 +56,10 @@ class ListOrder
   end
 
   private
+
+  def normalize(positions)
+    positions.to_h { |uuid, position| [ uuid.to_s, position.blank? ? nil : Integer(position.to_s, exception: false) ] }
+  end
 
   # The rows whose position column orders this list: the groups or profiles
   # themselves for account-wide lists, the links for lists inside a group.

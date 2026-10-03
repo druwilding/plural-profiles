@@ -55,6 +55,7 @@ export default class extends Controller {
     if (!direction) return
     // Not scroll the sidebar
     event.preventDefault()
+    if (this.paused) return
     this.#move(event.currentTarget, direction)
   }
 
@@ -71,14 +72,22 @@ export default class extends Controller {
     const button = event.currentTarget
     if (!confirm(`Sort ${button.dataset.reorderWithin} A–Z? This replaces the order you've chosen.`)) return
 
-    // Let moves already on their way land first, or one could undo the sort
-    await this.queue
+    // No more moves until the page reloads, and let those already on their
+    // way land first (including any queued while waiting), or one could undo
+    // the sort
+    this.#pause(true)
+    let pending
+    do {
+      pending = this.queue
+      await pending
+    } while (pending !== this.queue)
 
     try {
       await this.#send({ list: button.dataset.reorderReset, reset: "true" })
       window.Turbo ? Turbo.visit(window.location.href, { action: "replace" }) : window.location.reload()
     } catch (status) {
       this.#showError(status)
+      this.#pause(false)
     }
   }
 
@@ -90,12 +99,23 @@ export default class extends Controller {
     this.toggleTarget.setAttribute("aria-pressed", "true")
     this.toggleTarget.title = "Done reordering"
     this.hintTarget.hidden = false
+    this.paused = false
+    // Per list: the order last saved, and each item's stored position as the
+    // server last had it (sent with each save, see ListOrder)
     this.saved = new Map()
+    this.positions = new Map()
 
     this.#items().forEach(item => {
       this.#addControls(item)
       const key = this.#key(item)
-      if (!this.saved.has(key)) this.saved.set(key, this.#ids(item.parentElement, key))
+      if (!this.saved.has(key)) {
+        const items = this.#siblings(item)
+        this.saved.set(key, items.map(sibling => sibling.dataset.reorderId))
+        this.positions.set(key, Object.fromEntries(items.map(sibling => [
+          sibling.dataset.reorderId,
+          sibling.dataset.reorderPosition === "" ? null : Number(sibling.dataset.reorderPosition)
+        ])))
+      }
     })
 
     this.#containers().forEach(container => {
@@ -164,8 +184,10 @@ export default class extends Controller {
       if ((this.generations.get(key) || 0) !== generation) return
 
       try {
-        await this.#send(params)
+        // As of the save before this one, so read here rather than when queued
+        await this.#send({ ...params, previous: this.positions.get(key) })
         this.saved.set(key, ids)
+        this.positions.set(key, Object.fromEntries(ids.map((id, index) => [ id, index ])))
         if (this.errorKey === key) this.#clearError()
       } catch (status) {
         this.generations.set(key, generation + 1)
@@ -187,7 +209,16 @@ export default class extends Controller {
       body: JSON.stringify(params),
       credentials: "same-origin"
     })
+    // A signed-out session is redirected to the sign-in page, which fetch
+    // follows and reports as a success
+    if (response.redirected) throw "signed-out"
     if (!response.ok) throw response.status
+  }
+
+  // While a Sort A–Z is on its way, so no move can land after it
+  #pause(paused) {
+    this.paused = paused
+    this.sortables.forEach(sortable => sortable.option("disabled", paused))
   }
 
   // A group that sits inside several parents appears in the sidebar once
@@ -271,9 +302,10 @@ export default class extends Controller {
 
   #showError(status, key = null) {
     this.errorKey = key
-    const message = status === 409
-      ? "This list has changed since the page loaded. Reload the page to reorder it."
-      : "Couldn't save the new order. Please try again."
+    const message = {
+      409: "This list has changed since the page loaded. Reload the page to reorder it.",
+      "signed-out": "You've been signed out. Sign in again to save the new order."
+    }[status] || "Couldn't save the new order. Please try again."
     // Cleared first, so the same message twice in a row is still read out
     this.errorTarget.textContent = ""
     requestAnimationFrame(() => { this.errorTarget.textContent = message })

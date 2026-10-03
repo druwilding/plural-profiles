@@ -33,6 +33,17 @@ class Our::OrderingsControllerTest < ActionDispatch::IntegrationTest
     assert @user.profiles.all? { |profile| profile.position.nil? }
   end
 
+  test "a list reordered elsewhere since the page loaded is a conflict" do
+    alice, bob = profiles(:alice), profiles(:bob)
+    uuids = @user.profiles.order_by_position_then_name.map(&:uuid)
+    previous = uuids.index_with { nil }
+    alice.update!(position: 0) # another tab
+
+    patch our_ordering_path, params: { list: "profiles", ids: uuids.reverse, previous: previous }, as: :json
+    assert_response :conflict
+    assert_nil bob.reload.position
+  end
+
   test "an out-of-date list is a conflict" do
     patch our_ordering_path, params: { list: "profiles", ids: [ profiles(:alice).uuid ] }, as: :json
     assert_response :conflict

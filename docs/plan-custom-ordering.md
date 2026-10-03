@@ -2,7 +2,7 @@
 
 ## Summary
 
-Let people choose the order their groups and profiles appear in, instead of always alphabetical. The order applies everywhere groups and profiles are listed: the "our" sidebar, public group pages (explorer tree, cards, no-JS fallback), our group pages, and the chat "posting as" pickers.
+Let people choose the order their groups and profiles appear in, instead of always alphabetical. The order applies everywhere groups and profiles are listed: the "our" sidebar, public group pages (explorer tree, cards, no-JS fallback), our group pages and the manage pages. The chat "posting as" pickers stay alphabetical, so a name is quick to find in a long list.
 
 Profiles can belong to several groups, and the order is per group: a profile can be first in "Partners" and last in "Littles".
 
@@ -20,7 +20,7 @@ Reordering happens in the sidebar. It switches into a reorder mode with drag han
 | --- | --- |
 | Groups and profiles mixed together? | No. They stay in two separately ordered blocks: sub-groups first, then profiles. |
 | Where do new items go in a custom-ordered list? | At the end. Unpositioned items sort after positioned ones, alphabetically among themselves. |
-| How is dragging activated? | A "Reorder" toggle in the sidebar shows drag handles and move buttons. Otherwise links behave as normal. |
+| How is dragging activated? | A round toggle button in the sidebar's corner shows drag handles. Otherwise links behave as normal. |
 | Can dragging move items between groups? | No. Items are reordered within their current list only. Membership changes stay on the manage pages. |
 | Is ordering per path or per group? | Per group. A group's contents have the same order wherever that group appears in a tree. Inclusion overrides stay path-scoped, but ordering does not need to be. |
 | Reset? | The top-level groups and the profiles list each have a "Sort A–Z" button in reorder mode, which clears their positions. A group's contents are put back by dragging. |
@@ -151,12 +151,14 @@ patch "our/ordering", to: "our/orderings#update", as: :our_ordering
 | `list` | Which list is being saved: `profiles` or `groups` (account-wide), `group_profiles` or `group_groups` (inside a group). |
 | `group` | The owning group's UUID. Only for `group_profiles` and `group_groups`. |
 | `ids` | The items' UUIDs in their new order. |
+| `previous` | Optional. Each member's stored position as the page last saw it, `{ uuid => position or null }`. |
 | `reset` | Optional. `"true"` clears the list's positions (A–Z). |
 
 ### Behaviour
 
 - Scope everything through `Current.user`.
 - The submitted UUIDs must be exactly the current members of the list, with no extras and no missing items. Otherwise respond `409 Conflict` and write nothing. This guards against stale tabs after membership changes.
+- When `previous` is given, the stored positions must still match it, checked under the same row lock. Otherwise it's a `409` too, so two tabs reordering the same list can't silently overwrite each other. The sidebar renders each item's stored position (`data-reorder-position`), and updates its copy after each successful save.
 - Lock the list's rows, check membership and write all positions in one transaction. The write is a single `UPDATE ... SET position = CASE id WHEN ... END`, built with Arel.
 - Respond with a status code only: `204 No Content` when saved, `409` for a stale list, `404` for a group that isn't the user's, `400` for an unknown list.
 
