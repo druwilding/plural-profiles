@@ -1,4 +1,13 @@
 module ApplicationHelper
+  # Whether the person hid a sidebar beside the main content. Kept in a cookie
+  # (set by sidebar_toggle_controller.js) rather than localStorage so the page
+  # is rendered that way from the start, with no flash of sidebar. Each kind
+  # of sidebar has its own cookie: "sidebar" for the signed-in pages' one,
+  # "group_sidebar" for the tree on public group pages.
+  def sidebar_hidden?(cookie = "sidebar")
+    cookies[cookie] == "hidden"
+  end
+
   # Links from chat pages/broadcasts to public profile/group pages should never
   # carry the chat. subdomain — those pages aren't chat-namespaced routes, and
   # a chat. URL for them just reads as a broken/wrong link when shared.
