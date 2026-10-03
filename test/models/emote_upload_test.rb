@@ -78,8 +78,13 @@ class EmoteUploadTest < ActiveSupport::TestCase
 
   test "a PNG that can't be decoded is rejected and its blob purged" do
     corrupt = png_bytes(8, 8).byteslice(0, 40)
-    assert_no_difference -> { ActiveStorage::Blob.count } do
-      assert_equal "couldn't be read as an image", process_files(upload("broken.png", corrupt)).rejected.first.error
+    # libvips prints "not enough data" for the truncated PNG on top of raising
+    # the error being tested here. It writes straight to the process's stderr,
+    # so only a capture at that level keeps the expected noise out of the run.
+    capture_subprocess_io do
+      assert_no_difference -> { ActiveStorage::Blob.count } do
+        assert_equal "couldn't be read as an image", process_files(upload("broken.png", corrupt)).rejected.first.error
+      end
     end
   end
 
