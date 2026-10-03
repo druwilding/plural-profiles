@@ -25,8 +25,9 @@
 
     %main{class: "container #{content_for(:container_class)}", data: {controller: "spoiler", action: "click->spoiler#toggle keydown->spoiler#keydown"}}
       - if @sidebar_trees
-        .layout
+        .layout{class: ("layout--sidebar-hidden" if sidebar_hidden?), data: { controller: "sidebar-toggle", "sidebar-toggle-cookie-value": "sidebar", "sidebar-toggle-hidden-class": "layout--sidebar-hidden" }}
           = render "our/sidebar"
+          = render "shared/sidebar_toggle_button", action: :show, controls: "sidebar"
           .main-content
             - if flash[:notice]
               .flash.flash--notice= flash[:notice]

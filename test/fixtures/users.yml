@@ -1,4 +1,6 @@
-<% password_digest = BCrypt::Password.create("Plur4l!Pr0files#2026") %>
+<%# Minimum cost: every sign-in checks this hash, and at the default cost that
+    check is slow enough under parallel test load to outlast Capybara's wait. %>
+<% password_digest = BCrypt::Password.create("Plur4l!Pr0files#2026", cost: BCrypt::Engine::MIN_COST) %>
 
 one:
   email_address: one@example.com
