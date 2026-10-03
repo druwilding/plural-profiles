@@ -3021,6 +3021,10 @@ summary.emote-section__heading {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* The rows lay themselves out by the list's own width, not the screen's:
+     beside the sidebar, with larger text, the list can be narrow even on a
+     wide screen. */
+  container: emote-list / inline-size;
 }
 
 .emote-row {
@@ -3179,14 +3183,24 @@ label.emote-row__override {
   font-weight: 600;
 }
 
-/* In em, not px, so larger text switches to this layout too. */
-@media (max-width: 56em) {
+/* In em, not px, so larger text switches to these layouts sooner. */
+@container emote-list (max-width: 41em) {
   .emote-row {
     grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+    padding: 0.85rem 0;
   }
 
-  .emote-row__image {
-    align-self: start;
+  /* Line the image up with the first row of inputs rather than the labels.
+     Archived rows have no labels, so they don't need it. */
+  .emote-row:not(.emote-row--archived) .emote-row__image {
+    margin-top: 1.1rem;
+  }
+
+  /* Name and code share the first line; the set gets a full line of its
+     own, rather than stretching to only part of one. */
+  .emote-row__field--set {
+    flex-basis: 100%;
   }
 
   .emote-row__aside {
@@ -3197,6 +3211,35 @@ label.emote-row__override {
 
   .emote-row__aliases {
     grid-column: 2;
+  }
+}
+
+/* Too narrow for fields side by side: one field per line, full width. */
+@container emote-list (max-width: 30em) {
+  .emote-row__form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .emote-row__field,
+  .emote-row__field--set {
+    flex: none;
+  }
+}
+
+/* Very narrow: the image moves above the fields so they get the whole width. */
+@container emote-list (max-width: 20em) {
+  .emote-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .emote-row .emote-row__image {
+    margin-top: 0;
+  }
+
+  .emote-row__aside,
+  .emote-row__aliases {
+    grid-column: 1;
   }
 }
 
