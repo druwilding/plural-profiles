@@ -92,7 +92,8 @@ class ChatSendButtonTest < ApplicationSystemTestCase
     assert_selector "body[data-not-reloaded]"
     assert page.evaluate_script("document.activeElement.matches('textarea[data-same-box]')")
 
-    # The send's answer and the live broadcast both carry it; it shows once
+    # Only the live broadcast carries it (the send's answer just confirms it
+    # was saved), so it shows once
     sleep 1
     assert_selector "#chat-messages .chat-message", text: "Still typing", count: 1
     assert_no_text "No messages yet. Say hello!"

@@ -74,13 +74,17 @@ export default class extends Controller {
     return datetime ? this.#dayOf(new Date(datetime)) : null
   }
 
+  // Put together from its parts, which have no locale-dependent order or
+  // punctuation
   #dayOf(date) {
-    return new Intl.DateTimeFormat("en-CA", {
+    const parts = new Intl.DateTimeFormat("en-GB", {
       timeZone: this.timeZoneValue || undefined,
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
-    }).format(date)
+    }).formatToParts(date)
+    const part = type => parts.find(p => p.type === type).value
+    return `${part("year")}-${part("month")}-${part("day")}`
   }
 
   // As ApplicationHelper#chat_date_divider_label
