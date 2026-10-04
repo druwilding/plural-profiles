@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { loadDraft, saveDraft, clearDraft } from "chat_drafts"
 
 // Owns the whole "posting as" + message composer area. Enter sends the
 // message, Shift+Enter inserts a newline. It also live-previews Tupperbox-
@@ -8,6 +9,10 @@ import { Controller } from "@hotwired/stimulus"
 // avatar/name — purely client-side, never touches the stored default. The
 // real match happens again server-side on send (Chat::ProxyResolver.resolve),
 // this is just a preview.
+//
+// It also keeps an unsent message as a draft for its channel (see
+// chat_drafts.js), so going somewhere else and coming back doesn't lose it.
+// The textarea's data-draft-key says which draft is its own.
 //
 // Usage: wrap the whole `.composer` block with data: { controller: "composer" },
 // with data-composer-target="form"/"textarea" on the message form/textarea,
@@ -45,7 +50,38 @@ export default class extends Controller {
   // which comes back with the rejected body still filled in — starts at the
   // right height instead of the one-line default.
   textareaTargetConnected(element) {
+    this.restoreDraft(element)
     this.autoGrow()
+  }
+
+  restoreDraft(element) {
+    const key = element.dataset.draftKey
+    // Turbo's preview of a cached page carries whatever was typed when it was
+    // cached, which the draft may have moved on from since
+    if (!key || document.documentElement.hasAttribute("data-turbo-preview")) return
+    // A validation-error re-render comes back with the rejected message, which
+    // is the draft now
+    if (element.value) {
+      saveDraft(key, element.value)
+      return
+    }
+
+    const draft = loadDraft(key)
+    if (!draft) return
+    element.value = draft
+    // Once the posting-as picker's targets have connected too
+    requestAnimationFrame(() => this.detectProxy())
+  }
+
+  saveDraft() {
+    const key = this.textareaTarget.dataset.draftKey
+    if (key) saveDraft(key, this.textareaTarget.value)
+  }
+
+  // turbo:submit-end. A failed send keeps the draft, for another try.
+  sent(event) {
+    const key = this.textareaTarget.dataset.draftKey
+    if (key && event.detail.success) clearDraft(key)
   }
 
   submitOnEnter(event) {

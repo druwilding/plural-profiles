@@ -2,7 +2,7 @@
 %html{lang: "en-GB"}
   = render "layouts/head"
 
-  %body.chat-body{style: active_theme_style(background_image: false), data: {controller: "timezone chat-reconnect", "chat-reconnect-user-value": Current.user&.id}}
+  %body.chat-body{style: active_theme_style(background_image: false), data: {controller: "timezone chat-reconnect"}}
     %header.site-header
       .site-header__brand
         = link_to chat_root_path, class: "logo" do
@@ -26,8 +26,12 @@
           -# the flow client-side even though the session was destroyed. A
           -# real, Turbo-free form submission is a normal top-level
           -# navigation, which (unlike fetch) is never subject to CORS.
+          -#
+          -# Signing out also clears this account's unsent drafts
+          -# (chat_drafts.js), so they don't stay behind on a shared computer.
           = button_to "Sign out", session_path, method: :delete,
-            form: { data: { turbo: false } }, form_class: "site-header__signout", class: "link-button"
+            form: { data: { turbo: false, controller: "chat-sign-out", "chat-sign-out-user-value": Current.user.id, action: "submit->chat-sign-out#clearDrafts" } },
+            form_class: "site-header__signout", class: "link-button"
 
     - if flash[:notice]
       .flash.flash--notice= flash[:notice]

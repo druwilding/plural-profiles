@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { saveDraft } from "chat_drafts"
 
 // Catches a chat page up after its live connection has dropped.
 //
@@ -20,20 +21,16 @@ import { Controller } from "@hotwired/stimulus"
 // sign in, and Turbo's fetch can't follow a redirect to another origin (see
 // the sign-out button in layouts/chat.html.haml).
 //
-// A message being typed survives the reload, but only for the account that
-// typed it: after signing in again, someone else could be using the tab. If
-// it can't be kept, the page doesn't reload. Other forms with unsaved
+// A message being typed survives the reload as its channel's draft (see
+// chat_drafts.js). If it can't be kept, the page doesn't reload. Other forms with unsaved
 // changes (channel or server settings) don't reload at all: a stale unread
 // dot is better than losing someone's edits, and the next visit catches up.
 //
 // Long enough that Action Cable's own reconnect (which retries every 6 to
 // 12 seconds or so) usually gets there first
 const STILL_DOWN_AFTER = 20_000
-const DRAFT_KEY = "chat-reconnect-draft"
 
 export default class extends Controller {
-  static values = { user: String }
-
   connect() {
     this.lostAt = null
     this.refreshing = false
@@ -51,8 +48,6 @@ export default class extends Controller {
 
     this.visibilityChanged = this.#visibilityChanged.bind(this)
     document.addEventListener("visibilitychange", this.visibilityChanged)
-
-    requestAnimationFrame(() => this.#restoreDraft())
   }
 
   disconnect() {
@@ -91,7 +86,7 @@ export default class extends Controller {
   }
 
   #refresh({ fullLoad }) {
-    if (this.refreshing || this.#hasUnsavedChanges() || !this.#saveDraft()) return
+    if (this.refreshing || this.#hasUnsavedChanges() || !this.#draftKept()) return
     this.refreshing = true
 
     if (fullLoad || !window.Turbo) {
@@ -105,47 +100,12 @@ export default class extends Controller {
     return this.element.querySelector("textarea[data-composer-target='textarea']")
   }
 
-  // In sessionStorage rather than memory, so it survives a full page load,
-  // including a detour through signing in again. False if there's a draft
-  // that couldn't be kept.
-  #saveDraft() {
+  // The composer keeps its draft as it's typed; saving it again here checks
+  // that it really was kept
+  #draftKept() {
     const textarea = this.#composer()
     if (!textarea?.value) return true
-
-    try {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
-        user: this.userValue,
-        url: window.location.href,
-        value: textarea.value,
-        focused: document.activeElement === textarea,
-        selectionStart: textarea.selectionStart,
-        selectionEnd: textarea.selectionEnd
-      }))
-      return true
-    } catch {
-      // Storage switched off or full
-      return false
-    }
-  }
-
-  #restoreDraft() {
-    let draft
-    try {
-      draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY))
-      sessionStorage.removeItem(DRAFT_KEY)
-    } catch { return }
-
-    const textarea = this.#composer()
-    if (!draft || !textarea || !this.userValue || draft.user !== this.userValue) return
-    if (draft.url !== window.location.href || textarea.value) return
-
-    textarea.value = draft.value
-    // Resizes the box and previews proxy brackets, as typing would
-    textarea.dispatchEvent(new Event("input", { bubbles: true }))
-    if (draft.focused) {
-      textarea.focus()
-      textarea.setSelectionRange(draft.selectionStart, draft.selectionEnd)
-    }
+    return Boolean(textarea.dataset.draftKey) && saveDraft(textarea.dataset.draftKey, textarea.value)
   }
 
   #forms() {
