@@ -5851,9 +5851,9 @@ button.profile-picker__option {
   text-overflow: ellipsis;
 }
 
-/* Disabled while a message is on its way (composer_controller.js), dimmed
+/* Read-only while a message is on its way (composer_controller.js), dimmed
    like a disabled button */
-.composer-input-row textarea:disabled {
+.composer-input-row textarea:read-only {
   opacity: 0.6;
   cursor: not-allowed;
 }

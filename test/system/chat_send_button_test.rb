@@ -1,8 +1,8 @@
 require "application_system_test_case"
 
 # The composer's send button, and keeping a message from being sent twice:
-# the box and button are disabled from sending until the page after it, with
-# the message in it, arrives.
+# from sending until the page after it, with the message in it, arrives, the
+# box is read-only (keeping a phone's keyboard open) and the button disabled.
 class ChatSendButtonTest < ApplicationSystemTestCase
   setup do
     @port = Capybara.current_session.server.port
@@ -48,19 +48,33 @@ class ChatSendButtonTest < ApplicationSystemTestCase
     assert_equal 1, @channel.messages.count
   end
 
-  test "the box and button are disabled while the message is on its way" do
+  test "the box is read-only and the button disabled while the message is on its way" do
     sign_in_and_visit
     hold_back_sends
     type "Taking its time"
     click_button "Send"
 
-    assert_selector "textarea[data-composer-target='textarea']:disabled"
+    assert_selector "textarea[data-composer-target='textarea'][readonly]"
     assert_selector "button.composer-send:disabled"
 
     page.execute_script("window.releaseSend()")
     within("#chat-messages") { assert_text "Taking its time" }
-    assert_selector "textarea[data-composer-target='textarea']:not(:disabled)"
+    assert_selector "textarea[data-composer-target='textarea']:not([readonly])"
     assert_selector "button.composer-send:not(:disabled)"
+  end
+
+  test "sending with Enter keeps the box focused, so a phone's keyboard stays open" do
+    sign_in_and_visit
+    hold_back_sends
+    type "Keep typing after"
+    composer.native.send_keys(:enter)
+
+    assert_selector "textarea[data-composer-target='textarea'][readonly]"
+    assert page.evaluate_script("document.activeElement.matches(\"textarea[data-composer-target='textarea']\")"),
+      "a disabled box would lose focus, which closes a phone's keyboard"
+
+    page.execute_script("window.releaseSend()")
+    within("#chat-messages") { assert_text "Keep typing after" }
   end
 
   test "a send that fails without reaching the server hands the message back to try again" do
@@ -74,7 +88,7 @@ class ChatSendButtonTest < ApplicationSystemTestCase
     type "Try again"
     click_button "Send"
 
-    assert_selector "textarea[data-composer-target='textarea']:not(:disabled)"
+    assert_selector "textarea[data-composer-target='textarea']:not([readonly])"
     assert_selector "button.composer-send:not(:disabled)"
     assert_equal "Try again", composer.value
     assert_equal 0, @channel.messages.count

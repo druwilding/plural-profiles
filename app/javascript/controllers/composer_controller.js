@@ -104,21 +104,24 @@ export default class extends Controller {
   // server has usually saved it.
   //
   // The submit event, before Turbo sees it (it listens on the document), so a
-  // repeat is stopped before it starts. Nothing's disabled yet: Turbo hasn't
-  // read the form's values, and a disabled field isn't sent.
+  // repeat is stopped before it starts.
+  //
+  // The box goes read-only rather than disabled until the page after sending,
+  // with the message in it, replaces it: it can't be changed, but keeps focus,
+  // so a phone's keyboard stays open. (A read-only field is still sent with
+  // the form, too, where a disabled one isn't.)
   submitting(event) {
     if (this.inFlight) {
       event.preventDefault()
       return
     }
     this.inFlight = true
+    this.textareaTarget.readOnly = true
   }
 
-  // turbo:submit-start, once Turbo has the form's values: the box and button
-  // stay disabled until the page after sending, with the message in it,
-  // replaces them.
+  // turbo:submit-start. The button is disabled outright, once Turbo has
+  // started with it.
   sending() {
-    this.textareaTarget.disabled = true
     this.sendTarget.disabled = true
   }
 
@@ -134,7 +137,7 @@ export default class extends Controller {
     }
 
     this.inFlight = false
-    this.textareaTarget.disabled = false
+    this.textareaTarget.readOnly = false
     this.sendTarget.disabled = false
     this.textareaTarget.focus()
   }
