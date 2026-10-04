@@ -4586,6 +4586,18 @@ details.theme-section-card:not([open]) .theme-section-card__header {
      own text colour below. */
 }
 
+/* The chat page itself, rather than the theme designer's mock of it (which
+   shares the class). The shared body rule's min-height: 100vh outranks the
+   height above, and on a phone 100vh is the screen with the browser's bars
+   hidden — taller than what's visible while they show. The page then
+   scrolled as a whole: the composer slid under the browser's bottom bar, and
+   the header scrolled off the top with no way back, since scrolling up only
+   scrolls (and loads more of) the message history. With no minimum, the
+   page is exactly the visible screen, and only the panes inside scroll. */
+body.chat-body {
+  min-height: 0;
+}
+
 /* The site header is the same markup in both layouts, so chat's version of it
    is a scoped override rather than a separate component. Specificity (0,2,0)
    beats the base .site-header rules (0,1,0) without !important; the nav rules

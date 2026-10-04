@@ -26,6 +26,16 @@ export default class extends Controller {
 
     this.observer = new MutationObserver(this.onMessagesChanged.bind(this))
     this.observer.observe(this.messagesTarget, { childList: true })
+
+    // The pane changes size when a phone's keyboard opens (the page shrinks
+    // to the space above it) or the composer grows as a message gets longer.
+    // Shrinking keeps the scroll position, which would hide the newest
+    // messages under the composer just as someone goes to reply to them, so
+    // a reader at the bottom stays at the bottom.
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.stickToBottom) this.scrollToBottom()
+    })
+    this.resizeObserver.observe(this.scrollableTarget)
   }
 
   disconnect() {
@@ -33,6 +43,7 @@ export default class extends Controller {
     this.scrollableTarget.removeEventListener("turbo:before-frame-render", this.onBeforeFrameRender)
     this.scrollableTarget.removeEventListener("turbo:frame-load", this.onFrameLoad)
     this.observer?.disconnect()
+    this.resizeObserver?.disconnect()
   }
 
   onScroll() {
