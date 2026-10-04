@@ -20,6 +20,10 @@ module Chat
     def create
       @message = @channel.messages.build(message_params.merge(user: Current.user))
       if @message.save
+        # Tells the page after the redirect to clear this channel's draft (see
+        # composer_controller.js). A turned-away send redirects too, so the
+        # browser can't tell from the response alone.
+        flash[:sent_message_in] = @channel.uuid
         redirect_to chat_server_channel_path(@server, @channel)
       else
         @messages = Chat::Message.latest_page(@channel.messages)
