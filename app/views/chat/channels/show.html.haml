@@ -27,7 +27,7 @@
   = turbo_stream_from @channel
 
   .chat-messages-scroll{data: {"chat-scroll-target": "scrollable"}}
-    #chat-messages.chat-messages{data: {"chat-scroll-target": "messages"}}
+    #chat-messages.chat-messages{data: {"chat-scroll-target": "messages", controller: "chat-dates", "chat-dates-time-zone-value": Time.zone.tzinfo.identifier}}
       - if @has_more_messages
         %turbo-frame#older-messages{src: chat_server_channel_messages_path(@server, @channel, before_id: @messages.first.id, before_created_at: @messages.first.created_at.iso8601(6)), loading: "lazy"}
       - if @messages.any?

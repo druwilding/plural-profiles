@@ -117,6 +117,44 @@ class ChatSendButtonTest < ApplicationSystemTestCase
     end
   end
 
+  test "a message posted while sending stays after the sent one, in the order they were sent" do
+    member = users(:two)
+    @server.memberships.create!(user: member, role: "member", default_postable: profiles(:carol))
+    sign_in_and_visit
+    hold_back_answers
+    type "Mine came first"
+    click_button "Send"
+
+    # Saved and broadcast, though the answer to sending it is held back
+    within("#chat-messages") { assert_text "Mine came first" }
+    @channel.messages.create!(user: member, postable: profiles(:carol), postable_name: "Carol", body: "Theirs came second")
+    within("#chat-messages") { assert_text "Theirs came second" }
+    assert_selector "textarea[data-composer-target='textarea'][readonly]"
+
+    page.execute_script("window.releaseAnswer()")
+    assert_selector "textarea[data-composer-target='textarea']:not([readonly])"
+    sleep 0.5
+    assert_equal [ "Mine came first", "Theirs came second" ],
+      all("#chat-messages .chat-message__body").map(&:text)
+  end
+
+  test "the box waits for the sent message to appear before it's handed back" do
+    sign_in_and_visit
+    # Nothing arrives live: the message is saved, but can't appear yet
+    ActionCable.server.remote_connections.where(current_user: @owner).disconnect
+    assert_no_selector "turbo-cable-stream-source[connected]", visible: false
+    type "Into the void"
+    click_button "Send"
+
+    assert_eventually { @channel.messages.exists?(body: "Into the void") }
+    sleep 1
+    assert_selector "textarea[data-composer-target='textarea'][readonly]"
+    assert_equal "Into the void", composer.value
+
+    # Handed back after a few seconds regardless
+    assert_selector "textarea[data-composer-target='textarea']:not([readonly])", wait: 8
+  end
+
   test "a send that fails without reaching the server hands the message back to try again" do
     sign_in_and_visit
     page.execute_script(<<~JS)
@@ -154,6 +192,22 @@ class ChatSendButtonTest < ApplicationSystemTestCase
 
   def type(text)
     fill_in placeholder: "Message #general (Enter to send, Shift+Enter for a new line)", with: text
+  end
+
+  # The answer to the next send is held back until window.releaseAnswer() is
+  # called (the send itself goes straight through)
+  def hold_back_answers
+    page.execute_script(<<~JS)
+      const realFetch = window.fetch
+      let release
+      const held = new Promise(resolve => { release = resolve })
+      window.releaseAnswer = () => release()
+      window.fetch = async (input, init) => {
+        const response = await realFetch(input, init)
+        if ((init?.method || "GET").toUpperCase() === "POST") await held
+        return response
+      }
+    JS
   end
 
   # The next send waits until window.releaseSend() is called

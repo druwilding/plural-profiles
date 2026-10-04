@@ -21,12 +21,19 @@ module Chat
       @message = @channel.messages.build(message_params.merge(user: Current.user))
       if @message.save
         respond_to do |format|
-          # Adds the message in place, rather than reloading the page: a reload
-          # replaces the message box, which closes a phone's keyboard and opens
-          # it again. A Turbo Stream answer is also how the composer knows the
-          # message was saved (composer_controller.js), since a turned-away
-          # send redirects like one that worked.
-          format.turbo_stream
+          # Answers without reloading the page: a reload replaces the message
+          # box, which closes a phone's keyboard and opens it again. A Turbo
+          # Stream answer is how the composer knows the message was saved
+          # (composer_controller.js), since a turned-away send redirects like
+          # one that worked. It names the message, so the composer can wait
+          # for it to appear before handing the box back.
+          #
+          # The message itself comes only from Chat::Message's broadcast, as
+          # for everyone else. Sent here too, Turbo would move the first copy
+          # to the end on the second, after any message that landed between.
+          format.turbo_stream do
+            response.set_header("X-Chat-Message", helpers.dom_id(@message))
+          end
           format.html do
             # Tells the page after the redirect to clear this channel's draft
             flash[:sent_message_in] = @channel.uuid

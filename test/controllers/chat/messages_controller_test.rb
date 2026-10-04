@@ -35,14 +35,18 @@ class Chat::MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea[data-draft-sent='false']"
   end
 
-  test "a message sent from the page is added with a Turbo Stream rather than a reload" do
+  test "a message sent from the page is confirmed with a Turbo Stream rather than a reload" do
     sign_in_as @owner
     post chat_server_channel_messages_path(@server, @channel), params: { chat_message: { body: "streamed in" } }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
-    assert_select "turbo-stream[action='append'][target='chat-messages']"
-    assert_includes response.body, "streamed in"
+    message = Chat::Message.order(:created_at).last
+    assert_equal "streamed in", message.body
+    # Names it, for the composer to wait for. The message itself comes only in
+    # the channel's broadcast, so it can't arrive twice out of order.
+    assert_equal ActionView::RecordIdentifier.dom_id(message), response.headers["X-Chat-Message"]
+    assert_select "turbo-stream", count: 0
     assert_nil flash[:sent_message_in]
   end
 

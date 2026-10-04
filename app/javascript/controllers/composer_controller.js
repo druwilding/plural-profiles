@@ -1,6 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 import { loadDraft, saveDraft, clearDraft } from "chat_drafts"
 
+// How long to wait for a sent message to arrive in the history before
+// handing the message box back regardless
+const SHOWN_WITHIN = 5000
+
 // Owns the whole "posting as" + message composer area. Enter sends the
 // message, Shift+Enter inserts a newline. It also live-previews Tupperbox-
 // style proxying: as you type, if the message matches one of your profiles'
@@ -127,10 +131,11 @@ export default class extends Controller {
 
   // turbo:submit-end.
   //
-  // Saved: the server answers with a Turbo Stream that adds the message (see
+  // Saved: the server answers with a Turbo Stream (see
   // Chat::MessagesController#create), and only then, so that's the
-  // confirmation. The box is emptied and handed back in place, never
-  // replaced, so it keeps focus and a phone's keyboard stays open.
+  // confirmation. Once the message shows in the history, the box is emptied
+  // and handed back in place, never replaced, so it keeps focus and a phone's
+  // keyboard stays open.
   //
   // Turned away with a page of its own (an error message, or "too fast"), the
   // page that follows brings a fresh composer. Failed without one (the
@@ -139,7 +144,9 @@ export default class extends Controller {
     const response = event.detail.fetchResponse
 
     if (event.detail.success && response?.contentType?.startsWith("text/vnd.turbo-stream.html")) {
-      this.#reset()
+      // Turbo re-enables the button it was sent with just before this event
+      this.sendTarget.disabled = true
+      this.#whenShown(response.header("X-Chat-Message"), () => this.#reset())
       return
     }
 
@@ -152,6 +159,35 @@ export default class extends Controller {
 
     this.#handBack()
     this.textareaTarget.focus()
+  }
+
+  // Once the message is in the history: it comes in the channel's broadcast,
+  // which may land a moment before or after the answer to sending it. If it
+  // hasn't come within a few seconds (the live connection is down), the box is
+  // handed back anyway; it's saved, and chat_reconnect_controller.js catches
+  // the page up when the connection returns.
+  #whenShown(id, callback) {
+    const messages = document.getElementById("chat-messages")
+    if (!id || !messages || document.getElementById(id)) {
+      callback()
+      return
+    }
+
+    const done = () => {
+      this.shownObserver?.disconnect()
+      clearTimeout(this.shownTimeout)
+      callback()
+    }
+    this.shownObserver = new MutationObserver(() => {
+      if (document.getElementById(id)) done()
+    })
+    this.shownObserver.observe(messages, { childList: true })
+    this.shownTimeout = setTimeout(done, SHOWN_WITHIN)
+  }
+
+  disconnect() {
+    this.shownObserver?.disconnect()
+    clearTimeout(this.shownTimeout)
   }
 
   #reset() {
