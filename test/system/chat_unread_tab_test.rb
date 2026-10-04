@@ -41,6 +41,46 @@ class ChatUnreadTabTest < ApplicationSystemTestCase
     assert_eventually { favicon_href == "/logo.png" }
   end
 
+  test "a message in the open channel while the window isn't focused stays unread until it is" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path(@general))
+    assert_text "No messages yet. Say hello!"
+    # As when another app has focus
+    page.execute_script("document.hasFocus = () => false; window.dispatchEvent(new Event('blur'))")
+
+    post_as_member "While you were away", @general
+    within("#chat-messages") { assert_text "While you were away" }
+    assert_selector ".server-rail .unread-dot:not(.unread-dot--pending)"
+    assert_eventually { title.start_with?("• ") }
+
+    page.execute_script("delete document.hasFocus; window.dispatchEvent(new Event('focus'))")
+    assert_no_selector ".server-rail .unread-dot", visible: :all
+    assert_eventually { !title.start_with?("• ") }
+  end
+
+  test "a message in the open channel while its tab is hidden stays unread until it's shown" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path(@general))
+    assert_text "No messages yet. Say hello!"
+    # As when another tab is in front
+    page.execute_script(<<~JS)
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" })
+      document.dispatchEvent(new Event("visibilitychange"))
+    JS
+
+    post_as_member "While you were in another tab", @general
+    within("#chat-messages") { assert_text "While you were in another tab" }
+    assert_selector ".server-rail .unread-dot:not(.unread-dot--pending)"
+    assert_eventually { title.start_with?("• ") }
+
+    page.execute_script(<<~JS)
+      delete document.visibilityState
+      document.dispatchEvent(new Event("visibilitychange"))
+    JS
+    assert_no_selector ".server-rail .unread-dot", visible: :all
+    assert_eventually { !title.start_with?("• ") }
+  end
+
   test "a message in the channel being read never blinks a dot on, in the rail or the tab" do
     sign_in_via_browser(@owner)
     visit chat_url(channel_path(@general))
@@ -56,7 +96,10 @@ class ChatUnreadTabTest < ApplicationSystemTestCase
 
   test "a dot that arrives live waits before it shows, and one cleared within that never shows" do
     sign_in_via_browser(@owner)
-    visit chat_url(channel_path(@general))
+    # The server's page, not a channel's: opening a channel marks it read,
+    # and the broadcast of that could land on top of the dots streamed in here
+    visit chat_url("/servers/#{@server.uuid}")
+    assert_selector ".channel-pane"
 
     stream_rail_dot(unread: true)
     assert_selector ".server-rail .unread-dot.unread-dot--pending", visible: :all
@@ -73,7 +116,10 @@ class ChatUnreadTabTest < ApplicationSystemTestCase
   test "a dot that's already showing doesn't blink when it's replaced by another" do
     @off_topic.messages.create!(user: @member, postable: profiles(:carol), postable_name: "Carol", body: "unread")
     sign_in_via_browser(@owner)
-    visit chat_url(channel_path(@general))
+    # The server's page, not a channel's: opening a channel marks it read,
+    # and the broadcast of that could land on top of the dots streamed in here
+    visit chat_url("/servers/#{@server.uuid}")
+    assert_selector ".channel-pane"
     assert_selector ".server-rail .unread-dot:not(.unread-dot--pending)"
 
     stream_rail_dot(unread: true)
