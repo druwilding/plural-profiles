@@ -5049,13 +5049,20 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   padding: 0.15rem 0.4rem;
 }
 
-/* One line each, cut short with an ellipsis (the link's title has the full
-   name). Shrinks before the unread dot does, so the dot never disappears. */
+/* One line each, cut short with an ellipsis. The link's title shows the full
+   name on hover; keyboard focus shows it by letting it wrap, since a title
+   tooltip doesn't appear for the keyboard. (On a touch screen, tapping opens
+   the channel, whose header always shows the name in full.) */
 .channel-pane__name {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.channel-pane .sidebar-tree__leaf:focus-visible .channel-pane__name {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .channel-pane .sidebar-tree__leaf:hover {
@@ -5095,6 +5102,13 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 
 .channel-pane__server-name:hover {
   text-decoration: underline;
+}
+
+/* In full while focused, like the channel names (the server's page shows it in
+   full too) */
+.channel-pane__server-name:focus-visible {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .channel-pane__add-channel {
@@ -5242,6 +5256,36 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    the dash */
 .chat-channel-header__title-text .subtitle::before {
   content: "– " / "";
+}
+
+/* Only there while something's cut short (truncated_text_controller.js) */
+.chat-channel-header__more {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: var(--chat-topbar-text);
+  text-decoration: underline;
+}
+
+/* Not the filled hover of the global button:hover rule; it's a text link */
+.chat-channel-header__more:hover {
+  background: none;
+}
+
+/* Opened with "more": everything in full, wrapping onto as many lines as it
+   needs. A description too long for the room beside the name moves to a line
+   of its own rather than wrapping in a thin column. */
+.chat-channel-header__title-text--expanded {
+  flex-wrap: wrap;
+}
+
+.chat-channel-header__title-text--expanded .subtitle,
+.chat-channel-header__title-text--expanded .description {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.chat-channel-header__title-text--expanded .description {
+  flex: 1 1 12rem;
 }
 
 .chat-body .chat-channel-header .subtitle {

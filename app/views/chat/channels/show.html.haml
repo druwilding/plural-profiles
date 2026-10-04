@@ -8,13 +8,18 @@
       .chat-channel-header__title-column
         -# All on one line, so the header takes as little height from the
         -# messages as it can. The name wraps rather than being cut short; the
-        -# subtitle and description give way to it.
-        .chat-channel-header__title-text
+        -# subtitle and description give way to it, and "more" shows them in
+        -# full (truncated_text_controller.js).
+        .chat-channel-header__title-text{data: {controller: "truncated-text", "truncated-text-expanded-class": "chat-channel-header__title-text--expanded"}}
           %h1= safe_join([ "# ", formatted_inline(@channel.name) ])
           - if @channel.subtitle.present?
-            %p.subtitle{title: plain_field(@channel.subtitle)}= formatted_inline(@channel.subtitle)
+            %p.subtitle{title: plain_field(@channel.subtitle), data: {"truncated-text-target": "text"}}= formatted_inline(@channel.subtitle)
           - if @channel.description.present?
-            %p.description{title: plain_field(@channel.description)}= formatted_inline(@channel.description)
+            %p.description{title: plain_field(@channel.description), data: {"truncated-text-target": "text"}}= formatted_inline(@channel.description)
+          - if @channel.subtitle.present? || @channel.description.present?
+            %button.link-button.chat-channel-header__more{type: "button", hidden: true, "aria-expanded": "false", data: {"truncated-text-target": "toggle", action: "truncated-text#toggle"}}
+              %span{data: {"truncated-text-target": "label"}} more
+              %span.visually-hidden of the channel details
 
     - if server_owner?
       = link_to "Channel settings", edit_chat_server_channel_path(@server, @channel), class: "btn btn--secondary btn--small"
