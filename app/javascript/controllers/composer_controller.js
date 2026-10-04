@@ -20,7 +20,7 @@ import { loadDraft, saveDraft, clearDraft } from "chat_drafts"
 // avatar/name/pronouns, and "option" (plus data-prefix/data-suffix/data-name)
 // on each profile/group in the posting-as picker.
 export default class extends Controller {
-  static targets = [ "form", "textarea", "triggerAvatar", "triggerName", "triggerPronouns", "option" ]
+  static targets = [ "form", "textarea", "send", "triggerAvatar", "triggerName", "triggerPronouns", "option" ]
 
   // Rather than caching the "default" trigger HTML once in connect(), track
   // it via Stimulus's target lifecycle callbacks below — switching who's
@@ -96,6 +96,47 @@ export default class extends Controller {
 
     event.preventDefault()
     this.formTarget.requestSubmit()
+  }
+
+  // While a message is on its way, nothing else sends: Enter pressed twice in
+  // quick succession (easy on a phone keyboard) would otherwise post it twice.
+  // Turbo cancels its first request when a second starts, but by then the
+  // server has usually saved it.
+  //
+  // The submit event, before Turbo sees it (it listens on the document), so a
+  // repeat is stopped before it starts. Nothing's disabled yet: Turbo hasn't
+  // read the form's values, and a disabled field isn't sent.
+  submitting(event) {
+    if (this.inFlight) {
+      event.preventDefault()
+      return
+    }
+    this.inFlight = true
+  }
+
+  // turbo:submit-start, once Turbo has the form's values: the box and button
+  // stay disabled until the page after sending, with the message in it,
+  // replaces them.
+  sending() {
+    this.textareaTarget.disabled = true
+    this.sendTarget.disabled = true
+  }
+
+  // turbo:submit-end. Sent, or turned away with a page of its own (an error
+  // message, or "too fast"), the page that follows brings a fresh composer.
+  // Failed without one (the network dropped), it's handed back to try again.
+  sent(event) {
+    if (event.detail.success || event.detail.fetchResponse?.response) {
+      // Turbo re-enables the button it was sent with just before this event,
+      // in the same task, so it's never drawn enabled in between
+      this.sendTarget.disabled = true
+      return
+    }
+
+    this.inFlight = false
+    this.textareaTarget.disabled = false
+    this.sendTarget.disabled = false
+    this.textareaTarget.focus()
   }
 
   // Grows the textarea to fit its content, from one line up to the six-line

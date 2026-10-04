@@ -40,7 +40,7 @@
       - current_postable = @channel.default_postable_for(Current.user) || current_membership.default_postable
       = render "chat/channels/posting_as_picker", server: @server, channel: @channel, current_postable: current_postable
 
-    = form_with model: @message, url: chat_server_channel_messages_path(@server, @channel), scope: :chat_message, data: { "composer-target": "form" } do |form|
+    = form_with model: @message, url: chat_server_channel_messages_path(@server, @channel), scope: :chat_message, data: { "composer-target": "form", action: "submit->composer#submitting turbo:submit-start->composer#sending turbo:submit-end->composer#sent" } do |form|
       - if @message.errors.any?
         .error-messages
           - @message.errors.full_messages.each do |message|
@@ -48,4 +48,6 @@
 
       .composer-input-row
         = emote_field(form, :body, as: :text_area, menu_placement: "above", rows: 1, required: true, autofocus: true, placeholder: "Message ##{plain_field(@channel.name)} (Enter to send, Shift+Enter for a new line)", data: { "composer-target": "textarea", "draft-key": "#{Current.user.id}:#{@channel.uuid}", "draft-sent": (flash[:sent_message_in] == @channel.uuid).to_s, action: "keydown->composer#submitOnEnter input->composer#detectProxy input->composer#autoGrow input->composer#saveDraft" })
-        = form.submit "Send", class: "visually-hidden"
+        %button.composer-send{type: "submit", title: "Send", data: { "composer-target": "send" }}
+          = render "chat/channels/send_icon"
+          %span.visually-hidden Send
