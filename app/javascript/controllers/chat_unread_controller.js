@@ -134,10 +134,10 @@ function badge(src) {
       context.drawImage(image, 0, 0, size, size)
       context.beginPath()
       context.arc(45, 19, 17, 0, 2 * Math.PI)
-      context.fillStyle = "#e5484d"
+      context.fillStyle = "#1d5653"
       context.fill()
       context.lineWidth = 4
-      context.strokeStyle = "#ffffff"
+      context.strokeStyle = "#3f9380"
       context.stroke()
       resolve(canvas.toDataURL("image/png"))
     }

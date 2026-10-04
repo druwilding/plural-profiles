@@ -52,7 +52,7 @@ Chat variables, one set per surface: `--chat-header-*`, `--chat-rail-*` (the ser
 
 Every themeable colour is a key in `Theme::THEMEABLE_PROPERTIES`, which a person's theme sets as an inline custom property. Each chat key falls back to its profile-page equivalent until a theme sets it. A new colour means a new key there, a `:root` default, and a place in the theme designer.
 
-The one deliberate exception: colours drawn outside the page's CSS, such as the red unread badge `chat_unread_controller.js` draws onto the favicon with a canvas. The browser's tab bar isn't themed, so that badge is fixed to read on light and dark tab bars alike.
+The one deliberate exception: colours drawn outside the page's CSS, such as the unread badge `chat_unread_controller.js` draws onto the favicon with a canvas. The browser's tab bar isn't themed, so that badge is fixed to read on light and dark tab bars alike.
 
 ### Accessibility
 This is a core value of the app, not a nice-to-have.
