@@ -1,3 +1,6 @@
+-# The text is for screen readers, which don't see the dot. Inside the dot,
+-# so it's hidden along with it (the active channel's row hides its dot).
 %span{id: "channel_#{channel.id}_sidebar_dot"}
   - if unread
     %span.unread-dot
+      %span.visually-hidden (unread)

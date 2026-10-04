@@ -1,3 +1,5 @@
+-# The text is for screen readers, which don't see the dot.
 %span{id: "server_#{server.id}_rail_dot"}
   - if unread
     %span.unread-dot.unread-dot--rail
+      %span.visually-hidden (unread)
