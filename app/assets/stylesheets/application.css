@@ -3931,7 +3931,7 @@ label.upload-review__choice {
 }
 
 .theme-preview__chat .channel-pane {
-  /* Close to the real 200px, and wide enough that the mock's longest channel
+  /* Close to the real 224px, and wide enough that the mock's longest channel
      name stays on one line — a cut-short row misreads as a styling bug
      rather than a narrow column. */
   --dot-inset: 0.6rem;
@@ -5006,7 +5006,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 .channel-pane {
   /* From the pane's edge to the channel rows (see .unread-dot) */
   --dot-inset: 0.5rem;
-  width: 200px;
+  width: 224px;
   flex-shrink: 0;
   background-color: var(--chat-sidebar-bg);
   color: var(--chat-sidebar-text);
@@ -5046,7 +5046,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   color: var(--chat-sidebar-link);
   flex-wrap: nowrap;
   align-items: center;
-  padding: 0.15rem 0.4rem;
+  padding: 0.3rem 0.4rem;
 }
 
 /* One line each, cut short with an ellipsis. The link's title shows the full
