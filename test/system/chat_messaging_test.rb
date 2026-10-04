@@ -57,6 +57,58 @@ class ChatMessagingTest < ApplicationSystemTestCase
     end
   end
 
+  test "a live message on a new day gets a date divider, but only the first" do
+    using_session(:owner) do
+      sign_in_via_browser(@owner)
+      visit chat_url(channel_path)
+      assert_text "No messages yet. Say hello!"
+    end
+
+    using_session(:member) do
+      sign_in_via_browser(@member)
+      visit chat_url(channel_path)
+      send_message("First of the day")
+      within("#chat-messages") { assert_text "First of the day" }
+      send_message("Second of the day")
+      within("#chat-messages") { assert_text "Second of the day" }
+      assert_selector "#chat-messages .chat-date-divider", text: "TODAY", count: 1
+    end
+
+    using_session(:owner) do
+      within("#chat-messages") { assert_text "Second of the day" }
+      assert_selector "#chat-messages .chat-date-divider", text: "TODAY", count: 1
+      assert_selector "#chat-messages .chat-date-divider + .chat-message", text: "First of the day"
+    end
+  end
+
+  test "a live message shows its time in the viewer's time zone, not the sender's" do
+    # Nine hours apart (Tokyo has no daylight saving; London's is an hour at most)
+    @owner.update!(time_zone: "Tokyo")
+    @member.update!(time_zone: "London")
+
+    using_session(:owner) do
+      sign_in_via_browser(@owner)
+      visit chat_url(channel_path)
+      assert_text "No messages yet. Say hello!"
+    end
+
+    using_session(:member) do
+      sign_in_via_browser(@member)
+      visit chat_url(channel_path)
+      send_message("What time is it there?")
+      within("#chat-messages") { assert_text "What time is it there?" }
+    end
+
+    message = @channel.messages.find_by!(body: "What time is it there?")
+    using_session(:owner) do
+      within("#chat-messages") { assert_text "What time is it there?" }
+      assert_selector ".chat-message__time", text: message.created_at.in_time_zone("Tokyo").strftime("%H:%M")
+    end
+    using_session(:member) do
+      assert_selector ".chat-message__time", text: message.created_at.in_time_zone("London").strftime("%H:%M")
+    end
+  end
+
   test "switching the posting-as profile changes whose name is attached to new messages" do
     sign_in_via_browser(@owner)
     visit chat_url(channel_path)

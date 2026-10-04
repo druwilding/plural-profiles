@@ -20,11 +20,26 @@ module Chat
     def create
       @message = @channel.messages.build(message_params.merge(user: Current.user))
       if @message.save
-        # Tells the page after the redirect to clear this channel's draft (see
-        # composer_controller.js). A turned-away send redirects too, so the
-        # browser can't tell from the response alone.
-        flash[:sent_message_in] = @channel.uuid
-        redirect_to chat_server_channel_path(@server, @channel)
+        respond_to do |format|
+          # Answers without reloading the page: a reload replaces the message
+          # box, which closes a phone's keyboard and opens it again. A Turbo
+          # Stream answer is how the composer knows the message was saved
+          # (composer_controller.js), since a turned-away send redirects like
+          # one that worked. It names the message, so the composer can wait
+          # for it to appear before handing the box back.
+          #
+          # The message itself comes only from Chat::Message's broadcast, as
+          # for everyone else. Sent here too, Turbo would move the first copy
+          # to the end on the second, after any message that landed between.
+          format.turbo_stream do
+            response.set_header("X-Chat-Message", helpers.dom_id(@message))
+          end
+          format.html do
+            # Tells the page after the redirect to clear this channel's draft
+            flash[:sent_message_in] = @channel.uuid
+            redirect_to chat_server_channel_path(@server, @channel)
+          end
+        end
       else
         @messages = Chat::Message.latest_page(@channel.messages)
         @has_more_messages = @messages.any? && @channel.messages.before_cursor(@messages.first).exists?

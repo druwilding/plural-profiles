@@ -1,6 +1,6 @@
 - content_for(:title) { "# #{plain_field(@channel.name)} — #{@server.name} — Plural Profiles" }
 
-.chat-channel{data: {controller: "chat-scroll channel-read", "channel-read-url-value": mark_read_chat_server_channel_path(@server, @channel)}}
+.chat-channel{data: {controller: "chat-scroll channel-read", action: "composer:sent->chat-scroll#follow", "channel-read-url-value": mark_read_chat_server_channel_path(@server, @channel)}}
   .chat-channel-header
     .chat-channel-header__title
       = link_to chat_server_path(@server), class: "chat-channel-back", "aria-label": "Back to channels" do
@@ -27,13 +27,13 @@
   = turbo_stream_from @channel
 
   .chat-messages-scroll{data: {"chat-scroll-target": "scrollable"}}
-    #chat-messages.chat-messages{data: {"chat-scroll-target": "messages"}}
+    #chat-messages.chat-messages{data: {"chat-scroll-target": "messages", controller: "chat-dates", "chat-dates-time-zone-value": Time.zone.tzinfo.identifier}}
       - if @has_more_messages
         %turbo-frame#older-messages{src: chat_server_channel_messages_path(@server, @channel, before_id: @messages.first.id, before_created_at: @messages.first.created_at.iso8601(6)), loading: "lazy"}
       - if @messages.any?
         = render "chat/messages/message_list", messages: @messages
       - else
-        %p No messages yet. Say hello!
+        %p.chat-messages__empty No messages yet. Say hello!
 
   .composer{data: {controller: "composer"}}
     - if current_membership&.default_postable

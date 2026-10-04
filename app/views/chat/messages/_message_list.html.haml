@@ -5,9 +5,9 @@
 -# Inserts a date divider before the first message of each calendar day
 -# within this list. Each rendering context (the initial page load, and each
 -# lazily-loaded older batch) computes its own dividers independently, since
--# they're separate requests with no shared state — the only edge case this
--# doesn't cover is a live-broadcast message that happens to be the first of
--# a new day, which won't get a divider until the page is next reloaded.
+-# they're separate requests with no shared state. A live-broadcast message
+-# that's the first of a new day gets its divider in the browser instead
+-# (chat_dates_controller.js), since a broadcast can't know the viewer's day.
 - previous_date = nil
 - messages.each do |message|
   - message_date = message.created_at.to_date
