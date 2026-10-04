@@ -3931,10 +3931,9 @@ label.upload-review__choice {
 }
 
 .theme-preview__chat .channel-pane {
-  /* Fixed, unlike the real one (which follows the text size and window
-     width), since the preview panel is a fixed size. Wide enough that the
-     mock's longest channel name stays on one line — a
-     cut-short row misreads as a styling bug rather than a narrow column. */
+  /* Close to the real 200px, and wide enough that the mock's longest channel
+     name stays on one line — a cut-short row misreads as a styling bug
+     rather than a narrow column. */
   --dot-inset: 0.6rem;
   width: 186px;
   padding: 0.85rem var(--dot-inset);
@@ -5004,13 +5003,10 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   }
 }
 
-/* In rem, so it grows with the text size rather than squeezing large text
-   into a fixed column, but never more than a fifth of the window, so it
-   doesn't crowd the messages out on a small screen. */
 .channel-pane {
   /* From the pane's edge to the channel rows (see .unread-dot) */
   --dot-inset: 0.5rem;
-  width: clamp(9rem, 20vw, 15rem);
+  width: 200px;
   flex-shrink: 0;
   background-color: var(--chat-sidebar-bg);
   color: var(--chat-sidebar-text);
