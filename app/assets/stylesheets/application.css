@@ -3915,6 +3915,7 @@ label.upload-review__choice {
 /* The real rail and channel list are sized for a full window; at preview width
    they'd leave almost nothing for the messages. */
 .theme-preview__chat .server-rail {
+  --dot-inset: calc((44px - 28px) / 2 + 2px);
   width: 44px;
   gap: 0.5rem;
   padding: 0.85rem 0;
@@ -3932,10 +3933,11 @@ label.upload-review__choice {
 .theme-preview__chat .channel-pane {
   /* Fixed, unlike the real one (which follows the text size and window
      width), since the preview panel is a fixed size. Wide enough that the
-     mock's longest channel name plus its unread dot stays on one line — a
+     mock's longest channel name stays on one line — a
      cut-short row misreads as a styling bug rather than a narrow column. */
+  --dot-inset: 0.6rem;
   width: 186px;
-  padding: 0.85rem 0.6rem;
+  padding: 0.85rem var(--dot-inset);
   overflow: hidden;
 }
 
@@ -4892,6 +4894,9 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 }
 
 .server-rail {
+  /* From the rail's edge to the inside of the icons' 2px border, which is
+     what the dot is positioned against (see .unread-dot) */
+  --dot-inset: calc((72px - 42px) / 2 + 2px);
   width: 72px;
   flex-shrink: 0;
   background-color: var(--chat-rail-bg);
@@ -4953,25 +4958,29 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   text-decoration: none;
 }
 
+/* Unread markers sit on the left edge of the rail or the channel list, level
+   with their server or channel, with their outer half cut off by the edge:
+   a half-dot that's easy to spot down the side without taking any room from
+   the names. The edge clips it because both panes scroll (overflow), and
+   --dot-inset is how far the item is from that edge, so the dot can reach
+   back to it. In rem, so it grows with the text. */
 .unread-dot {
-  display: inline-block;
-  align-self: center;
-  width: 8px;
-  height: 8px;
+  --unread-dot-size: 0.6rem;
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--dot-inset) - var(--unread-dot-size) / 2);
+  transform: translateY(-50%);
+  width: var(--unread-dot-size);
+  height: var(--unread-dot-size);
   border-radius: 50%;
   background-color: var(--chat-sidebar-unread-dot);
-  flex-shrink: 0;
 }
 
 /* Same specificity as .unread-dot above and declared after it, so the rail's
    own colour wins. The two sit on different surfaces — chat_rail_bg and
    chat_sidebar_bg — which a theme may colour very differently. */
 .unread-dot--rail {
-  position: absolute;
-  top: 0;
-  right: 0;
   background-color: var(--chat-rail-unread-dot);
-  border: 2px solid var(--chat-rail-bg);
 }
 
 @media (forced-colors: active) {
@@ -4993,22 +5002,20 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   .unread-dot {
     background-color: CanvasText;
   }
-
-  .unread-dot--rail {
-    border-color: Canvas;
-  }
 }
 
 /* In rem, so it grows with the text size rather than squeezing large text
    into a fixed column, but never more than a fifth of the window, so it
    doesn't crowd the messages out on a small screen. */
 .channel-pane {
+  /* From the pane's edge to the channel rows (see .unread-dot) */
+  --dot-inset: 0.5rem;
   width: clamp(9rem, 20vw, 15rem);
   flex-shrink: 0;
   background-color: var(--chat-sidebar-bg);
   color: var(--chat-sidebar-text);
   border-right: 1px solid var(--chat-divider);
-  padding: 0.6rem 0.5rem;
+  padding: 0.6rem var(--dot-inset);
   overflow-y: auto;
   line-height: 1.4;
 }
@@ -5026,6 +5033,11 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    tree-guide line — with that line hidden above, it's just dead space. */
 .channel-pane .sidebar-tree__children {
   padding-left: 0;
+}
+
+/* What each row's unread dot is positioned against */
+.channel-pane .sidebar-tree__children > li {
+  position: relative;
 }
 
 /* The channel rows reuse .sidebar-tree__leaf, which lives with the profile
@@ -5064,9 +5076,13 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    hovered rows need no mirror: the base doesn't give them system colours in
    forced-colors mode either, so they already behave as they do elsewhere. */
 @media (forced-colors: active) {
+  /* Already in system colours, so nothing for the browser to adjust. Left to
+     it, it puts a Canvas backplate behind the name, which hides
+     HighlightText in themes where the two match. */
   .channel-pane .sidebar-tree__leaf--active {
     background: Highlight;
     color: HighlightText;
+    forced-color-adjust: none;
   }
 }
 
