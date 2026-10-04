@@ -1,14 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Adds a date divider before a message that arrives live (the channel's
-// broadcast) on a different day from the message before it, such as the
-// first message in an empty channel, or the first after midnight.
+// Dates and times for messages that arrive live (the channel's broadcast),
+// in the viewer's time zone.
 //
-// Dividers are otherwise drawn by the server (chat/messages/_message_list),
-// in the viewer's time zone. A broadcast is drawn once for everyone, so it
-// can't know whose day it is: this works it out here instead, in the same
-// time zone the server used for the rest of the page (the zone value), with
-// the same labels.
+// The server draws everything else in the viewer's time zone. A broadcast is
+// drawn once for everyone, in the sender's request, so its time is the
+// sender's and it can't know whose day it is. For each live message, this
+// rewrites its time, and adds a date divider before it if it's on a different
+// day from the message before it (the first in an empty channel, or the first
+// after midnight). Both use the time zone the server used for the rest of the
+// page (the zone value), and the same formats.
 export default class extends Controller {
   static values = { timeZone: String }
 
@@ -24,9 +25,24 @@ export default class extends Controller {
   #added(mutations) {
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
-        if (node.nodeType === Node.ELEMENT_NODE && node.matches(".chat-message")) this.#divide(node)
+        if (node.nodeType !== Node.ELEMENT_NODE || !node.matches(".chat-message")) return
+        this.#localizeTime(node)
+        this.#divide(node)
       })
     })
+  }
+
+  // As the server's %H:%M
+  #localizeTime(message) {
+    const time = message.querySelector("time.chat-message__time[datetime]")
+    if (!time) return
+
+    time.textContent = new Intl.DateTimeFormat("en-GB", {
+      timeZone: this.timeZoneValue || undefined,
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).format(new Date(time.getAttribute("datetime")))
   }
 
   #divide(message) {
