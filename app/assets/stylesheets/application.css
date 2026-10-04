@@ -4999,6 +4999,13 @@ body.chat-body {
   background-color: var(--chat-rail-unread-dot);
 }
 
+/* Arrived live, and waiting a moment in case it's cleared again straight
+   away (chat_unread_controller.js). Hidden from screen readers too, along with
+   its "(unread)" text. */
+.unread-dot--pending {
+  visibility: hidden;
+}
+
 @media (forced-colors: active) {
   /* Background colors are the first thing forced-colors mode flattens away,
      so without an explicit border the rail is indistinguishable from the
