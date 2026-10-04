@@ -169,8 +169,6 @@ class ChatThemeTest < ApplicationSystemTestCase
 
     assert_equal rgb("#ff0000"), style_of(".unread-dot--rail", "background-color")
     assert_equal rgb("#0000ff"), style_of(".channel-pane .unread-dot", "background-color")
-    assert_equal rgb("#070809"), style_of(".unread-dot--rail", "border-top-color"),
-      "the rail dot's ring should match the rail background it sits on"
   end
 
   test "both unread dots follow the pane text until overridden" do

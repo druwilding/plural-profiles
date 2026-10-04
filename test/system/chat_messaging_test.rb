@@ -227,6 +227,22 @@ class ChatMessagingTest < ApplicationSystemTestCase
     end
   end
 
+  test "unread channels and servers say so to screen readers, not just with a dot" do
+    other_server = @owner.owned_chat_servers.create!(name: "Busy Server")
+    other_server.memberships.create!(user: @owner, role: "owner", default_postable: profiles(:alice))
+    other_server.channels.create!(name: "lobby").messages.create!(user: @member, postable: profiles(:carol), postable_name: "Carol", body: "hi")
+    @other_channel.messages.create!(user: @member, postable: profiles(:carol), postable_name: "Carol", body: "hello")
+
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path)
+    within(".channel-pane") { assert_selector ".unread-dot", count: 1, visible: :all }
+
+    assert_equal "# off-topic (unread)", accessible_name(".channel-pane a", text: "off-topic")
+    assert_equal "# general", accessible_name(".channel-pane a", text: "general")
+    assert_equal "Busy Server (unread)", accessible_name(".server-rail a[title='Busy Server']")
+    assert_equal "Live Server (unread)", accessible_name(".server-rail a[title='Live Server']")
+  end
+
   test "a page whose live connection dropped catches up on what it missed once it reconnects" do
     sign_in_via_browser(@owner)
     visit chat_url(channel_path)
@@ -316,6 +332,11 @@ class ChatMessagingTest < ApplicationSystemTestCase
     # A reload would start straight after reconnecting; give it time to land
     sleep 2
     assert_selector "body[data-not-reloaded]"
+  end
+
+  # What a screen reader announces for the element, as Chrome computes it
+  def accessible_name(selector, **options)
+    find(selector, **options).native.accessible_name
   end
 
   # Every turbo_stream_from on the page has subscribed

@@ -1,12 +1,15 @@
 .channel-pane
-  = link_to formatted_inline(@server.name), chat_server_path(@server), class: "channel-pane__server-name"
+  -# Names stay on one line, cut short with an ellipsis if they don't fit, so
+  -# a long one doesn't push the rest of the list down a line per word at large
+  -# text sizes. The title shows it in full on hover.
+  = link_to formatted_inline(@server.name), chat_server_path(@server), class: "channel-pane__server-name", title: plain_field(@server.name)
 
   %ul.sidebar-tree__children
     - @server.channels.order(:name).each do |channel|
       - is_active = params[:uuid] == channel.uuid
       %li
-        = link_to chat_server_channel_path(@server, channel), class: "sidebar-tree__leaf #{'sidebar-tree__leaf--active' if is_active}".strip do
-          = safe_join([ "# ", formatted_inline(channel.name) ])
+        = link_to chat_server_channel_path(@server, channel), class: "sidebar-tree__leaf #{'sidebar-tree__leaf--active' if is_active}".strip, title: "# #{plain_field(channel.name)}" do
+          %span.channel-pane__name= safe_join([ "# ", formatted_inline(channel.name) ])
           = render "chat/shared/channel_dot", channel: channel, unread: !is_active && unread_channel_ids.include?(channel.id)
 
   - if server_owner?

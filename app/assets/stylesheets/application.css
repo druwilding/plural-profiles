@@ -3915,6 +3915,7 @@ label.upload-review__choice {
 /* The real rail and channel list are sized for a full window; at preview width
    they'd leave almost nothing for the messages. */
 .theme-preview__chat .server-rail {
+  --dot-inset: calc((44px - 28px) / 2 + 2px);
   width: 44px;
   gap: 0.5rem;
   padding: 0.85rem 0;
@@ -3931,10 +3932,11 @@ label.upload-review__choice {
 
 .theme-preview__chat .channel-pane {
   /* Close to the real 200px, and wide enough that the mock's longest channel
-     name plus its unread dot stays on one line — a wrapped row misreads as a
-     styling bug rather than a narrow column. */
+     name stays on one line — a cut-short row misreads as a styling bug
+     rather than a narrow column. */
+  --dot-inset: 0.6rem;
   width: 186px;
-  padding: 0.85rem 0.6rem;
+  padding: 0.85rem var(--dot-inset);
   overflow: hidden;
 }
 
@@ -4604,6 +4606,27 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   color: var(--chat-header-title-text);
 }
 
+/* Chat fills the window, so every line the header takes is one less line of
+   messages: thinner than the profile pages' header, with a smaller Chat menu
+   button. */
+.chat-body .site-header {
+  padding-block: 0.2rem;
+}
+
+.chat-body .site-header .action-dropdown__trigger {
+  padding: 0.1rem 0.5rem;
+}
+
+/* The profile pages stack the header on phones; chat keeps it to one row,
+   wrapping only if it really has to. */
+@media (max-width: 600px) {
+  .chat-body .site-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    text-align: left;
+  }
+}
+
 .chat-body .site-header nav a,
 .chat-body .site-header nav .link-button {
   color: var(--chat-header-link);
@@ -4870,6 +4893,9 @@ details.theme-section-card:not([open]) .theme-section-card__header {
 }
 
 .server-rail {
+  /* From the rail's edge to the inside of the icons' 2px border, which is
+     what the dot is positioned against (see .unread-dot) */
+  --dot-inset: calc((72px - 42px) / 2 + 2px);
   width: 72px;
   flex-shrink: 0;
   background-color: var(--chat-rail-bg);
@@ -4877,8 +4903,8 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.85rem 0;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
   overflow-y: auto;
 }
 
@@ -4931,25 +4957,29 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   text-decoration: none;
 }
 
+/* Unread markers sit on the left edge of the rail or the channel list, level
+   with their server or channel, with their outer half cut off by the edge:
+   a half-dot that's easy to spot down the side without taking any room from
+   the names. The edge clips it because both panes scroll (overflow), and
+   --dot-inset is how far the item is from that edge, so the dot can reach
+   back to it. In rem, so it grows with the text. */
 .unread-dot {
-  display: inline-block;
-  align-self: center;
-  width: 8px;
-  height: 8px;
+  --unread-dot-size: 0.6rem;
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--dot-inset) - var(--unread-dot-size) / 2);
+  transform: translateY(-50%);
+  width: var(--unread-dot-size);
+  height: var(--unread-dot-size);
   border-radius: 50%;
   background-color: var(--chat-sidebar-unread-dot);
-  flex-shrink: 0;
 }
 
 /* Same specificity as .unread-dot above and declared after it, so the rail's
    own colour wins. The two sit on different surfaces — chat_rail_bg and
    chat_sidebar_bg — which a theme may colour very differently. */
 .unread-dot--rail {
-  position: absolute;
-  top: 0;
-  right: 0;
   background-color: var(--chat-rail-unread-dot);
-  border: 2px solid var(--chat-rail-bg);
 }
 
 @media (forced-colors: active) {
@@ -4971,20 +5001,19 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   .unread-dot {
     background-color: CanvasText;
   }
-
-  .unread-dot--rail {
-    border-color: Canvas;
-  }
 }
 
 .channel-pane {
+  /* From the pane's edge to the channel rows (see .unread-dot) */
+  --dot-inset: 0.5rem;
   width: 200px;
   flex-shrink: 0;
   background-color: var(--chat-sidebar-bg);
   color: var(--chat-sidebar-text);
   border-right: 1px solid var(--chat-divider);
-  padding: 1rem 0.75rem;
+  padding: 0.6rem var(--dot-inset);
   overflow-y: auto;
+  line-height: 1.4;
 }
 
 /* The channel list reuses the group/profile sidebar's tree-guide-line
@@ -5002,6 +5031,11 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   padding-left: 0;
 }
 
+/* What each row's unread dot is positioned against */
+.channel-pane .sidebar-tree__children > li {
+  position: relative;
+}
+
 /* The channel rows reuse .sidebar-tree__leaf, which lives with the profile
    sidebar styles and so wasn't caught by the chat palette conversion. Channel
    names have always been link-coloured (they're bare <a>s with no colour rule
@@ -5010,6 +5044,25 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    profile variables gave them before. */
 .channel-pane .sidebar-tree__leaf {
   color: var(--chat-sidebar-link);
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 0.15rem 0.4rem;
+}
+
+/* One line each, cut short with an ellipsis. The link's title shows the full
+   name on hover; keyboard focus shows it by letting it wrap, since a title
+   tooltip doesn't appear for the keyboard. (On a touch screen, tapping opens
+   the channel, whose header always shows the name in full.) */
+.channel-pane__name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.channel-pane .sidebar-tree__leaf:focus-visible .channel-pane__name {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .channel-pane .sidebar-tree__leaf:hover {
@@ -5026,9 +5079,13 @@ details.theme-section-card:not([open]) .theme-section-card__header {
    hovered rows need no mirror: the base doesn't give them system colours in
    forced-colors mode either, so they already behave as they do elsewhere. */
 @media (forced-colors: active) {
+  /* Already in system colours, so nothing for the browser to adjust. Left to
+     it, it puts a Canvas backplate behind the name, which hides
+     HighlightText in themes where the two match. */
   .channel-pane .sidebar-tree__leaf--active {
     background: Highlight;
     color: HighlightText;
+    forced-color-adjust: none;
   }
 }
 
@@ -5037,17 +5094,27 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   font-weight: 700;
   color: var(--chat-sidebar-title-text);
   text-decoration: none;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.4rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .channel-pane__server-name:hover {
   text-decoration: underline;
 }
 
+/* In full while focused, like the channel names (the server's page shows it in
+   full too) */
+.channel-pane__server-name:focus-visible {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .channel-pane__add-channel {
   display: block;
-  margin-top: 0.6rem;
-  padding-left: 1.1rem;
+  margin-top: 0.4rem;
+  padding-left: 0.4rem;
   font-size: 0.85rem;
   color: var(--chat-sidebar-link);
   text-decoration: none;
@@ -5097,6 +5164,9 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   display: flex;
   flex-direction: column;
   color: var(--chat-pane-text);
+  /* Tighter than the page-wide 1.6, which at large text sizes spends a lot of
+     height on the gaps between lines */
+  line-height: 1.4;
 }
 
 .chat-channel-header {
@@ -5104,7 +5174,7 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.6rem 1.25rem 0.9rem;
+  padding: 0.35rem 1rem;
   /* Defaults to the message pane's own colour, so this reads as one surface
      with the history below it until a designer parts the two. */
   background-color: var(--chat-topbar-bg);
@@ -5120,10 +5190,14 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   color: var(--chat-topbar-title-text);
 }
 
+/* Never squeezed by the subtitle or description beside it, but never wider
+   than the header either: a name too long for the line wraps, rather than
+   running underneath the Channel settings button. */
 .chat-channel-header h1 {
   margin: 0;
   font-size: 1.15rem;
   flex-shrink: 0;
+  max-width: 100%;
   overflow-wrap: anywhere;
 }
 
@@ -5148,10 +5222,10 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   flex: 1;
 }
 
-/* Name and description share one line rather than stacking — the description is
-   the one that gives way (ellipsis) since the channel name is what
-   identifies the channel and should never get cut off. The subtitle, if
-   present, runs on its own line underneath. */
+/* Name, subtitle and description share one line rather than stacking — the
+   subtitle and description are the ones that give way (ellipsis, with the
+   full text in their title) since the channel name is what identifies the
+   channel and should never get cut off. */
 .chat-channel-header__title-text {
   display: flex;
   align-items: baseline;
@@ -5159,17 +5233,59 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   min-width: 0;
 }
 
+.chat-channel-header__title-text .subtitle,
 .chat-channel-header__title-text .description {
   margin: 0;
   min-width: 0;
-  flex: 1 1 auto;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.chat-channel-header__title-column .subtitle {
-  margin: 0.15rem 0 0;
+.chat-channel-header__title-text .subtitle {
+  flex: 0 1 auto;
+}
+
+/* No width of its own (a zero basis), so it takes only the room left over:
+   it gives way completely before the subtitle starts to */
+.chat-channel-header__title-text .description {
+  flex: 1 1 0;
+}
+
+/* The alternative text after the slash keeps screen readers from announcing
+   the dash */
+.chat-channel-header__title-text .subtitle::before {
+  content: "– " / "";
+}
+
+/* Only there while something's cut short (truncated_text_controller.js) */
+.chat-channel-header__more {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: var(--chat-topbar-text);
+  text-decoration: underline;
+}
+
+/* Not the filled hover of the global button:hover rule; it's a text link */
+.chat-channel-header__more:hover {
+  background: none;
+}
+
+/* Opened with "more": everything in full, wrapping onto as many lines as it
+   needs. A description too long for the room beside the name moves to a line
+   of its own rather than wrapping in a thin column. */
+.chat-channel-header__title-text--expanded {
+  flex-wrap: wrap;
+}
+
+.chat-channel-header__title-text--expanded .subtitle,
+.chat-channel-header__title-text--expanded .description {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.chat-channel-header__title-text--expanded .description {
+  flex: 1 1 12rem;
 }
 
 .chat-body .chat-channel-header .subtitle {
@@ -5211,13 +5327,29 @@ details.theme-section-card:not([open]) .theme-section-card__header {
   .chat-channel-back {
     display: flex;
   }
+
+  /* No room beside the name on a phone, so the subtitle and description go
+     on a line of their own under it */
+  .chat-channel-header__title-text {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .chat-channel-header h1 {
+    flex-basis: 100%;
+  }
+
+  /* Starting a line, the dash has nothing to separate */
+  .chat-channel-header__title-text .subtitle::before {
+    content: none;
+  }
 }
 
 .chat-messages-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 1rem 1.5rem;
+  padding: 0.6rem 1rem;
 }
 
 /* turbo-frame has no default display value browsers agree on. `display:
@@ -5247,7 +5379,7 @@ turbo-frame {
 
 .chat-message,
 .chat-date-divider {
-  margin-bottom: 1rem;
+  margin-bottom: 0.7rem;
 }
 
 .chat-messages > :last-child {
@@ -5258,7 +5390,7 @@ turbo-frame {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding-top: 1.5rem;
+  padding-top: 0.5rem;
   color: color-mix(in srgb, var(--chat-pane-text) 65%, transparent);
   font-size: 0.76rem;
   font-weight: 700;
@@ -5304,8 +5436,17 @@ turbo-frame {
 .chat-message__who {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
+}
+
+/* Name – pronouns – time, so they read as one line of who and when. The
+   alternative text after the slash keeps screen readers from announcing the
+   dashes. */
+.chat-message__pronouns::before,
+.chat-message__time::before {
+  content: "– " / "";
+  font-style: normal;
 }
 
 .chat-message__avatar-trigger,
@@ -5371,12 +5512,14 @@ turbo-frame {
 .chat-message__subtitle {
   display: block;
   font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.3;
   color: color-mix(in srgb, var(--chat-pane-text) 75%, transparent);
 }
 
 .chat-message__body {
   font-size: 0.92rem;
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
 }
 
 .composer {
@@ -5384,7 +5527,7 @@ turbo-frame {
   background-color: var(--chat-composer-bg);
   color: var(--chat-composer-text);
   border-top: 1px solid var(--chat-divider);
-  padding: 0.5rem 1.25rem 0.75rem;
+  padding: 0.4rem 1rem 0.5rem;
 }
 
 /* Shared "post as" searchable profile picker — used by the composer's
@@ -5463,7 +5606,8 @@ turbo-frame {
 /* The composer's picker additionally opens upward, since it sits at the very
    bottom of the pane and there's no room to open downward. */
 .composer-posting-as {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.35rem;
+  padding-block: 0.1rem;
 }
 
 .composer-posting-as .action-dropdown__menu {
@@ -5680,6 +5824,14 @@ button.profile-picker__option {
   max-height: 9.6rem;
   resize: none;
   overflow-y: auto;
+}
+
+/* The box starts one line tall, so a placeholder too long for the line would
+   wrap onto a second one that's cut off half-way. Cut it short on the first. */
+.composer-input-row textarea::placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The base forced-colors rule gives every text field Canvas and CanvasText
