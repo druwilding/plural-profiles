@@ -15,22 +15,49 @@ import { Controller } from "@hotwired/stimulus"
 // right at that channel. Without this, the rail icon would light up even
 // while you're mid-conversation in the very channel that caused it. Chasing
 // each new message with a fresh read marker keeps that self-correcting
-// (a brief flicker at worst) without needing real presence tracking.
+// (chat_unread_controller.js holds a new dot back long enough to hide the
+// round trip) without needing real presence tracking.
+//
+// Only while someone could be reading, though: the tab in view and the window
+// focused. A message that arrives while they're in another tab or another
+// app stays unread, so its dot (and the tab's) can tell them about it; the
+// channel's marked read when they come back. The same goes for a page that
+// loads in the background, such as a link opened in a new tab.
 export default class extends Controller {
   static values = { url: String }
 
   connect() {
-    this.markRead()
+    this.markReadIfSeen()
 
     const messages = this.element.querySelector("#chat-messages")
     if (messages) {
-      this.observer = new MutationObserver(() => this.markRead())
+      this.observer = new MutationObserver(() => this.markReadIfSeen())
       this.observer.observe(messages, { childList: true })
     }
+
+    this.cameBack = this.cameBack.bind(this)
+    document.addEventListener("visibilitychange", this.cameBack)
+    window.addEventListener("focus", this.cameBack)
   }
 
   disconnect() {
     this.observer?.disconnect()
+    document.removeEventListener("visibilitychange", this.cameBack)
+    window.removeEventListener("focus", this.cameBack)
+  }
+
+  markReadIfSeen() {
+    if (this.#seen()) {
+      this.pending = false
+      this.markRead()
+    } else {
+      this.pending = true
+    }
+  }
+
+  // Back in the tab or window, with something left to mark
+  cameBack() {
+    if (this.pending) this.markReadIfSeen()
   }
 
   markRead() {
@@ -41,5 +68,9 @@ export default class extends Controller {
         "Accept": "text/plain"
       }
     })
+  }
+
+  #seen() {
+    return document.visibilityState === "visible" && document.hasFocus()
   }
 }
