@@ -304,10 +304,11 @@ class ChatMessagingTest < ApplicationSystemTestCase
     assert_equal "", find("textarea[data-composer-target='textarea']").value
   end
 
-  test "a page whose session ended while it was away goes to sign in" do
+  test "a page whose session ended while it was away goes to sign in, and keeps the message for afterwards" do
     sign_in_via_browser(@owner)
     visit chat_url(channel_path)
     wait_for_live_connection
+    fill_in placeholder: "Message ##{@channel.name} (Enter to send, Shift+Enter for a new line)", with: "Still here"
 
     # Signed out elsewhere: the server now refuses to reconnect this page, and
     # Action Cable gives up
@@ -315,6 +316,12 @@ class ChatMessagingTest < ApplicationSystemTestCase
     ActionCable.server.remote_connections.where(current_user: @owner).disconnect
 
     assert_field "Email address or account name", wait: 40
+    fill_in "Email address or account name", with: @owner.email_address
+    fill_in "Password", with: "Plur4l!Pr0files#2026"
+    click_button "Sign in"
+
+    assert_text "No messages yet. Say hello!"
+    assert_equal "Still here", find("textarea[data-composer-target='textarea']").value
   end
 
   private

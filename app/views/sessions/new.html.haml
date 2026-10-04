@@ -5,7 +5,14 @@
   .card__header
     %h1 Sign in
 
-  = form_with url: session_path do |form|
+  -# Not submitted by Turbo: after signing in, someone sent here from a chat
+  -# page goes back to it on the chat. subdomain, and Turbo's fetch can't
+  -# follow a redirect to another origin (this app sets up no CORS). It fails,
+  -# and Turbo reloads this page, so they're signed in but stuck here. A plain
+  -# form submission is a top-level navigation, which can go anywhere. The
+  -# chat's sign-out button is the same, the other way round
+  -# (layouts/chat.html.haml).
+  = form_with url: session_path, data: { turbo: false } do |form|
     .form-group
       = form.label :login, "Email address or account name"
       = form.text_field :login, required: true, autocomplete: "username", value: params[:login]
