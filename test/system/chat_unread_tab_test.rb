@@ -81,6 +81,36 @@ class ChatUnreadTabTest < ApplicationSystemTestCase
     assert title.start_with?("• ")
   end
 
+  test "a server whose name starts with a dot keeps it, read or unread" do
+    @server.update!(name: "• Team")
+    sign_in_via_browser(@owner)
+    visit chat_url("/servers/#{@server.uuid}")
+    assert_text "general"
+    sleep 0.5
+    assert_equal "• Team — Plural Profiles", title
+
+    post_as_member "Over here", @off_topic
+    assert_eventually { title == "• • Team — Plural Profiles" }
+  end
+
+  test "going back to a page with something unread gives its title one dot, not two" do
+    @server.update!(name: "• Team")
+    @off_topic.messages.create!(user: @member, postable: profiles(:carol), postable_name: "Carol", body: "unread")
+    sign_in_via_browser(@owner)
+    visit chat_url("/servers/#{@server.uuid}")
+    assert_eventually { title == "• • Team — Plural Profiles" }
+
+    within(".channel-pane") { click_link "general" }
+    assert_selector "h1", text: "# general"
+    # Restored from Turbo's copy of the page, taken on the way out
+    page.go_back
+    assert_no_selector "h1", text: "# general"
+    sleep 0.5
+
+    assert_equal "• • Team — Plural Profiles", title
+    assert_selector ".server-rail .unread-dot:not(.unread-dot--pending)"
+  end
+
   private
 
   def chat_url(path)

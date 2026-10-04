@@ -23,16 +23,33 @@ let badgedIcon = null
 export default class extends Controller {
   connect() {
     this.timers = new Map()
-    this.baseTitle = document.title.startsWith(TITLE_DOT) ? document.title.slice(TITLE_DOT.length) : document.title
+    // Always the page's own title: Turbo's cached copy never has the dot (see
+    // beforeCache), so nothing here has to guess whether a leading "• " is
+    // ours or part of a server's name.
+    this.baseTitle = document.title
+    // Any left waiting in a cached copy have no timer to show them now
+    this.element.querySelectorAll(".unread-dot--pending").forEach(dot => dot.classList.remove("unread-dot--pending"))
 
     this.observer = new MutationObserver(mutations => this.#changed(mutations))
     this.observer.observe(this.element, { childList: true, subtree: true })
+    this.beforeCache = this.#beforeCache.bind(this)
+    document.addEventListener("turbo:before-cache", this.beforeCache)
     this.#updateTab()
   }
 
   disconnect() {
     this.observer.disconnect()
     this.timers.forEach(timer => clearTimeout(timer))
+    document.removeEventListener("turbo:before-cache", this.beforeCache)
+  }
+
+  // Turbo keeps a copy of the page to show on going back to it. That copy
+  // gets the page's own title and favicon, and every unread dot as it stands,
+  // so a page restored from it starts clean and this works it all out again.
+  #beforeCache() {
+    document.title = this.baseTitle
+    this.#setFavicon(false)
+    this.element.querySelectorAll(".unread-dot--pending").forEach(dot => dot.classList.remove("unread-dot--pending"))
   }
 
   #changed(mutations) {
