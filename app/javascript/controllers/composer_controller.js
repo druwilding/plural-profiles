@@ -59,6 +59,16 @@ export default class extends Controller {
     // Turbo's preview of a cached page carries whatever was typed when it was
     // cached, which the draft may have moved on from since
     if (!key || document.documentElement.hasAttribute("data-turbo-preview")) return
+    // The page straight after a message was saved says so (see
+    // Chat::MessagesController#create). Nothing else clears the draft: a
+    // send the server turns away (too fast, or no longer a member) redirects
+    // just like one it saves, so the browser can't tell them apart. Taken off
+    // the page once used, so Turbo's cached copy can't clear a later draft.
+    if (element.dataset.draftSent === "true") {
+      delete element.dataset.draftSent
+      clearDraft(key)
+      return
+    }
     // A validation-error re-render comes back with the rejected message, which
     // is the draft now
     if (element.value) {
@@ -76,12 +86,6 @@ export default class extends Controller {
   saveDraft() {
     const key = this.textareaTarget.dataset.draftKey
     if (key) saveDraft(key, this.textareaTarget.value)
-  }
-
-  // turbo:submit-end. A failed send keeps the draft, for another try.
-  sent(event) {
-    const key = this.textareaTarget.dataset.draftKey
-    if (key && event.detail.success) clearDraft(key)
   }
 
   submitOnEnter(event) {

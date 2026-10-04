@@ -75,6 +75,40 @@ class ChatDraftsTest < ApplicationSystemTestCase
     assert_draft "general", ""
   end
 
+  test "going back to a channel after sending doesn't clear a newer draft" do
+    sign_in_via_browser(@owner)
+    visit chat_url(channel_path(@general))
+    type_message "First", @general
+    composer.native.send_keys(:enter)
+    assert_draft "general", ""
+    type_message "Second thoughts", @general
+
+    within(".channel-pane") { click_link "off-topic" }
+    assert_draft "off-topic", ""
+    # Restored from Turbo's cache of the page straight after sending
+    page.go_back
+    assert_draft "general", "Second thoughts"
+
+    visit chat_url(channel_path(@general))
+    assert_draft "general", "Second thoughts"
+  end
+
+  # The same as a send that's too fast: redirected without saving. The browser
+  # can't tell either from a send that worked.
+  test "a send the server turns away keeps its draft" do
+    sign_in_via_browser(@member)
+    visit chat_url(channel_path(@general))
+    type_message "Please don't lose this", @general
+    @server.memberships.find_by!(user: @member).destroy!
+
+    composer.native.send_keys(:enter)
+    assert_text "You need a valid invite link to join this server."
+
+    @server.memberships.create!(user: @member, role: "member", default_postable: profiles(:carol))
+    visit chat_url(channel_path(@general))
+    assert_draft "general", "Please don't lose this"
+  end
+
   test "emptying the message box clears its draft" do
     sign_in_via_browser(@owner)
     visit chat_url(channel_path(@general))

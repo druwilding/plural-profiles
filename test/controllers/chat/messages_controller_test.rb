@@ -22,6 +22,27 @@ class Chat::MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal profiles(:alice), message.postable
   end
 
+  test "the page after a saved message tells the composer to clear the channel's draft" do
+    sign_in_as @owner
+    post chat_server_channel_messages_path(@server, @channel), params: { chat_message: { body: "hello there" } }
+    assert_equal @channel.uuid, flash[:sent_message_in]
+
+    follow_redirect!
+    assert_select "textarea[data-draft-sent='true']"
+
+    # Only straight after sending
+    get chat_server_channel_path(@server, @channel)
+    assert_select "textarea[data-draft-sent='false']"
+  end
+
+  test "a rejected message doesn't tell the composer to clear the draft" do
+    sign_in_as @owner
+    post chat_server_channel_messages_path(@server, @channel), params: { chat_message: { body: "" } }
+    assert_response :unprocessable_entity
+    assert_nil flash[:sent_message_in]
+    assert_select "textarea[data-draft-sent='false']"
+  end
+
   test "create resolves chat proxy brackets to a different profile" do
     profiles(:bob).update!(chat_bracket_before: "bob:")
     sign_in_as @owner
