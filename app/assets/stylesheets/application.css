@@ -3983,6 +3983,11 @@ label.upload-review__choice {
   font-size: 0.8rem;
 }
 
+.theme-preview__chat .composer-send {
+  width: 2rem;
+  height: 2rem;
+}
+
 .theme-preview__section:last-child {
   margin-bottom: 0;
 }
@@ -5844,6 +5849,31 @@ button.profile-picker__option {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Read-only while a message is on its way (composer_controller.js), dimmed
+   like a disabled button */
+.composer-input-row textarea:read-only {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* The send button: the default button style, square, and as tall as the
+   message box on a single line. The row aligns to the bottom, so it stays
+   beside the last line as the box grows. */
+.composer-send {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+}
+
+.composer-send__icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* The base forced-colors rule gives every text field Canvas and CanvasText

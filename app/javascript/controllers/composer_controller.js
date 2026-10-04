@@ -20,7 +20,7 @@ import { loadDraft, saveDraft, clearDraft } from "chat_drafts"
 // avatar/name/pronouns, and "option" (plus data-prefix/data-suffix/data-name)
 // on each profile/group in the posting-as picker.
 export default class extends Controller {
-  static targets = [ "form", "textarea", "triggerAvatar", "triggerName", "triggerPronouns", "option" ]
+  static targets = [ "form", "textarea", "send", "triggerAvatar", "triggerName", "triggerPronouns", "option" ]
 
   // Rather than caching the "default" trigger HTML once in connect(), track
   // it via Stimulus's target lifecycle callbacks below — switching who's
@@ -96,6 +96,50 @@ export default class extends Controller {
 
     event.preventDefault()
     this.formTarget.requestSubmit()
+  }
+
+  // While a message is on its way, nothing else sends: Enter pressed twice in
+  // quick succession (easy on a phone keyboard) would otherwise post it twice.
+  // Turbo cancels its first request when a second starts, but by then the
+  // server has usually saved it.
+  //
+  // The submit event, before Turbo sees it (it listens on the document), so a
+  // repeat is stopped before it starts.
+  //
+  // The box goes read-only rather than disabled until the page after sending,
+  // with the message in it, replaces it: it can't be changed, but keeps focus,
+  // so a phone's keyboard stays open. (A read-only field is still sent with
+  // the form, too, where a disabled one isn't.)
+  submitting(event) {
+    if (this.inFlight) {
+      event.preventDefault()
+      return
+    }
+    this.inFlight = true
+    this.textareaTarget.readOnly = true
+  }
+
+  // turbo:submit-start. The button is disabled outright, once Turbo has
+  // started with it.
+  sending() {
+    this.sendTarget.disabled = true
+  }
+
+  // turbo:submit-end. Sent, or turned away with a page of its own (an error
+  // message, or "too fast"), the page that follows brings a fresh composer.
+  // Failed without one (the network dropped), it's handed back to try again.
+  sent(event) {
+    if (event.detail.success || event.detail.fetchResponse?.response) {
+      // Turbo re-enables the button it was sent with just before this event,
+      // in the same task, so it's never drawn enabled in between
+      this.sendTarget.disabled = true
+      return
+    }
+
+    this.inFlight = false
+    this.textareaTarget.readOnly = false
+    this.sendTarget.disabled = false
+    this.textareaTarget.focus()
   }
 
   // Grows the textarea to fit its content, from one line up to the six-line
