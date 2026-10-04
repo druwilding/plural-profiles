@@ -1,0 +1,5 @@
+-# The sender's own message, added straight away. The same message also
+-# arrives over Action Cable (Chat::Message's broadcast); whichever comes
+-# second replaces the first, since Turbo drops a child with the same id
+-# before appending.
+= turbo_stream.append "chat-messages", partial: "chat/messages/message", locals: { message: @message }

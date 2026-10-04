@@ -35,6 +35,17 @@ class Chat::MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea[data-draft-sent='false']"
   end
 
+  test "a message sent from the page is added with a Turbo Stream rather than a reload" do
+    sign_in_as @owner
+    post chat_server_channel_messages_path(@server, @channel), params: { chat_message: { body: "streamed in" } }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_select "turbo-stream[action='append'][target='chat-messages']"
+    assert_includes response.body, "streamed in"
+    assert_nil flash[:sent_message_in]
+  end
+
   test "a rejected message doesn't tell the composer to clear the draft" do
     sign_in_as @owner
     post chat_server_channel_messages_path(@server, @channel), params: { chat_message: { body: "" } }

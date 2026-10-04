@@ -125,21 +125,51 @@ export default class extends Controller {
     this.sendTarget.disabled = true
   }
 
-  // turbo:submit-end. Sent, or turned away with a page of its own (an error
-  // message, or "too fast"), the page that follows brings a fresh composer.
-  // Failed without one (the network dropped), it's handed back to try again.
+  // turbo:submit-end.
+  //
+  // Saved: the server answers with a Turbo Stream that adds the message (see
+  // Chat::MessagesController#create), and only then, so that's the
+  // confirmation. The box is emptied and handed back in place, never
+  // replaced, so it keeps focus and a phone's keyboard stays open.
+  //
+  // Turned away with a page of its own (an error message, or "too fast"), the
+  // page that follows brings a fresh composer. Failed without one (the
+  // network dropped), it's handed back as it was, to try again.
   sent(event) {
-    if (event.detail.success || event.detail.fetchResponse?.response) {
+    const response = event.detail.fetchResponse
+
+    if (event.detail.success && response?.contentType?.startsWith("text/vnd.turbo-stream.html")) {
+      this.#reset()
+      return
+    }
+
+    if (event.detail.success || response?.response) {
       // Turbo re-enables the button it was sent with just before this event,
       // in the same task, so it's never drawn enabled in between
       this.sendTarget.disabled = true
       return
     }
 
+    this.#handBack()
+    this.textareaTarget.focus()
+  }
+
+  #reset() {
+    const key = this.textareaTarget.dataset.draftKey
+    if (key) clearDraft(key)
+    this.textareaTarget.value = ""
+    this.#handBack()
+    this.autoGrow()
+    // Back to the default "Posting as", if brackets had switched it
+    this.detectProxy()
+    // So the history follows to the new message, wherever the reader was
+    this.dispatch("sent")
+  }
+
+  #handBack() {
     this.inFlight = false
     this.textareaTarget.readOnly = false
     this.sendTarget.disabled = false
-    this.textareaTarget.focus()
   }
 
   // Grows the textarea to fit its content, from one line up to the six-line

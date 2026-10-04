@@ -83,6 +83,14 @@ export default class extends Controller {
     if (appendedAtEnd && this.stickToBottom) this.scrollToBottom()
   }
 
+  // composer:sent. Someone who's just sent a message wants to see it, even if
+  // they'd scrolled up. It may be added just before this or just after, so
+  // this both scrolls now and follows it when it lands.
+  follow() {
+    this.stickToBottom = true
+    this.scrollToBottom()
+  }
+
   scrollToBottom() {
     this.scrollableTarget.scrollTop = this.scrollableTarget.scrollHeight
   }

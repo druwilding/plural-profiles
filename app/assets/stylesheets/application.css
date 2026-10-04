@@ -5403,6 +5403,11 @@ turbo-frame {
   margin-bottom: 0;
 }
 
+/* Gone once the first message arrives, whether live or just sent */
+.chat-messages:has(.chat-message) > .chat-messages__empty {
+  display: none;
+}
+
 .chat-date-divider {
   display: flex;
   align-items: center;
