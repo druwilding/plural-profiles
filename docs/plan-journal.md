@@ -41,7 +41,9 @@ If the journal grows into its own sub-site (`journal.`), it should be mostly a r
 
 ### One account, many Dreamwidth connections
 
-The first instinct was to add `dreamwidth_username` and `dreamwidth_api_key` columns to `users`. That can't hold several Dreamwidth accounts, so connections get their own model: **`Journal::DreamwidthAccount`, many per user.**
+The first instinct was to add `dreamwidth_username` and `dreamwidth_api_key` columns to `users`. That can't hold several Dreamwidth accounts, so connections get their own model: **`Journal::DreamwidthConnection`, many per user**, in the `journal_dreamwidth_connections` table.
+
+It's called a *connection*, not an *account*, because the row isn't the Dreamwidth account. It's this person's key to one. The word also matches the pages ("Manage a connection"). Like chat, it sets `self.table_name` explicitly and inherits from an abstract `JournalRecord`.
 
 - **Each connection is separate.** Disconnecting one is just `destroy`; the others and `User` itself are untouched. `has_many … dependent: :destroy` removes them all with the account.
 - **It has room to grow** for the import step: `last_imported_at`, import progress, and possibly a community to post to. All of that is per Dreamwidth account.
@@ -49,21 +51,26 @@ The first instinct was to add `dreamwidth_username` and `dreamwidth_api_key` col
 Shape:
 
 ```
-Journal::DreamwidthAccount
+Journal::DreamwidthConnection   (table: journal_dreamwidth_connections)
   user_id            (FK)
-  username           (string, the Dreamwidth username; stored lowercase, as Dreamwidth treats it)
+  username           (string, the Dreamwidth username, normalised: see below)
   api_key            (text, encrypted)
-  api_key_digest     (string, SHA-256 of the key, for spotting duplicates)
-  verified_at        (datetime, last time Dreamwidth accepted the key)
+  api_key_digest     (string, HMAC-SHA256 of the key, for spotting duplicates)
+  verified_at        (datetime, when Dreamwidth last accepted the key on connect or replace)
+  failed_at          (datetime, nullable, when Dreamwidth last rejected the key in use)
   timestamps
 
   unique index on (user_id, username)
   unique index on (user_id, api_key_digest)
 ```
 
-**Why a digest:** encrypted values can't be searched, so on its own `api_key` couldn't tell us "you've already added this key". A SHA-256 of the key can. Dreamwidth keys are long and random, so the digest can't be turned back into the key.
+**Usernames are normalised before saving and before every lookup:** lowercased, with hyphens turned into underscores. Dreamwidth treats `foo-bar` and `foo_bar` as the same account, and its API only accepts `[0-9A-Za-z_]`. Normalising means the unique index really does stop the same journal being connected twice, and the URL has only one form.
 
-`User has_many :dreamwidth_accounts, class_name: "Journal::DreamwidthAccount", dependent: :destroy`.
+**Why a digest:** encrypted values can't be searched, so on its own `api_key` couldn't tell us "you've already added this key". A digest can. It's an HMAC keyed from `secret_key_base` (via `Rails.application.key_generator`), not a bare SHA-256, so someone holding a copy of the database can't check it against a key they already have.
+
+**When a key stops working.** If someone revokes their key on Dreamwidth, calls start getting 401s. The client reports this as a rejected key, and the controller sets `failed_at`. Every page for that journal then says plainly that Dreamwidth stopped accepting the key, and links to Manage. There they can replace the key (which clears `failed_at` and sets `verified_at`) or disconnect it and add it again. A later successful call also clears `failed_at`.
+
+`User has_many :dreamwidth_connections, class_name: "Journal::DreamwidthConnection", dependent: :destroy`.
 
 - **Unique per plural-profiles account, not site-wide.** Connecting the same Dreamwidth username twice in one account makes no sense. But two plural-profiles accounts both connecting the same journal is legitimate (a shared household journal, say), and refusing it would tell one account that the other exists.
 - **No limit on how many** in v1. Each is a single small row.
@@ -71,7 +78,7 @@ Journal::DreamwidthAccount
 
 ### Encryption: Active Record encryption, which isn't set up yet
 
-`encrypts :api_key` is a one-liner, but nothing in the app uses Active Record encryption today, so Phase 0 has to set it up:
+`encrypts :api_key` is a one-liner, but nothing in the app uses Active Record encryption today, so Phase 1 has to set it up:
 
 - Run `bin/rails db:encryption:init` and put the three keys (`primary_key`, `deterministic_key`, `key_derivation_salt`) in `config/credentials.yml.enc`. Production already decrypts credentials via `RAILS_MASTER_KEY` on Scalingo, so there's no new environment variable. Check that the variable is actually set before relying on it.
 - Fixed, non-secret keys for the test environment go in `config/environments/test.rb`, so CI doesn't need the master key.
@@ -87,10 +94,16 @@ Journal::DreamwidthAccount
 
 ## Talking to Dreamwidth: `Dreamwidth::Client`
 
-A plain Ruby class (`lib/dreamwidth/client.rb`, or `app/models/dreamwidth/client.rb` if we'd rather it autoload). It knows nothing about controllers or plural-profiles models, so the future importer can reuse it as is.
+A plain Ruby class in `app/services/dreamwidth/client.rb`, so it autoloads. It's the first file in `app/services/`. It knows nothing about controllers or plural-profiles models, so the future importer can reuse it as is.
 
 - Built with `Dreamwidth::Client.new(username:, api_key:)`.
-- Methods: `entries(count:, offset:)`, `entry(id)`, `create_entry(attrs)`, `update_entry(id, attrs)`, `verify!`. Each returns plain Ruby hashes or small value objects, never raw JSON.
+- Methods: `entries(count:, offset:, security: nil)`, `entry(id)`, `create_entry(attrs)`, `update_entry(id, attrs)`, `verify!`. Each returns plain Ruby hashes or small value objects, never raw JSON.
+- **What the API actually does** (checked in Phase 0; see "Phase 0 findings" below):
+  - Entry IDs are Dreamwidth's public `ditemid`, the number in `/29492.html`. One ID works for list, read, edit and the "View on Dreamwidth" link.
+  - Editing is `POST /journals/{u}/entries/{id}`, not `PATCH`, and `text` is required every time.
+  - Tags go in as a JSON array and come back as one.
+  - `datetime` comes back as `"YYYY-MM-DD HH:MM:SS"` in the journal's own time, with no time zone.
+  - New entries have no format field, so Dreamwidth uses its default, "casual HTML" (HTML tags allowed, blank lines become paragraphs). That's v1's format. Rich text can come later, perhaps across the whole site.
 - **Uses `Net::HTTP` from the standard library, with no new gem.** Nothing in the app makes outbound HTTP calls today, and four endpoints don't justify Faraday.
 - **Short timeouts** (around 5 s to open, 15 s to read). A slow Dreamwidth must not hold a Puma thread for long. The app is memory-constrained on Scalingo (see `plan-chat-servers.md`), so we can't spare threads.
 - **Errors are mapped to a few kinds the controller can phrase kindly:**
@@ -100,7 +113,7 @@ A plain Ruby class (`lib/dreamwidth/client.rb`, or `app/models/dreamwidth/client
   - validation error (Dreamwidth's message passed through)
 - Only ever talks to `https://www.dreamwidth.org/api/v1/`. The host is a constant, never taken from input.
 
-`Journal::ApplicationController` looks up the connection from the URL, always through `Current.user.dreamwidth_accounts.find_by!(username: params[:dreamwidth_username])`. Scoping it to the person's own connections means a changed URL can never reach someone else's key: it's a 404. `#dreamwidth_client` then builds the client from that connection. Tests swap that method for a fake (see Testing), so there's no need for WebMock.
+`Journal::ApplicationController` looks up the connection from the URL, always through `Current.user.dreamwidth_connections.find_by!(username: normalised params[:dreamwidth_username])`. Scoping it to the person's own connections means a changed URL can never reach someone else's key: it's a 404. `#dreamwidth_client` then builds the client from that connection. Tests swap that method for a fake (see Testing), so there's no need for WebMock.
 
 ### No local copy of entries in v1
 
@@ -124,14 +137,14 @@ The `dw/` prefix leaves room for native journal pages to sit beside these later,
 
 ### The pages
 
-| Page                | Route                                                                                                         | What it does                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Journals            | `GET /journal`                                                                                                | The landing page: a list of your connected Dreamwidth accounts, each linking to its Entries page, plus **Connect another Dreamwidth account**. With no connections, it explains what this is and links straight to Connect. With exactly one, it still shows the list rather than redirecting, so the page stays the same whether you have one journal or six. |
-| Connect             | `GET /journal/dw/new`, `POST /journal/dw`                                                                     | Dreamwidth username and API key, with a link to get the key (see "Connecting a journal" below). Saving checks the key with Dreamwidth before storing it.                                                                                                                                                                                                       |
-| Manage a connection | `GET/PATCH /journal/dw/:dreamwidth_username/connection`, `DELETE` the same                                    | Shows that the connection exists (last four characters of the key, when it was last verified). It lets you replace the key, or disconnect, with a note that you can also revoke the key on Dreamwidth.                                                                                                                                                         |
-| Entries             | `GET /journal/dw/:dreamwidth_username`                                                                        | That journal's recent entries, newest first. Each shows its subject ("(no subject)" if blank), date, security level, an **Edit** link and a **View on Dreamwidth** link. A **Write a new entry** link sits at the top. Plain "Older entries" / "Newer entries" links page through using `offset`.                                                              |
-| Write               | `GET /journal/dw/:dreamwidth_username/entries/new`, `POST /journal/dw/:dreamwidth_username/entries`           | Subject, entry text (a large `textarea`, sized in `rem`), security (public / access-locked / private) and tags (one comma-separated text field). After posting, it goes back to that journal's Entries with a notice linking to the new entry on Dreamwidth.                                                                                                   |
-| Edit                | `GET /journal/dw/:dreamwidth_username/entries/:id/edit`, `PATCH /journal/dw/:dreamwidth_username/entries/:id` | The same form, filled with the entry's current values.                                                                                                                                                                                                                                                                                                         |
+| Page                | Route                                                                                                         | What it does                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Journals            | `GET /journal`                                                                                                | The landing page: a list of your connected Dreamwidth accounts, each linking to its Entries page, plus **Connect another Dreamwidth account**. With no connections, it explains what this is and links straight to Connect. With exactly one, it still shows the list rather than redirecting, so the page stays the same whether you have one journal or six.                                   |
+| Connect             | `GET /journal/connect`, `POST /journal/connect`                                                               | Dreamwidth username and API key, with a link to get the key (see "Connecting a journal" below). Saving checks the key with Dreamwidth before storing it. It isn't under `dw/`, so a Dreamwidth user called `new` can't clash with it.                                                                                                                                                            |
+| Manage a connection | `GET/PATCH /journal/dw/:dreamwidth_username/connection`, `DELETE` the same                                    | Shows that the connection exists (last four characters of the key, when it was last verified, and when Dreamwidth stopped accepting it if `failed_at` is set). It lets you replace the key, or disconnect, with a note that you can also revoke the key on Dreamwidth.                                                                                                                           |
+| Entries             | `GET /journal/dw/:dreamwidth_username`                                                                        | That journal's recent entries, newest first. Each shows its subject ("(no subject)" if blank), date, security level, an **Edit** link and a **View on Dreamwidth** link. A **Write a new entry** link sits at the top. Plain "Older entries" / "Newer entries" links page through using `offset`. Until Dreamwidth fixes access-locked entries, see "Fallback while access-locked entries fail". |
+| Write               | `GET /journal/dw/:dreamwidth_username/entries/new`, `POST /journal/dw/:dreamwidth_username/entries`           | Subject, entry text (a large `textarea`, sized in `rem`), security (public / access-locked / private) and tags (one comma-separated text field). After posting, it goes back to that journal's Entries with a notice linking to the new entry on Dreamwidth.                                                                                                                                     |
+| Edit                | `GET /journal/dw/:dreamwidth_username/entries/:id/edit`, `PATCH /journal/dw/:dreamwidth_username/entries/:id` | The same form, filled with the entry's current values. Our route is `PATCH`; the client sends Dreamwidth a `POST`. Blocked on Dreamwidth fixes; see "Editing mustn't quietly change what isn't shown".                                                                                                                                                                                           |
 
 ### Connecting a journal
 
@@ -177,13 +190,38 @@ This is the most important behaviour, and the reason for the rule below.
 - After a timeout we can't know whether the entry was actually saved. The message must say that and suggest checking the Entries page before trying again, so nobody ends up with a duplicate post.
 - Protect against double-submits with `data-turbo-submits-with` on the submit button. It only works with Turbo, but a double post is annoying rather than harmful.
 
+### Fallback while access-locked entries fail
+
+Until Dreamwidth deploys the access-locked fix (see "Upstream fixes"), reading any access-locked or custom-filtered entry returns a 500. One such entry in a list fails the whole list.
+
+- **The Entries page asks for everything first**, as normal. Once the fix is live, this just works, and we don't need to change or deploy anything.
+- **If that returns a 500, it asks for `security=public` and `security=private` separately**, merges them newest first, and shows the first page. Both of those work. A note at the top says: "Access-locked entries can't be shown yet, because of a bug on Dreamwidth's side that has been reported. Your public and private entries are below." "Older entries" is hidden in this mode, since paging two merged lists properly isn't worth building for a temporary problem.
+- **The Edit page for an access-locked entry** shows the same explanation and links to editing it on Dreamwidth.
+- It's a small amount of code in one place, and it's deleted once the fix is live.
+
 ### Editing mustn't quietly change what isn't shown
 
 The form shows only some of an entry's settings. Editing must never reset the rest: custom access filters, mood, icon, comment settings, backdating and so on.
 
-- Send **only the fields the form shows** on update. The spec marks every update field as optional, which suggests a partial update, but **this must be verified with a real key** before building Edit (see Phase 0).
-- If an entry's security is something the form can't show (for example a custom access filter), the form says so ("This entry is shown to a custom access filter. Saving won't change that.") and leaves security out of the update entirely, rather than squashing it to one of the three options.
-- Edit must load the entry's **raw source text**, not rendered HTML. Otherwise a single save would convert someone's markup or formatting. Also verify with a real key (likely `full=1` on the entries endpoint, or the single-entry endpoint).
+**Phase 0 showed that Dreamwidth's edit endpoint doesn't do a partial update.** The spec marks every field as optional, but an edit that leaves a field out doesn't always keep it:
+
+| Setting                                   | When left out of an edit                    | When sent                              |
+| ----------------------------------------- | ------------------------------------------- | -------------------------------------- |
+| Subject, security (public/access/private) | kept                                        | changed                                |
+| Date, mood, music, location, icon, format | kept                                        | changed (we don't send them)           |
+| Tags                                      | **all removed**                             | **mangled** into one tag, `array(0x…)` |
+| Comments disabled / no email              | **reset to the journal default**            | changed                                |
+| Age restriction and reason                | **reset to the journal default**            | changed                                |
+| Backdated ("Don't show on Reading pages") | **unticked**                                | not in the API                         |
+| Custom access filter                      | **kept as "custom" with no filters ticked** | not in the API                         |
+
+None of the reset settings come back when reading an entry, so we can't fetch them and send them back either. So:
+
+- **Edit can't ship until Dreamwidth fixes tags on edit.** With the API as it is, every edit either wipes an entry's tags or replaces them with junk. There's no workaround: the API rejects tags sent as a string. It's a small fix that copies what creating an entry already does; see "Upstream fixes".
+- **Entries with a custom access filter can't be edited here.** Their Edit page explains why and links to editing the entry on Dreamwidth. We can only tell which entries these are once the access-locked fix is live, since until then reading them fails.
+- **Comment settings, age restriction and backdating are reset by any edit**, until Dreamwidth fixes that too. Until then, the Edit form says so plainly, right above the save button: "Saving here resets this entry's comment settings and age restriction to your journal's defaults, and shows it on Reading pages if it was hidden from them. To keep those, edit it on Dreamwidth instead." (See open questions: we may prefer to hold Edit back until this is fixed.)
+- Edit loads the entry's **raw source text** (`body_raw` and `subject_raw`, which Dreamwidth includes when the key can edit the entry), not the rendered `body`. Otherwise a single save would convert someone's markup or formatting. (`full=1` is in the spec but does nothing.)
+- The client always sends `text`, `subject`, `security` and `tags` on edit, and nothing else.
 
 ### Entry text is never rendered as HTML here
 
@@ -216,36 +254,34 @@ This is the whole reason the feature exists, so it gets more attention than usua
   - a URL with another account's (or an unconnected) username gets a 404
   - pasting a key already added (it names the other journal), connecting the same journal twice, and a key that belongs to a different account
   - write, then see it listed
-  - edit, keeping fields that aren't shown
+  - edit sends exactly `text`, `subject`, `security` and `tags`; a custom-filter entry links to Dreamwidth instead
+  - the Entries fallback when the unfiltered list fails, with its note
+  - a key that starts being rejected sets `failed_at`, and every page for that journal says so
   - a failed post that keeps the text
   - a timeout message
   - forced colours, using the existing `with_forced_colors`
   - the accessibility cases the people using this give us
-- **Fixtures:** a `journal/dreamwidth_accounts.yml` fixture with fake keys, including one person with two connections and a second person connected to the same Dreamwidth username. These need the test encryption keys above to load.
+- **Fixtures:** a `journal/dreamwidth_connections.yml` fixture with fake keys, including one person with two connections and a second person connected to the same Dreamwidth username. These need the test encryption keys above to load.
 
 ---
 
 ## Phased build order
 
-**Phase 0: check the API with a real key (no code).** Make an API key on Dreamwidth and use `curl` to confirm:
-
-1. `/api/getkey` and the `accesslists` ownership check behave as the source code suggests
-2. what the entries list returns: field names, date format and how security is reported
-3. how to get an entry's raw text for editing
-4. that an update with only some fields leaves the others alone, custom security included
-
-Write the answers into this document. Several decisions above depend on them.
+**Phase 0: check the API with a real key (no code). Done 2026-10-06.** See "Phase 0 findings" below.
 
 **Phase 1: groundwork and connecting.**
 - `/journal` routes and the "Journal" nav link.
 - Active Record encryption keys.
-- `Journal::DreamwidthAccount`, with as many per account as people like.
+- `Journal::DreamwidthConnection`, with as many per account as people like.
 - `Dreamwidth::Client` with `verify!` and `entries`.
-- The Journals landing page, Connect, Manage a connection, the "Your journals" switcher and the Entries list (read-only).
+- The Journals landing page, Connect, Manage a connection (including `failed_at`), the "Your journals" switcher and the Entries list (read-only), with the access-locked fallback.
+- Visible to everyone who's signed in, with no admin-only stage.
 
 Ship it. This is already useful for checking things look and read right with real themes and real assistive technology.
 
-**Phase 2: writing and editing.** `create_entry` / `update_entry`, the Write and Edit pages, keeping the text when a post fails, the partial-update rule, and rate limits. After this, people can stop using Dreamwidth's own pages for everyday posting.
+**Phase 2: writing.** `create_entry`, the Write page, keeping the text when a post fails, and rate limits. Creating works with the API as it is today.
+
+**Phase 3: editing, once Dreamwidth has fixed tags on edit.** `update_entry` and the Edit page, following "Editing mustn't quietly change what isn't shown". After this, people can stop using Dreamwidth's own pages for everyday posting.
 
 **Later, each with its own planning pass:**
 - **Native journal.** Entries stored in plural-profiles, posted *as* a profile or group (the same "postable" idea chat already uses), with their own privacy rules. This is where the journal gets properly plural.
@@ -255,7 +291,42 @@ Ship it. This is already useful for checking things look and read right with rea
 
 ---
 
+## Phase 0 findings
+
+Checked on 2026-10-06 with a real key against `druewilding`, using a private test entry for anything that wrote. These match what Dreamwidth's source code predicted.
+
+**Connecting**
+
+- `GET /journals/{u}/accesslists` with the journal's own key returns 200 and its access filters. Another journal returns 403, a made-up username returns 404, and a bad key returns 401. The ownership check works as planned.
+
+**Reading**
+
+- Fields on each entry: `entry_id`, `url`, `subject`, `subject_raw`, `body`, `body_raw`, `datetime`, `security`, `tags`, `icon`, `icon_keyword`, `poster`, and `current_mood`, `current_music` and `current_location` when set.
+- `body_raw` is the source as typed (`"<b>bold</b> line one\n\nline two"`). `body` is rendered HTML (`"...line one<br /><br />line two"`). We only ever use the `_raw` fields.
+- `datetime` is `"2026-10-06 21:34:00"`, the journal's local time with no time zone.
+- `security` is `public`, `private` or (in theory) `access` / `custom`.
+- **Reading any access-locked or custom-filtered entry returns a 500**, both alone and in a list. Filtering with `security=public` or `security=private` works. See "Upstream fixes".
+- Not yet checked: the largest `count` the list allows (the code defaults to 25).
+
+**Writing**
+
+- Creating returns `{"success": 1, "entry_id": …, "url": …}`. Tags sent as a list are saved correctly.
+- Editing returns the same shape. For what an edit keeps and resets, see the table in "Editing mustn't quietly change what isn't shown".
+- Tags sent as a string are rejected with a 400, because the request is checked against the spec.
+
+## Upstream fixes
+
+Dreamwidth's code is open source ([dreamwidth/dreamwidth](https://github.com/dreamwidth/dreamwidth)) and actively maintained. Fixing these upstream helps every API user, not just us.
+
+| Problem                                                                                                                                                      | Status                                                                                                                              | What it blocks                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Reading access-locked / custom entries returns 500 (`LJ::Entry::TO_JSON`)                                                                                    | Issue [#3686](https://github.com/dreamwidth/dreamwidth/issues/3686), PR [#3687](https://github.com/dreamwidth/dreamwidth/pull/3687) | The full Entries list; editing locked entries |
+| Tags sent as a list are mangled on edit (`LJ::Protocol::editevent` doesn't handle the arrayref that `postevent` does)                                        | To be sent as a PR                                                                                                                  | Edit                                          |
+| Edits reset comment settings, age restriction and backdating, and empty custom filters (`DW::Entry::_form_to_backend` rebuilds these from the request alone) | To be reported as an issue. It needs a design decision from Dreamwidth: the API must tell "not sent" apart from "turned off".       | Edit without a warning                        |
+
+---
+
 ## Open questions
 
 - **Which accessibility needs, specifically, does Dreamwidth's new version break?** This decides what we test for, and might change the form layout.
-- **Who can see the Journal at first?** Everyone who's signed in, or only admins until Phase 2 is done? The nav link could stay hidden until then.
+- **Ship Edit with a warning, or wait?** Once tags are fixed, should Edit ship with the warning that it resets comment settings, age restriction and backdating? Or should it wait until Dreamwidth fixes those too? A warning is honest, but it's one more thing to read and understand before saving, for exactly the people this is built for.
