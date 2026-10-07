@@ -206,24 +206,22 @@ The people this is for sent screenshots of Dreamwidth's posting page, and told u
 **What they value:**
 
 - **Focused:** everything sits in one central column, with empty space either side and no sidebar. The main layout already does this. Their focus starts at the form, so there's little above it: the site header, then a one-line `h1`.
-- **The "old school" feel** is mostly layout, which we copy: each section grouped in a **thin-bordered panel**, **bold labels to the left of their fields on the same line**, and plenty of space around. Colours, fonts and buttons come from each person's plural-profiles theme and the site's usual button styles, not Dreamwidth's.
-- **The order and position of things**, top to bottom:
+- **Plural-profiles' own style, as much as possible.** They like how plural-profiles looks and works, and especially how it works with Firefox's forced colours. So Write and Edit are built from the same pieces as the rest of the site: **everything in panes (`.card`), each with a pane header (`.card__header`)**, the usual form, label and button styles, and each person's theme. What we take from Dreamwidth is the **order** of things and its **wording**, not its look.
+- **The order of things**, top to bottom, in panes:
 
-| Where                                   | What                                                                                                                                                                              |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Top left                                | The chosen icon's image, in a thin-bordered box                                                                                                                                   |
-| Beside the icon, as a label/value grid  | **Post as:** the journal (see "Linking to a journal"). **Post to:** a dropdown of the journal and remembered communities. **Date:** the date fields. **Icon:** the icon dropdown. |
-| A full-width row                        | **Subject:** with its label to the left                                                                                                                                           |
-| A large, full-width panel               | The entry text                                                                                                                                                                    |
-| Just below it                           | The draft status ("Draft saved at 20:22")                                                                                                                                         |
-| A full-width panel                      | **Tags:** with its label to the left, one comma-separated field                                                                                                                   |
-| A bordered strip at the bottom, centred | **Show this entry to:** dropdown, then the **Post to: *username*** button                                                                                                         |
-| In the same strip, below those          | The custom filter checkboxes                                                                                                                                                      |
+| Pane (header)      | What's in it, in order                                                                                                                                                                                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Details**        | The chosen icon's image at top left. Beside it (or below it on narrow screens): **Post as:** the journal (see "Linking to a journal"), **Post to:** a dropdown of the journal and remembered communities, **Date:** the date fields, **Icon:** the icon dropdown. |
+| **Entry**          | **Subject:**, then the large entry text box, then the draft status ("Draft saved at 20:22")                                                                                                                                                                       |
+| **Tags**           | **Tags:**, one comma-separated field, with tag suggestions                                                                                                                                                                                                        |
+| **Who can see it** | **Show this entry to:** dropdown, then the custom filter checkboxes, then the **Post to: *username*** button                                                                                                                                                      |
+
+The pane header names are a first suggestion, to check with the people using it.
 
 **Details:**
 
 - **Labels use Dreamwidth's wording, colons included:** "Post as:", "Post to:", "Date:", "Icon:", "Subject:", "Tags:", "Show this entry to:". The dropdown options are "Everyone (Public)", "Access List", "Private (Just You)" and "Custom Filter", sent as `public`, `access`, `private` and `custom`.
-- **The entry text is a large `textarea` in a monospace font**, whatever the theme. About 25 lines tall, sized in `rem` so it grows with text size, and resizable vertically. Monospace is part of the feel, and makes HTML tags easy to spot.
+- **The entry text is a large `textarea` in the site's usual font**, the same as plural-profiles' description boxes (which moved from monospace to the default font a while ago, without complaint). About 25 lines tall, sized in `rem` so it grows with text size, and resizable vertically. Dreamwidth's is monospace; we can switch if they'd prefer it.
 - **Date fields are always visible**, rather than behind an "Edit Date" link (the people using it suggested this). They reuse the existing `shared/_datetime_picker` partial, which already matches Dreamwidth's: month, day, year, hour : minute, "(24 hour time)", with visually hidden labels, and no JavaScript needed. They're filled in with now, in the person's time zone. **If they're not changed, no `datetime` is sent**, so Dreamwidth uses its own "now"; a page left open for an hour still posts at the right time. A hidden field holds the original value to compare against.
 - **Icon:** a dropdown of icon keywords, "(default)" first. The image at top left shows the chosen icon. Without JavaScript it shows the icon last submitted (or the default); with JavaScript it updates as the choice changes. Images load straight from Dreamwidth (`url` from the icons list). Which icon is the default isn't in the API yet (see "Upstream fixes"); until it is, we take it from the newest entry Dreamwidth reports with `icon_keyword` "(default)", and show no image if there isn't one.
 - **Custom filters:**
@@ -334,7 +332,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
 - Errors after a failed submit appear in a summary at the top of the form that lists each problem and links to its field. The summary is the first thing after the `h1`, so it's announced when the page loads.
 - Flash notices on journal pages sit directly after the `h1`, rather than above the header, so screen readers reach them in reading order.
 - Entries is a real `ol` of links. Each Edit link includes the entry's subject in hidden text ("Edit *Monday thoughts*"), so a list of links read out of context still makes sense.
-- Large text, narrow screens and `forced-colors` are checked for every page, as in chat.
+- Large text, narrow screens and `forced-colors` are checked for every page, as in chat. Forced colours matter especially here: the people using it rely on them in Firefox, and like how plural-profiles already works with them, so journal pages must work just as well.
 - **Check dropdowns with them on their Chromebook.** On Dreamwidth, the open dropdown list highlights the current option in white with light text, which makes it unreadable. Plural-profiles' own dropdowns already work for them, so ours should too, but it's worth checking "Show this entry to" and "Icon" specifically.
 - **Before building the pages, ask the people who'll use this what exactly breaks for them in Dreamwidth's new version** (screen reader, keyboard, zoom, motion, cognitive load…). Then put those cases in as browser tests, so we're checking for the same failures in our version.
 
