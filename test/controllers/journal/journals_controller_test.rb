@@ -41,6 +41,17 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-header nav a[href=?][aria-current='page'][data-turbo-prefetch='false']", journal_root_path
   end
 
+  test "journal pages load journal.css, and other pages don't" do
+    sign_in_as users(:one)
+
+    get journal_root_path
+    assert_select "link[rel='stylesheet'][href*='/journal-'][data-turbo-track='dynamic']", 1
+
+    get our_themes_path
+    assert_select "link[rel='stylesheet'][href*='/journal-']", 0
+    assert_select "link[rel='stylesheet'][href*='/application-']", 1
+  end
+
   test "notices appear after the heading" do
     sign_in_as users(:one)
     delete journal_dw_connection_path("second_journal")

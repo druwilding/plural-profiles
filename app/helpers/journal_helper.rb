@@ -9,11 +9,18 @@ module JournalHelper
 
   DREAMWIDTH_USERHEAD_URL = "https://www.dreamwidth.org/img/silk/identity/user.png".freeze
 
-  # Sets the page title, and stops Turbo prefetching this page's links: every
-  # journal page asks Dreamwidth for something, so a hover mustn't.
+  # Sets the page title, loads journal.css (only journal pages do), and stops
+  # Turbo prefetching this page's links: every journal page asks Dreamwidth
+  # for something, so a hover mustn't.
+  #
+  # "dynamic" lets Turbo add the stylesheet arriving on a journal page and
+  # remove it leaving, with no full page reload either way.
   def journal_page(title)
     content_for(:title) { "#{title} — Plural Profiles" }
-    content_for(:head) { tag.meta(name: "turbo-prefetch", content: "false") }
+    content_for(:head) do
+      stylesheet_link_tag("journal", "data-turbo-track": "dynamic") +
+        tag.meta(name: "turbo-prefetch", content: "false")
+    end
   end
 
   # Journal addresses use hyphens where usernames have underscores.

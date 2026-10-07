@@ -429,7 +429,9 @@ app/
 │   └── group_profiles/  # Shared profile-in-group view
 └── assets/
     └── stylesheets/
-        └── application.css   # Hand-written CSS with custom colour palette
+        ├── application.css   # Hand-written CSS with custom colour palette
+        ├── coloris.css       # The colour picker, loaded by the theme designer only
+        └── journal.css       # The journal's own styles, loaded by journal pages only
 ```
 
 ## Deployment (Scalingo)

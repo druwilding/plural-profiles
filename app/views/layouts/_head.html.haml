@@ -20,5 +20,7 @@
   %link{rel: "apple-touch-icon", href: "/logo.png"}
 
   -# Includes all stylesheet files in app/assets/stylesheets
-  = stylesheet_link_tag :app, "data-turbo-track": "reload"
+  -# By name, not :app: :app is every .css file under app/assets, and the
+  -# others (coloris.css, journal.css) are only for the pages that link them.
+  = stylesheet_link_tag "application", "data-turbo-track": "reload"
   = javascript_importmap_tags

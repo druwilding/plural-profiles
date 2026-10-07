@@ -130,6 +130,8 @@ Every page fetches what it needs live from Dreamwidth. No caching, no `journal_e
 
 All under `/journal`, in the main layout. They're plain forms with the existing pane, form and button classes and theme variables, so everyone's theme applies. Each page has its own `<title>` and a single `h1`.
 
+**Journal-only styles live in their own `app/assets/stylesheets/journal.css`**, loaded only by journal pages, so it can be handed to people who know some CSS without the whole of `application.css`. It starts with a short note on the site's rules (theme variables, `rem`, forced colours).
+
 ### Which journal you're in lives in the URL
 
 Every entries page sits under the Dreamwidth username it works on: `/journal/dw/:dreamwidth_username/entries/new`. Switching journals means following a link to another journal's pages. We considered remembering a "current account" in the session or a cookie instead, and decided against it:

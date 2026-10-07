@@ -1,0 +1,160 @@
+/*
+  Journal styles: the pages under /journal (docs/plan-journal.md).
+
+  Only journal pages load this file (see journal_page in
+  app/helpers/journal_helper.rb), so it can be read and changed without
+  wading through application.css. Everything else (cards, forms, buttons,
+  flash boxes, the header) comes from application.css; this file only adds
+  what's particular to the journal.
+
+  A few rules, the same as the rest of the site:
+
+  - Colours always come from the theme's variables, never fixed values:
+    var(--pane-text), var(--pane-border), var(--pane-link),
+    var(--warning-text) and so on (they're listed in the :root block at the
+    top of application.css). Each person's theme sets them.
+  - Sizes in rem, so pages follow the person's text size.
+  - Check forced colours (Windows high contrast, Firefox's "override
+    colours"): anything shown by colour alone also needs a shape, such as an
+    underline or a border.
+*/
+
+/* A journal named the way Dreamwidth names one: its userhead, then the
+   username in bold. */
+.dreamwidth-journal-link__userhead {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-right: 0.15rem;
+  vertical-align: -0.15em;
+}
+
+/* Problems and warnings on journal pages: the site's flash boxes, holding a
+   paragraph or two. */
+.journal-notice p {
+  margin: 0;
+}
+
+.journal-notice p + p {
+  margin-top: 0.5rem;
+}
+
+/* The page's link colour can clash with the box's background; the box's own
+   text colour is chosen to read on it. */
+.journal-notice a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.your-journals {
+  margin-bottom: 1.25rem;
+}
+
+.your-journals__heading {
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.your-journals__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Bold and underlined, so it shows in forced colours too. */
+.your-journals__list a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.journal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.journal-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--pane-border);
+}
+
+.journal-list__entries {
+  font-weight: 700;
+}
+
+.journal-list__problem {
+  color: var(--warning-text);
+}
+
+.journal-meta {
+  margin-bottom: 1.25rem;
+}
+
+.connect-steps {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.connect-steps li {
+  margin-bottom: 0.35rem;
+}
+
+.connection-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.connection-details dt {
+  font-weight: 700;
+}
+
+.connection-details dd {
+  margin: 0;
+}
+
+.journal-entries {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.journal-entry {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--pane-border);
+}
+
+.journal-entry__subject {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.journal-entry__meta,
+.journal-entry__actions {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.journal-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .connection-details {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-details dd {
+    margin-bottom: 0.5rem;
+  }
+}

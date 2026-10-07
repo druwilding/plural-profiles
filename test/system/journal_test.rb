@@ -54,6 +54,17 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector ".your-journals a[aria-current='page']", text: "second_journal"
   end
 
+  test "journal.css comes with journal pages and goes when leaving them" do
+    sign_in_via_browser
+    within(".site-header nav") { click_link "Journal" }
+    assert_selector "h1", text: "Journal"
+    assert_selector "link[rel='stylesheet'][href*='/journal-']", visible: false
+
+    within(".site-header nav") { click_link "Themes" }
+    assert_selector "h1", text: "Themes"
+    assert_no_selector "link[rel='stylesheet'][href*='/journal-']", visible: false
+  end
+
   test "the current journal and nav link stay marked in forced colours" do
     sign_in_via_browser
     visit journal_dw_entries_path("example_journal")

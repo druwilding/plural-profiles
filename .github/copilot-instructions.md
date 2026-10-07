@@ -42,7 +42,9 @@ The two share one database, one account and one session cookie (set for all subd
 All views use `.html.haml`. Never generate ERB templates. Use HAML syntax for everything, including partials, layouts and Turbo Stream templates.
 
 ### CSS — hand-written, no frameworks
-The app uses a single `application.css` file with CSS custom properties (see the `:root` block). There is no Tailwind, Bootstrap or any CSS framework.
+The app's styles are in `application.css`, with CSS custom properties (see the `:root` block). There is no Tailwind, Bootstrap or any CSS framework.
+
+The journal's styles are in their own `journal.css`, so people who know some CSS can work on the journal without the whole of `application.css`. Journal pages load it through `journal_page` (`JournalHelper`). Any journal-only rule goes there, not in `application.css`. The layout links `application.css` by name rather than `:app`, because `:app` would load every stylesheet on every page.
 
 **All colours must reference the root variables** — never hard-coded hex values, `rgb()` or `rgba()` outside the `:root` block. For tints and transparencies, use `color-mix(in srgb, var(--some-var) X%, transparent)` or `color-mix(in srgb, var(--some-var) X%, var(--other-var))`.
 
@@ -162,7 +164,8 @@ app/views/layouts/      — application (profiles) and chat layouts
 app/models/             — User, Profile, Group, Theme, Emote…; concerns for shared behaviour
 app/models/chat/        — chat models
 app/javascript/controllers/ — Stimulus controllers
-app/assets/stylesheets/application.css — single CSS file, hand-written
+app/assets/stylesheets/application.css — the site's CSS, hand-written
+app/assets/stylesheets/journal.css — the journal's CSS, loaded by journal pages only
 test/system/            — Capybara system tests (chat ones are chat_*_test.rb)
 docs/                   — plans written before larger features
 ```
