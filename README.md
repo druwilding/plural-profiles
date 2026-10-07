@@ -511,3 +511,7 @@ Action Cable's live chat updates run through Solid Cable, which reads/writes its
 ## Licence
 
 All rights reserved.
+
+### Credits
+
+- The journal's Dreamwidth userhead icons (`app/assets/images/dreamwidth/`) are from, or based on, the [Silk icon set](http://www.famfamfam.com/lab/icons/silk/) by Mark James, licensed under [Creative Commons Attribution 2.5](https://creativecommons.org/licenses/by/2.5/), as used by [Dreamwidth](https://github.com/dreamwidth/dreamwidth).

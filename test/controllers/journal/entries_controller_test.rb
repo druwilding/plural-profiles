@@ -109,6 +109,13 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.dreamwidth-journal-link[href='https://with-underscore.dreamwidth.org/'] strong", "with_underscore"
   end
 
+  test "the userhead icon is our own copy, not loaded from Dreamwidth" do
+    get journal_dw_entries_path(@connection)
+
+    assert_select "img.dreamwidth-journal-link__userhead[src^='/assets/dreamwidth/user-'][alt='']"
+    assert_select "img[src*='dreamwidth.org']", 0
+  end
+
   test "every link to Dreamwidth opens in a new tab and says so" do
     FakeDreamwidthClient.journals["example_journal"][:entries] = [ dreamwidth_entry(id: 1) ]
 

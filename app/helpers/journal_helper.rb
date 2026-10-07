@@ -7,8 +7,6 @@ module JournalHelper
     "custom" => "Custom Filter"
   }.freeze
 
-  DREAMWIDTH_USERHEAD_URL = "https://www.dreamwidth.org/img/silk/identity/user.png".freeze
-
   # Sets the page title, loads journal.css (only journal pages do), and stops
   # Turbo prefetching this page's links: every journal page asks Dreamwidth
   # for something, so a hover mustn't.
@@ -42,12 +40,14 @@ module JournalHelper
     end
   end
 
-  # A journal named the way Dreamwidth names one: its userhead icon, then the
-  # username in bold, linking to the journal. The icon is decoration; the
-  # name says it all.
-  def dreamwidth_journal_link(username)
+  # A journal named the way Dreamwidth names one: its userhead icon (a person,
+  # or a globe for a community), then the username in bold, linking to the
+  # journal. The icon is decoration; the name says it all. The icons are our
+  # own copies, credited in app/assets/images/dreamwidth/README.md.
+  def dreamwidth_journal_link(username, community: false)
+    userhead = community ? "dreamwidth/community.png" : "dreamwidth/user.png"
     dreamwidth_link_to dreamwidth_journal_url(username), class: "dreamwidth-journal-link" do
-      image_tag(DREAMWIDTH_USERHEAD_URL, alt: "", class: "dreamwidth-journal-link__userhead", width: 17, height: 17) +
+      image_tag(userhead, alt: "", class: "dreamwidth-journal-link__userhead", width: 16, height: 16) +
         tag.strong(username)
     end
   end
