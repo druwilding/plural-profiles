@@ -149,8 +149,9 @@ The `dw/` prefix leaves room for native journal pages to sit beside these later,
 | Connect             | `GET /journal/connect`, `POST /journal/connect`                                                               | Dreamwidth username and API key, with a link to get the key (see "Connecting a journal" below). Saving checks the key with Dreamwidth before storing it. It isn't under `dw/`, so a Dreamwidth user called `new` can't clash with it.                                                                                                                          |
 | Manage a connection | `GET/PATCH /journal/dw/:dreamwidth_username/connection`, `DELETE` the same                                    | Shows that the connection exists (last four characters of the key, when it was last verified, and when Dreamwidth stopped accepting it if `failed_at` is set). It lets you replace the key, or disconnect, with a note that you can also revoke the key on Dreamwidth.                                                                                         |
 | Entries             | `GET /journal/dw/:dreamwidth_username`                                                                        | That journal's recent entries, newest first. Each shows its subject ("(no subject)" if blank), date, security level, an **Edit** link and a **View on Dreamwidth** link. A **Write a new entry** link sits at the top. Plain "Older entries" / "Newer entries" links page through using `offset`. In private-only mode, it lists private entries only.         |
-| Write               | `GET /journal/dw/:dreamwidth_username/entries/new`, `POST /journal/dw/:dreamwidth_username/entries`           | Laid out as in "The Write page" below: icon, post to, date and time, subject, entry text, tags, security with custom filters, and the post button. After posting, it goes back to that journal's Entries with a notice linking to the new entry on Dreamwidth.                                                                                                 |
-| Edit                | `GET /journal/dw/:dreamwidth_username/entries/:id/edit`, `PATCH /journal/dw/:dreamwidth_username/entries/:id` | The same form, filled with the entry's current values. Post to is shown but can't be changed. Our route is `PATCH`; the client sends Dreamwidth a `POST`. See "Editing mustn't quietly change what isn't shown".                                                                                                                                               |
+| Write               | `GET /journal/dw/:dreamwidth_username/entries/new`, `POST /journal/dw/:dreamwidth_username/entries`           | Laid out as in "The Write page" below: icon, post as, post to, date and time, subject, entry text, tags, "Show this entry to" with custom filters, and the "Post to: *username*" button. After posting, it goes to that entry's page (below).                                                                                                                  |
+| Entry               | `GET /journal/dw/:dreamwidth_username/entries/:id`                                                            | Where Write and Edit land: "Your entry has been posted." or "Journal entry was edited." (from the flash), who can see it, its subject, and what to do next. See "After posting or saving".                                                                                                                                                                     |
+| Edit                | `GET /journal/dw/:dreamwidth_username/entries/:id/edit`, `PATCH /journal/dw/:dreamwidth_username/entries/:id` | The same form, filled with the entry's current values, as in "The Edit page" below. Our route is `PATCH`; the client sends Dreamwidth a `POST`. After saving, it goes to that entry's page. See "Editing mustn't quietly change what isn't shown".                                                                                                             |
 
 ### Connecting a journal
 
@@ -182,34 +183,83 @@ On any failure the form keeps the username, and empties the key field so the nex
   - Edit: "Editing an entry in *username*"
 
   It's the first thing a screen reader announces and the first thing anyone sees, so nobody has to wonder whose journal they're about to post to.
-- **The Write form repeats where it's posting right beside the submit button** ("Post to *username*", or "Post to *community*"). It's the last thing read before acting.
+- **The Write form repeats where it's posting on the submit button itself** ("Post to: *username*", or "Post to: *community*"), as Dreamwidth's does. It's the last thing read before acting.
 - **A short "Your journals" `nav` near the top of every journal page** lists each connected account as a link to its Entries page. The current one is marked with `aria-current="page"`, which also has a visible style. It's an ordinary list of links (no dropdown, no JavaScript), so it works the same everywhere. With only one connection it can be left out.
-- **The posted notice names the journal too** ("Posted to *username*. View it on Dreamwidth."), as confirmation.
+- **The entry page after posting names the journal too**, with a link to it, as confirmation.
 
-**Not in v1:** deleting entries (the v1 API has no delete endpoint), and previews. The people this is for said they're fine without these from Dreamwidth's page: a random icon, FAQ links, the rich text option, disabling auto-formatting, mood, location, music, comment settings, comment screening, age restriction and its reason, and crossposting. Backdating ("Don't show on Reading pages") isn't in the API.
+**Linking to a journal.** Wherever a journal is named (Poster, the entry page, "Your journals"), it's shown the way Dreamwidth shows it: Dreamwidth's small "userhead" icon (`https://www.dreamwidth.org/img/silk/identity/user.png`, or `community.png` for a community), then the username in bold, linking to the journal on Dreamwidth. The people this is for asked for this; it replaces the link to their journal in Dreamwidth's header, which they liked. Journal addresses use hyphens where usernames have underscores (`foo_bar` → `https://foo-bar.dreamwidth.org/`). One helper builds it. Once we can tell which icon is the default (see "Upstream fixes"), the journal's default icon can sit beside it too.
+
+**Not in v1.** The people this is for said they're fine without these from Dreamwidth's pages:
+
+- choose a random icon, the help and FAQ links ("Supported HTML" and so on)
+- the Rich Text / HTML tabs and "Disable Auto-Formatting"
+- mood, location, music, comment settings, comment screening, age restriction and its reason, crossposting
+- Dreamwidth's header and footer
+- Delete Entry (the API can't delete anyway), "Add to memories", and a separate tags-only editing page (the Edit page has the tags field)
+
+We're also leaving out Preview; Spell check (the browser's own spell checking already works in the text box, and they use it); and Update Date (the date fields are always shown and filled in). "Insert Image", "Embed Media" and "Don't show on Reading pages" are open questions.
 
 ### The Write page
 
-The people this is for told us what they value about Dreamwidth's current posting page, and the Write page follows it:
+The people this is for sent screenshots of Dreamwidth's posting page, and told us what they value about it. The Write page follows it closely.
 
-- **Focused:** everything sits in one central column, with empty space either side and no sidebar. The main layout already does this.
-- **An "old school internet" look and feel.** Screenshots are coming, so we can tell which parts come from the layout (and should be copied) and which from Dreamwidth's colours and fonts (which each person's plural-profiles theme replaces).
-- **The order and position of things matters**, top to bottom:
+**What they value:**
 
-| Where                                                  | What                                                                                                                                                                                                          |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Top left                                               | The chosen icon's image                                                                                                                                                                                       |
-| To the right of (or below) the icon, above the subject | Post as (the connected journal, shown as text), post to (that journal or a community), date and time (filled in with now; can be changed when writing), icon chooser. The order within this area is flexible. |
-| Across the column                                      | Subject                                                                                                                                                                                                       |
-| Across the column, large                               | Entry text                                                                                                                                                                                                    |
-| Across the column                                      | Tags (one comma-separated field)                                                                                                                                                                              |
-| Bottom                                                 | "Show entry to" (a dropdown: public, access-locked, private, custom) and the post button, near each other, with the dropdown above or to the left of the button                                               |
-| Below "Show entry to"                                  | The custom filter checkboxes, one per access filter (from `accesslists`). Above the button if the button is below the dropdown, or below both if they're side by side.                                        |
+- **Focused:** everything sits in one central column, with empty space either side and no sidebar. The main layout already does this. Their focus starts at the form, so there's little above it: the site header, then a one-line `h1`.
+- **The "old school" feel** is mostly layout, which we copy: each section grouped in a **thin-bordered panel**, **bold labels to the left of their fields on the same line**, and plenty of space around. Colours, fonts and buttons come from each person's plural-profiles theme and the site's usual button styles, not Dreamwidth's.
+- **The order and position of things**, top to bottom:
 
-- **Custom filter checkboxes stay visible once "custom" is chosen.** They're valued for this. Without JavaScript, the simplest way is to always show them, under a heading that says they only apply when "Show entry to" is "Custom". With JavaScript, they can be hidden until "Custom" is chosen. Both are acceptable to the people using it.
-- **Custom filters are essential.** Almost all their entries use them. Write can be built without them, but people can't start using it until Dreamwidth accepts custom security; see "Upstream fixes".
-- **Icon chooser:** a `select` of icon keywords, defaulting to the journal's default icon. Without JavaScript, the image at the top left shows the default icon or the icon last submitted. With JavaScript, it can update as the choice changes. Icon images are loaded straight from Dreamwidth (`url` from the icons list).
+| Where                                   | What                                                                                                                                                                              |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Top left                                | The chosen icon's image, in a thin-bordered box                                                                                                                                   |
+| Beside the icon, as a label/value grid  | **Post as:** the journal (see "Linking to a journal"). **Post to:** a dropdown of the journal and remembered communities. **Date:** the date fields. **Icon:** the icon dropdown. |
+| A full-width row                        | **Subject:** with its label to the left                                                                                                                                           |
+| A large, full-width panel               | The entry text                                                                                                                                                                    |
+| Just below it                           | The draft status ("Draft saved at 20:22")                                                                                                                                         |
+| A full-width panel                      | **Tags:** with its label to the left, one comma-separated field                                                                                                                   |
+| A bordered strip at the bottom, centred | **Show this entry to:** dropdown, then the **Post to: *username*** button                                                                                                         |
+| In the same strip, below those          | The custom filter checkboxes                                                                                                                                                      |
+
+**Details:**
+
+- **Labels use Dreamwidth's wording, colons included:** "Post as:", "Post to:", "Date:", "Icon:", "Subject:", "Tags:", "Show this entry to:". The dropdown options are "Everyone (Public)", "Access List", "Private (Just You)" and "Custom Filter", sent as `public`, `access`, `private` and `custom`.
+- **The entry text is a large `textarea` in a monospace font**, whatever the theme. About 25 lines tall, sized in `rem` so it grows with text size, and resizable vertically. Monospace is part of the feel, and makes HTML tags easy to spot.
+- **Date fields are always visible**, rather than behind an "Edit Date" link (the people using it suggested this). They reuse the existing `shared/_datetime_picker` partial, which already matches Dreamwidth's: month, day, year, hour : minute, "(24 hour time)", with visually hidden labels, and no JavaScript needed. They're filled in with now, in the person's time zone. **If they're not changed, no `datetime` is sent**, so Dreamwidth uses its own "now"; a page left open for an hour still posts at the right time. A hidden field holds the original value to compare against.
+- **Icon:** a dropdown of icon keywords, "(default)" first. The image at top left shows the chosen icon. Without JavaScript it shows the icon last submitted (or the default); with JavaScript it updates as the choice changes. Images load straight from Dreamwidth (`url` from the icons list). Which icon is the default isn't in the API yet (see "Upstream fixes"); until it is, we take it from the newest entry Dreamwidth reports with `icon_keyword` "(default)", and show no image if there isn't one.
+- **Custom filters:**
+  - **Essential.** Almost all their entries use them. Write can be built without them, but people can't start using it until Dreamwidth accepts custom security (#3688).
+  - **More than one can be ticked**; the entry is shown to anyone in any ticked filter. Sent as a list of filter ids (from `accesslists`).
+  - **Without JavaScript, the list is always visible.** With JavaScript, it appears when "Custom Filter" is chosen. The people using it are happy with either.
+  - **Laid out in columns that fill down, then across**, as Dreamwidth's does for long lists (CSS `columns`), dropping to one column on narrow screens. Reading and Tab order follow the same order.
+  - **The ticked state must be obvious** in every theme and in forced colours.
+  - **Order:** whatever order Dreamwidth's page uses. To check against the real page once it's built.
+  - **Safety:** with JavaScript, ticking a filter switches the dropdown to "Custom Filter". On the server, if any filters are ticked but the dropdown isn't "Custom Filter", nothing is posted: the form comes back with everything kept and "You ticked some filters, but 'Show this entry to' is set to *Everyone (Public)*. Choose 'Custom Filter' to use them, or untick them." We never guess which they meant, since a wrong guess shows an entry to the wrong people.
 - **Narrow screens:** the same order, stacked in one column.
+
+### The Edit page
+
+The same form and layout as Write, filled with the entry's current values, as on Dreamwidth's edit page. The differences, again following Dreamwidth:
+
+- **"Poster:"** (the journal, as a link) instead of "Post as:", and **no "Post to:"**, since an entry can't move to another journal.
+- **The button says "Save".** The journal is already named in the `h1`.
+- **No Delete Entry button.**
+- **The entry's custom filters come back ticked.** Until #3688, they're listed as text instead (see "Editing mustn't quietly change what isn't shown").
+- Unlike Dreamwidth's edit page, ours keeps an `h1` ("Editing an entry in *username*") and the same centred column as Write, so the two pages match and screen readers announce where they are.
+
+### After posting or saving: the entry page
+
+Dreamwidth shows a confirmation page after posting or editing, and the people using it rely on what's on it. Ours is `GET /journal/dw/:dreamwidth_username/entries/:id`, which Write and Edit both redirect to:
+
+- **First line**, from the flash: "Your entry has been posted." or "Journal entry was edited." Visiting the page again later shows the rest without it.
+- **Who can see it:** "The entry is visible to your custom access filter(s) *filter*, *filter*." (or Everyone, Access List, Private). And the subject: "The entry was posted with the following subject: *subject*" or "(no subject)".
+- **Both are read back from Dreamwidth**, not echoed from what we sent, so if Dreamwidth saved something different, this is where it shows. Filter names come from `accesslists`.
+- **"From here you can:"**
+  - View this entry (on Dreamwidth)
+  - Edit this entry (our Edit page; "Edit this entry again" after an edit)
+  - View *username*'s journal (on Dreamwidth)
+  - Back to *username*'s entries (our Entries page)
+  - Write another entry (after posting)
+- **It clears the draft** for that form (see "Never lose someone's writing").
 
 ### Never lose someone's writing
 
@@ -219,12 +269,21 @@ This is the most important behaviour, and the reason for the rule below.
 - After a timeout we can't know whether the entry was actually saved. The message must say that and suggest checking the Entries page before trying again, so nobody ends up with a duplicate post.
 - Protect against double-submits with `data-turbo-submits-with` on the submit button. It only works with Turbo, but a double post is annoying rather than harmful.
 
+**Drafts, saved in the browser.** Dreamwidth autosaves drafts and shows "Autosaved draft at 8:22:18 PM" under the text box, and the people using it want that. They write on one device, so drafts stay **in the browser on that device** (`localStorage`), never on our server. That keeps their unposted, mostly filter-locked writing off plural-profiles entirely.
+
+- A Stimulus controller saves the whole form (subject, text, tags, icon, date, security, filters) every few seconds while typing, and immediately on **Ctrl+S** (or Cmd+S), which it takes over from the browser's "Save page".
+- **"Draft saved at 20:22"** appears just below the text box. It's only announced to screen readers after Ctrl+S (a polite live region updated then), not every few seconds, so it doesn't keep interrupting.
+- There's one draft per connection for Write, and one per entry for Edit.
+- Coming back to a form with a draft offers: "You have an unsent draft from 20:22. **Restore it** / **Discard it**". It never restores silently over what's on the page.
+- The entry page clears the draft after a successful post or save, via a data attribute the controller reads.
+- Without JavaScript, the form works as before, just without drafts.
+
 ### Private-only mode, until Dreamwidth's fixes are deployed
 
 Dreamwidth has merged fixes for reading access-locked entries (#3687), tags on edit (#3691), and edits resetting settings they didn't mention (#3693). They aren't deployed yet. Rather than build workarounds for bugs that are about to go away, we build for the fixed API and start with a **private-only mode**, which is one switch (a constant such as `Journal::PRIVATE_ONLY`). While it's on:
 
 - **Entries lists private entries only** (`security=private`), with the normal "Older entries" / "Newer entries" paging. Private entries are the one kind that both reads and lists correctly today, and a single filter pages properly.
-- **Write always posts as private.** "Show entry to" shows just "Private", with a short note that more options are coming. "Post to" is the connected journal only (no communities yet). Subject, text, tags, icon and date all work today when creating.
+- **Write always posts as private.** "Show this entry to" shows just "Private (Just You)", with a short note that more options are coming. "Post to" is the connected journal only (no communities yet). Subject, text, tags, icon and date all work today when creating.
 - **Edit sends only `subject` and `text`.** It doesn't touch any other field. Until #3693 is live, though, Dreamwidth's old edit code resets some settings whatever we send: it removes an entry's tags, puts comment settings and age restriction back to the journal default, and unticks "Don't show on Reading pages". **So in this mode, only edit private test entries.** The Edit page says so.
 
 **Turning it off.** When this prints "…Fields left out of the request keep their current values.", all three fixes are live:
@@ -255,11 +314,14 @@ Entry bodies only ever go into a `textarea`, which HAML escapes. Subjects are sh
 This is the whole reason the feature exists, so it gets more attention than usual, on top of the existing checklist in `.github/copilot-instructions.md`:
 
 - Every field has a visible `label`. Hints and errors are tied to their field with `aria-describedby`.
-- "Show entry to" is a labelled `select`, as on Dreamwidth's page, because that's what the people using it asked for. (An earlier draft used radio buttons.) The custom filter checkboxes sit in a `fieldset` with a `legend`.
+- "Show this entry to" is a labelled `select`, as on Dreamwidth's page, because that's what the people using it asked for. (An earlier draft used radio buttons.) The custom filter checkboxes sit in a `fieldset` with a `legend`, and their ticked state is obvious in every theme and in forced colours.
+- The date fields are a group with a "Date" legend and a hidden label on each field (as `shared/_datetime_picker` already does).
+- The draft status is only announced after Ctrl+S, not on every autosave.
 - Errors after a failed submit appear in a summary at the top of the form that lists each problem and links to its field. The summary is the first thing after the `h1`, so it's announced when the page loads.
 - Flash notices on journal pages sit directly after the `h1`, rather than above the header, so screen readers reach them in reading order.
 - Entries is a real `ol` of links. Each Edit link includes the entry's subject in hidden text ("Edit *Monday thoughts*"), so a list of links read out of context still makes sense.
 - Large text, narrow screens and `forced-colors` are checked for every page, as in chat.
+- **Check dropdowns with them on their Chromebook.** On Dreamwidth, the open dropdown list highlights the current option in white with light text, which makes it unreadable. Plural-profiles' own dropdowns already work for them, so ours should too, but it's worth checking "Show this entry to" and "Icon" specifically.
 - **Before building the pages, ask the people who'll use this what exactly breaks for them in Dreamwidth's new version** (screen reader, keyboard, zoom, motion, cognitive load…). Then put those cases in as browser tests, so we're checking for the same failures in our version.
 
 ### Rate limiting
@@ -279,6 +341,10 @@ This is the whole reason the feature exists, so it gets more attention than usua
   - pasting a key already added (it names the other journal), connecting the same journal twice, and a key that belongs to a different account
   - write, then see it listed
   - the Write page's order matches "The Write page", at wide and narrow widths
+  - ticked filters with "Show this entry to" not set to "Custom Filter" posts nothing and keeps the form
+  - an unchanged date sends no `datetime`; a changed one does
+  - after posting and after saving, the entry page shows who can see it and the subject, read back from Dreamwidth
+  - drafts: typing saves a draft, Ctrl+S saves and announces it, coming back offers to restore, and posting clears it
   - posting to a community adds it to that connection's remembered communities
   - private-only mode: Entries asks for private entries and pages through them; Write offers only Private; Edit sends only `subject` and `text`
   - with the mode off: edit sends exactly `subject`, `text`, `tags`, `icon`, `datetime` and `security`, and leaves `security` out for a custom-filtered entry
@@ -305,7 +371,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
 
 Ship it. This is already useful for checking things look and read right with real themes and real assistive technology.
 
-**Phase 2: writing and editing.** `create_entry` and `update_entry`, the Write page as laid out in "The Write page" (icon chooser, date and time, and, once the mode is off, post to with remembered communities and the full "Show entry to"), the Edit page, keeping the text when a post fails, and rate limits. Built in private-only mode, and tested on private test entries.
+**Phase 2: writing and editing.** `create_entry` and `update_entry`; the Write and Edit pages as laid out above (icon chooser, date and time, and, once the mode is off, post to with remembered communities and the full "Show this entry to"); the entry page after posting or saving; drafts; keeping the text when a post fails; and rate limits. Built in private-only mode, and tested on private test entries.
 
 **Phase 3: everything, once Dreamwidth deploys its fixes.** Turn private-only mode off (see "Private-only mode"). This should be small: the pages are already built for the fixed API.
 
@@ -362,16 +428,18 @@ Checked on 2026-10-06 with a real key against `druewilding`, using a private tes
 
 Dreamwidth's code is open source ([dreamwidth/dreamwidth](https://github.com/dreamwidth/dreamwidth)) and actively maintained. Fixing these upstream helps every API user, not just us.
 
-| Problem                                                                                                             | Status                                                                                                                                                                                                                                                                                 | Unblocks                                 |
-| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Reading access-locked / custom entries returns 500 (`LJ::Entry::TO_JSON`)                                           | Issue [#3686](https://github.com/dreamwidth/dreamwidth/issues/3686), PR [#3687](https://github.com/dreamwidth/dreamwidth/pull/3687): **merged 2026-10-07**, not yet deployed                                                                                                           | Turning off private-only mode            |
-| Tags sent as a list are mangled on edit                                                                             | Issue [#3689](https://github.com/dreamwidth/dreamwidth/issues/3689), PR [#3691](https://github.com/dreamwidth/dreamwidth/pull/3691): **merged 2026-10-07**, not yet deployed                                                                                                           | Turning off private-only mode            |
-| Edits reset settings the request didn't include (tags, comments, age restriction, backdating, slug, custom filters) | Issue [#3690](https://github.com/dreamwidth/dreamwidth/issues/3690), fixed by [#3693](https://github.com/dreamwidth/dreamwidth/pull/3693) (zorkian's API test suite and fixes): **merged 2026-10-07**, not yet deployed. #3693 also makes edits honour `datetime` and `text` optional. | Turning off private-only mode            |
-| Custom security can't be posted (the request schemas only allow `public`/`private`/`access`)                        | Issue [#3688](https://github.com/dreamwidth/dreamwidth/issues/3688): **open**. #3693 fixed the editing half (filters are kept); posting `"custom"` is still rejected. PR once the field name (`custom_groups`) is agreed.                                                              | Phase 4: the people this is for using it |
+| Problem                                                                                                             | Status                                                                                                                                                                                                                                                                                 | Unblocks                                                             |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Reading access-locked / custom entries returns 500 (`LJ::Entry::TO_JSON`)                                           | Issue [#3686](https://github.com/dreamwidth/dreamwidth/issues/3686), PR [#3687](https://github.com/dreamwidth/dreamwidth/pull/3687): **merged 2026-10-07**, not yet deployed                                                                                                           | Turning off private-only mode                                        |
+| Tags sent as a list are mangled on edit                                                                             | Issue [#3689](https://github.com/dreamwidth/dreamwidth/issues/3689), PR [#3691](https://github.com/dreamwidth/dreamwidth/pull/3691): **merged 2026-10-07**, not yet deployed                                                                                                           | Turning off private-only mode                                        |
+| Edits reset settings the request didn't include (tags, comments, age restriction, backdating, slug, custom filters) | Issue [#3690](https://github.com/dreamwidth/dreamwidth/issues/3690), fixed by [#3693](https://github.com/dreamwidth/dreamwidth/pull/3693) (zorkian's API test suite and fixes): **merged 2026-10-07**, not yet deployed. #3693 also makes edits honour `datetime` and `text` optional. | Turning off private-only mode                                        |
+| The icons list doesn't say which icon is the default                                                                | To be reported as an issue                                                                                                                                                                                                                                                             | Showing the default icon reliably on Write and next to journal names |
+| Custom security can't be posted (the request schemas only allow `public`/`private`/`access`)                        | Issue [#3688](https://github.com/dreamwidth/dreamwidth/issues/3688): **open**. #3693 fixed the editing half (filters are kept); posting `"custom"` is still rejected. PR once the field name (`custom_groups`) is agreed.                                                              | Phase 4: the people this is for using it                             |
 
 ---
 
 ## Open questions
 
 - **Which accessibility needs, specifically, does Dreamwidth's new version break?** This decides what we test for. We now know what they value about the current posting page (see "The Write page"); this is about what breaks.
-- **What makes the "old school internet" look?** Screenshots of the current posting page are coming.
+- **Do they use "Insert Image" or "Embed Media"?** Both are on Dreamwidth's page but weren't on either of their lists. If they do, it'd be worth seeing what those do for them, since neither is in the API.
+- **Do they use "Don't show on Reading Pages"?** It's on Dreamwidth's page but wasn't on either list, and the API can't set it. If they do, it's one more thing to ask Dreamwidth for.
