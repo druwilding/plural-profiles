@@ -112,7 +112,7 @@ class Journal::ConnectionsControllerTest < ActionDispatch::IntegrationTest
     get journal_dw_connection_path("example_journal")
 
     assert_response :success
-    assert_select "code", "0001"
+    assert_select "code", "********0001"
     assert_not_includes response.body, "fakeKeyOneMain0001"
   end
 
@@ -147,7 +147,7 @@ class Journal::ConnectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select "#connection-problem", /didn't accept that key/
-    assert_select "code", "0001"
+    assert_select "code", "********0001"
     assert_equal "fakeKeyOneMain0001", connection.reload.api_key
   end
 

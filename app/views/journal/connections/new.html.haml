@@ -10,12 +10,13 @@
 
   %p
     Connecting uses an API key from Dreamwidth. It lets Plural Profiles read and
-    post to that one journal. Your Dreamwidth password never comes here.
+    post to that one journal. The key is stored encrypted, and is never shown
+    in full again after you save it. Your Dreamwidth password never comes here.
 
   %ol.connect-steps
     %li Log in to Dreamwidth as the account you want to connect.
     %li
-      = link_to "Get your key from Dreamwidth (opens in a new tab)", "https://www.dreamwidth.org/api/getkey", target: "_blank", rel: "noopener"
+      %strong= link_to "Get your key from Dreamwidth (opens in a new tab)", "https://www.dreamwidth.org/api/getkey", target: "_blank", rel: "noopener"
     %li Copy the key that page shows, then come back to this tab and paste it below.
 
   = form_with model: @connection, scope: :connection, url: journal_connect_path, method: :post do |form|

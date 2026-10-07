@@ -16,8 +16,10 @@
     %dd= dreamwidth_journal_link(@connection.username)
     %dt API key
     %dd
-      Ending in
-      %code= @connection.api_key_last_four
+      -# The stars are for the eye; a screen reader would read out each one,
+      -# so it gets words instead.
+      %code{aria: { hidden: "true" }} ********#{@connection.api_key_last_four}
+      %span.visually-hidden Ending in #{@connection.api_key_last_four}
     - if @connection.verified_at
       %dt Last checked with Dreamwidth
       %dd= @connection.verified_at.strftime("%-d %B %Y, %H:%M")
