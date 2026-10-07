@@ -2,7 +2,7 @@
 
 ## Summary
 
-Dreamwidth is moving to a new version of its site that breaks accessibility needs some of our people rely on. The current version works for them; the new one won't. This plan adds a Journal section (`/journal`) to plural-profiles that lets someone list, write and edit their Dreamwidth entries through plain, server-rendered HTML forms, wearing the plural-profiles theme they already use.
+Dreamwidth is replacing its page for posting and editing entries with a new version that breaks accessibility needs some of our people rely on. The current posting page works for them; the new one won't. The rest of Dreamwidth is fine: it's still where they read entries. This plan adds a Journal section (`/journal`) to plural-profiles that lets someone list, write and edit their Dreamwidth entries through plain, server-rendered HTML forms, wearing the plural-profiles theme they already use.
 
 It's deliberately the first step towards a native journal in plural-profiles (with importing from Dreamwidth), so the pieces are named and placed with that in mind. But v1 is only a Dreamwidth client: Dreamwidth stays the source of truth, and plural-profiles stores nothing but the connection details.
 
@@ -190,7 +190,7 @@ On any failure the form keeps the username, and empties the key field so the nex
 - **A short "Your journals" `nav` near the top of every journal page** lists each connected account as a link to its Entries page. The current one is marked with `aria-current="page"`, which also has a visible style. It's an ordinary list of links (no dropdown, no JavaScript), so it works the same everywhere. With only one connection it can be left out.
 - **The entry page after posting names the journal too**, with a link to it, as confirmation.
 
-**Linking to a journal.** Wherever a journal is named (Poster, the entry page, "Your journals"), it's shown the way Dreamwidth shows it: Dreamwidth's small "userhead" icon (`https://www.dreamwidth.org/img/silk/identity/user.png`, or `community.png` for a community), then the username in bold, linking to the journal on Dreamwidth. The people this is for asked for this; it replaces the link to their journal in Dreamwidth's header, which they liked. Journal addresses use hyphens where usernames have underscores (`foo_bar` → `https://foo-bar.dreamwidth.org/`). One helper builds it. Once we can tell which icon is the default (see "Upstream fixes"), the journal's default icon can sit beside it too.
+**Linking to a journal.** Wherever a journal is named (Poster, the entry page, "Your journals"), it's shown the way Dreamwidth shows it: Dreamwidth's small "userhead" icon (`https://www.dreamwidth.org/img/silk/identity/user.png`, or `community.png` for a community), then the username in bold, linking to the journal on Dreamwidth. The people this is for asked for this; it replaces the link to their journal in Dreamwidth's header, which they liked. Journal addresses use hyphens where usernames have underscores (`foo_bar` → `https://foo-bar.dreamwidth.org/`). One helper builds it. Once we can tell which icon is the default (see "Upstream fixes"), the journal's default icon can sit beside it too. Like every link to Dreamwidth, it opens in a new tab, since it leaves Plural Profiles: marked with ↗ (as the site's other new-tab links are) and "(opens in a new tab)" for screen readers. Dreamwidth itself isn't a problem for the people using this (only its new posting page is), so linking out to read entries there is fine.
 
 **Not in v1.** The people this is for said they're fine without these from Dreamwidth's pages:
 
@@ -337,7 +337,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
 - Entries is a real `ol` of links. Each Edit link includes the entry's subject in hidden text ("Edit *Monday thoughts*"), so a list of links read out of context still makes sense.
 - Large text, narrow screens and `forced-colors` are checked for every page, as in chat. Forced colours matter especially here: the people using it rely on them in Firefox, and like how plural-profiles already works with them, so journal pages must work just as well.
 - **Check dropdowns with them on their Chromebook.** On Dreamwidth, the open dropdown list highlights the current option in white with light text, which makes it unreadable. Plural-profiles' own dropdowns already work for them, so ours should too, but it's worth checking "Show this entry to" and "Icon" specifically.
-- **What Dreamwidth's new version breaks for them:** the new page is cluttered, splits the form into separate boxes spread across columns that can't be rearranged or simplified, and moves the Post button to the top, away from the end of the form. The plan avoids all of that (one column, a fixed order, Post last), and browser tests check the order stays that way.
+- **What Dreamwidth's new posting page breaks for them:** it is cluttered, splits the form into separate boxes spread across columns that can't be rearranged or simplified, and moves the Post button to the top, away from the end of the form. The plan avoids all of that (one column, a fixed order, Post last), and browser tests check the order stays that way.
 
 ### Rate limiting
 

@@ -28,11 +28,25 @@ module JournalHelper
     "https://#{username.tr('_', '-')}.dreamwidth.org/"
   end
 
+  # Links to Dreamwidth open in a new tab, since they leave Plural Profiles.
+  # Marked with ↗ the way the site marks its other new-tab links, plus words
+  # for screen readers, which skip the arrow.
+  def dreamwidth_link_to(url, **options, &block)
+    link_to url, target: "_blank", rel: "noopener", **options do
+      safe_join([
+        capture(&block),
+        " ",
+        tag.span("↗", aria: { hidden: "true" }),
+        tag.span(" (opens in a new tab)", class: "visually-hidden")
+      ])
+    end
+  end
+
   # A journal named the way Dreamwidth names one: its userhead icon, then the
   # username in bold, linking to the journal. The icon is decoration; the
   # name says it all.
   def dreamwidth_journal_link(username)
-    link_to dreamwidth_journal_url(username), class: "dreamwidth-journal-link" do
+    dreamwidth_link_to dreamwidth_journal_url(username), class: "dreamwidth-journal-link" do
       image_tag(DREAMWIDTH_USERHEAD_URL, alt: "", class: "dreamwidth-journal-link__userhead", width: 17, height: 17) +
         tag.strong(username)
     end

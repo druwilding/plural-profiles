@@ -49,6 +49,6 @@
     Disconnecting removes the key from Plural Profiles. Your entries stay on
     Dreamwidth. To stop the key working anywhere, also revoke it in
     = succeed "." do
-      = link_to "Dreamwidth's mobile settings", "https://www.dreamwidth.org/manage/settings/?cat=mobile"
+      = dreamwidth_link_to("https://www.dreamwidth.org/manage/settings/?cat=mobile") { "Dreamwidth's mobile settings" }
   = button_to "Disconnect #{@connection.username}", journal_dw_connection_path(@connection), method: :delete,
     class: "btn btn--danger", form: { data: { turbo_confirm: "Disconnect #{@connection.username}?" } }

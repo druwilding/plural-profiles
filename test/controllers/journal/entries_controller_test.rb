@@ -109,6 +109,20 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.dreamwidth-journal-link[href='https://with-underscore.dreamwidth.org/'] strong", "with_underscore"
   end
 
+  test "every link to Dreamwidth opens in a new tab and says so" do
+    FakeDreamwidthClient.journals["example_journal"][:entries] = [ dreamwidth_entry(id: 1) ]
+
+    [ journal_dw_entries_path(@connection), journal_dw_connection_path(@connection), journal_connect_path ].each do |path|
+      get path
+      links = css_select("a[href*='dreamwidth.org']")
+      assert links.any?, "#{path} should link to Dreamwidth"
+      links.each do |link|
+        assert_equal "_blank", link["target"], "#{link['href']} on #{path}"
+        assert_match(/opens in a new tab/, link.text, "#{link['href']} on #{path}")
+      end
+    end
+  end
+
   test "pages and links on journal pages don't prefetch" do
     get journal_dw_entries_path(@connection)
 

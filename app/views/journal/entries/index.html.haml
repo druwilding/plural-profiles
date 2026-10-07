@@ -43,7 +43,7 @@
               %span= dreamwidth_security_label(entry.security)
             - if entry.url.present?
               %p.journal-entry__actions
-                = link_to entry.url do
+                = dreamwidth_link_to entry.url do
                   View on Dreamwidth
                   %span.visually-hidden
                     = surround "(", ")" do

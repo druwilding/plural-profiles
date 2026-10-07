@@ -34,7 +34,7 @@
         aria: { describedby: ["api-key-hint", described_by].compact.join(" ") }, data: { "1p-ignore": "true" }
       %p.form-hint#api-key-hint
         You can revoke it any time in
-        = link_to "Dreamwidth's mobile settings", "https://www.dreamwidth.org/manage/settings/?cat=mobile"
+        = dreamwidth_link_to("https://www.dreamwidth.org/manage/settings/?cat=mobile") { "Dreamwidth's mobile settings" }
         and it stops working here at once.
     .form-group
       = form.submit "Connect", data: { turbo_submits_with: "Checking with Dreamwidth…" }
