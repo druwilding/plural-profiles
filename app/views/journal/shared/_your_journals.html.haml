@@ -1,0 +1,14 @@
+-# Locals:
+-#   current — the connection this page is for
+-#
+-# Plain links, so switching journals means going to that journal's pages:
+-# nothing remembers a "current" journal that another tab could change. Left
+-# out when there's only one journal to switch between.
+- if dreamwidth_connections.size > 1
+  %nav.your-journals{aria: { labelledby: "your-journals-heading" }}
+    %h2#your-journals-heading.your-journals__heading Your journals
+    %ul.your-journals__list
+      - dreamwidth_connections.each do |connection|
+        %li
+          = link_to connection.username, journal_dw_entries_path(connection),
+            aria: { current: ("page" if connection == current) }

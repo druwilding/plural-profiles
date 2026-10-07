@@ -43,6 +43,12 @@ module Journal
       self.api_key_digest = key && self.class.digest_api_key(key)
     end
 
+    # Journal URLs name the journal, not our row id, so a page always says
+    # which journal it's for.
+    def to_param
+      username
+    end
+
     # The most a page ever shows of a key.
     def api_key_last_four
       api_key&.last(4)

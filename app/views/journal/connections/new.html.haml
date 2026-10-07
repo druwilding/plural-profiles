@@ -1,0 +1,41 @@
+- journal_page "Connect a Dreamwidth journal"
+- described_by = ("connection-problem" if @problem)
+
+.card
+  .card__header
+    %h1 Connect a Dreamwidth journal
+  = render "journal/shared/flash"
+  - if @problem
+    = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
+
+  %p
+    Connecting uses an API key from Dreamwidth. It lets Plural Profiles read and
+    post to that one journal. Your Dreamwidth password never comes here.
+
+  %ol.connect-steps
+    %li Log in to Dreamwidth as the account you want to connect.
+    %li
+      = link_to "Get your key from Dreamwidth (opens in a new tab)", "https://www.dreamwidth.org/api/getkey", target: "_blank", rel: "noopener"
+    %li Copy the key that page shows, then come back to this tab and paste it below.
+
+  = form_with model: @connection, scope: :connection, url: journal_connect_path, method: :post do |form|
+    .form-group
+      = form.label :username, "Dreamwidth username"
+      = form.text_field :username, required: true, maxlength: 25,
+        autocomplete: "off", autocapitalize: "none", spellcheck: false,
+        aria: { describedby: described_by }, data: { "1p-ignore": "true" }
+    .form-group
+      = form.label :api_key, "API key"
+      -# Always empty: a key is never shown back, and an empty field means the
+      -# next paste can't get mixed up with the last one.
+      = form.text_field :api_key, value: "", required: true,
+        autocomplete: "off", autocapitalize: "none", spellcheck: false,
+        aria: { describedby: ["api-key-hint", described_by].compact.join(" ") }, data: { "1p-ignore": "true" }
+      %p.form-hint#api-key-hint
+        You can revoke it any time in
+        = link_to "Dreamwidth's mobile settings", "https://www.dreamwidth.org/manage/settings/?cat=mobile"
+        and it stops working here at once.
+    .form-group
+      = form.submit "Connect", data: { turbo_submits_with: "Checking with Dreamwidth…" }
+
+  %p= link_to "Back to your journals", journal_root_path

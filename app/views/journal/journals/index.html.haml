@@ -1,0 +1,25 @@
+- journal_page "Journal"
+
+.card
+  .card__header
+    %h1 Journal
+  = render "journal/shared/flash"
+
+  - if dreamwidth_connections.any?
+    %p Your connected Dreamwidth journals:
+    %ul.journal-list
+      - dreamwidth_connections.each do |connection|
+        %li.journal-list__item
+          = link_to "#{connection.username}'s entries", journal_dw_entries_path(connection), class: "journal-list__entries"
+          - if connection.failed?
+            %span.journal-list__problem (Dreamwidth stopped accepting its key)
+          = link_to journal_dw_connection_path(connection), class: "journal-list__manage" do
+            Manage
+            %span.visually-hidden= connection.username
+  - else
+    %p
+      Write and edit your Dreamwidth entries here, in plain pages that wear your
+      Plural Profiles theme. Dreamwidth stays where your entries live: this
+      only keeps what it needs to reach your journal.
+
+  = link_to (dreamwidth_connections.any? ? "Connect another Dreamwidth journal" : "Connect a Dreamwidth journal"), journal_connect_path, class: "btn"

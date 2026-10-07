@@ -327,23 +327,23 @@ Then re-run the check to confirm everything is clean before committing the updat
 
 Chat is routed on its own subdomain (`chat.` — see [Getting started](#getting-started)), so paths below are relative to `chat.<host>`:
 
-| Path                                          | Description                                          |
-| ---------------------------------------------- | ----------------------------------------------------- |
-| `/`                                            | List of servers you belong to                        |
-| `/servers/new`                                 | Create a server                                       |
-| `/servers/:uuid`                               | Server view — channel sidebar + active channel        |
-| `/servers/:uuid/edit`                          | Edit server settings (owner only)                     |
-| `/servers/:uuid/join`                          | Join via invite link (prompts to create a profile first if you have none) |
-| `/servers/:uuid/invite`                        | View/regenerate the server's invite link (owner only) |
-| `/invite/:token`                               | Redeem an invite link                                 |
-| `/servers/:uuid/membership/edit`               | Change your default "post as" for this server         |
-| `/servers/:server_uuid/channels/new`           | Create a channel (owner only)                         |
-| `/servers/:server_uuid/channels/:uuid`         | Channel view (messages + composer)                    |
-| `/servers/:server_uuid/channels/:uuid/edit`    | Edit channel settings (owner only)                    |
-| `PATCH .../channels/:uuid/mark_read`           | Mark a channel as read (clears its unread dot)         |
-| `POST .../channels/:channel_uuid/messages`     | Post a message (rate-limited to 60/minute)             |
-| `PATCH .../channels/:channel_uuid/default_postable` | Change your default "post as" for this channel   |
-| `/cable`                                       | Action Cable WebSocket endpoint                        |
+| Path                                                | Description                                                               |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| `/`                                                 | List of servers you belong to                                             |
+| `/servers/new`                                      | Create a server                                                           |
+| `/servers/:uuid`                                    | Server view — channel sidebar + active channel                            |
+| `/servers/:uuid/edit`                               | Edit server settings (owner only)                                         |
+| `/servers/:uuid/join`                               | Join via invite link (prompts to create a profile first if you have none) |
+| `/servers/:uuid/invite`                             | View/regenerate the server's invite link (owner only)                     |
+| `/invite/:token`                                    | Redeem an invite link                                                     |
+| `/servers/:uuid/membership/edit`                    | Change your default "post as" for this server                             |
+| `/servers/:server_uuid/channels/new`                | Create a channel (owner only)                                             |
+| `/servers/:server_uuid/channels/:uuid`              | Channel view (messages + composer)                                        |
+| `/servers/:server_uuid/channels/:uuid/edit`         | Edit channel settings (owner only)                                        |
+| `PATCH .../channels/:uuid/mark_read`                | Mark a channel as read (clears its unread dot)                            |
+| `POST .../channels/:channel_uuid/messages`          | Post a message (rate-limited to 60/minute)                                |
+| `PATCH .../channels/:channel_uuid/default_postable` | Change your default "post as" for this channel                            |
+| `/cable`                                            | Action Cable WebSocket endpoint                                           |
 
 ## Project structure
 
@@ -497,14 +497,14 @@ Action Cable's live chat updates run through Solid Cable, which reads/writes its
 
 ### Configuration files
 
-| File               | Purpose                                                             |
-| ------------------ | -------------------------------------------------------------------- |
-| `Procfile`         | Defines the `web` process, the `worker` process (Solid Queue), and the post-deploy migration hook |
-| `.buildpacks`      | Uses APT + Ruby buildpacks (APT installs libvips)                     |
-| `Aptfile`          | Lists APT packages to install (`libvips-dev`)                         |
-| `config/queue.yml` | Solid Queue dispatcher/worker settings (queues, threads, polling)     |
-| `config/cable.yml` | Action Cable adapter — `solid_cable` in production, `async` in dev    |
-| `config/recurring.yml` | Scheduled Solid Queue tasks (e.g. hourly cleanup of finished jobs) |
+| File                   | Purpose                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `Procfile`             | Defines the `web` process, the `worker` process (Solid Queue), and the post-deploy migration hook |
+| `.buildpacks`          | Uses APT + Ruby buildpacks (APT installs libvips)                                                 |
+| `Aptfile`              | Lists APT packages to install (`libvips-dev`)                                                     |
+| `config/queue.yml`     | Solid Queue dispatcher/worker settings (queues, threads, polling)                                 |
+| `config/cable.yml`     | Action Cable adapter — `solid_cable` in production, `async` in dev                                |
+| `config/recurring.yml` | Scheduled Solid Queue tasks (e.g. hourly cleanup of finished jobs)                                |
 
 ## Licence
 

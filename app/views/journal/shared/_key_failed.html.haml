@@ -1,0 +1,13 @@
+-# Locals:
+-#   connection
+-#   manage_link — whether to link to the Manage page (not on the Manage page itself)
+.flash.flash--warning.journal-notice
+  %p
+    Dreamwidth stopped accepting the key for
+    %strong= connection.username
+    on #{connection.failed_at.strftime("%-d %B %Y, %H:%M")}. It may have been revoked.
+  %p
+    - if manage_link
+      = link_to "Replace the key or disconnect #{connection.username}", journal_dw_connection_path(connection)
+    - else
+      Replace the key below, or disconnect this journal and connect it again.

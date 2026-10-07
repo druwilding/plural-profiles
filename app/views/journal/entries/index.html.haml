@@ -1,0 +1,57 @@
+- journal_page "#{@connection.username}'s entries"
+
+.card
+  .card__header
+    %h1 #{@connection.username}'s entries
+  = render "journal/shared/flash"
+  = render "journal/shared/your_journals", current: @connection
+
+  %p.journal-meta
+    = dreamwidth_journal_link(@connection.username)
+    ·
+    = link_to "Manage this connection", journal_dw_connection_path(@connection)
+
+  - case @problem
+  - when :key_rejected
+    = render "journal/shared/key_failed", connection: @connection, manage_link: true
+  - when :journal_gone
+    .flash.flash--warning.journal-notice
+      %p
+        Dreamwidth doesn't have a journal called
+        %strong= @connection.username
+        any more. If it was renamed, disconnect this one and connect the new name.
+      %p= link_to "Manage #{@connection.username}", journal_dw_connection_path(@connection)
+  - when :unavailable
+    .flash.flash--warning.journal-notice
+      %p Couldn't reach Dreamwidth just now. Try again in a few minutes.
+  - else
+    - if Journal::PRIVATE_ONLY
+      %p.form-hint
+        Showing private entries only, for now. The rest will appear here once
+        Dreamwidth has updated its API.
+
+    - if @entries.empty?
+      %p.muted= @offset.zero? ? "No entries yet." : "No more entries."
+    - else
+      %ol.journal-entries
+        - @entries.each do |entry|
+          %li.journal-entry
+            %h2.journal-entry__subject= entry.subject.presence || "(no subject)"
+            %p.journal-entry__meta
+              %span= dreamwidth_entry_date(entry.datetime)
+              ·
+              %span= dreamwidth_security_label(entry.security)
+            - if entry.url.present?
+              %p.journal-entry__actions
+                = link_to entry.url do
+                  View on Dreamwidth
+                  %span.visually-hidden
+                    = surround "(", ")" do
+                      = entry.subject.presence || "no subject"
+
+    - if @offset.positive? || @has_older
+      %nav.journal-pagination{aria: { label: "Entry pages" }}
+        - if @offset.positive?
+          = link_to "Newer entries", journal_dw_entries_path(@connection, offset: ([ @offset - Journal::EntriesController::PER_PAGE, 0 ].max.nonzero?))
+        - if @has_older
+          = link_to "Older entries", journal_dw_entries_path(@connection, offset: @offset + Journal::EntriesController::PER_PAGE)

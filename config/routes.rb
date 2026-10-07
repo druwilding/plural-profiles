@@ -60,6 +60,21 @@ Rails.application.routes.draw do
   end
 
   # Site-wide administration (admins only)
+  # The journal: for now, an accessible Dreamwidth client (docs/plan-journal.md).
+  # Its own Journal:: namespace and /journal path rather than our/, so it can
+  # become a journal. sub-site later with mostly a routing change. Which
+  # journal a page works on is always in its URL, never remembered elsewhere.
+  scope "journal", module: "journal", as: "journal" do
+    root "journals#index"
+    get "connect", to: "connections#new", as: :connect
+    post "connect", to: "connections#create"
+
+    scope "dw/:dreamwidth_username", as: "dw", constraints: { dreamwidth_username: /[A-Za-z0-9_-]+/ } do
+      get "/", to: "entries#index", as: :entries
+      resource :connection, only: %i[show update destroy]
+    end
+  end
+
   namespace :admin do
     root "dashboard#show"
 

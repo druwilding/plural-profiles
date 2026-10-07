@@ -8,7 +8,15 @@ class ApplicationController < ActionController::Base
 
   around_action :set_time_zone
 
+  helper_method :inline_flash?
+
   private
+
+  # Whether the page shows flash notices itself, rather than the layout
+  # showing them above everything. Journal pages do.
+  def inline_flash?
+    false
+  end
 
   def require_admin
     redirect_to root_path, alert: "Only admins can access that page." unless Current.user&.admin?
