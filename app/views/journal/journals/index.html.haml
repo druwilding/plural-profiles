@@ -18,8 +18,11 @@
             %span.visually-hidden= connection.username
   - else
     %p
-      Write and edit your Dreamwidth entries here, in plain pages that wear your
-      Plural Profiles theme. Dreamwidth stays where your entries live: this
-      only keeps what it needs to reach your journal.
+      This part of Plural Profiles is a way into Dreamwidth, so you can post and
+      edit your entries here.
+    %p
+      Your entries live on Dreamwidth. Nothing is stored on Plural Profiles
+      apart from an API key for each journal you connect. The API keys are
+      encrypted.
 
   = link_to (dreamwidth_connections.any? ? "Connect another Dreamwidth journal" : "Connect a Dreamwidth journal"), journal_connect_path, class: "btn"

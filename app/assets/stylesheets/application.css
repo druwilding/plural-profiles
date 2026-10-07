@@ -152,12 +152,6 @@ body {
   background-color: transparent;
 }
 
-/* Underlined as well as bold, so it still shows in forced colours. */
-.site-header nav a[aria-current="page"] {
-  font-weight: 700;
-  text-decoration: underline;
-}
-
 .site-header__signout {
   display: inline;
 }

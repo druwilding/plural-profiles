@@ -65,16 +65,16 @@ class JournalTest < ApplicationSystemTestCase
     assert_no_selector "link[rel='stylesheet'][href*='/journal-']", visible: false
   end
 
-  test "the current journal and nav link stay marked in forced colours" do
+  test "the current journal stays marked in forced colours" do
     sign_in_via_browser
     visit journal_dw_entries_path("example_journal")
     assert_selector "h1", text: "example_journal's entries"
 
     with_forced_colors do
-      [ ".your-journals a[aria-current='page']", ".site-header nav a[aria-current='page']" ].each do |selector|
-        decoration = page.evaluate_script("getComputedStyle(document.querySelector(#{selector.to_json})).textDecorationLine")
-        assert_equal "underline", decoration, "#{selector} should be underlined"
-      end
+      decoration = page.evaluate_script(
+        "getComputedStyle(document.querySelector(\".your-journals a[aria-current='page']\")).textDecorationLine"
+      )
+      assert_equal "underline", decoration
     end
   end
 end
