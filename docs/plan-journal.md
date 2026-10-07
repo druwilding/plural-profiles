@@ -103,7 +103,7 @@ A plain Ruby class in `app/services/dreamwidth/client.rb`, so it autoloads. It's
 - Methods: `entries(count:, offset:, security: nil)`, `entry(id)`, `create_entry(attrs)`, `update_entry(id, attrs)`, `verify!`. Each returns plain Ruby hashes or small value objects, never raw JSON.
 - **What the API actually does** (checked in Phase 0; see "Phase 0 findings" below):
   - Entry IDs are Dreamwidth's public `ditemid`, the number in `/29492.html`. One ID works for list, read, edit and the "View on Dreamwidth" link.
-  - Editing is `POST /journals/{u}/entries/{id}`, not `PATCH`, and `text` is required every time.
+  - Editing is `POST /journals/{u}/entries/{id}`, not `PATCH`. Once #3693 is live, fields left out of an edit keep their current values, `text` is optional, and `datetime` is honoured.
   - Tags go in as a JSON array and come back as one.
   - `datetime` comes back as `"YYYY-MM-DD HH:MM:SS"` in the journal's own time, with no time zone.
   - Creating accepts an `icon` keyword and a `datetime` (`"YYYY-MM-DD hh:mm"`), and both are applied. Icons come from `GET /users/{u}/icons`, each with `keywords`, `url`, `picid` and `comment`.
@@ -143,14 +143,14 @@ The `dw/` prefix leaves room for native journal pages to sit beside these later,
 
 ### The pages
 
-| Page                | Route                                                                                                         | What it does                                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Journals            | `GET /journal`                                                                                                | The landing page: a list of your connected Dreamwidth accounts, each linking to its Entries page, plus **Connect another Dreamwidth account**. With no connections, it explains what this is and links straight to Connect. With exactly one, it still shows the list rather than redirecting, so the page stays the same whether you have one journal or six.                                   |
-| Connect             | `GET /journal/connect`, `POST /journal/connect`                                                               | Dreamwidth username and API key, with a link to get the key (see "Connecting a journal" below). Saving checks the key with Dreamwidth before storing it. It isn't under `dw/`, so a Dreamwidth user called `new` can't clash with it.                                                                                                                                                            |
-| Manage a connection | `GET/PATCH /journal/dw/:dreamwidth_username/connection`, `DELETE` the same                                    | Shows that the connection exists (last four characters of the key, when it was last verified, and when Dreamwidth stopped accepting it if `failed_at` is set). It lets you replace the key, or disconnect, with a note that you can also revoke the key on Dreamwidth.                                                                                                                           |
-| Entries             | `GET /journal/dw/:dreamwidth_username`                                                                        | That journal's recent entries, newest first. Each shows its subject ("(no subject)" if blank), date, security level, an **Edit** link and a **View on Dreamwidth** link. A **Write a new entry** link sits at the top. Plain "Older entries" / "Newer entries" links page through using `offset`. Until Dreamwidth fixes access-locked entries, see "Fallback while access-locked entries fail". |
-| Write               | `GET /journal/dw/:dreamwidth_username/entries/new`, `POST /journal/dw/:dreamwidth_username/entries`           | Laid out as in "The Write page" below: icon, post to, date and time, subject, entry text, tags, security with custom filters, and the post button. After posting, it goes back to that journal's Entries with a notice linking to the new entry on Dreamwidth.                                                                                                                                   |
-| Edit                | `GET /journal/dw/:dreamwidth_username/entries/:id/edit`, `PATCH /journal/dw/:dreamwidth_username/entries/:id` | The same form, filled with the entry's current values. Post to and the date are shown but can't be changed. Our route is `PATCH`; the client sends Dreamwidth a `POST`. Blocked on Dreamwidth fixes; see "Editing mustn't quietly change what isn't shown".                                                                                                                                      |
+| Page                | Route                                                                                                         | What it does                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Journals            | `GET /journal`                                                                                                | The landing page: a list of your connected Dreamwidth accounts, each linking to its Entries page, plus **Connect another Dreamwidth account**. With no connections, it explains what this is and links straight to Connect. With exactly one, it still shows the list rather than redirecting, so the page stays the same whether you have one journal or six. |
+| Connect             | `GET /journal/connect`, `POST /journal/connect`                                                               | Dreamwidth username and API key, with a link to get the key (see "Connecting a journal" below). Saving checks the key with Dreamwidth before storing it. It isn't under `dw/`, so a Dreamwidth user called `new` can't clash with it.                                                                                                                          |
+| Manage a connection | `GET/PATCH /journal/dw/:dreamwidth_username/connection`, `DELETE` the same                                    | Shows that the connection exists (last four characters of the key, when it was last verified, and when Dreamwidth stopped accepting it if `failed_at` is set). It lets you replace the key, or disconnect, with a note that you can also revoke the key on Dreamwidth.                                                                                         |
+| Entries             | `GET /journal/dw/:dreamwidth_username`                                                                        | That journal's recent entries, newest first. Each shows its subject ("(no subject)" if blank), date, security level, an **Edit** link and a **View on Dreamwidth** link. A **Write a new entry** link sits at the top. Plain "Older entries" / "Newer entries" links page through using `offset`. In private-only mode, it lists private entries only.         |
+| Write               | `GET /journal/dw/:dreamwidth_username/entries/new`, `POST /journal/dw/:dreamwidth_username/entries`           | Laid out as in "The Write page" below: icon, post to, date and time, subject, entry text, tags, security with custom filters, and the post button. After posting, it goes back to that journal's Entries with a notice linking to the new entry on Dreamwidth.                                                                                                 |
+| Edit                | `GET /journal/dw/:dreamwidth_username/entries/:id/edit`, `PATCH /journal/dw/:dreamwidth_username/entries/:id` | The same form, filled with the entry's current values. Post to is shown but can't be changed. Our route is `PATCH`; the client sends Dreamwidth a `POST`. See "Editing mustn't quietly change what isn't shown".                                                                                                                                               |
 
 ### Connecting a journal
 
@@ -219,39 +219,32 @@ This is the most important behaviour, and the reason for the rule below.
 - After a timeout we can't know whether the entry was actually saved. The message must say that and suggest checking the Entries page before trying again, so nobody ends up with a duplicate post.
 - Protect against double-submits with `data-turbo-submits-with` on the submit button. It only works with Turbo, but a double post is annoying rather than harmful.
 
-### Fallback while access-locked entries fail
+### Private-only mode, until Dreamwidth's fixes are deployed
 
-Until Dreamwidth deploys the access-locked fix (see "Upstream fixes"), reading any access-locked or custom-filtered entry returns a 500. One such entry in a list fails the whole list.
+Dreamwidth has merged fixes for reading access-locked entries (#3687), tags on edit (#3691), and edits resetting settings they didn't mention (#3693). They aren't deployed yet. Rather than build workarounds for bugs that are about to go away, we build for the fixed API and start with a **private-only mode**, which is one switch (a constant such as `Journal::PRIVATE_ONLY`). While it's on:
 
-- **The Entries page asks for everything first**, as normal. Once the fix is live, this just works, and we don't need to change or deploy anything.
-- **If that returns a 500, it asks for `security=public` and `security=private` separately**, merges them newest first, and shows the first page. Both of those work. A note at the top says: "Access-locked entries can't be shown yet, because of a bug on Dreamwidth's side that has been reported. Your public and private entries are below." "Older entries" is hidden in this mode, since paging two merged lists properly isn't worth building for a temporary problem.
-- **The Edit page for an access-locked entry** shows the same explanation and links to editing it on Dreamwidth.
-- It's a small amount of code in one place, and it's deleted once the fix is live.
+- **Entries lists private entries only** (`security=private`), with the normal "Older entries" / "Newer entries" paging. Private entries are the one kind that both reads and lists correctly today, and a single filter pages properly.
+- **Write always posts as private.** "Show entry to" shows just "Private", with a short note that more options are coming. "Post to" is the connected journal only (no communities yet). Subject, text, tags, icon and date all work today when creating.
+- **Edit sends only `subject` and `text`.** It doesn't touch any other field. Until #3693 is live, though, Dreamwidth's old edit code resets some settings whatever we send: it removes an entry's tags, puts comment settings and age restriction back to the journal default, and unticks "Don't show on Reading pages". **So in this mode, only edit private test entries.** The Edit page says so.
+
+**Turning it off.** When this prints "…Fields left out of the request keep their current values.", all three fixes are live:
+
+```sh
+curl -s https://www.dreamwidth.org/api/v1/spec | jq -r '.paths["/journals/{username}/entries/{entry_id}"].post.description'
+```
+
+Then check it with a real key (read an access-locked entry; edit a test entry's tags), and turn the switch off. Entries then lists everything; Write offers public, access-locked and private, plus communities; Edit sends all its fields. Custom filters follow once #3688 is fixed.
 
 ### Editing mustn't quietly change what isn't shown
 
-The form shows only some of an entry's settings. Editing must never reset the rest: custom access filters, mood, icon, comment settings, backdating and so on.
+The form shows only some of an entry's settings. Editing must never reset the rest: mood, comment settings, age restriction, backdating, custom access filters and so on.
 
-**Phase 0 showed that Dreamwidth's edit endpoint doesn't do a partial update.** The spec marks every field as optional, but an edit that leaves a field out doesn't always keep it:
+Phase 0 found that Dreamwidth's edit endpoint reset several of these (see "Phase 0 findings"). That's fixed by #3693: **fields left out of an edit keep their current values.** So once it's live:
 
-| Setting                                   | When left out of an edit                    | When sent                              |
-| ----------------------------------------- | ------------------------------------------- | -------------------------------------- |
-| Subject, security (public/access/private) | kept                                        | changed                                |
-| Date, mood, music, location, icon, format | kept                                        | changed (we don't send them)           |
-| Tags                                      | **all removed**                             | **mangled** into one tag, `array(0x…)` |
-| Comments disabled / no email              | **reset to the journal default**            | changed                                |
-| Age restriction and reason                | **reset to the journal default**            | changed                                |
-| Backdated ("Don't show on Reading pages") | **unticked**                                | not in the API                         |
-| Custom access filter                      | **kept as "custom" with no filters ticked** | not in the API                         |
-
-None of the reset settings come back when reading an entry, so we can't fetch them and send them back either. So:
-
-- **Edit can't ship until Dreamwidth fixes tags on edit.** With the API as it is, every edit either wipes an entry's tags or replaces them with junk. There's no workaround: the API rejects tags sent as a string. It's a small fix that copies what creating an entry already does; see "Upstream fixes".
-- **Entries with a custom access filter can't be edited here until Dreamwidth accepts custom security.** Until then, their Edit page explains why and links to editing the entry on Dreamwidth. Once it does, Edit reads the entry's `custom_groups` and shows them ticked, and sends them back. The proposed fix also keeps the existing groups when none are sent. We can only tell which entries have custom filters once the access-locked fix is live, since until then reading them fails.
-- **The date can't be changed on Edit.** From Dreamwidth's code, the edit endpoint ignores `datetime` (only the create endpoint passes it on). Not tested; the Edit page shows the date as text.
-- **Comment settings, age restriction and backdating are reset by any edit**, until Dreamwidth fixes that too. Until then, the Edit form says so plainly, right above the save button: "Saving here resets this entry's comment settings and age restriction to your journal's defaults, and shows it on Reading pages if it was hidden from them. To keep those, edit it on Dreamwidth instead." (See open questions: we may prefer to hold Edit back until this is fixed.)
+- **The client sends only what the form shows:** `subject`, `text`, `tags`, `icon`, `datetime`, and `security`. Nothing else, so everything else is kept.
+- **Custom-filtered entries leave `security` out** until Dreamwidth accepts `"custom"` (#3688). That keeps their filters as they are. Their Edit page shows the filters as text ("Shown to: Close friends, Family") with a note that changing them here isn't possible yet. Once #3688 is fixed, the filters become checkboxes like on Write, and Edit sends them.
+- **The date can be changed** on Edit, as #3693 makes the edit endpoint honour `datetime`.
 - Edit loads the entry's **raw source text** (`body_raw` and `subject_raw`, which Dreamwidth includes when the key can edit the entry), not the rendered `body`. Otherwise a single save would convert someone's markup or formatting. (`full=1` is in the spec but does nothing.)
-- The client always sends `text`, `subject`, `security`, `tags` and `icon` on edit (plus `custom_groups` once that exists), and nothing else.
 
 ### Entry text is never rendered as HTML here
 
@@ -287,8 +280,8 @@ This is the whole reason the feature exists, so it gets more attention than usua
   - write, then see it listed
   - the Write page's order matches "The Write page", at wide and narrow widths
   - posting to a community adds it to that connection's remembered communities
-  - edit sends exactly `text`, `subject`, `security`, `tags` and `icon`; a custom-filter entry links to Dreamwidth instead (until custom security is accepted)
-  - the Entries fallback when the unfiltered list fails, with its note
+  - private-only mode: Entries asks for private entries and pages through them; Write offers only Private; Edit sends only `subject` and `text`
+  - with the mode off: edit sends exactly `subject`, `text`, `tags`, `icon`, `datetime` and `security`, and leaves `security` out for a custom-filtered entry
   - a key that starts being rejected sets `failed_at`, and every page for that journal says so
   - a failed post that keeps the text
   - a timeout message
@@ -307,14 +300,16 @@ This is the whole reason the feature exists, so it gets more attention than usua
 - Active Record encryption keys.
 - `Journal::DreamwidthConnection`, with as many per account as people like.
 - `Dreamwidth::Client` with `verify!` and `entries`.
-- The Journals landing page, Connect, Manage a connection (including `failed_at`), the "Your journals" switcher and the Entries list (read-only), with the access-locked fallback.
+- The Journals landing page, Connect, Manage a connection (including `failed_at`), the "Your journals" switcher and the Entries list (read-only), in private-only mode.
 - Visible to everyone who's signed in, with no admin-only stage.
 
 Ship it. This is already useful for checking things look and read right with real themes and real assistive technology.
 
-**Phase 2: writing.** `create_entry`, the Write page as laid out in "The Write page" (icon chooser, post to and remembered communities, date and time, custom filter checkboxes), keeping the text when a post fails, and rate limits. Everything except custom filters works with the API as it is today. **The people this is for can't start using it until Dreamwidth accepts custom security**, since almost all their entries use custom filters.
+**Phase 2: writing and editing.** `create_entry` and `update_entry`, the Write page as laid out in "The Write page" (icon chooser, date and time, and, once the mode is off, post to with remembered communities and the full "Show entry to"), the Edit page, keeping the text when a post fails, and rate limits. Built in private-only mode, and tested on private test entries.
 
-**Phase 3: editing, once Dreamwidth has fixed tags on edit.** `update_entry` and the Edit page, following "Editing mustn't quietly change what isn't shown". After this, people can stop using Dreamwidth's own pages for everyday posting.
+**Phase 3: everything, once Dreamwidth deploys its fixes.** Turn private-only mode off (see "Private-only mode"). This should be small: the pages are already built for the fixed API.
+
+**Phase 4: custom filters, once #3688 is fixed.** The custom filter checkboxes on Write and Edit. **The people this is for can't start using it until then**, since almost all their entries use custom filters.
 
 **Later, each with its own planning pass:**
 - **Native journal.** Entries stored in plural-profiles, posted *as* a profile or group (the same "postable" idea chat already uses), with their own privacy rules. This is where the journal gets properly plural.
@@ -344,7 +339,17 @@ Checked on 2026-10-06 with a real key against `druewilding`, using a private tes
 **Writing**
 
 - Creating returns `{"success": 1, "entry_id": …, "url": …}`. Tags sent as a list are saved correctly.
-- Editing returns the same shape. For what an edit keeps and resets, see the table in "Editing mustn't quietly change what isn't shown".
+- Editing returns the same shape. What an edit kept and reset, before #3691 and #3693:
+
+| Setting                                   | When left out of an edit                    | When sent                              |
+| ----------------------------------------- | ------------------------------------------- | -------------------------------------- |
+| Subject, security (public/access/private) | kept                                        | changed                                |
+| Date, mood, music, location, icon, format | kept                                        | changed (date ignored)                 |
+| Tags                                      | **all removed**                             | **mangled** into one tag, `array(0x…)` |
+| Comments disabled / no email              | **reset to the journal default**            | changed                                |
+| Age restriction and reason                | **reset to the journal default**            | changed                                |
+| Backdated ("Don't show on Reading pages") | **unticked**                                | not in the API                         |
+| Custom access filter                      | **kept as "custom" with no filters ticked** | not in the API                         |
 - Tags sent as a string are rejected with a 400, because the request is checked against the spec.
 - Creating with `"icon": "<keyword>"` and `"datetime": "2026-10-01 12:00"` applies both (read back as `icon_keyword` and `"2026-10-01 12:00:00"`).
 - `"security": "custom"` is rejected with a 400, for the same reason.
@@ -357,12 +362,12 @@ Checked on 2026-10-06 with a real key against `druewilding`, using a private tes
 
 Dreamwidth's code is open source ([dreamwidth/dreamwidth](https://github.com/dreamwidth/dreamwidth)) and actively maintained. Fixing these upstream helps every API user, not just us.
 
-| Problem                                                                                                                                 | Status                                                                                                                                                                 | What it blocks                                      |
-| --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Reading access-locked / custom entries returns 500 (`LJ::Entry::TO_JSON`)                                                               | Issue [#3686](https://github.com/dreamwidth/dreamwidth/issues/3686), PR [#3687](https://github.com/dreamwidth/dreamwidth/pull/3687)                                    | The full Entries list; editing locked entries       |
-| Tags sent as a list are mangled on edit (`LJ::Protocol::editevent` doesn't handle the arrayref that `postevent` does)                   | Issue [#3689](https://github.com/dreamwidth/dreamwidth/issues/3689), PR [#3691](https://github.com/dreamwidth/dreamwidth/pull/3691)                                    | Edit                                                |
-| Custom security can't be posted (the request schemas only allow `public`/`private`/`access`), and edits empty an entry's custom filters | Issue [#3688](https://github.com/dreamwidth/dreamwidth/issues/3688); PR once the field name (`custom_groups`) is agreed                                                | Write being usable; editing custom-filtered entries |
-| Edits reset comment settings, age restriction and backdating (`DW::Entry::_form_to_backend` rebuilds these from the request alone)      | Issue [#3690](https://github.com/dreamwidth/dreamwidth/issues/3690). It needs a design decision from Dreamwidth: the API must tell "not sent" apart from "turned off". | Edit without a warning                              |
+| Problem                                                                                                             | Status                                                                                                                                                                                                                                                                                 | Unblocks                                 |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Reading access-locked / custom entries returns 500 (`LJ::Entry::TO_JSON`)                                           | Issue [#3686](https://github.com/dreamwidth/dreamwidth/issues/3686), PR [#3687](https://github.com/dreamwidth/dreamwidth/pull/3687): **merged 2026-10-07**, not yet deployed                                                                                                           | Turning off private-only mode            |
+| Tags sent as a list are mangled on edit                                                                             | Issue [#3689](https://github.com/dreamwidth/dreamwidth/issues/3689), PR [#3691](https://github.com/dreamwidth/dreamwidth/pull/3691): **merged 2026-10-07**, not yet deployed                                                                                                           | Turning off private-only mode            |
+| Edits reset settings the request didn't include (tags, comments, age restriction, backdating, slug, custom filters) | Issue [#3690](https://github.com/dreamwidth/dreamwidth/issues/3690), fixed by [#3693](https://github.com/dreamwidth/dreamwidth/pull/3693) (zorkian's API test suite and fixes): **merged 2026-10-07**, not yet deployed. #3693 also makes edits honour `datetime` and `text` optional. | Turning off private-only mode            |
+| Custom security can't be posted (the request schemas only allow `public`/`private`/`access`)                        | Issue [#3688](https://github.com/dreamwidth/dreamwidth/issues/3688): **open**. #3693 fixed the editing half (filters are kept); posting `"custom"` is still rejected. PR once the field name (`custom_groups`) is agreed.                                                              | Phase 4: the people this is for using it |
 
 ---
 
@@ -370,4 +375,3 @@ Dreamwidth's code is open source ([dreamwidth/dreamwidth](https://github.com/dre
 
 - **Which accessibility needs, specifically, does Dreamwidth's new version break?** This decides what we test for. We now know what they value about the current posting page (see "The Write page"); this is about what breaks.
 - **What makes the "old school internet" look?** Screenshots of the current posting page are coming.
-- **Ship Edit with a warning, or wait?** Once tags are fixed, should Edit ship with the warning that it resets comment settings, age restriction and backdating? Or should it wait until Dreamwidth fixes those too? A warning is honest, but it's one more thing to read and understand before saving, for exactly the people this is built for.
