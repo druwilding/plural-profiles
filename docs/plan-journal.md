@@ -197,7 +197,7 @@ On any failure the form keeps the username, and empties the key field so the nex
 - Dreamwidth's header and footer
 - Delete Entry (the API can't delete anyway), "Add to memories", and a separate tags-only editing page (the Edit page has the tags field)
 
-We're also leaving out Preview; Spell check (the browser's own spell checking already works in the text box, and they use it); and Update Date (the date fields are always shown and filled in). "Insert Image", "Embed Media" and "Don't show on Reading pages" are open questions.
+We're also leaving out Preview; Spell check (the browser's own spell checking already works in the text box, and they use it); Update Date (the date fields are always shown and filled in); "Insert Image" and "Embed Media"; and "Don't show on Reading pages" (which the API can't set anyway).
 
 ### The Write page
 
@@ -216,7 +216,7 @@ The people this is for sent screenshots of Dreamwidth's posting page, and told u
 | **Tags**           | **Tags:**, one comma-separated field, with tag suggestions                                                                                                                                                                                                        |
 | **Who can see it** | **Show this entry to:** dropdown, then the custom filter checkboxes, then the **Post to: *username*** button                                                                                                                                                      |
 
-The pane header names are a first suggestion, to check with the people using it.
+The pane header names are a first suggestion. We'll go with them, and change them once the people using it have tried the pages.
 
 **Details:**
 
@@ -334,7 +334,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
 - Entries is a real `ol` of links. Each Edit link includes the entry's subject in hidden text ("Edit *Monday thoughts*"), so a list of links read out of context still makes sense.
 - Large text, narrow screens and `forced-colors` are checked for every page, as in chat. Forced colours matter especially here: the people using it rely on them in Firefox, and like how plural-profiles already works with them, so journal pages must work just as well.
 - **Check dropdowns with them on their Chromebook.** On Dreamwidth, the open dropdown list highlights the current option in white with light text, which makes it unreadable. Plural-profiles' own dropdowns already work for them, so ours should too, but it's worth checking "Show this entry to" and "Icon" specifically.
-- **Before building the pages, ask the people who'll use this what exactly breaks for them in Dreamwidth's new version** (screen reader, keyboard, zoom, motion, cognitive load…). Then put those cases in as browser tests, so we're checking for the same failures in our version.
+- **What Dreamwidth's new version breaks for them:** the new page is cluttered, splits the form into separate boxes spread across columns that can't be rearranged or simplified, and moves the Post button to the top, away from the end of the form. The plan avoids all of that (one column, a fixed order, Post last), and browser tests check the order stays that way.
 
 ### Rate limiting
 
@@ -454,6 +454,4 @@ Dreamwidth's code is open source ([dreamwidth/dreamwidth](https://github.com/dre
 
 ## Open questions
 
-- **Which accessibility needs, specifically, does Dreamwidth's new version break?** This decides what we test for. We now know what they value about the current posting page (see "The Write page"); this is about what breaks.
-- **Do they use "Insert Image" or "Embed Media"?** Both are on Dreamwidth's page but weren't on either of their lists. If they do, it'd be worth seeing what those do for them, since neither is in the API.
-- **Do they use "Don't show on Reading Pages"?** It's on Dreamwidth's page but wasn't on either list, and the API can't set it. If they do, it's one more thing to ask Dreamwidth for.
+None at the moment.
