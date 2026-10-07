@@ -1,0 +1,27 @@
+<%# Fake keys. api_key is encrypted as the fixtures load (encrypt_fixtures in
+    config/environments/test.rb); the digest has to be worked out here, since
+    fixtures skip the api_key= writer that normally sets it. %>
+<% digest = ->(key) { Journal::DreamwidthConnection.digest_api_key(key) } %>
+
+one_main:
+  user: one
+  username: example_journal
+  api_key: fakeKeyOneMain0001
+  api_key_digest: <%= digest.("fakeKeyOneMain0001") %>
+  verified_at: <%= 1.day.ago.to_fs(:db) %>
+
+one_second:
+  user: one
+  username: second_journal
+  api_key: fakeKeyOneSecond0002
+  api_key_digest: <%= digest.("fakeKeyOneSecond0002") %>
+  verified_at: <%= 2.days.ago.to_fs(:db) %>
+
+# A shared household journal: the same Dreamwidth account as one_main,
+# connected from a different plural-profiles account with its own key.
+two_shared:
+  user: two
+  username: example_journal
+  api_key: fakeKeyTwoShared0003
+  api_key_digest: <%= digest.("fakeKeyTwoShared0003") %>
+  verified_at: <%= 3.days.ago.to_fs(:db) %>

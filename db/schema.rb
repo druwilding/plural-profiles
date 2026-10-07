@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,10 +45,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
   create_table "chat_channel_default_postables", force: :cascade do |t|
     t.bigint "channel_id", null: false
     t.datetime "created_at", null: false
-    t.bigint "postable_id", null: false
-    t.string "postable_type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "postable_type", null: false
+    t.bigint "postable_id", null: false
     t.index ["channel_id", "user_id"], name: "index_chat_channel_default_postables_on_channel_id_and_user_id", unique: true
     t.index ["postable_type", "postable_id"], name: "idx_on_postable_type_postable_id_f889e21558"
   end
@@ -64,13 +64,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
 
   create_table "chat_channels", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "description"
     t.string "name", null: false
     t.bigint "server_id", null: false
-    t.string "subtitle"
+    t.string "description"
     t.bigint "theme_id"
     t.datetime "updated_at", null: false
     t.string "uuid", null: false
+    t.string "subtitle"
     t.index ["server_id", "name"], name: "index_chat_channels_on_server_id_and_name", unique: true
     t.index ["theme_id"], name: "index_chat_channels_on_theme_id"
     t.index ["uuid"], name: "index_chat_channels_on_uuid", unique: true
@@ -78,12 +78,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
 
   create_table "chat_memberships", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "default_postable_id"
-    t.string "default_postable_type"
     t.string "role", default: "member", null: false
     t.bigint "server_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "default_postable_type"
+    t.bigint "default_postable_id"
     t.index ["default_postable_type", "default_postable_id"], name: "idx_on_default_postable_type_default_postable_id_782e0a1134"
     t.index ["server_id", "user_id"], name: "index_chat_memberships_on_server_id_and_user_id", unique: true
     t.index ["user_id"], name: "index_chat_memberships_on_user_id"
@@ -93,11 +93,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.text "body", null: false
     t.bigint "channel_id", null: false
     t.datetime "created_at", null: false
-    t.bigint "postable_id"
-    t.string "postable_name", null: false
-    t.string "postable_type"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "postable_type"
+    t.bigint "postable_id"
+    t.string "postable_name", null: false
     t.index ["channel_id", "created_at"], name: "index_chat_messages_on_channel_id_and_created_at"
     t.index ["postable_type", "postable_id"], name: "index_chat_messages_on_postable"
     t.index ["user_id"], name: "index_chat_messages_on_user_id"
@@ -121,55 +121,55 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.string "avatar_alt_text"
     t.string "avatar_shape", default: "rounded", null: false
     t.datetime "created_at", null: false
-    t.string "description"
     t.string "name", null: false
     t.bigint "owner_id", null: false
-    t.string "subtitle"
+    t.string "description"
     t.bigint "theme_id"
     t.datetime "updated_at", null: false
     t.string "uuid", null: false
+    t.string "subtitle"
     t.index ["owner_id"], name: "index_chat_servers_on_owner_id"
     t.index ["theme_id"], name: "index_chat_servers_on_theme_id"
     t.index ["uuid"], name: "index_chat_servers_on_uuid", unique: true
   end
 
   create_table "duplication_wizards", force: :cascade do |t|
-    t.datetime "created_at", null: false
+    t.bigint "user_id", null: false
     t.bigint "group_id", null: false
     t.jsonb "state", default: {}, null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
     t.index ["group_id"], name: "index_duplication_wizards_on_group_id"
     t.index ["user_id"], name: "index_duplication_wizards_on_user_id"
   end
 
   create_table "emote_aliases", force: :cascade do |t|
+    t.bigint "emote_id", null: false
     t.string "code", null: false
     t.datetime "created_at", null: false
-    t.bigint "emote_id", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_emote_aliases_on_code", unique: true
     t.index ["emote_id"], name: "index_emote_aliases_on_emote_id"
   end
 
   create_table "emote_sets", force: :cascade do |t|
-    t.datetime "created_at", null: false
     t.string "name", null: false
-    t.bigint "owner_id"
-    t.string "owner_type"
     t.integer "position", default: 0, null: false
+    t.string "owner_type"
+    t.bigint "owner_id"
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["owner_type", "owner_id", "name"], name: "index_emote_sets_on_owner_type_and_owner_id_and_name", unique: true
     t.index ["owner_type", "owner_id"], name: "index_emote_sets_on_owner"
   end
 
   create_table "emotes", force: :cascade do |t|
-    t.datetime "archived_at"
-    t.string "code", null: false
-    t.boolean "code_overridden", default: false, null: false
-    t.datetime "created_at", null: false
     t.bigint "emote_set_id", null: false
     t.string "name", null: false
+    t.string "code", null: false
+    t.boolean "code_overridden", default: false, null: false
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_emotes_on_code", unique: true
     t.index ["emote_set_id"], name: "index_emotes_on_emote_set_id"
@@ -180,8 +180,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.bigint "child_group_id", null: false
     t.datetime "created_at", null: false
     t.bigint "parent_group_id", null: false
-    t.integer "position"
     t.datetime "updated_at", null: false
+    t.integer "position"
     t.index ["child_group_id"], name: "index_group_groups_on_child_group_id"
     t.index ["parent_group_id", "child_group_id"], name: "index_group_groups_on_parent_group_id_and_child_group_id", unique: true
     t.index ["parent_group_id", "position"], name: "index_group_groups_on_parent_group_id_and_position"
@@ -191,11 +191,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
   create_table "group_profiles", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "group_id", null: false
-    t.integer "position"
     t.bigint "profile_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["group_id", "profile_id"], name: "index_group_profiles_on_group_id_and_profile_id", unique: true
+    t.integer "position"
     t.index ["group_id", "position"], name: "index_group_profiles_on_group_id_and_position"
+    t.index ["group_id", "profile_id"], name: "index_group_profiles_on_group_id_and_profile_id", unique: true
     t.index ["group_id"], name: "index_group_profiles_on_group_id"
     t.index ["profile_id"], name: "index_group_profiles_on_profile_id"
   end
@@ -203,38 +203,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
   create_table "groups", force: :cascade do |t|
     t.string "avatar_alt_text"
     t.string "avatar_shape", default: "rounded", null: false
-    t.string "chat_bracket_after"
-    t.string "chat_bracket_before"
     t.bigint "copied_from_id"
     t.datetime "created_at", null: false
     t.text "description"
-    t.string "emotes"
     t.jsonb "labels", default: [], null: false
-    t.string "mini_profile_avatar_alt_text"
-    t.boolean "mini_profile_avatar_inherited", default: true, null: false
-    t.string "mini_profile_avatar_shape", default: "rounded", null: false
-    t.text "mini_profile_description"
-    t.boolean "mini_profile_description_inherited", default: false, null: false
-    t.string "mini_profile_emotes"
-    t.boolean "mini_profile_emotes_inherited", default: true, null: false
-    t.boolean "mini_profile_link_enabled", default: false, null: false
-    t.string "mini_profile_name"
-    t.boolean "mini_profile_name_inherited", default: true, null: false
-    t.string "mini_profile_pronouns"
-    t.boolean "mini_profile_pronouns_inherited", default: true, null: false
-    t.string "mini_profile_subtitle"
-    t.boolean "mini_profile_subtitle_inherited", default: true, null: false
-    t.string "mini_profile_tag_line"
-    t.boolean "mini_profile_tag_line_inherited", default: true, null: false
     t.string "name", null: false
-    t.integer "position"
-    t.string "pronouns"
     t.string "subtitle"
     t.string "tag_line"
     t.bigint "theme_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.string "chat_bracket_before"
+    t.string "chat_bracket_after"
+    t.string "mini_profile_name"
+    t.boolean "mini_profile_name_inherited", default: true, null: false
+    t.string "mini_profile_subtitle"
+    t.boolean "mini_profile_subtitle_inherited", default: true, null: false
+    t.string "mini_profile_tag_line"
+    t.boolean "mini_profile_tag_line_inherited", default: true, null: false
+    t.text "mini_profile_description"
+    t.boolean "mini_profile_description_inherited", default: false, null: false
+    t.string "mini_profile_avatar_alt_text"
+    t.string "mini_profile_avatar_shape", default: "rounded", null: false
+    t.boolean "mini_profile_avatar_inherited", default: true, null: false
+    t.boolean "mini_profile_link_enabled", default: false, null: false
+    t.string "pronouns"
+    t.string "mini_profile_pronouns"
+    t.boolean "mini_profile_pronouns_inherited", default: true, null: false
+    t.string "emotes"
+    t.string "mini_profile_emotes"
+    t.boolean "mini_profile_emotes_inherited", default: true, null: false
+    t.integer "position"
     t.index "user_id, COALESCE(chat_bracket_before, ''::character varying), COALESCE(chat_bracket_after, ''::character varying)", name: "index_groups_on_user_id_and_chat_bracket_pair", unique: true, where: "((chat_bracket_before IS NOT NULL) OR (chat_bracket_after IS NOT NULL))"
     t.index ["copied_from_id"], name: "index_groups_on_copied_from_id"
     t.index ["labels"], name: "index_groups_on_labels", using: :gin
@@ -266,6 +266,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.index ["user_id"], name: "index_invite_codes_on_user_id"
   end
 
+  create_table "journal_dreamwidth_connections", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "username", null: false
+    t.text "api_key", null: false
+    t.string "api_key_digest", null: false
+    t.datetime "verified_at"
+    t.datetime "failed_at"
+    t.jsonb "communities", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "api_key_digest"], name: "idx_on_user_id_api_key_digest_6bce6dc110", unique: true
+    t.index ["user_id", "username"], name: "index_journal_dreamwidth_connections_on_user_id_and_username", unique: true
+  end
+
   create_table "profiles", force: :cascade do |t|
     t.string "avatar_alt_text"
     t.string "avatar_shape", default: "rounded", null: false
@@ -274,26 +288,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.bigint "copied_from_id"
     t.datetime "created_at", null: false
     t.text "description"
-    t.string "emotes"
     t.jsonb "labels", default: [], null: false
-    t.string "mini_profile_avatar_alt_text"
-    t.boolean "mini_profile_avatar_inherited", default: true, null: false
-    t.string "mini_profile_avatar_shape", default: "rounded", null: false
-    t.text "mini_profile_description"
-    t.boolean "mini_profile_description_inherited", default: false, null: false
-    t.string "mini_profile_emotes"
-    t.boolean "mini_profile_emotes_inherited", default: true, null: false
-    t.boolean "mini_profile_link_enabled", default: false, null: false
-    t.string "mini_profile_name"
-    t.boolean "mini_profile_name_inherited", default: true, null: false
-    t.string "mini_profile_pronouns"
-    t.boolean "mini_profile_pronouns_inherited", default: true, null: false
-    t.string "mini_profile_subtitle"
-    t.boolean "mini_profile_subtitle_inherited", default: true, null: false
-    t.string "mini_profile_tag_line"
-    t.boolean "mini_profile_tag_line_inherited", default: true, null: false
     t.string "name", null: false
-    t.integer "position"
     t.string "pronouns"
     t.string "subtitle"
     t.string "tag_line"
@@ -301,6 +297,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.string "uuid", null: false
+    t.string "mini_profile_name"
+    t.boolean "mini_profile_name_inherited", default: true, null: false
+    t.string "mini_profile_subtitle"
+    t.boolean "mini_profile_subtitle_inherited", default: true, null: false
+    t.string "mini_profile_tag_line"
+    t.boolean "mini_profile_tag_line_inherited", default: true, null: false
+    t.text "mini_profile_description"
+    t.boolean "mini_profile_description_inherited", default: false, null: false
+    t.string "mini_profile_pronouns"
+    t.boolean "mini_profile_pronouns_inherited", default: true, null: false
+    t.string "mini_profile_avatar_alt_text"
+    t.string "mini_profile_avatar_shape", default: "rounded", null: false
+    t.boolean "mini_profile_avatar_inherited", default: true, null: false
+    t.boolean "mini_profile_link_enabled", default: false, null: false
+    t.string "emotes"
+    t.string "mini_profile_emotes"
+    t.boolean "mini_profile_emotes_inherited", default: true, null: false
+    t.integer "position"
     t.index "user_id, COALESCE(chat_bracket_before, ''::character varying), COALESCE(chat_bracket_after, ''::character varying)", name: "index_profiles_on_user_id_and_chat_bracket_pair", unique: true, where: "((chat_bracket_before IS NOT NULL) OR (chat_bracket_after IS NOT NULL))"
     t.index ["copied_from_id"], name: "index_profiles_on_copied_from_id"
     t.index ["labels"], name: "index_profiles_on_labels", using: :gin
@@ -520,6 +534,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_120000) do
   add_foreign_key "inclusion_overrides", "groups", on_delete: :cascade
   add_foreign_key "invite_codes", "users"
   add_foreign_key "invite_codes", "users", column: "redeemed_by_id"
+  add_foreign_key "journal_dreamwidth_connections", "users"
   add_foreign_key "profiles", "profiles", column: "copied_from_id"
   add_foreign_key "profiles", "themes", on_delete: :nullify
   add_foreign_key "profiles", "users"

@@ -67,7 +67,7 @@ This is a core value of the app, not a nice-to-have.
 - CSS: BEM-ish (e.g. `.card`, `.card__header`, `.btn`, `.btn--secondary`, `.avatar--small`, `.chat-message__time`)
 - Routes: authenticated profile-site actions are namespaced under `our/` (e.g. `Our::ProfilesController`); chat controllers are under `Chat::` and only routed on the `chat` subdomain
 - Shared-link controllers are at the root namespace (`ProfilesController`, `GroupsController`)
-- Models use singular names; join tables use both model names (`GroupGroup`, `GroupProfile`); chat models live in `Chat::`, and the database-backed ones inherit from `ChatRecord`
+- Models use singular names; join tables use both model names (`GroupGroup`, `GroupProfile`); chat models live in `Chat::`, and the database-backed ones inherit from `ChatRecord`; journal models live in `Journal::` and inherit from `JournalRecord`
 
 ### Comments
 Comments explain *why*: the constraint, the browser quirk, the bug a line prevents. Keep them in step with the code; a comment that describes old behaviour is a bug.
@@ -187,4 +187,4 @@ docs/                   — plans written before larger features
 - `Procfile` runs `web` (Puma), `worker` (Solid Queue) and migrates on `postdeploy`
 - `.buildpacks` uses APT + Ruby buildpacks (APT installs libvips for image processing)
 - S3-compatible storage for Active Storage in production
-- Environment variables: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_HOST`, `ACTIVE_STORAGE_SERVICE`, `S3_*`
+- Environment variables: `DATABASE_URL`, `SECRET_KEY_BASE`, `APP_HOST`, `ACTIVE_STORAGE_SERVICE`, `S3_*`, `ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY` and `ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT` (encrypt the journal's Dreamwidth API keys)

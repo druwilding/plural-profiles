@@ -79,14 +79,13 @@ Journal::DreamwidthConnection   (table: journal_dreamwidth_connections)
 - **No limit on how many** in v1. Each is a single small row.
 - **Linking a connection to a profile or group** (so each journal shows that profile's avatar and name) is a natural extension. It also points towards the native journal posting *as* a profile. It isn't needed for v1, and can be added as a nullable `postable` reference later, the same way chat does it.
 
-### Encryption: Active Record encryption, which isn't set up yet
+### Encryption: Active Record encryption, from environment variables
 
-`encrypts :api_key` is a one-liner, but nothing in the app uses Active Record encryption today, so Phase 1 has to set it up:
+`encrypts :api_key` is a one-liner, but nothing in the app used Active Record encryption before, so Phase 1 sets it up. Like the rest of production's settings (S3, mail and so on), the keys come from **environment variables**, not `config/credentials.yml.enc`, so no master key is involved:
 
-- Run `bin/rails db:encryption:init` and put the three keys (`primary_key`, `deterministic_key`, `key_derivation_salt`) in `config/credentials.yml.enc`. Production already decrypts credentials via `RAILS_MASTER_KEY` on Scalingo, so there's no new environment variable. Check that the variable is actually set before relying on it.
-- Fixed, non-secret keys for the test environment go in `config/environments/test.rb`, so CI doesn't need the master key.
-- Non-deterministic encryption. We never look the key up by value.
-- **Losing the encryption keys makes every stored API key unreadable.** That's recoverable (people paste their key in again), but it should be written down next to the master key.
+- **Production** reads `ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY` and `ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT` (`config/environments/production.rb`). Generate the values with `bin/rails db:encryption:init` (which only prints them) and set them on Scalingo **before anyone connects a journal**. The third key it prints, `deterministic_key`, isn't needed: we never look a key up by value.
+- **Development and test** use fixed, non-secret keys in their environment files, so nothing needs setting up locally or in CI. Test also sets `encrypt_fixtures`, so fixture keys are encrypted as they load.
+- **Losing the production values makes every stored API key unreadable.** That's recoverable (people paste their keys in again), but keep them somewhere safe.
 
 ### Never shown back, never logged
 

@@ -15,6 +15,8 @@ class User < ApplicationRecord
   has_many :chat_servers, through: :chat_memberships, source: :server
   has_many :chat_messages, class_name: "Chat::Message", dependent: :destroy
 
+  has_many :dreamwidth_connections, class_name: "Journal::DreamwidthConnection", dependent: :destroy
+
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   normalizes :unverified_email_address, with: ->(e) { e.strip.downcase }
   normalizes :username, with: ->(u) { value = u.strip.downcase; value.blank? ? nil : value }, apply_to_nil: false
