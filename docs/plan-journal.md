@@ -100,7 +100,7 @@ Journal::DreamwidthConnection   (table: journal_dreamwidth_connections)
 A plain Ruby class in `app/services/dreamwidth/client.rb`, so it autoloads. It's the first file in `app/services/`. It knows nothing about controllers or plural-profiles models, so the future importer can reuse it as is.
 
 - Built with `Dreamwidth::Client.new(username:, api_key:)`.
-- Methods: `entries(count:, offset:, security: nil)`, `entry(id)`, `create_entry(attrs)`, `update_entry(id, attrs)`, `verify!`. Each returns plain Ruby hashes or small value objects, never raw JSON.
+- Methods: `entries(count:, offset:, security: nil)`, `entry(id)`, `create_entry(attrs)`, `update_entry(id, attrs)`, `tags`, `icons`, `access_lists`, `verify!`. Each returns plain Ruby hashes or small value objects, never raw JSON.
 - **What the API actually does** (checked in Phase 0; see "Phase 0 findings" below):
   - Entry IDs are Dreamwidth's public `ditemid`, the number in `/29492.html`. One ID works for list, read, edit and the "View on Dreamwidth" link.
   - Editing is `POST /journals/{u}/entries/{id}`, not `PATCH`. Once #3693 is live, fields left out of an edit keep their current values, `text` is optional, and `datetime` is honoured.
@@ -246,6 +246,20 @@ The same form and layout as Write, filled with the entry's current values, as on
 - **The entry's custom filters come back ticked.** Until #3688, they're listed as text instead (see "Editing mustn't quietly change what isn't shown").
 - Unlike Dreamwidth's edit page, ours keeps an `h1` ("Editing an entry in *username*") and the same centred column as Write, so the two pages match and screen readers announce where they are.
 
+### Tag suggestions
+
+The people using it liked one thing about Dreamwidth's new posting page: typing in the tags field lists **every** matching tag, where the old page suggested only one. They'd like it to work like chat's emote autocomplete, but starting after one character.
+
+- **The journal's tags come from `GET /journals/{u}/tags`**, which works today (it's separate from the bug about saving tags on edit). It returns each tag's name, sorted. They're fetched with the page and embedded as JSON, so suggestions appear instantly while typing.
+- **A Stimulus controller, following `emote_input_controller.js`**: a combobox with a listbox of options, Up/Down to move, Enter or Tab to choose, Escape to close, and a polite live announcement of how many tags match. Any listbox code worth sharing with the emote controller can be pulled out as we go, rather than up front.
+- **It works on the tag being typed**: the text after the last comma. It opens after **one character**.
+- **Matching** ignores case, and treats every character literally (some of their tags start with `*`). Tags that **start** with what's typed come first, then tags that **contain** it anywhere. Tags already in the field are left out. Every match is listed, scrolling if there are many.
+- **Choosing a tag** replaces what's being typed with the tag, followed by ", ", ready for the next one.
+- **The list opens below the field**, not at the caret, since it's a single-line field.
+- **Each tag can be at most 40 characters** (Dreamwidth's limit). We check that before posting, and if one is too long, the form comes back with everything kept and says which tag is too long.
+- **Not for now**: a "browse all tags" button, and showing how often each tag has been used. The API gives usage counts, so either can be added later.
+- Without JavaScript, it's the plain comma-separated field.
+
 ### After posting or saving: the entry page
 
 Dreamwidth shows a confirmation page after posting or editing, and the people using it rely on what's on it. Ours is `GET /journal/dw/:dreamwidth_username/entries/:id`, which Write and Edit both redirect to:
@@ -345,6 +359,8 @@ This is the whole reason the feature exists, so it gets more attention than usua
   - an unchanged date sends no `datetime`; a changed one does
   - after posting and after saving, the entry page shows who can see it and the subject, read back from Dreamwidth
   - drafts: typing saves a draft, Ctrl+S saves and announces it, coming back offers to restore, and posting clears it
+  - tag suggestions: one character opens matching tags (starts-with first, then contains, including tags starting with `*`), choosing one adds it with ", ", and tags already in the field aren't offered
+  - a tag over 40 characters posts nothing and keeps the form
   - posting to a community adds it to that connection's remembered communities
   - private-only mode: Entries asks for private entries and pages through them; Write offers only Private; Edit sends only `subject` and `text`
   - with the mode off: edit sends exactly `subject`, `text`, `tags`, `icon`, `datetime` and `security`, and leaves `security` out for a custom-filtered entry
@@ -371,7 +387,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
 
 Ship it. This is already useful for checking things look and read right with real themes and real assistive technology.
 
-**Phase 2: writing and editing.** `create_entry` and `update_entry`; the Write and Edit pages as laid out above (icon chooser, date and time, and, once the mode is off, post to with remembered communities and the full "Show this entry to"); the entry page after posting or saving; drafts; keeping the text when a post fails; and rate limits. Built in private-only mode, and tested on private test entries.
+**Phase 2: writing and editing.** `create_entry` and `update_entry`; the Write and Edit pages as laid out above (icon chooser, date and time, and, once the mode is off, post to with remembered communities and the full "Show this entry to"); the entry page after posting or saving; drafts; tag suggestions; keeping the text when a post fails; and rate limits. Built in private-only mode, and tested on private test entries.
 
 **Phase 3: everything, once Dreamwidth deploys its fixes.** Turn private-only mode off (see "Private-only mode"). This should be small: the pages are already built for the fixed API.
 
