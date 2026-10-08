@@ -18,7 +18,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     # The chat tests visit lvh.me and chat.lvh.me, which public DNS points at
     # 127.0.0.1. Resolving them in Chrome instead takes the network out of the
     # tests: a slow or failed lookup broke every chat test on that worker.
-    driver_option.add_argument("--host-resolver-rules=MAP lvh.me 127.0.0.1, MAP *.lvh.me 127.0.0.1")
+    # Dreamwidth fails at once for the same reason: journal pages show its
+    # images, and waiting on them under load timed tests out.
+    driver_option.add_argument("--host-resolver-rules=MAP lvh.me 127.0.0.1, MAP *.lvh.me 127.0.0.1, MAP dreamwidth.org ~NOTFOUND, MAP *.dreamwidth.org ~NOTFOUND")
     driver_option.add_preference("credentials_enable_service", false)
     driver_option.add_preference("profile.password_manager_leak_detection", false)
   end

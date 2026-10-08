@@ -1,6 +1,8 @@
 - content_for :head do
   %meta{name: "turbo-cache-control", content: "no-cache"}
-  = stylesheet_link_tag "coloris", "data-turbo-track": "reload"
+  -# "dynamic": Turbo adds it arriving here and removes it leaving, with no
+  -# full page reload either way.
+  = stylesheet_link_tag "coloris", "data-turbo-track": "dynamic"
 
 = form_with model: theme, url: (theme.persisted? ? our_theme_path(theme) : our_themes_path), method: (theme.persisted? ? :patch : :post) do |form|
   - if theme.errors.any?

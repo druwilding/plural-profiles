@@ -92,6 +92,13 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
+  # Encrypts the Dreamwidth API keys people connect in the journal. From the
+  # environment, like the rest of production's settings, so there's no
+  # credentials file to decrypt. Losing these makes every stored key
+  # unreadable: people would have to paste their keys in again.
+  config.active_record.encryption.primary_key = ENV["ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY"]
+  config.active_record.encryption.key_derivation_salt = ENV["ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT"]
+
   # Enable DNS rebinding protection and other `Host` header attacks.
   config.hosts = [
     ENV.fetch("APP_HOST", "plural-profiles.osc-fr1.scalingo.io"),

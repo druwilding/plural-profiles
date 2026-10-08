@@ -1,0 +1,37 @@
+- journal_page "Your journals"
+
+.card
+  .card__header
+    %h1 Your journals
+
+  %p
+    This part of Plural Profiles is a way into Dreamwidth, so you can post and
+    edit your entries here.
+  %p
+    Your entries live on Dreamwidth. Nothing is stored on Plural Profiles
+    apart from an API key for each journal you connect. The API keys are
+    encrypted.
+
+  = link_to (dreamwidth_connections.any? ? "Connect another Dreamwidth journal" : "Connect a Dreamwidth journal"), journal_connect_path, class: "btn"
+
+-# A tile per journal, like pp's profile cards: the whole tile goes to its
+-# entries, and the Post and Manage buttons sit on top. Each icon loads into its tile after the
+-# page (journal/icons), so a slow Dreamwidth never holds the page up.
+- if dreamwidth_connections.any?
+  %ul.profile-grid.journal-tiles
+    - dreamwidth_connections.each do |connection|
+      %li.card.profile-card.journal-tile
+        .journal-tile__icon
+          = turbo_frame_tag dom_id(connection, :icon), src: journal_dw_icon_path(connection), loading: :lazy
+        %h2.journal-tile__name
+          = link_to journal_wrappable_username(connection.username), journal_dw_entries_path(connection), class: "journal-tile__link"
+        - if connection.failed?
+          %p.journal-tile__problem Dreamwidth stopped accepting its key
+        .profile-card__action-spacer
+        .journal-tile__actions
+          = link_to journal_dw_new_entry_path(connection), class: "btn btn--small" do
+            Post
+            %span.visually-hidden an entry to #{connection.username}
+          = link_to journal_dw_connection_path(connection), class: "btn btn--small btn--secondary" do
+            Manage
+            %span.visually-hidden= connection.username

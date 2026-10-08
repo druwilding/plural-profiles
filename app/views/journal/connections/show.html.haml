@@ -1,0 +1,54 @@
+- journal_page "Manage #{@connection.username}"
+- described_by = ("connection-problem" if @problem)
+
+- if @problem
+  = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
+- elsif @connection.failed?
+  = render "journal/shared/key_failed", connection: @connection, manage_link: false
+
+.card
+  .card__header
+    %h1 Manage #{@connection.username}
+  = render "journal/shared/your_journals", current: @connection
+
+  %dl.connection-details
+    %dt Journal
+    %dd= dreamwidth_journal_link(@connection.username)
+    %dt API key
+    %dd
+      -# The stars are for the eye; a screen reader would read out each one,
+      -# so it gets words instead.
+      %code{aria: { hidden: "true" }} ********#{@connection.api_key_last_four}
+      %span.visually-hidden Ending in #{@connection.api_key_last_four}
+    - if @connection.verified_at
+      %dt Last checked with Dreamwidth
+      %dd= @connection.verified_at.strftime("%-d %B %Y, %H:%M")
+
+  %p= link_to "Back to your journals", journal_root_path, class: "btn btn--secondary"
+
+.card
+  .card__header
+    %h2 Replace the key
+  %p
+    If you've made a new key on Dreamwidth, or Dreamwidth stopped accepting this one,
+    = link_to "get the key from Dreamwidth (opens in a new tab)", "https://www.dreamwidth.org/api/getkey", target: "_blank", rel: "noopener"
+    while logged in as #{@connection.username}, and paste it here.
+  = form_with model: @connection, scope: :connection, url: journal_dw_connection_path(@connection), method: :patch do |form|
+    .form-group
+      = form.label :api_key, "New API key"
+      = form.text_field :api_key, value: "", required: true,
+        autocomplete: "off", autocapitalize: "none", spellcheck: false,
+        aria: { describedby: described_by }, data: { "1p-ignore": "true" }
+    .form-group
+      = form.submit "Save the new key"
+
+.card
+  .card__header
+    %h2 Disconnect
+  %p
+    Disconnecting removes the key from Plural Profiles. Your entries stay on
+    Dreamwidth. To stop the key working anywhere, also revoke it in
+    = succeed "." do
+      = dreamwidth_link_to("https://www.dreamwidth.org/manage/settings/?cat=mobile") { "Dreamwidth's mobile settings" }
+  = button_to "Disconnect #{@connection.username}", journal_dw_connection_path(@connection), method: :delete,
+    class: "btn btn--danger", form: { data: { turbo_confirm: "Disconnect #{@connection.username}?" } }

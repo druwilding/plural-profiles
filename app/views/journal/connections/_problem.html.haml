@@ -1,0 +1,45 @@
+-# Locals:
+-#   problem    — a symbol from ConnectionsController
+-#   connection — the connection being saved
+-#   existing   — the other connection a duplicate matched, if any
+-#
+-# Each message says what happened and what to do next. Shown just after the
+-# h1, and the fields point at it with aria-describedby. In the site's alert box
+-# rather than .error-messages, so it can't be missed.
+.flash.flash--alert.journal-notice#connection-problem{tabindex: "-1"}
+  - case problem
+  - when :already_connected
+    %p
+      You've already connected
+      = succeed "." do
+        %strong= existing.username
+      To replace its key,
+      = succeed "." do
+        = link_to "manage #{existing.username}", journal_dw_connection_path(existing)
+  - when :key_already_added
+    %p
+      You've already added this key: it's the one for
+      = succeed "." do
+        %strong= existing.username
+      Dreamwidth gives each account its own key, so you were probably logged in to Dreamwidth as #{existing.username}.
+      Log out of Dreamwidth, log in as #{connection.username}, then get the key again.
+  - when :key_rejected
+    %p Dreamwidth didn't accept that key. Check you copied all of it.
+  - when :wrong_account
+    %p
+      That key belongs to a different Dreamwidth account than
+      = succeed "." do
+        %strong= connection.username
+      Check which account you're logged in to on Dreamwidth, then get the key again.
+  - when :no_such_journal
+    %p
+      Dreamwidth doesn't have an account called
+      = succeed "." do
+        %strong= connection.username
+  - when :no_key
+    %p Paste the new key first.
+  - when :unavailable
+    %p Couldn't reach Dreamwidth just now, so nothing was saved. Try again in a few minutes.
+  - else
+    - connection.errors.full_messages.each do |message|
+      %p= message

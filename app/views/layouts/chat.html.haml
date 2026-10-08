@@ -28,9 +28,12 @@
           -# navigation, which (unlike fetch) is never subject to CORS.
           -#
           -# Signing out also clears this account's unsent drafts
-          -# (chat_drafts.js), so they don't stay behind on a shared computer.
+          -# (chat_drafts.js and journal_drafts.js), so they don't stay behind
+          -# on a shared computer.
           = button_to "Sign out", session_path, method: :delete,
-            form: { data: { turbo: false, controller: "chat-sign-out", "chat-sign-out-user-value": Current.user.id, action: "submit->chat-sign-out#clearDrafts" } },
+            form: { data: { turbo: false, controller: "chat-sign-out journal-sign-out",
+              "chat-sign-out-user-value": Current.user.id, "journal-sign-out-user-value": Current.user.id,
+              action: "submit->chat-sign-out#clearDrafts submit->journal-sign-out#clearDrafts" } },
             form_class: "site-header__signout", class: "link-button"
 
     - if flash[:notice]

@@ -1,0 +1,5 @@
+-# Replaces the tile's empty icon box (journal/journals/index). The icon is
+-# decoration: the journal's name is right below it.
+= turbo_frame_tag dom_id(@connection, :icon) do
+  - if @icon_url
+    = image_tag @icon_url, alt: "", width: 100, height: 100, class: "journal-tile__icon-image"
