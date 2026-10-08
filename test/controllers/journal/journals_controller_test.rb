@@ -15,6 +15,8 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Your journals"
     assert_select "title", /\AYour journals/
+    assert_select "p", /a way into Dreamwidth/
+    assert_select "p", /The API keys are\s+encrypted/
     assert_select ".journal-tile", 2
     assert_select ".journal-tile a[href=?]", journal_dw_entries_path("example_journal"), text: "example_journal"
     assert_select ".journal-tile a[href=?]", journal_dw_entries_path("second_journal"), text: "second_journal"
