@@ -48,7 +48,9 @@
               %option= @connection.username
             %p.form-hint#post-to-hint
               Posting to communities will come later, once Dreamwidth has updated their API.
-        %fieldset.journal-details__row.journal-details__date
+        -# A date that isn't real is explained in the problem notice, so the
+        -# date group points at it, as the text and tags fields do.
+        %fieldset.journal-details__row.journal-details__date{aria: { describedby: ("entry-problem" if @form.errors[:datetime].any?) }}
           %legend.journal-details__label Date
           = render "shared/datetime_picker", form: form, field: :datetime, value: @form.datetime_value
         .journal-details__row

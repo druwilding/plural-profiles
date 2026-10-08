@@ -4,9 +4,9 @@ module Journal
 
     PER_PAGE = 10
 
-    # Generous: only there to stop a runaway loop, not to limit writing.
-    rate_limit to: 30, within: 1.minute, only: :create,
-      with: -> { redirect_to journal_dw_entries_path(params[:dreamwidth_username]), alert: "That's a lot of posts in a minute. Wait a moment, then try again." }
+    # Generous: only there to stop a runaway loop, not to limit writing. Even
+    # then, the writing comes back with the page, as for any failed post.
+    rate_limit to: 30, within: 1.minute, only: :create, with: -> { render_rate_limited }
 
     before_action :set_connection
 
@@ -93,8 +93,18 @@ module Journal
       render :new, status: :unprocessable_entity
     end
 
+    # The rate limit runs before set_connection, so it finds the connection
+    # itself.
+    def render_rate_limited
+      set_connection
+      @form = EntryForm.new(entry_params)
+      @problem = :rate_limited
+      render_form
+    end
+
     # What the Write page offers: icons to choose from, and tags to suggest.
-    # Either can fail on its own; the page still works without them.
+    # Either can fail on its own; the page still works without them. A
+    # rejected key is recorded and shown, as on the other pages.
     def load_choices
       load_icons
       load_tags
@@ -103,6 +113,9 @@ module Journal
     # Sorted the way they're suggested: ignoring case.
     def load_tags
       @tags = dreamwidth_client.tags.sort_by(&:downcase)
+    rescue Dreamwidth::Client::KeyRejected, Dreamwidth::Client::Forbidden => error
+      @problem ||= problem_for(error)
+      @tags = []
     rescue Dreamwidth::Client::Error
       @tags = []
     end
@@ -114,6 +127,9 @@ module Journal
         icon.keywords.map { |keyword| [ keyword, icon.url ] }
       end.sort_by { |keyword, _url| keyword.downcase }
       @default_icon_url = default_icon_url_from_entries
+    rescue Dreamwidth::Client::KeyRejected, Dreamwidth::Client::Forbidden => error
+      @problem ||= problem_for(error)
+      @icons ||= []
     rescue Dreamwidth::Client::Error
       @icons ||= []
     end

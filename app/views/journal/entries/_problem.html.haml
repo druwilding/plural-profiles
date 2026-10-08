@@ -3,7 +3,7 @@
 -#   message — Dreamwidth's own words, for :invalid
 -#   form    — the entry form, if this is the Write page (its own errors are listed too)
 -#
--# Shown just after the h1, and the fields point at it with aria-describedby.
+-# Shown above the pane, and the fields point at it with aria-describedby.
 - if problem == :key_rejected
   = render "journal/shared/key_failed", connection: @connection, manage_link: true
 - elsif problem || form&.errors&.any?
@@ -25,6 +25,10 @@
       %p
         Couldn't reach Dreamwidth just now, so nothing was posted. Your writing is
         still here: try again in a few minutes.
+    - when :rate_limited
+      %p
+        That's a lot of posts in a minute, so this one wasn't sent. Your writing
+        is still here: wait a moment, then try again.
     - when :journal_gone
       %p
         Dreamwidth doesn't have a journal called
