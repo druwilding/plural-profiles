@@ -6,7 +6,7 @@ module Dreamwidth
   #
   # datetime is the journal's own local time ("2026-10-06 21:34:00") with no
   # time zone, so it's kept as Dreamwidth's text and never converted.
-  Entry = Data.define(:id, :url, :subject, :body, :datetime, :security, :tags, :icon_keyword) do
+  Entry = Data.define(:id, :url, :subject, :body, :datetime, :security, :tags, :icon_keyword, :icon_url) do
     def self.from_api(hash)
       new(
         id: hash.fetch("entry_id"),
@@ -16,7 +16,9 @@ module Dreamwidth
         datetime: hash["datetime"],
         security: hash["security"],
         tags: Array(hash["tags"]),
-        icon_keyword: hash["icon_keyword"]
+        icon_keyword: hash["icon_keyword"],
+        # The icon it was posted with, even when that was "(default)".
+        icon_url: hash.dig("icon", "url")
       )
     end
   end

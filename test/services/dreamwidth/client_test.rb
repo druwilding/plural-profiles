@@ -155,8 +155,65 @@ class Dreamwidth::ClientTest < ActiveSupport::TestCase
     end
   end
 
+  test "entry reads one entry by its id" do
+    transport = FakeTransport.new(body: ENTRY_JSON.merge("icon" => { "url" => "https://v2.dreamwidth.org/1/2" }).to_json)
+    entry = client(transport).entry(29492)
+
+    assert_equal "/api/v1/journals/example_journal/entries/29492", transport.last_uri.path
+    assert_equal "API & test", entry.subject
+    assert_equal "https://v2.dreamwidth.org/1/2", entry.icon_url
+  end
+
+  test "create_entry posts JSON and returns the new entry's id and url" do
+    body = { "success" => 1, "entry_id" => 29927, "url" => "https://example-journal.dreamwidth.org/29927.html" }.to_json
+    transport = FakeTransport.new(body: body)
+    attrs = { text: "Hello", subject: "Hi", security: "private", tags: [ "one", "two" ] }
+
+    posted = client(transport).create_entry(attrs)
+
+    assert_equal Net::HTTP::Post, transport.last_request.class
+    assert_equal "/api/v1/journals/example_journal/entries", transport.last_uri.path
+    assert_equal "application/json", transport.last_request["Content-Type"]
+    assert_equal attrs.stringify_keys, JSON.parse(transport.last_request.body)
+    assert_equal 29927, posted.id
+    assert_equal "https://example-journal.dreamwidth.org/29927.html", posted.url
+  end
+
+  test "a moderated post has a message instead of an entry" do
+    transport = FakeTransport.new(body: { "success" => 1, "message" => "Awaiting approval" }.to_json)
+    posted = client(transport).create_entry(text: "Hello")
+
+    assert_nil posted.id
+    assert_equal "Awaiting approval", posted.message
+  end
+
+  test "icons are the user's, with their keywords" do
+    body = [ { "picid" => 8, "keywords" => [ "bass", "music" ], "url" => "https://v2.dreamwidth.org/8/1", "comment" => "", "username" => "example_journal" } ]
+    transport = FakeTransport.new(body: body.to_json)
+
+    icons = client(transport).icons
+
+    assert_equal "/api/v1/users/example_journal/icons", transport.last_uri.path
+    assert_equal [ Dreamwidth::Icon.new(id: 8, keywords: [ "bass", "music" ], url: "https://v2.dreamwidth.org/8/1", comment: "") ], icons
+  end
+
+  test "no answer in time is TimedOut: it may have happened" do
+    error = assert_raises(Dreamwidth::Client::TimedOut) do
+      client(FakeTransport.new(raises: Net::ReadTimeout.new)).create_entry(text: "Hello")
+    end
+    assert_kind_of Dreamwidth::Client::Unavailable, error
+  end
+
+  test "failing to connect is Unavailable but not TimedOut: nothing happened" do
+    error = assert_raises(Dreamwidth::Client::Unavailable) do
+      client(FakeTransport.new(raises: Net::OpenTimeout.new)).create_entry(text: "Hello")
+    end
+    assert_not_kind_of Dreamwidth::Client::TimedOut, error
+  end
+
   test "the real transport uses short timeouts" do
     assert_equal 5, Dreamwidth::Client::OPEN_TIMEOUT
     assert_equal 15, Dreamwidth::Client::READ_TIMEOUT
+    assert_equal 15, Dreamwidth::Client::WRITE_TIMEOUT
   end
 end

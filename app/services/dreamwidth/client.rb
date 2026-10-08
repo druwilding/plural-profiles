@@ -15,6 +15,7 @@ module Dreamwidth
     # few threads.
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 15
+    WRITE_TIMEOUT = 15
 
     class Error < StandardError; end
     # 401: the key is wrong or has been revoked.
@@ -27,21 +28,33 @@ module Dreamwidth
     class Invalid < Error; end
     # Timeouts, connection failures, 429 and 5xx: worth trying again later.
     class Unavailable < Error; end
+    # The request reached Dreamwidth but no answer came back in time, so it
+    # may or may not have happened. After a post, that means checking before
+    # posting again, or there could be two.
+    class TimedOut < Unavailable; end
+
+    # What posting an entry returns. A moderated community has no entry yet,
+    # just Dreamwidth's message saying it's waiting for approval.
+    Posted = Data.define(:id, :url, :message)
 
     # The real network call. Tests pass their own transport instead, which
     # answers with canned responses.
     class NetHttpTransport
       def call(uri, request)
-        Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT) do |http|
+        Net::HTTP.start(uri.host, uri.port, use_ssl: true,
+          open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT, write_timeout: WRITE_TIMEOUT) do |http|
           http.request(request)
         end
       end
     end
 
+    # Failures before the request got through, so nothing happened.
     NETWORK_ERRORS = [
-      Net::OpenTimeout, Net::ReadTimeout, SocketError, SystemCallError,
-      OpenSSL::SSL::SSLError, EOFError, IOError
+      Net::OpenTimeout, SocketError, SystemCallError, OpenSSL::SSL::SSLError
     ].freeze
+
+    # Failures after it may have got through.
+    UNCERTAIN_ERRORS = [ Net::ReadTimeout, Net::WriteTimeout, EOFError, IOError ].freeze
 
     attr_reader :username
 
@@ -71,6 +84,25 @@ module Dreamwidth
       get(journal_path("entries"), query).map { |entry| Entry.from_api(entry) }
     end
 
+    def entry(id)
+      Entry.from_api(get(journal_path("entries", id)))
+    end
+
+    # attrs as the API takes them: text, subject, security, tags (a list),
+    # icon (a keyword) and datetime ("YYYY-MM-DD hh:mm"). Anything left out
+    # gets Dreamwidth's default.
+    def create_entry(attrs)
+      response = post(journal_path("entries"), attrs)
+      Posted.new(id: response["entry_id"], url: response["url"], message: response["message"])
+    end
+
+    # The icons a journal can post with. Not journal_path: icons belong to
+    # the user, at /users/{username}/icons.
+    def icons
+      path = [ "users", username, "icons" ].map { |segment| ERB::Util.url_encode(segment) }.join("/")
+      get(path).map { |icon| Icon.from_api(icon) }
+    end
+
     private
 
     def journal_path(*segments)
@@ -84,6 +116,14 @@ module Dreamwidth
       perform(uri, request)
     end
 
+    def post(path, body)
+      uri = URI.join(BASE_URL, path)
+      request = Net::HTTP::Post.new(uri)
+      request["Content-Type"] = "application/json"
+      request.body = body.to_json
+      perform(uri, request)
+    end
+
     def perform(uri, request)
       # The key only ever travels in this header: never in a URL, where it
       # could end up in a log.
@@ -94,6 +134,8 @@ module Dreamwidth
         @transport.call(uri, request)
       rescue *NETWORK_ERRORS => error
         raise Unavailable, "Couldn't reach Dreamwidth (#{error.class})"
+      rescue *UNCERTAIN_ERRORS => error
+        raise TimedOut, "No answer from Dreamwidth (#{error.class})"
       end
 
       handle(response)

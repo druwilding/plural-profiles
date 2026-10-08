@@ -11,6 +11,8 @@
     ·
     = link_to "Manage this connection", journal_dw_connection_path(@connection)
 
+  %p= link_to "Write a new entry", journal_dw_new_entry_path(@connection), class: "btn"
+
   - case @problem
   - when :key_rejected
     = render "journal/shared/key_failed", connection: @connection, manage_link: true
@@ -21,7 +23,7 @@
         %strong= @connection.username
         any more. If it was renamed, disconnect this one and connect the new name.
       %p= link_to "Manage #{@connection.username}", journal_dw_connection_path(@connection)
-  - when :unavailable
+  - when :unavailable, :timed_out
     .flash.flash--warning.journal-notice
       %p Couldn't reach Dreamwidth just now. Try again in a few minutes.
   - else

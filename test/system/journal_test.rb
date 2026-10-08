@@ -54,6 +54,39 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector ".your-journals a[aria-current='page']", text: "second_journal"
   end
 
+  test "write a private entry, post it, and see what Dreamwidth saved" do
+    sign_in_via_browser
+    visit journal_dw_entries_path("example_journal")
+    click_link "Write a new entry"
+
+    assert_selector "h1", text: "New entry in example_journal"
+    fill_in "Subject:", with: "Tuesday thoughts"
+    fill_in "Entry text:", with: "First paragraph.\n\nSecond one."
+    fill_in "Tags:", with: "days, thoughts"
+    click_button "Post to: example_journal"
+
+    assert_selector "h1", text: "Entry in example_journal"
+    assert_text "Your entry has been posted."
+    assert_text "only you can see it"
+    assert_selector "strong", text: "Tuesday thoughts"
+    posted = FakeDreamwidthClient.journals["example_journal"][:entries].last
+    assert_equal "First paragraph.\n\nSecond one.", posted.body
+    assert_equal [ "days", "thoughts" ], posted.tags
+  end
+
+  test "choosing an icon shows it straight away" do
+    FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "New entry in example_journal"
+    assert_no_selector ".journal-details__icon-image", visible: true
+
+    select "bass", from: "Icon:"
+
+    assert_selector ".journal-details__icon-image[src='https://v2.dreamwidth.org/8/1']", visible: :all
+    assert_equal false, page.evaluate_script("document.querySelector('.journal-details__icon-image').hidden")
+  end
+
   test "journal.css comes with journal pages and goes when leaving them" do
     sign_in_via_browser
     within(".site-header nav") { click_link "Journal" }

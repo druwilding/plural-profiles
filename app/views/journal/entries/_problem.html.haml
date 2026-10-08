@@ -1,0 +1,37 @@
+-# Locals:
+-#   problem — a symbol from EntriesController
+-#   message — Dreamwidth's own words, for :invalid
+-#   form    — the entry form, if this is the Write page (its own errors are listed too)
+-#
+-# Shown just after the h1, and the fields point at it with aria-describedby.
+- if problem == :key_rejected
+  = render "journal/shared/key_failed", connection: @connection, manage_link: true
+- elsif problem || form&.errors&.any?
+  .flash.flash--alert.journal-notice#entry-problem{tabindex: "-1"}
+    - case problem
+    - when :invalid
+      %p Dreamwidth didn't post it, and said: “#{message}”
+      %p Your writing is still here.
+    - when :timed_out
+      %p
+        Dreamwidth didn't answer in time, so it isn't clear whether your entry was
+        posted. Your writing is still here.
+      %p
+        Before posting again,
+        = link_to journal_dw_entries_path(@connection), target: "_blank", rel: "noopener" do
+          check #{@connection.username}'s entries (opens in a new tab)
+        so it isn't posted twice.
+    - when :unavailable
+      %p
+        Couldn't reach Dreamwidth just now, so nothing was posted. Your writing is
+        still here: try again in a few minutes.
+    - when :journal_gone
+      %p
+        Dreamwidth doesn't have a journal called
+        %strong= @connection.username
+        any more.
+    - when :entry_gone
+      %p Dreamwidth doesn't have that entry. It may have been deleted.
+    - if form
+      - form.errors.full_messages.each do |error_message|
+        %p= error_message

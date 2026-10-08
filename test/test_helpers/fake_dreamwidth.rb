@@ -13,8 +13,8 @@ class FakeDreamwidthClient
     end
 
     # api_key can be a list: a Dreamwidth account can have several keys.
-    def add_journal(username, api_key:, entries: [], access_lists: [])
-      journals[username] = { api_keys: Array(api_key), entries: entries, access_lists: access_lists }
+    def add_journal(username, api_key:, entries: [], access_lists: [], icons: [])
+      journals[username] = { api_keys: Array(api_key), entries: entries, access_lists: access_lists, icons: icons }
     end
 
     # Every call fails with this error until reset (Unavailable, KeyRejected…).
@@ -49,6 +49,36 @@ class FakeDreamwidthClient
     list = list.select { |entry| entry.security == "public" } unless own_journal?
     list = list.select { |entry| entry.security == security } if security
     list.drop(offset).first(count)
+  end
+
+  def entry(id)
+    record(:entry, id: id)
+    found = journal[:entries].find { |entry| entry.id.to_s == id.to_s }
+    raise Dreamwidth::Client::NotFound, "No such entry" unless found
+    raise Dreamwidth::Client::Forbidden, "Not visible" unless own_journal? || found.security == "public"
+    found
+  end
+
+  # Keeps the entry, as Dreamwidth would, and returns what Dreamwidth does.
+  def create_entry(attrs)
+    record(:create_entry, **attrs)
+    raise Dreamwidth::Client::Forbidden, "Not your journal" unless own_journal?
+
+    id = (journal[:entries].map(&:id).max || 0) + 1
+    url = "https://#{username.tr('_', '-')}.dreamwidth.org/#{id}.html"
+    icon = journal[:icons].find { |candidate| candidate.keywords.include?(attrs[:icon]) }
+    journal[:entries] << Dreamwidth::Entry.new(
+      id: id, url: url, subject: attrs[:subject].to_s, body: attrs[:text],
+      datetime: attrs[:datetime] ? "#{attrs[:datetime]}:00" : Time.current.strftime("%Y-%m-%d %H:%M:%S"),
+      security: attrs[:security] || "public", tags: Array(attrs[:tags]),
+      icon_keyword: attrs[:icon] || "(default)", icon_url: icon&.url
+    )
+    Dreamwidth::Client::Posted.new(id: id, url: url, message: nil)
+  end
+
+  def icons
+    record(:icons)
+    journal[:icons]
   end
 
   private
@@ -86,10 +116,15 @@ module FakeDreamwidthHelper
     end
   end
 
-  def dreamwidth_entry(id:, subject: "An entry", datetime: "2026-10-06 21:34:00", security: "private", tags: [])
+  def dreamwidth_entry(id:, subject: "An entry", datetime: "2026-10-06 21:34:00", security: "private", tags: [],
+    icon_keyword: "(default)", icon_url: nil)
     Dreamwidth::Entry.new(
       id: id, url: "https://example.dreamwidth.org/#{id}.html", subject: subject, body: "Body of #{id}",
-      datetime: datetime, security: security, tags: tags, icon_keyword: "(default)"
+      datetime: datetime, security: security, tags: tags, icon_keyword: icon_keyword, icon_url: icon_url
     )
+  end
+
+  def dreamwidth_icon(id:, keywords:)
+    Dreamwidth::Icon.new(id: id, keywords: Array(keywords), url: "https://v2.dreamwidth.org/#{id}/1", comment: "")
   end
 end

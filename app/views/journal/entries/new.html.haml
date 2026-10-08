@@ -1,0 +1,73 @@
+- journal_page "New entry in #{@connection.username}"
+- has_problem = @problem.present? || @form.errors.any?
+- described_by = ("entry-problem" if has_problem && @problem != :key_rejected)
+- chosen_icon_url = @icons.to_h[@form.icon] || (@default_icon_url if @form.icon.blank?)
+
+-# One form across the panes, in the order Dreamwidth's posting page uses
+-# (docs/plan-journal.md, "The Write page"). It works without JavaScript; with
+-# it, the icon image follows the icon chosen.
+= form_with model: @form, scope: :entry, url: journal_dw_entries_path(@connection), method: :post,
+  class: "journal-write", data: { controller: "journal-icon-preview" } do |form|
+  = form.hidden_field :datetime_original
+
+  .card
+    .card__header
+      %h1 New entry in #{@connection.username}
+    = render "journal/shared/flash"
+    = render "journal/entries/problem", problem: @problem, message: @problem_message, form: @form
+
+    .journal-details
+      .journal-details__icon
+        %img.journal-details__icon-image{src: chosen_icon_url, alt: "", width: 100, height: 100,
+          hidden: chosen_icon_url.blank?, data: { "journal-icon-preview-target": "image" }}
+
+      .journal-details__fields
+        .journal-details__row
+          %span.journal-details__label Post as:
+          %span= dreamwidth_journal_link(@connection.username)
+        .journal-details__row
+          %span.journal-details__label Post to:
+          %span= @connection.username
+        %fieldset.journal-details__row.journal-details__date
+          %legend.journal-details__label Date:
+          = render "shared/datetime_picker", form: form, field: :datetime, value: @form.datetime_value
+        .journal-details__row
+          = form.label :icon, "Icon:", class: "journal-details__label"
+          = form.select :icon, journal_icon_options(@icons, @default_icon_url, @form.icon), {},
+            data: { "journal-icon-preview-target": "select", action: "journal-icon-preview#update" }
+
+  .card
+    .card__header
+      %h2 Entry
+    .form-group
+      = form.label :subject, "Subject:"
+      = form.text_field :subject, maxlength: 255, autocomplete: "off", data: { "1p-ignore": "true" }
+    .form-group
+      = form.label :body, "Entry text:"
+      = form.text_area :body, rows: 25, required: true, class: "journal-write__text",
+        aria: { describedby: ["entry-text-hint", described_by].compact.join(" ") }
+      %p.form-hint#entry-text-hint
+        HTML tags work here, and a blank line starts a new paragraph, as on Dreamwidth.
+
+  .card
+    .card__header
+      %h2 Tags
+    .form-group
+      = form.label :tags, "Tags:"
+      = form.text_field :tags, autocomplete: "off", spellcheck: false,
+        aria: { describedby: ["tags-hint", described_by].compact.join(" ") }, data: { "1p-ignore": "true" }
+      %p.form-hint#tags-hint
+        Separate tags with commas. Each tag can be up to #{Journal::EntryForm::MAX_TAG_LENGTH} characters.
+
+  .card
+    .card__header
+      %h2 Who can see it
+    .form-group
+      = form.label :security, "Show this entry to:"
+      = form.select :security, Journal::EntryForm.security_options.invert, {},
+        aria: { describedby: ("security-hint" if Journal::PRIVATE_ONLY) }
+      - if Journal::PRIVATE_ONLY
+        %p.form-hint#security-hint
+          More options, including custom filters, once Dreamwidth has updated their API.
+    .form-group
+      = form.submit "Post to: #{@connection.username}", data: { turbo_submits_with: "Posting…" }

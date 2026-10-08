@@ -1,11 +1,6 @@
 module JournalHelper
   # Dreamwidth's own words for each security level, as on its posting page.
-  SECURITY_LABELS = {
-    "public" => "Everyone (Public)",
-    "access" => "Access List",
-    "private" => "Private (Just You)",
-    "custom" => "Custom Filter"
-  }.freeze
+  SECURITY_LABELS = Journal::EntryForm::SECURITY_OPTIONS.merge("custom" => "Custom Filter").freeze
 
   # Sets the page title, loads journal.css (only journal pages do), and stops
   # Turbo prefetching this page's links: every journal page asks Dreamwidth
@@ -54,6 +49,25 @@ module JournalHelper
 
   def dreamwidth_security_label(security)
     SECURITY_LABELS.fetch(security.to_s, security.to_s.humanize)
+  end
+
+  # The Icon dropdown: "(default)" first, then every keyword. Each option
+  # carries its icon's image address, for the preview to show.
+  def journal_icon_options(icons, default_icon_url, selected)
+    options = [ [ "(default)", "", { data: { url: default_icon_url } } ] ] +
+      icons.map { |keyword, url| [ keyword, keyword, { data: { url: url } } ] }
+    options_for_select(options, selected)
+  end
+
+  # Who can see an entry, in a sentence, as Dreamwidth says it after posting.
+  def dreamwidth_entry_visibility(security)
+    case security.to_s
+    when "public" then "The entry is visible to everyone."
+    when "access" then "The entry is visible to your access list."
+    when "private" then "The entry is private: only you can see it."
+    when "custom" then "The entry is visible to your custom access filters."
+    else "The entry's security is “#{security}”."
+    end
   end
 
   # Dreamwidth's "2026-10-06 21:34:00" is the journal's own local time with no

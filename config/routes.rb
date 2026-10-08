@@ -71,6 +71,9 @@ Rails.application.routes.draw do
 
     scope "dw/:dreamwidth_username", as: "dw", constraints: { dreamwidth_username: /[A-Za-z0-9_-]+/ } do
       get "/", to: "entries#index", as: :entries
+      post "/", to: "entries#create"
+      get "entries/new", to: "entries#new", as: :new_entry
+      get "entries/:id", to: "entries#show", as: :entry, constraints: { id: /\d+/ }
       resource :connection, only: %i[show update destroy]
     end
   end
