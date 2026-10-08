@@ -30,6 +30,13 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select "input[type=submit][value='Post to: example_journal']"
   end
 
+  test "a button beside Post goes back to the journal's entries" do
+    get journal_dw_new_entry_path(@connection)
+
+    assert_select "input[type=submit] + a.btn.btn--secondary[href=?]", journal_dw_entries_path(@connection),
+      text: "Back to example_journal's entries"
+  end
+
   test "it's all one pane, with the fields in Dreamwidth's order" do
     get journal_dw_new_entry_path(@connection)
 
@@ -120,6 +127,7 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select "p", /only you can see it/
     assert_select "p strong", "Hello"
     assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Post another entry"
+    assert_select "a.btn.btn--secondary[href=?]", journal_dw_entries_path(@connection), text: "Back to example_journal's entries"
   end
 
   test "an entry with no subject says so" do

@@ -380,6 +380,23 @@
   resize: vertical;
 }
 
+/* Buttons side by side, wrapping onto their own lines on narrow screens with
+   a gap between, rather than touching. */
+.journal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* The gap spaces them; .form-group's margin between buttons (same
+   selectors, in application.css) would push a wrapped one out of line. */
+.form-group.journal-actions input[type="submit"] + .btn,
+.form-group.journal-actions .btn + .btn,
+.form-group.journal-actions .btn + input[type="submit"] {
+  margin-left: 0;
+}
+
 .journal-next-steps {
   margin: 0;
   padding-left: 1.5rem;

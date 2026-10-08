@@ -24,7 +24,7 @@
       %dt Last checked with Dreamwidth
       %dd= @connection.verified_at.strftime("%-d %B %Y, %H:%M")
 
-  %p= link_to "#{@connection.username}'s entries", journal_dw_entries_path(@connection)
+  %p= link_to "Back to #{@connection.username}'s entries", journal_dw_entries_path(@connection), class: "btn btn--secondary"
 
 .card
   .card__header
