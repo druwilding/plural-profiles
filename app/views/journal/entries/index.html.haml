@@ -6,10 +6,7 @@
   = render "journal/shared/clear_draft"
   = render "journal/shared/your_journals", current: @connection
 
-  %p.journal-meta
-    = dreamwidth_journal_link(@connection.username)
-    ·
-    = link_to "Manage this connection", journal_dw_connection_path(@connection)
+  %p.journal-meta= dreamwidth_journal_link(@connection.username)
 
   %p.journal-actions
     = link_to "Post an entry", journal_dw_new_entry_path(@connection), class: "btn"

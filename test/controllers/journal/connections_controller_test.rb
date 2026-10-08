@@ -123,11 +123,11 @@ class Journal::ConnectionsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "fakeKeyOneMain0001"
   end
 
-  test "the manage page has a button back to the journal's entries" do
+  test "the manage page has a button back to your journals" do
     sign_in_as users(:one)
     get journal_dw_connection_path("example_journal")
 
-    assert_select "a.btn.btn--secondary[href=?]", journal_dw_entries_path("example_journal"), text: "Back to example_journal's entries"
+    assert_select "a.btn.btn--secondary[href=?]", journal_root_path, text: "Back to your journals"
   end
 
   test "someone else's journal, or one not connected, is a 404" do
