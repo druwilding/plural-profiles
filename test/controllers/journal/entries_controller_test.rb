@@ -126,8 +126,14 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_not @connection.reload.failed?
   end
 
-  test "the journal switcher lists every connected journal and marks this one" do
+  test "there's no journal switcher on the entries page" do
     get journal_dw_entries_path(@connection)
+
+    assert_select ".your-journals", 0
+  end
+
+  test "Manage has the journal switcher, listing every connected journal and marking this one" do
+    get journal_dw_connection_path(@connection)
 
     assert_select ".your-journals a", 2
     assert_select ".your-journals a[aria-current='page']", "example_journal"

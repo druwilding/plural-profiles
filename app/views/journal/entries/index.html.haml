@@ -11,7 +11,6 @@
       %h1 #{@connection.username}'s entries
       %p.journal-header__link= dreamwidth_journal_link(@connection.username)
   = render "journal/shared/clear_draft"
-  = render "journal/shared/your_journals", current: @connection
 
   %p.journal-actions
     = link_to "Post an entry", journal_dw_new_entry_path(@connection), class: "btn"

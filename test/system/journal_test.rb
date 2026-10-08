@@ -40,18 +40,17 @@ class JournalTest < ApplicationSystemTestCase
     assert_field "API key", with: ""
   end
 
-  test "switching journals with the Your journals links" do
+  test "switching journals with the Your journals links on Manage" do
     sign_in_via_browser
-    visit journal_dw_entries_path("example_journal")
-    assert_selector "h1", text: "example_journal's entries"
-    assert_text "Monday thoughts"
+    visit journal_dw_connection_path("example_journal")
+    assert_selector "h1", text: "Manage example_journal"
+    assert_selector ".your-journals a[aria-current='page']", text: "example_journal"
 
     within(".your-journals") { click_link "second_journal" }
 
     assert_selector "h1", text: "second_journal's entries"
     assert_text "Second journal's entry"
     assert_no_text "Monday thoughts"
-    assert_selector ".your-journals a[aria-current='page']", text: "second_journal"
   end
 
   test "write a private entry, post it, and see what Dreamwidth saved" do
@@ -326,8 +325,8 @@ class JournalTest < ApplicationSystemTestCase
 
   test "the current journal stays marked in forced colours" do
     sign_in_via_browser
-    visit journal_dw_entries_path("example_journal")
-    assert_selector "h1", text: "example_journal's entries"
+    visit journal_dw_connection_path("example_journal")
+    assert_selector "h1", text: "Manage example_journal"
 
     with_forced_colors do
       decoration = page.evaluate_script(
