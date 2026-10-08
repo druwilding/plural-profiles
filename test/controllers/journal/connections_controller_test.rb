@@ -35,6 +35,13 @@ class Journal::ConnectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='https://www.dreamwidth.org/api/getkey'][target='_blank'][rel='noopener']", text: /opens in a new tab/
   end
 
+  test "a key pasted across two lines still connects, rather than erroring" do
+    connect(username: "new_journal", api_key: "goodKey\r\n123")
+
+    assert_redirected_to journal_dw_entries_path("new_journal")
+    assert_equal "goodKey123", @user.dreamwidth_connections.find_by!(username: "new_journal").api_key
+  end
+
   test "connecting with the journal's own key saves it, checked, and goes to its entries" do
     assert_difference -> { @user.dreamwidth_connections.count }, 1 do
       connect(username: "New-Journal")

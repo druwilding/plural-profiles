@@ -222,6 +222,33 @@ class Dreamwidth::ClientTest < ActiveSupport::TestCase
     assert_not_kind_of Dreamwidth::Client::TimedOut, error
   end
 
+  test "a connection refused or unreachable is Unavailable but not TimedOut: nothing was sent" do
+    [ Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ENETUNREACH, SocketError ].each do |failure|
+      error = assert_raises(Dreamwidth::Client::Unavailable) do
+        client(FakeTransport.new(raises: failure.new)).create_entry(text: "Hello")
+      end
+      assert_not_kind_of Dreamwidth::Client::TimedOut, error, failure.name
+    end
+  end
+
+  test "a connection reset, broken pipe or SSL error is TimedOut: the post may have got through" do
+    [ Errno::ECONNRESET, Errno::EPIPE, Errno::ETIMEDOUT, OpenSSL::SSL::SSLError ].each do |failure|
+      assert_raises(Dreamwidth::Client::TimedOut, failure.name) do
+        client(FakeTransport.new(raises: failure.new)).create_entry(text: "Hello")
+      end
+    end
+  end
+
+  test "a key with a line break or space in it is rejected without asking Dreamwidth" do
+    [ "secret\nKey", "secret\rKey", "secret Key", "" ].each do |key|
+      transport = FakeTransport.new
+      assert_raises(Dreamwidth::Client::KeyRejected, key.inspect) do
+        Dreamwidth::Client.new(username: "example_journal", api_key: key, transport: transport).access_lists
+      end
+      assert_empty transport.requests
+    end
+  end
+
   test "the real transport uses short timeouts" do
     assert_equal 5, Dreamwidth::Client::OPEN_TIMEOUT
     assert_equal 15, Dreamwidth::Client::READ_TIMEOUT

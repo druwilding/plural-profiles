@@ -36,9 +36,11 @@ module Journal
       Rails.application.key_generator.generate_key("journal/dreamwidth_connection/api_key_digest", 32)
     end
 
-    # Pasted keys often bring a stray space or newline with them.
+    # Pasted keys often bring a stray space or newline with them, at the ends
+    # or (from wrapping) in the middle. No Dreamwidth key has either, so they
+    # go wherever they are.
     def api_key=(key)
-      key = key.to_s.strip.presence
+      key = key.to_s.gsub(/[[:space:][:cntrl:]]/, "").presence
       super(key)
       self.api_key_digest = key && self.class.digest_api_key(key)
     end

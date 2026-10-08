@@ -48,13 +48,22 @@ module Dreamwidth
       end
     end
 
-    # Failures before the request got through, so nothing happened.
+    # Failures while connecting, before any of the request was sent, so
+    # nothing happened: the name didn't resolve, or the connection was
+    # refused, unreachable or too slow to open.
     NETWORK_ERRORS = [
-      Net::OpenTimeout, SocketError, SystemCallError, OpenSSL::SSL::SSLError
+      Net::OpenTimeout, SocketError,
+      Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::EADDRNOTAVAIL
     ].freeze
 
-    # Failures after it may have got through.
-    UNCERTAIN_ERRORS = [ Net::ReadTimeout, Net::WriteTimeout, EOFError, IOError ].freeze
+    # Anything else may have come after the request got through: a reset
+    # connection (ECONNRESET), a broken pipe (EPIPE), an SSL error part-way,
+    # a timeout waiting for the answer. After a post, that means checking
+    # before posting again. Rescued after NETWORK_ERRORS, so the specific
+    # socket errors above are still "nothing happened".
+    UNCERTAIN_ERRORS = [
+      Net::ReadTimeout, Net::WriteTimeout, EOFError, IOError, SystemCallError, OpenSSL::SSL::SSLError
+    ].freeze
 
     attr_reader :username
 
@@ -131,6 +140,11 @@ module Dreamwidth
     end
 
     def perform(uri, request)
+      # A key with spaces or control characters in it can't be a Dreamwidth
+      # key, and Net::HTTP would refuse the header (CR or LF) with an error
+      # of its own. Say so the way Dreamwidth would.
+      raise KeyRejected, "That isn't a valid API key" unless @api_key.to_s.match?(/\A[[:graph:]]+\z/)
+
       # The key only ever travels in this header: never in a URL, where it
       # could end up in a log.
       request["Authorization"] = "Bearer #{@api_key}"

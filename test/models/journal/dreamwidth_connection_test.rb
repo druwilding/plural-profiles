@@ -58,6 +58,13 @@ class Journal::DreamwidthConnectionTest < ActiveSupport::TestCase
     assert_not_equal Digest::SHA256.hexdigest("abc123"), connection.api_key_digest
   end
 
+  test "a key pasted with line breaks or spaces in the middle is joined up" do
+    connection = @user.dreamwidth_connections.build(username: "my_journal", api_key: "abc\r\n123 def\t456")
+
+    assert_equal "abc123def456", connection.api_key
+    assert_equal Journal::DreamwidthConnection.digest_api_key("abc123def456"), connection.api_key_digest
+  end
+
   test "a blank key is invalid and has no digest" do
     connection = @user.dreamwidth_connections.build(username: "my_journal", api_key: "   ")
 
