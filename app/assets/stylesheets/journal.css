@@ -85,7 +85,9 @@
   margin: 0;
 }
 
-.journal-tile__icon {
+.journal-tile__icon,
+.journal-header__icon {
+  flex: none;
   width: 6.25rem;
   height: 6.25rem;
   border: 1px solid var(--pane-border);
@@ -93,7 +95,8 @@
   overflow: hidden;
 }
 
-.journal-tile__icon-image {
+.journal-tile__icon-image,
+.journal-header__icon-image {
   display: block;
   width: 100%;
   height: 100%;
@@ -134,8 +137,15 @@
   z-index: 1;
 }
 
-.journal-meta {
-  margin-bottom: 1.25rem;
+/* The Entries page's header: the Dreamwidth link under the name. The icon
+   box's border follows the header's text, so it shows on the header's
+   background. */
+.card > .card__header .journal-header__icon {
+  border-color: color-mix(in srgb, var(--header-text) 30%, transparent);
+}
+
+.journal-header__link {
+  margin: 0.35rem 0 0;
 }
 
 .connect-steps {

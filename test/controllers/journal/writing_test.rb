@@ -237,6 +237,6 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
 
     assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Post an entry"
     assert_select ".journal-actions a.btn + a.btn.btn--secondary[href=?]", journal_root_path, text: "Back to your journals"
-    assert_select ".journal-meta a[href=?]", journal_dw_connection_path(@connection), 0
+    assert_select "a[href=?]", journal_dw_connection_path(@connection), 0
   end
 end

@@ -10,6 +10,25 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
     FakeDreamwidthClient.add_journal("second_journal", api_key: "fakeKeyOneSecond0002")
   end
 
+  test "the header shows the journal's icon, its name, and a link to it on Dreamwidth" do
+    FakeDreamwidthClient.journals["example_journal"][:entries] = [
+      dreamwidth_entry(id: 1, icon_keyword: "(default)", icon_url: "https://v2.dreamwidth.org/7/1")
+    ]
+
+    get journal_dw_entries_path(@connection)
+
+    assert_select ".card__header .journal-header__icon img[src=?][alt='']", "https://v2.dreamwidth.org/7/1"
+    assert_select ".card__header h1", "example_journal's entries"
+    assert_select ".card__header h1 + .journal-header__link a[href=?][target=_blank]", "https://example-journal.dreamwidth.org/"
+  end
+
+  test "with no icon to show, the header keeps an empty box" do
+    get journal_dw_entries_path(@connection)
+
+    assert_select ".card__header .journal-header__icon", 1
+    assert_select ".card__header .journal-header__icon img", 0
+  end
+
   test "lists the journal's entries, newest first" do
     FakeDreamwidthClient.journals["example_journal"][:entries] = [
       dreamwidth_entry(id: 1, subject: "Older one", datetime: "2026-10-01 09:00:00"),
@@ -29,7 +48,7 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
   test "in private-only mode, asks Dreamwidth for private entries only" do
     get journal_dw_entries_path(@connection)
 
-    _method, _username, args = FakeDreamwidthClient.calls.last
+    _method, _username, args = FakeDreamwidthClient.calls.find { |method, _username, _args| method == :entries }
     assert_equal "private", args[:security]
   end
 

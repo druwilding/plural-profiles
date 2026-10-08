@@ -1,12 +1,17 @@
 - journal_page "#{@connection.username}'s entries"
 
 .card
+  -# Like a profile's header: the journal's icon (see journal_icon_url), then
+  -# its name, then the link to it on Dreamwidth. The icon is decoration.
   .card__header
-    %h1 #{@connection.username}'s entries
+    .journal-header__icon
+      - if @icon_url
+        = image_tag @icon_url, alt: "", width: 100, height: 100, class: "journal-header__icon-image"
+    %div
+      %h1 #{@connection.username}'s entries
+      %p.journal-header__link= dreamwidth_journal_link(@connection.username)
   = render "journal/shared/clear_draft"
   = render "journal/shared/your_journals", current: @connection
-
-  %p.journal-meta= dreamwidth_journal_link(@connection.username)
 
   %p.journal-actions
     = link_to "Post an entry", journal_dw_new_entry_path(@connection), class: "btn"

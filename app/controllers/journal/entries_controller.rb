@@ -24,6 +24,7 @@ module Journal
       @has_older = entries.size > per_page
       @entries = entries.first(per_page)
       @connection.record_success!
+      @icon_url = journal_icon_url
     rescue Dreamwidth::Client::Error => error
       @problem = problem_for(error)
     end

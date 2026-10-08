@@ -34,6 +34,22 @@ module Journal
       "private" if Journal::PRIVATE_ONLY
     end
 
+    # The icon that stands for a journal, on its tile and its Entries page:
+    # the default if we can tell, otherwise the first icon, otherwise none.
+    # Cached for an hour, so it costs Dreamwidth nothing most of the time.
+    def journal_icon_url(connection = @connection)
+      Rails.cache.fetch([ "journal-icon", connection.id ], expires_in: 1.hour, skip_nil: true) do
+        url = default_icon_url_from_entries(connection) || dreamwidth_client(connection).icons.first&.url
+        connection.record_success!
+        url
+      end
+    rescue Dreamwidth::Client::KeyRejected, Dreamwidth::Client::Forbidden
+      connection.record_failure!
+      nil
+    rescue Dreamwidth::Client::Error
+      nil
+    end
+
     # Dreamwidth doesn't yet say which icon is the default
     # (dreamwidth/dreamwidth#3696), but an entry posted with "(default)"
     # reports the icon it used, so the newest one shows the current default.
