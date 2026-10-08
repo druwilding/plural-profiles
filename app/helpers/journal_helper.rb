@@ -2,17 +2,25 @@ module JournalHelper
   # Dreamwidth's own words for each security level, as on its posting page.
   SECURITY_LABELS = Journal::EntryForm::SECURITY_OPTIONS.merge("custom" => "Custom Filter").freeze
 
-  # Sets the page title, loads journal.css (only journal pages do), and stops
-  # Turbo prefetching this page's links: every journal page asks Dreamwidth
-  # for something, so a hover mustn't.
+  # Sets the page title, loads journal.css (only journal pages do), and keeps
+  # Turbo from getting ahead of Dreamwidth:
+  #
+  # - no prefetching this page's links: every journal page asks Dreamwidth
+  #   for something, so a hover mustn't;
+  # - no cached snapshot shown on coming back: it would show what Dreamwidth
+  #   said last time (or what was typed), then change to the fresh page. A
+  #   moment's wait is better than content changing under someone.
   #
   # "dynamic" lets Turbo add the stylesheet arriving on a journal page and
   # remove it leaving, with no full page reload either way.
   def journal_page(title)
     content_for(:title) { "#{title} — Plural Profiles" }
     content_for(:head) do
-      stylesheet_link_tag("journal", "data-turbo-track": "dynamic") +
-        tag.meta(name: "turbo-prefetch", content: "false")
+      safe_join([
+        stylesheet_link_tag("journal", "data-turbo-track": "dynamic"),
+        tag.meta(name: "turbo-prefetch", content: "false"),
+        tag.meta(name: "turbo-cache-control", content: "no-cache")
+      ])
     end
   end
 

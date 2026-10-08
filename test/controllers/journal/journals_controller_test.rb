@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
+  include FakeDreamwidthHelper
+
   test "requires signing in" do
     get journal_root_path
     assert_redirected_to new_session_path
@@ -50,6 +52,21 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     get journal_root_path
 
     assert_select ".site-header nav a[href=?][aria-current='page'][data-turbo-prefetch='false']", journal_root_path
+  end
+
+  test "journal pages neither prefetch nor show a cached snapshot, and other pages do" do
+    sign_in_as users(:one)
+    FakeDreamwidthClient.add_journal("example_journal", api_key: "fakeKeyOneMain0001")
+
+    [ journal_root_path, journal_connect_path, journal_dw_entries_path("example_journal"),
+      journal_dw_new_entry_path("example_journal"), journal_dw_connection_path("example_journal") ].each do |path|
+      get path
+      assert_select "meta[name='turbo-prefetch'][content='false']", 1, "prefetch on #{path}"
+      assert_select "meta[name='turbo-cache-control'][content='no-cache']", 1, "cache on #{path}"
+    end
+
+    get our_themes_path
+    assert_select "meta[name='turbo-cache-control']", 0
   end
 
   test "journal pages load journal.css, and other pages don't" do

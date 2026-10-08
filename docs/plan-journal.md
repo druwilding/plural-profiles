@@ -288,7 +288,7 @@ This is the most important behaviour, and the reason for the rule below.
 - Coming back to a form with a draft offers: "You have an unsent draft from 20:22. **Restore it** / **Discard it**". It never restores silently over what's on the page. Until one is chosen, nothing is saved (the status line says so), so typing can't overwrite the draft by accident. A form that came back from a failed post already has the writing in it, so isn't offered one.
 - **The date is only restored if it had been changed.** Otherwise the restored entry is dated when it's posted, like any other.
 - The entry page clears the draft after a successful post or save: posting puts the draft's key in the flash, and the next page clears it.
-- **The Write page opts out of Turbo's cache.** Otherwise coming back flashes up a snapshot of what was typed, then the fresh form replaces it, which looks like the writing appearing and vanishing.
+- **Every journal page opts out of Turbo's prefetching and cache** (in `journal_page`). Prefetching would ask Dreamwidth on a hover. The cache would show a snapshot on coming back, then swap in the fresh page: on Write, what was typed appearing and vanishing; elsewhere, Dreamwidth's old answer changing to its new one. The people using it would rather wait a moment than have content change under them.
 - Without JavaScript, the form works as before, just without drafts.
 
 ### Private-only mode, until Dreamwidth's fixes are deployed
