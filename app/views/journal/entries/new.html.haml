@@ -57,8 +57,13 @@
 
     .form-group
       = form.label :tags, "Tags"
-      = form.text_field :tags, autocomplete: "off", spellcheck: false,
-        aria: { describedby: ["tags-hint", described_by].compact.join(" ") }, data: { "1p-ignore": "true" }
+      -# The journal's tags come with the page, so suggestions appear as soon
+      -# as something's typed (journal_tags_controller.js).
+      .journal-tags{data: { controller: "journal-tags" }}
+        = form.text_field :tags, autocomplete: "off", spellcheck: false,
+          aria: { describedby: ["tags-hint", described_by].compact.join(" ") },
+          data: { "1p-ignore": "true", "journal-tags-target": "field" }
+        = journal_tags_json_tag(@tags)
       %p.form-hint#tags-hint
         Separate tags with commas. Each tag can be up to #{Journal::EntryForm::MAX_TAG_LENGTH} characters.
 

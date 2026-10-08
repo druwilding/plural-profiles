@@ -197,6 +197,17 @@ class Dreamwidth::ClientTest < ActiveSupport::TestCase
     assert_equal [ Dreamwidth::Icon.new(id: 8, keywords: [ "bass", "music" ], url: "https://v2.dreamwidth.org/8/1", comment: "") ], icons
   end
 
+  test "tags are the journal's tag names" do
+    body = [ { "name" => "*mood", "use_count" => 3, "visibility" => "private", "url" => "https://example.dreamwidth.org/tag/*mood" },
+             { "name" => "days", "use_count" => 1 } ]
+    transport = FakeTransport.new(body: body.to_json)
+
+    tags = client(transport).tags
+
+    assert_equal "/api/v1/journals/example_journal/tags", transport.last_uri.path
+    assert_equal [ "*mood", "days" ], tags
+  end
+
   test "no answer in time is TimedOut: it may have happened" do
     error = assert_raises(Dreamwidth::Client::TimedOut) do
       client(FakeTransport.new(raises: Net::ReadTimeout.new)).create_entry(text: "Hello")

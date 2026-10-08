@@ -13,8 +13,8 @@ class FakeDreamwidthClient
     end
 
     # api_key can be a list: a Dreamwidth account can have several keys.
-    def add_journal(username, api_key:, entries: [], access_lists: [], icons: [])
-      journals[username] = { api_keys: Array(api_key), entries: entries, access_lists: access_lists, icons: icons }
+    def add_journal(username, api_key:, entries: [], access_lists: [], icons: [], tags: [])
+      journals[username] = { api_keys: Array(api_key), entries: entries, access_lists: access_lists, icons: icons, tags: tags }
     end
 
     # Every call fails with this error until reset (Unavailable, KeyRejected…).
@@ -79,6 +79,11 @@ class FakeDreamwidthClient
   def icons
     record(:icons)
     journal[:icons]
+  end
+
+  def tags
+    record(:tags)
+    journal[:tags]
   end
 
   private

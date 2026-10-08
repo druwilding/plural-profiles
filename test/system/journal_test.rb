@@ -100,6 +100,68 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector ".journal-details__spinner", visible: :hidden
   end
 
+  test "typing one character suggests every matching tag, starting ones first" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "*mood", "art", "days", "Monday", "today" ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+
+    find_field("Tags").send_keys("d")
+
+    assert_selector "[role='listbox'][aria-label='Matching tags']"
+    assert_equal [ "days", "*mood", "Monday", "today" ], all("[role='option']").map(&:text)
+    assert_selector "[role='option'][aria-selected='true']", text: "days"
+    assert_equal "true", find_field("Tags")["aria-expanded"]
+  end
+
+  test "choosing a tag adds it with a comma, and it isn't suggested again" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "*mood", "days", "Monday" ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+    field = find_field("Tags")
+
+    field.send_keys("*m", :enter)
+    assert_field "Tags", with: "*mood, "
+    assert_no_selector "[role='listbox']"
+
+    field.send_keys("m", :down, :tab)
+    assert_field "Tags", with: "*mood, Monday, "
+
+    field.send_keys("o")
+    assert_no_selector "[role='listbox']"
+  end
+
+  test "Enter in the tag list chooses rather than posting" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "days" ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+    fill_in "Entry text", with: "Hello"
+
+    find_field("Tags").send_keys("da", :enter)
+
+    assert_field "Tags", with: "days, "
+    assert_selector "h1", text: "Post an Entry"
+    assert_not FakeDreamwidthClient.calls.any? { |method, _username, _args| method == :create_entry }
+  end
+
+  test "Escape closes the tag list until something else is typed" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "days", "daisies" ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+    field = find_field("Tags")
+
+    field.send_keys("d")
+    assert_selector "[role='listbox']"
+    field.send_keys(:escape)
+    assert_no_selector "[role='listbox']"
+
+    field.send_keys("a")
+    assert_equal [ "daisies", "days" ].sort, all("[role='option']").map(&:text).sort
+  end
+
   test "journal.css comes with journal pages and goes when leaving them" do
     sign_in_via_browser
     within(".site-header nav") { click_link "Journal" }

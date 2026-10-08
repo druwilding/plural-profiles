@@ -45,6 +45,23 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select "select#entry_icon option[value='bass'][data-url='https://v2.dreamwidth.org/8/1']"
   end
 
+  test "the journal's tags come with the page, sorted ignoring case" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "days", "*mood", "Art" ]
+    get journal_dw_new_entry_path(@connection)
+
+    list = css_select("script[type='application/json'][data-journal-tags-target='list']").first
+    assert_equal [ "*mood", "Art", "days" ], JSON.parse(list.text)
+  end
+
+  test "a tag can't break out of the page's JSON" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "</script><b>x" ]
+    get journal_dw_new_entry_path(@connection)
+
+    assert_no_match "</script><b>", response.body
+    list = css_select("script[data-journal-tags-target='list']").first
+    assert_equal [ "</script><b>x" ], JSON.parse(list.text)
+  end
+
   test "the default icon's image comes from the newest entry posted with (default)" do
     get journal_dw_new_entry_path(@connection)
 

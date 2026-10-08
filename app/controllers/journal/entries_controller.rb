@@ -29,7 +29,7 @@ module Journal
     def new
       now = Time.zone.now.strftime("%Y-%m-%dT%H:%M")
       @form = EntryForm.new(datetime: now, datetime_original: now)
-      load_icons
+      load_choices
     end
 
     def create
@@ -78,8 +78,22 @@ module Journal
 
     # Never a redirect: the person's writing has to come back with the page.
     def render_form
-      load_icons
+      load_choices
       render :new, status: :unprocessable_entity
+    end
+
+    # What the Write page offers: icons to choose from, and tags to suggest.
+    # Either can fail on its own; the page still works without them.
+    def load_choices
+      load_icons
+      load_tags
+    end
+
+    # Sorted the way they're suggested: ignoring case.
+    def load_tags
+      @tags = dreamwidth_client.tags.sort_by(&:downcase)
+    rescue Dreamwidth::Client::Error
+      @tags = []
     end
 
     # The icons to choose from, and the default icon's image if we can tell

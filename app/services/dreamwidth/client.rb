@@ -103,6 +103,12 @@ module Dreamwidth
       get(path).map { |icon| Icon.from_api(icon) }
     end
 
+    # Every tag the journal has used, by name. With the owner's key that
+    # includes tags only used on locked and private entries.
+    def tags
+      get(journal_path("tags")).filter_map { |tag| tag["name"].presence }
+    end
+
     private
 
     def journal_path(*segments)

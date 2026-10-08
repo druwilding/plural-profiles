@@ -287,6 +287,93 @@
   max-width: 100%;
 }
 
+/* Tag suggestions: a list under the Tags field, like the emote
+   autocomplete's (.emote-input__menu in application.css). */
+.journal-tags {
+  position: relative;
+}
+
+.journal-tags__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  min-width: min(14rem, 100%);
+  max-width: 100%;
+  /* About eight tags before it scrolls. */
+  max-height: 20.5rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background-color: var(--pane-bg);
+  border: 1px solid var(--pane-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--pane-border) 25%, transparent);
+  color: var(--pane-text);
+  --journal-scrollbar-thumb: color-mix(in srgb, var(--pane-text) 45%, transparent);
+  --journal-scrollbar-track: color-mix(in srgb, var(--pane-text) 10%, transparent);
+}
+
+/* A scrollbar that stays showing, so it's clear there are more tags below
+   (as the emote list does: Chrome needs ::-webkit-scrollbar, and ignores it
+   where scrollbar-color is set, so that's only for Firefox). */
+.journal-tags__menu::-webkit-scrollbar {
+  width: 10px;
+}
+
+.journal-tags__menu::-webkit-scrollbar-track {
+  background-color: var(--journal-scrollbar-track);
+  border-radius: 5px;
+}
+
+.journal-tags__menu::-webkit-scrollbar-thumb {
+  background-color: var(--journal-scrollbar-thumb);
+  border-radius: 5px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .journal-tags__menu {
+    scrollbar-width: thin;
+    scrollbar-color: var(--journal-scrollbar-thumb) var(--journal-scrollbar-track);
+  }
+}
+
+.journal-tags__option {
+  display: flex;
+  align-items: center;
+  min-height: 2.4rem;
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.journal-tags__option:hover {
+  background-color: color-mix(in srgb, var(--pane-text) 8%, transparent);
+}
+
+.journal-tags__option--active,
+.journal-tags__option--active:hover {
+  background-color: color-mix(in srgb, var(--pane-link) 25%, transparent);
+  color: var(--pane-title-text);
+}
+
+@media (forced-colors: active) {
+  .journal-tags__menu {
+    border-color: CanvasText;
+  }
+
+  .journal-tags__option--active,
+  .journal-tags__option--active:hover {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}
+
 /* About 25 lines, growing with the person's text size, and resizable. */
 .journal-write__text {
   min-height: 30rem;

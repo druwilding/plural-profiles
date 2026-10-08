@@ -255,7 +255,7 @@ The people using it liked one thing about Dreamwidth's new posting page: typing 
 - **The list opens below the field**, not at the caret, since it's a single-line field.
 - **Each tag can be at most 40 characters** (Dreamwidth's limit). We check that before posting, and if one is too long, the form comes back with everything kept and says which tag is too long.
 - **Not for now**: a "browse all tags" button, and showing how often each tag has been used. The API gives usage counts, so either can be added later.
-- Without JavaScript, it's the plain comma-separated field.
+- Without JavaScript, or if Dreamwidth doesn't answer for the tags, it's the plain comma-separated field.
 
 ### After posting or saving: the entry page
 

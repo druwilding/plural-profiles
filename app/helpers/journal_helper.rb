@@ -59,6 +59,12 @@ module JournalHelper
     options_for_select(options, selected)
   end
 
+  # The journal's tags for the suggestions on the Write page. json_escape
+  # keeps a tag like "</script>" from ending the script early.
+  def journal_tags_json_tag(tags)
+    tag.script(json_escape(tags.to_json).html_safe, type: "application/json", data: { "journal-tags-target": "list" })
+  end
+
   # Who can see an entry, in a sentence, as Dreamwidth says it after posting.
   def dreamwidth_entry_visibility(security)
     case security.to_s
