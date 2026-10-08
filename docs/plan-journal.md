@@ -56,7 +56,7 @@ Journal::DreamwidthConnection   (table: journal_dreamwidth_connections)
   username           (string, the Dreamwidth username, normalised: see below)
   api_key            (text, encrypted)
   api_key_digest     (string, HMAC-SHA256 of the key, for spotting duplicates)
-  verified_at        (datetime, when Dreamwidth last accepted the key on connect or replace)
+  verified_at        (datetime, when Dreamwidth last accepted the key: on connect or replace, and after any successful call, at most once a minute)
   failed_at          (datetime, nullable, when Dreamwidth last rejected the key in use)
   communities        (jsonb, default [], community usernames this connection has posted to)
   timestamps

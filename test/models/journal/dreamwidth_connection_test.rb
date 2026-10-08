@@ -99,6 +99,23 @@ class Journal::DreamwidthConnectionTest < ActiveSupport::TestCase
     assert_not connection.reload.failed?
   end
 
+  test "record_success! moves the last checked time on, but not more than once a minute" do
+    connection = journal_dreamwidth_connections(:one_main)
+
+    travel_to Time.zone.local(2026, 10, 8, 18, 0) do
+      connection.record_success!
+      assert_equal Time.zone.local(2026, 10, 8, 18, 0), connection.reload.verified_at
+    end
+    travel_to Time.zone.local(2026, 10, 8, 18, 0, 30) do
+      connection.record_success!
+      assert_equal Time.zone.local(2026, 10, 8, 18, 0), connection.reload.verified_at
+    end
+    travel_to Time.zone.local(2026, 10, 8, 18, 5) do
+      connection.record_success!
+      assert_equal Time.zone.local(2026, 10, 8, 18, 5), connection.reload.verified_at
+    end
+  end
+
   test "connections go when their account does" do
     @user.dreamwidth_connections.create!(username: "my_journal", api_key: "key1")
 

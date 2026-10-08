@@ -151,6 +151,12 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='journal-draft-clear']", 0
   end
 
+  test "posting counts as Dreamwidth accepting the key" do
+    travel_to(Time.zone.local(2026, 10, 8, 18, 51)) { post_entry }
+
+    assert_equal Time.zone.local(2026, 10, 8, 18, 51), @connection.reload.verified_at
+  end
+
   test "an entry with no subject says so" do
     post_entry(subject: "")
     follow_redirect!

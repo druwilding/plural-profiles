@@ -64,8 +64,14 @@ module Journal
       update!(failed_at: Time.current) unless failed?
     end
 
+    # Dreamwidth accepted the key: clears a failure, and moves verified_at
+    # ("Last checked with Dreamwidth" on Manage) on. Not more than once a
+    # minute, so browsing entries doesn't write on every page.
     def record_success!
-      update!(failed_at: nil) if failed?
+      changes = {}
+      changes[:failed_at] = nil if failed?
+      changes[:verified_at] = Time.current if verified_at.nil? || verified_at < 1.minute.ago
+      update!(changes) if changes.any?
     end
   end
 end
