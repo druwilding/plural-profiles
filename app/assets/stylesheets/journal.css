@@ -151,6 +151,11 @@
   gap: 0.5rem 1.5rem;
 }
 
+/* On the right, even when there's no older link beside it. */
+.journal-pagination__newer {
+  margin-left: auto;
+}
+
 @media (max-width: 600px) {
   .connection-details {
     grid-template-columns: 1fr;

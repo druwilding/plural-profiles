@@ -34,20 +34,35 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "pages through with older and newer links" do
+    per_page = Journal::EntriesController::PER_PAGE
+    # Two full pages and five more, whatever the page size.
+    FakeDreamwidthClient.journals["example_journal"][:entries] = (1..(per_page * 2) + 5).map do |id|
+      dreamwidth_entry(id: id, datetime: (Time.utc(2026, 1, 1) + id.hours).strftime("%Y-%m-%d %H:%M:%S"))
+    end
+
+    get journal_dw_entries_path(@connection)
+    assert_select ".journal-entry", per_page
+    assert_select ".journal-pagination a[href=?]", journal_dw_entries_path(@connection, offset: per_page), text: /Older entries/
+    assert_select ".journal-pagination a", text: /Newer entries/, count: 0
+
+    get journal_dw_entries_path(@connection, offset: per_page * 2)
+    assert_select ".journal-entry", 5
+    assert_select ".journal-pagination a", text: /Older entries/, count: 0
+    assert_select ".journal-pagination a", text: /Newer entries/
+  end
+
+  test "in the middle, it's older on the left, then newer on the right" do
     FakeDreamwidthClient.journals["example_journal"][:entries] = (1..45).map do |id|
       dreamwidth_entry(id: id, datetime: (Time.utc(2026, 1, 1) + id.hours).strftime("%Y-%m-%d %H:%M:%S"))
     end
     per_page = Journal::EntriesController::PER_PAGE
+    get journal_dw_entries_path(@connection, offset: per_page)
 
-    get journal_dw_entries_path(@connection)
-    assert_select ".journal-entry", per_page
-    assert_select "a", text: "Older entries", href: journal_dw_entries_path(@connection, offset: per_page)
-    assert_select "a", text: "Newer entries", count: 0
-
-    get journal_dw_entries_path(@connection, offset: per_page * 2)
-    assert_select ".journal-entry", 5
-    assert_select "a", text: "Older entries", count: 0
-    assert_select "a", text: "Newer entries"
+    assert_equal [ "< Older entries", "Newer entries >" ],
+      css_select(".journal-pagination > *").map { |part| part.text.squish }
+    assert_select ".journal-pagination a:last-child.journal-pagination__newer"
+    assert_equal [ "Older entries", "Newer entries" ],
+      css_select(".journal-pagination a").map { |link| link.children.reject { |node| node["aria-hidden"] }.map(&:text).join.squish }
   end
 
   test "a hyphenated username in the URL finds the same journal" do

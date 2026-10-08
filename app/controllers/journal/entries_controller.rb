@@ -2,13 +2,15 @@ module Journal
   class EntriesController < ApplicationController
     include CreatedAtPartsParsing
 
-    PER_PAGE = 20
+    PER_PAGE = 10
 
     # Generous: only there to stop a runaway loop, not to limit writing.
     rate_limit to: 30, within: 1.minute, only: :create,
       with: -> { redirect_to journal_dw_entries_path(params[:dreamwidth_username]), alert: "That's a lot of posts in a minute. Wait a moment, then try again." }
 
     before_action :set_connection
+
+    helper_method :per_page
 
     # Fetched live every time: there's no local copy of anyone's entries.
     #
@@ -18,9 +20,9 @@ module Journal
     def index
       @offset = [ params[:offset].to_i, 0 ].max
       # One more than a page, to know whether there's an older page at all.
-      entries = dreamwidth_client.entries(count: PER_PAGE + 1, offset: @offset, security: listed_security)
-      @has_older = entries.size > PER_PAGE
-      @entries = entries.first(PER_PAGE)
+      entries = dreamwidth_client.entries(count: per_page + 1, offset: @offset, security: listed_security)
+      @has_older = entries.size > per_page
+      @entries = entries.first(per_page)
       @connection.record_success!
     rescue Dreamwidth::Client::Error => error
       @problem = problem_for(error)
@@ -67,6 +69,16 @@ module Journal
     end
 
     private
+
+    # Dreamwidth doesn't say how many entries there are, so there are no page
+    # numbers: just older and newer. To see the paging with only a few
+    # entries, set JOURNAL_ENTRIES_PER_PAGE in development
+    # (JOURNAL_ENTRIES_PER_PAGE=3 bin/dev). It can be lower than PER_PAGE, not higher.
+    def per_page
+      return PER_PAGE unless Rails.env.development?
+
+      Integer(ENV.fetch("JOURNAL_ENTRIES_PER_PAGE", PER_PAGE)).clamp(1, PER_PAGE)
+    end
 
     def listed_security
       "private" if Journal::PRIVATE_ONLY

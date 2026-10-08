@@ -52,8 +52,15 @@
                       = entry.subject.presence || "no subject"
 
     - if @offset.positive? || @has_older
+      -# "< Older entries" on the left as on Dreamwidth, "Newer entries >"
+      -# on the right. The arrows are only for the eye.
       %nav.journal-pagination{aria: { label: "Entry pages" }}
-        - if @offset.positive?
-          = link_to "Newer entries", journal_dw_entries_path(@connection, offset: ([ @offset - Journal::EntriesController::PER_PAGE, 0 ].max.nonzero?))
         - if @has_older
-          = link_to "Older entries", journal_dw_entries_path(@connection, offset: @offset + Journal::EntriesController::PER_PAGE)
+          = link_to journal_dw_entries_path(@connection, offset: @offset + per_page) do
+            %span{aria: { hidden: "true" }} <
+            Older entries
+        - if @offset.positive?
+          = link_to journal_dw_entries_path(@connection, offset: ([ @offset - per_page, 0 ].max.nonzero?)),
+            class: "journal-pagination__newer" do
+            Newer entries
+            %span{aria: { hidden: "true" }} >
