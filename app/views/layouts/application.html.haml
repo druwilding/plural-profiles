@@ -34,18 +34,16 @@
           = render "our/sidebar"
           = render "shared/sidebar_toggle_button", action: :show, controls: "sidebar"
           .main-content
-            - unless inline_flash?
-              - if flash[:notice]
-                .flash.flash--notice= flash[:notice]
-              - if flash[:alert]
-                .flash.flash--alert= flash[:alert]
+            - if flash[:notice]
+              .flash.flash--notice= flash[:notice]
+            - if flash[:alert]
+              .flash.flash--alert= flash[:alert]
             = yield
       - else
-        - unless inline_flash?
-          - if flash[:notice]
-            .flash.flash--notice= flash[:notice]
-          - if flash[:alert]
-            .flash.flash--alert= flash[:alert]
+        - if flash[:notice]
+          .flash.flash--notice= flash[:notice]
+        - if flash[:alert]
+          .flash.flash--alert= flash[:alert]
         = yield
     = yield :footer
     -# In the body, not the head: Turbo replaces the body on every visit, but

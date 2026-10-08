@@ -82,12 +82,12 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='stylesheet'][href*='/application-']", 1
   end
 
-  test "notices appear after the heading" do
+  test "notices appear above the pane, as elsewhere in pp" do
     sign_in_as users(:one)
     delete journal_dw_connection_path("second_journal")
     follow_redirect!
 
-    assert_select "main > .flash", 0
-    assert_select ".card__header + .flash--notice", /Disconnected second_journal/
+    assert_select "main > .flash--notice", /Disconnected second_journal/
+    assert_select ".card .flash--notice", 0
   end
 end

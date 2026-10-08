@@ -1,9 +1,0 @@
--# Rendered just after a journal page's h1 (see inline_flash?), so it's read in
--# order: which page this is, then what just happened.
-- if flash[:notice]
-  .flash.flash--notice{role: "status"}= flash[:notice]
-- if flash[:alert]
-  .flash.flash--alert{role: "alert"}= flash[:alert]
--# After posting, the entry's draft in the browser goes (journal_drafts.js).
-- if flash[:clear_journal_draft]
-  %div{hidden: true, data: { controller: "journal-draft-clear", "journal-draft-clear-key-value": flash[:clear_journal_draft] }}

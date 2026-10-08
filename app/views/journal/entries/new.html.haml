@@ -14,7 +14,6 @@
   .card
     .card__header
       %h1 Post an entry
-    = render "journal/shared/flash"
     = render "journal/entries/problem", problem: @problem, message: @problem_message, form: @form
 
     -# Shown by journal_draft_controller.js when there's a draft from before.

@@ -4,7 +4,6 @@
 .card
   .card__header
     %h1 Connect a Dreamwidth journal
-  = render "journal/shared/flash"
   - if @problem
     = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
 

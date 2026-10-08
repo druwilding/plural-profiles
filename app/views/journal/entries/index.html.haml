@@ -3,7 +3,7 @@
 .card
   .card__header
     %h1 #{@connection.username}'s entries
-  = render "journal/shared/flash"
+  = render "journal/shared/clear_draft"
   = render "journal/shared/your_journals", current: @connection
 
   %p.journal-meta

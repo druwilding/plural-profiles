@@ -41,11 +41,5 @@ module Journal
       dreamwidth_client(connection).entries(count: 10, security: listed_security)
         .find { |entry| entry.icon_keyword == "(default)" }&.icon_url
     end
-
-    # Journal pages show notices just after their h1, so a screen reader
-    # reaches them in reading order rather than before the page's heading.
-    def inline_flash?
-      true
-    end
   end
 end

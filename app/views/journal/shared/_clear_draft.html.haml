@@ -1,0 +1,4 @@
+-# On the pages posting lands on: the entry's draft in the browser goes
+-# (journal_drafts.js), now it's on Dreamwidth.
+- if flash[:clear_journal_draft]
+  %div{hidden: true, data: { controller: "journal-draft-clear", "journal-draft-clear-key-value": flash[:clear_journal_draft] }}

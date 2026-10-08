@@ -4,7 +4,6 @@
 .card
   .card__header
     %h1 Manage #{@connection.username}
-  = render "journal/shared/flash"
   = render "journal/shared/your_journals", current: @connection
   - if @problem
     = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing

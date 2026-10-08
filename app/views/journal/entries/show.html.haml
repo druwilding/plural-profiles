@@ -4,7 +4,7 @@
 .card
   .card__header
     %h1 Entry in #{@connection.username}
-  = render "journal/shared/flash"
+  = render "journal/shared/clear_draft"
   = render "journal/entries/problem", problem: @problem, message: nil, form: nil
 
   - if @entry
