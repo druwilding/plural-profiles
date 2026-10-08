@@ -169,6 +169,7 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .journal-details__icon {

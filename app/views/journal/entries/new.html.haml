@@ -3,7 +3,7 @@
 - described_by = ("entry-problem" if has_problem && @problem != :key_rejected)
 - chosen_icon_url = @icons.to_h[@form.icon] || (@default_icon_url if @form.icon.blank?)
 
--# One form across the panes, in the order Dreamwidth's posting page uses
+-# One form in one pane, in the order Dreamwidth's posting page uses
 -# (docs/plan-journal.md, "The Write page"). It works without JavaScript; with
 -# it, the icon image follows the icon chosen.
 = form_with model: @form, scope: :entry, url: journal_dw_entries_path(@connection), method: :post,
@@ -38,9 +38,6 @@
           = form.select :icon, journal_icon_options(@icons, @default_icon_url, @form.icon), {},
             data: { "journal-icon-preview-target": "select", action: "journal-icon-preview#update" }
 
-  .card
-    .card__header
-      %h2 Entry
     .form-group
       = form.label :subject, "Subject:"
       = form.text_field :subject, maxlength: 255, autocomplete: "off", data: { "1p-ignore": "true" }
@@ -51,9 +48,6 @@
       %p.form-hint#entry-text-hint
         HTML tags work here, and a blank line starts a new paragraph, as on Dreamwidth.
 
-  .card
-    .card__header
-      %h2 Tags
     .form-group
       = form.label :tags, "Tags:"
       = form.text_field :tags, autocomplete: "off", spellcheck: false,
@@ -61,9 +55,6 @@
       %p.form-hint#tags-hint
         Separate tags with commas. Each tag can be up to #{Journal::EntryForm::MAX_TAG_LENGTH} characters.
 
-  .card
-    .card__header
-      %h2 Who can see it
     .form-group
       = form.label :security, "Show this entry to:"
       = form.select :security, Journal::EntryForm.security_options.invert, {},

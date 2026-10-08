@@ -30,11 +30,12 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select "input[type=submit][value='Post to: example_journal']"
   end
 
-  test "the panes come in Dreamwidth's order" do
+  test "it's all one pane, with the fields in Dreamwidth's order" do
     get journal_dw_new_entry_path(@connection)
 
-    assert_equal [ "New entry in example_journal", "Entry", "Tags", "Who can see it" ],
-      css_select(".card__header h1, .card__header h2").map(&:text)
+    assert_select ".card", 1
+    assert_equal [ "Icon:", "Subject:", "Entry text:", "Tags:", "Show this entry to:" ],
+      css_select(".card label").map { |label| label.text.strip }.grep(/\A[A-Z].*:\z/)
   end
 
   test "icons are listed by keyword, (default) first, each with its image" do
