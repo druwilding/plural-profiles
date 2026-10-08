@@ -20,6 +20,13 @@ class Journal::ConnectionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
+  test "a button beside Connect goes back to your journals" do
+    get journal_connect_path
+
+    assert_select "input[type=submit][value=Connect] + a.btn.btn--secondary[href=?]", journal_root_path,
+      text: "Back to your journals"
+  end
+
   test "connect page links to Dreamwidth's key page in a new tab" do
     get journal_connect_path
 
