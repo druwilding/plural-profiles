@@ -11,6 +11,8 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     get journal_root_path
 
     assert_response :success
+    assert_select "h1", "Your journals"
+    assert_select "title", /\AYour journals/
     assert_select ".journal-list__item", 2
     assert_select "a[href=?]", journal_dw_entries_path("example_journal")
     assert_select "a[href=?]", journal_dw_entries_path("second_journal")

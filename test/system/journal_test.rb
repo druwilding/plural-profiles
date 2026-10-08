@@ -57,9 +57,9 @@ class JournalTest < ApplicationSystemTestCase
   test "write a private entry, post it, and see what Dreamwidth saved" do
     sign_in_via_browser
     visit journal_dw_entries_path("example_journal")
-    click_link "Post an Entry"
+    click_link "Post an entry"
 
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     fill_in "Subject", with: "Tuesday thoughts"
     fill_in "Entry text", with: "First paragraph.\n\nSecond one."
     fill_in "Tags", with: "days, thoughts"
@@ -77,8 +77,8 @@ class JournalTest < ApplicationSystemTestCase
   test "coming back to write again doesn't flash up what was typed before" do
     sign_in_via_browser
     visit journal_dw_entries_path("example_journal")
-    click_link "Post an Entry"
-    assert_selector "h1", text: "Post an Entry"
+    click_link "Post an entry"
+    assert_selector "h1", text: "Post an entry"
     fill_in "Subject", with: "Half-written"
     fill_in "Entry text", with: "Not finished"
     click_link "Back to example_journal's entries"
@@ -93,16 +93,16 @@ class JournalTest < ApplicationSystemTestCase
         if (subject && subject.value === "Half-written") window.sawOldText = true
       })
     JS
-    click_link "Post an Entry"
+    click_link "Post an entry"
 
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     assert_field "Subject", with: ""
     assert_equal false, page.evaluate_script("window.sawOldText")
   end
 
   def start_writing_and_leave(subject: "Half-written", body: "Not finished yet")
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     fill_in "Subject", with: subject
     fill_in "Entry text", with: body
     click_link "Back to example_journal's entries"
@@ -116,7 +116,7 @@ class JournalTest < ApplicationSystemTestCase
   test "leaving the Write page keeps a draft, and coming back offers it" do
     sign_in_via_browser
     start_writing_and_leave
-    click_link "Post an Entry"
+    click_link "Post an entry"
 
     assert_text "You have an unsent draft from"
     assert_field "Subject", with: ""
@@ -130,28 +130,28 @@ class JournalTest < ApplicationSystemTestCase
   test "discarding a draft removes it" do
     sign_in_via_browser
     start_writing_and_leave
-    click_link "Post an Entry"
+    click_link "Post an entry"
 
     click_button "Discard it"
     assert_no_text "You have an unsent draft"
     assert_empty journal_draft_keys
 
     click_link "Back to example_journal's entries"
-    click_link "Post an Entry"
-    assert_selector "h1", text: "Post an Entry"
+    click_link "Post an entry"
+    assert_selector "h1", text: "Post an entry"
     assert_no_text "You have an unsent draft"
   end
 
   test "typing while a draft is on offer doesn't overwrite it" do
     sign_in_via_browser
     start_writing_and_leave
-    click_link "Post an Entry"
+    click_link "Post an entry"
     assert_text "You have an unsent draft from"
 
     fill_in "Subject", with: "Something else"
     assert_text "Restore or discard the draft above"
     click_link "Back to example_journal's entries"
-    click_link "Post an Entry"
+    click_link "Post an entry"
     click_button "Restore it"
 
     assert_field "Subject", with: "Half-written"
@@ -160,7 +160,7 @@ class JournalTest < ApplicationSystemTestCase
   test "Ctrl+S saves a draft and says so" do
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     fill_in "Entry text", with: "Saving this"
 
     find_field("Entry text").send_keys([ :control, "s" ])
@@ -173,7 +173,7 @@ class JournalTest < ApplicationSystemTestCase
   test "it saves on its own after a pause in typing" do
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
 
     fill_in "Entry text", with: "Typing away"
 
@@ -183,18 +183,18 @@ class JournalTest < ApplicationSystemTestCase
   test "a changed date comes back with the draft; an unchanged one stays at now" do
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     fill_in "Entry text", with: "Backdated"
     select "March", from: "Month"
     click_link "Back to example_journal's entries"
-    click_link "Post an Entry"
+    click_link "Post an entry"
     click_button "Restore it"
     assert_select "Month", selected: "March"
 
     fill_in "Entry text", with: "Not backdated"
     select Time.current.strftime("%B"), from: "Month"
     click_link "Back to example_journal's entries"
-    click_link "Post an Entry"
+    click_link "Post an entry"
     click_button "Restore it"
     assert_field "Entry text", with: "Not backdated"
     assert_select "Month", selected: Time.current.strftime("%B")
@@ -203,7 +203,7 @@ class JournalTest < ApplicationSystemTestCase
   test "posting clears the draft" do
     sign_in_via_browser
     start_writing_and_leave(subject: "Posting this")
-    click_link "Post an Entry"
+    click_link "Post an entry"
     click_button "Restore it"
 
     click_button "Post to: example_journal"
@@ -211,7 +211,7 @@ class JournalTest < ApplicationSystemTestCase
     assert_empty journal_draft_keys
 
     click_link "Post another entry"
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     assert_no_text "You have an unsent draft"
   end
 
@@ -229,7 +229,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     assert_no_selector ".journal-details__icon-image", visible: true
 
     select "bass", from: "Icon"
@@ -242,7 +242,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
 
     # Dreamwidth is unreachable in browser tests, so the image fails at once.
     select "bass", from: "Icon"
@@ -255,7 +255,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:tags] = [ "*mood", "art", "days", "Diary", "Monday", "today" ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
 
     find_field("Tags").send_keys("d")
 
@@ -269,7 +269,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:tags] = [ "*mood", "days", "Monday" ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     field = find_field("Tags")
 
     field.send_keys("*m", :enter)
@@ -287,13 +287,13 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:tags] = [ "days" ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     fill_in "Entry text", with: "Hello"
 
     find_field("Tags").send_keys("da", :enter)
 
     assert_field "Tags", with: "days, "
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     assert_not FakeDreamwidthClient.calls.any? { |method, _username, _args| method == :create_entry }
   end
 
@@ -301,7 +301,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:tags] = [ "days", "daisies" ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "Post an Entry"
+    assert_selector "h1", text: "Post an entry"
     field = find_field("Tags")
 
     field.send_keys("d")
@@ -316,7 +316,7 @@ class JournalTest < ApplicationSystemTestCase
   test "journal.css comes with journal pages and goes when leaving them" do
     sign_in_via_browser
     within(".site-header nav") { click_link "Journal" }
-    assert_selector "h1", text: "Journal"
+    assert_selector "h1", text: "Your journals"
     assert_selector "link[rel='stylesheet'][href*='/journal-']", visible: false
 
     within(".site-header nav") { click_link "Themes" }

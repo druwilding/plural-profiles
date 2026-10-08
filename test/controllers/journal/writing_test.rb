@@ -26,7 +26,7 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     get journal_dw_new_entry_path(@connection)
 
     assert_response :success
-    assert_select "h1", "Post an Entry"
+    assert_select "h1", "Post an entry"
     assert_select "input[type=submit][value='Post to: example_journal']"
   end
 
@@ -229,7 +229,7 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
   test "the entries page links to writing" do
     get journal_dw_entries_path(@connection)
 
-    assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Post an Entry"
+    assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Post an entry"
     assert_select ".journal-actions a.btn + a.btn.btn--secondary[href=?]", journal_root_path, text: "Back to your journals"
   end
 end

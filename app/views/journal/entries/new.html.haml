@@ -1,4 +1,4 @@
-- journal_page "Post an Entry"
+- journal_page "Post an entry"
 -# No snapshot for Turbo to show on coming back: it would flash up what was
 -# typed last time, then the fresh empty form would replace it.
 - content_for(:head) { tag.meta name: "turbo-cache-control", content: "no-cache" }
@@ -16,7 +16,7 @@
 
   .card
     .card__header
-      %h1 Post an Entry
+      %h1 Post an entry
     = render "journal/shared/flash"
     = render "journal/entries/problem", problem: @problem, message: @problem_message, form: @form
 
