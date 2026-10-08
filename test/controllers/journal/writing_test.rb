@@ -191,6 +191,7 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_select "#entry-problem", /nothing was posted/
+    assert_select ".card #entry-problem", 0, "problems sit above the pane, like flash messages"
     assert_select "textarea[name='entry[body]']", "Some <b>text</b>\n\nand more"
   end
 

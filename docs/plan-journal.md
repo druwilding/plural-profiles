@@ -331,7 +331,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
 - The date fields are a group with a "Date" legend and a hidden label on each field (as `shared/_datetime_picker` already does).
 - The draft status is only announced after Ctrl+S, not on every autosave.
 - Errors after a failed submit appear in a summary at the top of the form that lists each problem and links to its field. The summary is the first thing after the `h1`, so it's announced when the page loads.
-- Flash notices on journal pages sit above the pane, as everywhere else in pp. (They first sat inside it, after the `h1`, for reading order, but matching the rest of the site won out.)
+- Flash notices on journal pages sit above the pane, as everywhere else in pp, and so do the journal's own notices (Dreamwidth unavailable, a rejected key, a failed post, the draft offer). (They first sat inside it, after the `h1`, for reading order, but matching the rest of the site won out.)
 - Entries is a real `ol` of links. Each Edit link includes the entry's subject in hidden text ("Edit *Monday thoughts*"), so a list of links read out of context still makes sense.
 - Large text, narrow screens and `forced-colors` are checked for every page, as in chat. Forced colours matter especially here: the people using it rely on them in Firefox, and like how plural-profiles already works with them, so journal pages must work just as well.
 - **Check dropdowns with them on their Chromebook.** On Dreamwidth, the open dropdown list highlights the current option in white with light text, which makes it unreadable. Plural-profiles' own dropdowns already work for them, so ours should too, but it's worth checking "Show this entry to" and "Icon" specifically.

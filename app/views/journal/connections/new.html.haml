@@ -1,11 +1,12 @@
 - journal_page "Connect a Dreamwidth journal"
 - described_by = ("connection-problem" if @problem)
 
+- if @problem
+  = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
+
 .card
   .card__header
     %h1 Connect a Dreamwidth journal
-  - if @problem
-    = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
 
   %p
     Connecting uses an API key from Dreamwidth. It lets Plural Profiles read and

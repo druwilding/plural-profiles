@@ -1,14 +1,15 @@
 - journal_page "Manage #{@connection.username}"
 - described_by = ("connection-problem" if @problem)
 
+- if @problem
+  = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
+- elsif @connection.failed?
+  = render "journal/shared/key_failed", connection: @connection, manage_link: false
+
 .card
   .card__header
     %h1 Manage #{@connection.username}
   = render "journal/shared/your_journals", current: @connection
-  - if @problem
-    = render "journal/connections/problem", problem: @problem, connection: @connection, existing: @existing
-  - elsif @connection.failed?
-    = render "journal/shared/key_failed", connection: @connection, manage_link: false
 
   %dl.connection-details
     %dt Journal

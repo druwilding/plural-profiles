@@ -1,5 +1,20 @@
 - journal_page "#{@connection.username}'s entries"
 
+-# Problems sit above the pane, like flash messages.
+- case @problem
+- when :key_rejected
+  = render "journal/shared/key_failed", connection: @connection, manage_link: true
+- when :journal_gone
+  .flash.flash--warning.journal-notice
+    %p
+      Dreamwidth doesn't have a journal called
+      %strong= @connection.username
+      any more. If it was renamed, disconnect this one and connect the new name.
+    %p= link_to "Manage #{@connection.username}", journal_dw_connection_path(@connection)
+- when :unavailable, :timed_out
+  .flash.flash--warning.journal-notice
+    %p Couldn't reach Dreamwidth just now. Try again in a few minutes.
+
 .card
   -# Like a profile's header: the journal's icon (see journal_icon_url), then
   -# its name, then the link to it on Dreamwidth. The icon is decoration.
@@ -16,20 +31,7 @@
     = link_to "Post an entry", journal_dw_new_entry_path(@connection), class: "btn"
     = link_to "Back to your journals", journal_root_path, class: "btn btn--secondary"
 
-  - case @problem
-  - when :key_rejected
-    = render "journal/shared/key_failed", connection: @connection, manage_link: true
-  - when :journal_gone
-    .flash.flash--warning.journal-notice
-      %p
-        Dreamwidth doesn't have a journal called
-        %strong= @connection.username
-        any more. If it was renamed, disconnect this one and connect the new name.
-      %p= link_to "Manage #{@connection.username}", journal_dw_connection_path(@connection)
-  - when :unavailable, :timed_out
-    .flash.flash--warning.journal-notice
-      %p Couldn't reach Dreamwidth just now. Try again in a few minutes.
-  - else
+  - unless @problem
     - if Journal::PRIVATE_ONLY
       %p.form-hint
         Showing private entries only, for now. The rest will appear here once

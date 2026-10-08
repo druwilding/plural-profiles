@@ -1,11 +1,12 @@
 - subject = @entry&.subject.presence
 - journal_page(subject ? "#{subject} — #{@connection.username}" : "Entry in #{@connection.username}")
 
+= render "journal/entries/problem", problem: @problem, message: nil, form: nil
+
 .card
   .card__header
     %h1 Entry in #{@connection.username}
   = render "journal/shared/clear_draft"
-  = render "journal/entries/problem", problem: @problem, message: nil, form: nil
 
   - if @entry
     -# Read back from Dreamwidth, so this is what it actually saved.

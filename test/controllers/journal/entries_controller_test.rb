@@ -123,6 +123,7 @@ class Journal::EntriesControllerTest < ActionDispatch::IntegrationTest
     get journal_dw_entries_path(@connection)
 
     assert_select ".flash--warning", /Couldn't reach Dreamwidth/
+    assert_select ".card .flash--warning", 0, "problems sit above the pane, like flash messages"
     assert_not @connection.reload.failed?
   end
 
