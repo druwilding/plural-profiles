@@ -89,5 +89,5 @@
         %p.form-hint#security-hint
           More options, including custom filters, once Dreamwidth has updated their API.
     .form-group.journal-actions
-      = form.submit "Post to: #{@connection.username}", data: { turbo_submits_with: "Posting…" }
+      = form.submit "Post to: #{@connection.username}"
       = link_to "Back to #{@connection.username}'s entries", journal_dw_entries_path(@connection), class: "btn btn--secondary"

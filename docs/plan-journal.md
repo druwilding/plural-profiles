@@ -278,7 +278,7 @@ This is the most important behaviour, and the reason for the rule below.
 
 - **If Dreamwidth rejects or fails a post or edit, re-render the form with everything the person typed still in it.** Don't redirect. Show the error at the top of the form, as text, saying what happened and whether trying again might help.
 - After a timeout we can't know whether the entry was actually saved. The message must say that and suggest checking the Entries page before trying again, so nobody ends up with a duplicate post.
-- Protect against double-submits with `data-turbo-submits-with` on the submit button. It only works with Turbo, but a double post is annoying rather than harmful.
+- Protect against double-submits with Turbo's own behaviour: it disables the submit button while the form is being sent. **Buttons never change their text or size while working** (no `data-turbo-submits-with`), as the people using it asked. It only works with Turbo, but a double post is annoying rather than harmful.
 
 **Drafts, saved in the browser.** Dreamwidth autosaves drafts and shows "Autosaved draft at 8:22:18 PM" under the text box, and the people using it want that. They write on one device, so drafts stay **in the browser on that device** (`localStorage`), never on our server. That keeps their unposted, mostly filter-locked writing off plural-profiles entirely.
 

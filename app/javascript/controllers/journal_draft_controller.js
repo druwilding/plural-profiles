@@ -34,6 +34,10 @@ export default class extends Controller {
 
   connect() {
     this.initialDate = JSON.stringify(this.dateValues())
+    // Choices from the draft this journal doesn't offer (an icon keyword
+    // only another journal has), kept in the draft as they were until
+    // something else is chosen, so going back to that journal still has them.
+    this.carried = {}
     this.submitting = false
 
     // Offered only on a fresh form: one that came back from a failed post
@@ -76,15 +80,21 @@ export default class extends Controller {
   restore() {
     const draft = this.pendingDraft
     this.closeOffer()
+    this.restoring = true
     for (const [ name, value ] of Object.entries(draft.fields || {})) {
       if (DATE_FIELD.test(name) && !draft.dateChanged) continue
       const field = this.element.elements.namedItem(name)
       if (!field) continue
-      // An icon that's since been deleted on Dreamwidth stays at (default).
-      if (field.tagName === "SELECT" && ![ ...field.options ].some(option => option.value === value)) continue
+      // An icon this journal doesn't have (another journal's, or since
+      // deleted) stays at (default) here, but stays in the draft.
+      if (field.tagName === "SELECT" && ![ ...field.options ].some(option => option.value === value)) {
+        this.carried[name] = value
+        continue
+      }
       field.value = value
       if (field.tagName === "SELECT") field.dispatchEvent(new Event("change", { bubbles: true }))
     }
+    this.restoring = false
     this.save()
     this.element.elements.namedItem("entry[body]")?.focus()
   }
@@ -103,7 +113,10 @@ export default class extends Controller {
 
   // -- Saving --
 
-  onChange() {
+  onChange(event) {
+    // Someone choosing for themselves (not restore setting it) replaces
+    // whatever was carried along for that field.
+    if (!this.restoring) delete this.carried[event.target.name]
     if (this.pendingDraft) {
       this.statusTarget.textContent = "Restore or discard the draft above to start saving drafts again."
       return
@@ -173,7 +186,7 @@ export default class extends Controller {
       if (!field.name || [ "hidden", "submit", "button" ].includes(field.type)) continue
       values[field.name] = field.value
     }
-    return values
+    return { ...values, ...this.carried }
   }
 
   dateValues() {

@@ -137,6 +137,38 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector "input[type=submit][value='Post to: second_journal']"
   end
 
+  test "a draft's icon comes back where that journal has it, and stays at (default) where it doesn't" do
+    FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
+    FakeDreamwidthClient.journals["second_journal"][:icons] = [ dreamwidth_icon(id: 9, keywords: "apple") ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an entry"
+    fill_in "Entry text", with: "With an icon"
+    select "bass", from: "Icon"
+    click_link "Back to example_journal's entries"
+
+    visit journal_dw_new_entry_path("second_journal")
+    click_button "Restore it"
+    assert_field "Entry text", with: "With an icon"
+    assert_select "Icon", selected: "(default)"
+    click_link "Back to second_journal's entries"
+
+    visit journal_dw_new_entry_path("example_journal")
+    click_button "Restore it"
+    assert_select "Icon", selected: "bass"
+    assert_selector ".journal-details__icon-image[src='https://v2.dreamwidth.org/8/1']", visible: :all
+    click_link "Back to example_journal's entries"
+
+    # Choosing an icon in the other journal replaces the one carried along.
+    visit journal_dw_new_entry_path("second_journal")
+    click_button "Restore it"
+    select "apple", from: "Icon"
+    click_link "Back to second_journal's entries"
+    visit journal_dw_new_entry_path("example_journal")
+    click_button "Restore it"
+    assert_select "Icon", selected: "(default)"
+  end
+
   test "discarding a draft removes it" do
     sign_in_via_browser
     start_writing_and_leave
@@ -233,6 +265,18 @@ class JournalTest < ApplicationSystemTestCase
     within(".site-header nav") { click_link "Sign out" }
     assert_link "Sign in"
     assert_empty journal_draft_keys
+  end
+
+  test "while posting, the Post button is disabled but keeps its text" do
+    FakeDreamwidthClient.post_delay = 1.5
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    fill_in "Entry text", with: "Slowly"
+
+    click_button "Post to: example_journal"
+
+    assert_selector "input[type=submit][value='Post to: example_journal'][disabled]"
+    assert_text "Your entry has been posted."
   end
 
   test "choosing an icon shows it straight away" do

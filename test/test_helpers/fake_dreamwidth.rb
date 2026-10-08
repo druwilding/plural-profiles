@@ -4,12 +4,13 @@
 # and anyone's key can list a journal's public entries.
 class FakeDreamwidthClient
   class << self
-    attr_accessor :journals, :failure, :calls
+    attr_accessor :journals, :failure, :calls, :post_delay
 
     def reset!
       self.journals = {}
       self.failure = nil
       self.calls = []
+      self.post_delay = nil
     end
 
     # api_key can be a list: a Dreamwidth account can have several keys.
@@ -63,6 +64,8 @@ class FakeDreamwidthClient
   def create_entry(attrs)
     record(:create_entry, **attrs)
     raise Dreamwidth::Client::Forbidden, "Not your journal" unless own_journal?
+    # A slow Dreamwidth, for seeing the page while it waits.
+    sleep self.class.post_delay if self.class.post_delay
 
     id = (journal[:entries].map(&:id).max || 0) + 1
     url = "https://#{username.tr('_', '-')}.dreamwidth.org/#{id}.html"

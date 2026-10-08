@@ -36,5 +36,5 @@
         = dreamwidth_link_to("https://www.dreamwidth.org/manage/settings/?cat=mobile") { "Dreamwidth's mobile settings" }
         and it stops working here at once.
     .form-group.journal-actions
-      = form.submit "Connect", data: { turbo_submits_with: "Checking with Dreamwidth…" }
+      = form.submit "Connect"
       = link_to "Back to your journals", journal_root_path, class: "btn btn--secondary"
