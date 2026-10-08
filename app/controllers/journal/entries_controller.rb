@@ -80,10 +80,6 @@ module Journal
       Integer(ENV.fetch("JOURNAL_ENTRIES_PER_PAGE", PER_PAGE)).clamp(1, PER_PAGE)
     end
 
-    def listed_security
-      "private" if Journal::PRIVATE_ONLY
-    end
-
     def entry_params
       permitted = params.expect(entry: [ :subject, :body, :tags, :icon, :security, :datetime_original,
                                          datetime_parts: %i[month day year hour minute] ])
@@ -111,15 +107,12 @@ module Journal
     end
 
     # The icons to choose from, and the default icon's image if we can tell
-    # which it is. Dreamwidth doesn't yet say which icon is the default
-    # (dreamwidth/dreamwidth#3696), but an entry posted with "(default)"
-    # reports the icon it used, so the newest one shows the current default.
+    # which it is (see default_icon_url_from_entries).
     def load_icons
       @icons = dreamwidth_client.icons.flat_map do |icon|
         icon.keywords.map { |keyword| [ keyword, icon.url ] }
       end.sort_by { |keyword, _url| keyword.downcase }
-      @default_icon_url = dreamwidth_client.entries(count: 10, security: listed_security)
-        .find { |entry| entry.icon_keyword == "(default)" }&.icon_url
+      @default_icon_url = default_icon_url_from_entries
     rescue Dreamwidth::Client::Error
       @icons ||= []
     end

@@ -65,6 +65,12 @@ module JournalHelper
     tag.script(json_escape(tags.to_json).html_safe, type: "application/json", data: { "journal-tags-target": "list" })
   end
 
+  # A username that can wrap after its underscores ("example_" / "journal"),
+  # rather than mid-word, where space is tight.
+  def journal_wrappable_username(username)
+    safe_join(username.split(/(?<=_)/).flat_map { |part| [ part, tag.wbr ] }[0...-1])
+  end
+
   # Who can see an entry, in a sentence, as Dreamwidth says it after posting.
   def dreamwidth_entry_visibility(security)
     case security.to_s

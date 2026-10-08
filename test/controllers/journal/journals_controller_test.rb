@@ -13,9 +13,10 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Your journals"
     assert_select "title", /\AYour journals/
-    assert_select ".journal-list__item", 2
-    assert_select "a[href=?]", journal_dw_entries_path("example_journal")
-    assert_select "a[href=?]", journal_dw_entries_path("second_journal")
+    assert_select ".journal-tile", 2
+    assert_select ".journal-tile a[href=?]", journal_dw_entries_path("example_journal"), text: "example_journal"
+    assert_select ".journal-tile a[href=?]", journal_dw_entries_path("second_journal"), text: "second_journal"
+    assert_select ".journal-tile a.btn[href=?]", journal_dw_connection_path("example_journal"), text: /Manage/
     assert_select "a", text: "Connect another Dreamwidth journal"
   end
 
@@ -23,7 +24,7 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as users(:three)
     get journal_root_path
 
-    assert_select ".journal-list", 0
+    assert_select ".journal-tiles", 0
     assert_select "a[href=?]", journal_connect_path, text: "Connect a Dreamwidth journal"
   end
 
@@ -33,7 +34,15 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
 
     get journal_root_path
 
-    assert_select ".journal-list__problem", 1
+    assert_select ".journal-tile__problem", 1
+  end
+
+  test "each tile's icon loads after the page, so Dreamwidth isn't asked for the page itself" do
+    sign_in_as users(:one)
+    get journal_root_path
+
+    assert_select "turbo-frame[src=?][loading=lazy]", journal_dw_icon_path("example_journal")
+    assert_select "turbo-frame[src=?][loading=lazy]", journal_dw_icon_path("second_journal")
   end
 
   test "the nav's Journal link is marked current on journal pages, and doesn't prefetch" do

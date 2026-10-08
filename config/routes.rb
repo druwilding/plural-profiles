@@ -75,6 +75,7 @@ Rails.application.routes.draw do
       get "entries/new", to: "entries#new", as: :new_entry
       get "entries/:id", to: "entries#show", as: :entry, constraints: { id: /\d+/ }
       resource :connection, only: %i[show update destroy]
+      resource :icon, only: :show
     end
   end
 

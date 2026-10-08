@@ -71,27 +71,58 @@
   text-decoration: underline;
 }
 
-.journal-list {
+/* Your journals: a tile per journal, using pp's profile grid and cards. The
+   name's link stretches over the whole tile, so it's all clickable; Manage
+   sits above that. */
+.journal-tiles {
   list-style: none;
   padding: 0;
-  margin: 0 0 1.5rem;
+  margin: 0;
 }
 
-.journal-list__item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 1rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--pane-border);
+.journal-tile {
+  position: relative;
+  margin: 0;
 }
 
-.journal-list__entries {
-  font-weight: 700;
+.journal-tile__icon {
+  width: 6.25rem;
+  height: 6.25rem;
+  border: 1px solid var(--pane-border);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-.journal-list__problem {
+.journal-tile__icon-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.journal-tile__name {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1.1rem;
+  /* Wraps after underscores (journal_wrappable_username); mid-word only if
+     a part still doesn't fit. */
+  overflow-wrap: break-word;
+}
+
+.journal-tile__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.journal-tile__problem {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
   color: var(--warning-text);
+}
+
+.journal-tile__manage {
+  position: relative;
+  z-index: 1;
 }
 
 .journal-meta {
