@@ -31,11 +31,23 @@ class Journal::EntryFormTest < ActiveSupport::TestCase
   test "to_api sends what Dreamwidth takes, leaving out what's blank" do
     api = form(subject: "", tags: "one, two", icon: "").to_api
 
-    assert_equal({ text: "Hello", security: "private", tags: [ "one", "two" ] }, api)
+    assert_equal({ text: "Hello", security: "private", tags: [ "one", "two" ] }, api.except(:datetime))
   end
 
-  test "an unchanged date isn't sent, so Dreamwidth uses its own now" do
-    assert_not form.to_api.key?(:datetime)
+  test "an unchanged date is sent as now in the person's time zone, not left to Dreamwidth's UTC" do
+    travel_to Time.utc(2026, 10, 8, 16, 51) do
+      Time.use_zone("Copenhagen") do
+        assert_equal "2026-10-08 18:51", form.to_api[:datetime]
+      end
+    end
+  end
+
+  test "an unchanged date is the time of posting, not of opening the page" do
+    travel_to Time.utc(2026, 10, 8, 17, 30) do
+      Time.use_zone("Copenhagen") do
+        assert_equal "2026-10-08 19:30", form(datetime: "2026-10-08T18:51", datetime_original: "2026-10-08T18:51").to_api[:datetime]
+      end
+    end
   end
 
   test "a changed date is sent in Dreamwidth's format" do

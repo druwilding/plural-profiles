@@ -69,9 +69,11 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
   end
 
   test "posting sends Dreamwidth what was written and lands on the entry" do
-    post_entry
+    users(:one).update!(time_zone: "Copenhagen")
+    travel_to(Time.utc(2026, 10, 8, 16, 51)) { post_entry }
 
-    assert_equal({ subject: "Hello", text: "Some <b>text</b>\n\nand more", security: "private", tags: [ "one", "two" ] }, posted)
+    assert_equal({ subject: "Hello", text: "Some <b>text</b>\n\nand more", security: "private", tags: [ "one", "two" ],
+                   datetime: "2026-10-08 18:51" }, posted)
     entry_id = FakeDreamwidthClient.journals["example_journal"][:entries].last.id
     assert_redirected_to journal_dw_entry_path(@connection, entry_id)
   end

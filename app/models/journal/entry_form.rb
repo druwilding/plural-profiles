@@ -25,9 +25,9 @@ module Journal
     attribute :security, :string, default: "private"
     # "YYYY-MM-DDTHH:MM" in the person's own time zone, from the date fields.
     attribute :datetime, :string
-    # What the date fields started as. If they weren't changed, no datetime
-    # is sent and Dreamwidth uses its own "now", so a page left open for an
-    # hour still posts at the time it's posted.
+    # What the date fields started as. If they weren't changed, the entry is
+    # dated at the moment it's posted, so a page left open for an hour still
+    # posts at the right time.
     attribute :datetime_original, :string
 
     validates :body, presence: { message: "can't be empty" }
@@ -59,16 +59,21 @@ module Journal
         security: security,
         tags: tag_list,
         icon: icon.presence,
-        datetime: changed_datetime
+        datetime: api_datetime
       }.compact
     end
 
     private
 
-    def changed_datetime
-      return if datetime.blank? || datetime == datetime_original
-
-      datetime.tr("T", " ")
+    # Always sent: left out, Dreamwidth dates the entry in UTC rather than
+    # the person's time. Unchanged date fields mean "now", in Time.zone (the
+    # person's own zone).
+    def api_datetime
+      if datetime.blank? || datetime == datetime_original
+        Time.zone.now.strftime("%Y-%m-%d %H:%M")
+      else
+        datetime.tr("T", " ")
+      end
     end
 
     def datetime_is_a_date
