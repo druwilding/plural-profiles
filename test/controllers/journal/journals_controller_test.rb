@@ -20,7 +20,9 @@ class Journal::JournalsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".journal-tile", 2
     assert_select ".journal-tile a[href=?]", journal_dw_entries_path("example_journal"), text: "example_journal"
     assert_select ".journal-tile a[href=?]", journal_dw_entries_path("second_journal"), text: "second_journal"
-    assert_select ".journal-tile a.btn[href=?]", journal_dw_connection_path("example_journal"), text: /Manage/
+    assert_select ".journal-tile__actions a.btn:not(.btn--secondary)[href=?]", journal_dw_new_entry_path("example_journal"),
+      text: /Post\s+an entry to example_journal/
+    assert_select ".journal-tile__actions a.btn.btn--secondary[href=?]", journal_dw_connection_path("example_journal"), text: /Manage/
     assert_select "a", text: "Connect another Dreamwidth journal"
   end
 

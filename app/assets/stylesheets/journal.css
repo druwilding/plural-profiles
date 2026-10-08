@@ -72,8 +72,8 @@
 }
 
 /* Your journals: a tile per journal, using pp's profile grid and cards. The
-   name's link stretches over the whole tile, so it's all clickable; Manage
-   sits above that. */
+   name's link stretches over the whole tile, so it's all clickable; Post and
+   Manage sit above that. */
 .journal-tiles {
   list-style: none;
   padding: 0;
@@ -120,7 +120,16 @@
   color: var(--warning-text);
 }
 
-.journal-tile__manage {
+/* Post and Manage, side by side, above the tile-wide link. */
+.journal-tile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.journal-tile__actions .btn {
   position: relative;
   z-index: 1;
 }

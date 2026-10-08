@@ -15,7 +15,7 @@
   = link_to (dreamwidth_connections.any? ? "Connect another Dreamwidth journal" : "Connect a Dreamwidth journal"), journal_connect_path, class: "btn"
 
 -# A tile per journal, like pp's profile cards: the whole tile goes to its
--# entries, and Manage sits on top. Each icon loads into its tile after the
+-# entries, and the Post and Manage buttons sit on top. Each icon loads into its tile after the
 -# page (journal/icons), so a slow Dreamwidth never holds the page up.
 - if dreamwidth_connections.any?
   %ul.profile-grid.journal-tiles
@@ -28,6 +28,10 @@
         - if connection.failed?
           %p.journal-tile__problem Dreamwidth stopped accepting its key
         .profile-card__action-spacer
-        = link_to journal_dw_connection_path(connection), class: "btn btn--small btn--secondary journal-tile__manage" do
-          Manage
-          %span.visually-hidden= connection.username
+        .journal-tile__actions
+          = link_to journal_dw_new_entry_path(connection), class: "btn btn--small" do
+            Post
+            %span.visually-hidden an entry to #{connection.username}
+          = link_to journal_dw_connection_path(connection), class: "btn btn--small btn--secondary" do
+            Manage
+            %span.visually-hidden= connection.username
