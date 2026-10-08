@@ -57,9 +57,9 @@ class JournalTest < ApplicationSystemTestCase
   test "write a private entry, post it, and see what Dreamwidth saved" do
     sign_in_via_browser
     visit journal_dw_entries_path("example_journal")
-    click_link "Write a new entry"
+    click_link "Post an Entry"
 
-    assert_selector "h1", text: "New entry in example_journal"
+    assert_selector "h1", text: "Post an Entry"
     fill_in "Subject", with: "Tuesday thoughts"
     fill_in "Entry text", with: "First paragraph.\n\nSecond one."
     fill_in "Tags", with: "days, thoughts"
@@ -78,7 +78,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "New entry in example_journal"
+    assert_selector "h1", text: "Post an Entry"
     assert_no_selector ".journal-details__icon-image", visible: true
 
     select "bass", from: "Icon"
@@ -91,7 +91,7 @@ class JournalTest < ApplicationSystemTestCase
     FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
-    assert_selector "h1", text: "New entry in example_journal"
+    assert_selector "h1", text: "Post an Entry"
 
     # Dreamwidth is unreachable in browser tests, so the image fails at once.
     select "bass", from: "Icon"

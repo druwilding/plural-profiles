@@ -1,4 +1,4 @@
-- journal_page "New entry in #{@connection.username}"
+- journal_page "Post an Entry"
 - has_problem = @problem.present? || @form.errors.any?
 - described_by = ("entry-problem" if has_problem && @problem != :key_rejected)
 - chosen_icon_url = @icons.to_h[@form.icon] || (@default_icon_url if @form.icon.blank?)
@@ -12,7 +12,7 @@
 
   .card
     .card__header
-      %h1 New entry in #{@connection.username}
+      %h1 Post an Entry
     = render "journal/shared/flash"
     = render "journal/entries/problem", problem: @problem, message: @problem_message, form: @form
 

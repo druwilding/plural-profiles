@@ -22,11 +22,11 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     FakeDreamwidthClient.calls.reverse.find { |method, _username, _args| method == :create_entry }&.last
   end
 
-  test "the write page names the journal in its heading and on the button" do
+  test "the write page is headed as on Dreamwidth, and names the journal on the button" do
     get journal_dw_new_entry_path(@connection)
 
     assert_response :success
-    assert_select "h1", "New entry in example_journal"
+    assert_select "h1", "Post an Entry"
     assert_select "input[type=submit][value='Post to: example_journal']"
   end
 
@@ -102,7 +102,7 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select ".flash--notice", "Your entry has been posted."
     assert_select "p", /only you can see it/
     assert_select "p strong", "Hello"
-    assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Write another entry"
+    assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Post another entry"
   end
 
   test "an entry with no subject says so" do
@@ -183,6 +183,6 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
   test "the entries page links to writing" do
     get journal_dw_entries_path(@connection)
 
-    assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Write a new entry"
+    assert_select "a[href=?]", journal_dw_new_entry_path(@connection), text: "Post an Entry"
   end
 end

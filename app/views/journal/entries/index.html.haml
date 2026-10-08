@@ -11,7 +11,7 @@
     ·
     = link_to "Manage this connection", journal_dw_connection_path(@connection)
 
-  %p= link_to "Write a new entry", journal_dw_new_entry_path(@connection), class: "btn"
+  %p= link_to "Post an Entry", journal_dw_new_entry_path(@connection), class: "btn"
 
   - case @problem
   - when :key_rejected

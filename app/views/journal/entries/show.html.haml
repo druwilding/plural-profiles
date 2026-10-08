@@ -22,4 +22,4 @@
     %li
       = dreamwidth_link_to(dreamwidth_journal_url(@connection.username)) { "View #{@connection.username}'s journal on Dreamwidth" }
     %li= link_to "Back to #{@connection.username}'s entries", journal_dw_entries_path(@connection)
-    %li= link_to "Write another entry", journal_dw_new_entry_path(@connection)
+    %li= link_to "Post another entry", journal_dw_new_entry_path(@connection)
