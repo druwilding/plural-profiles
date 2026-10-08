@@ -34,7 +34,7 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     get journal_dw_new_entry_path(@connection)
 
     assert_select ".card", 1
-    assert_equal [ "Icon", "Subject", "Entry text", "Tags", "Show this entry to" ],
+    assert_equal [ "Post to", "Icon", "Subject", "Entry text", "Tags", "Show this entry to" ],
       css_select(".card label:not(.visually-hidden)").map { |label| label.text.strip }
   end
 
@@ -49,6 +49,14 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     get journal_dw_new_entry_path(@connection)
 
     assert_select "img.journal-details__icon-image[src='https://v2.dreamwidth.org/7/1']"
+  end
+
+  test "Post to offers only the journal for now, and says communities will come" do
+    get journal_dw_new_entry_path(@connection)
+
+    assert_equal [ "example_journal" ], css_select("select#entry_post_to option").map(&:text)
+    assert_select "select#entry_post_to:not([name])"
+    assert_select "#post-to-hint", /communities will come later/
   end
 
   test "in private-only mode, Show this entry to offers only private" do

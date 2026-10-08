@@ -28,8 +28,15 @@
           %span.journal-details__label Post as
           %span= dreamwidth_journal_link(@connection.username)
         .journal-details__row
-          %span.journal-details__label Post to
-          %span= @connection.username
+          %label.journal-details__label{for: "entry_post_to"} Post to
+          -# Only the journal itself until communities come (with private-only
+          -# mode off), so it has no name and isn't sent; it's here to show
+          -# where communities will be.
+          .journal-details__field
+            %select#entry_post_to{aria: { describedby: "post-to-hint" }}
+              %option= @connection.username
+            %p.form-hint#post-to-hint
+              Posting to communities will come later, once Dreamwidth has updated their API.
         %fieldset.journal-details__row.journal-details__date
           %legend.journal-details__label Date
           = render "shared/datetime_picker", form: form, field: :datetime, value: @form.datetime_value

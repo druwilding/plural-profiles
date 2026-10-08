@@ -275,6 +275,11 @@
   margin: 0.25rem 0 0;
 }
 
+/* A field with a hint under it, in the second column. */
+.journal-details__field .form-hint {
+  margin: 0.25rem 0 0;
+}
+
 /* As wide as its longest keyword, not the whole column. */
 .journal-details select {
   justify-self: start;
