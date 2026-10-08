@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Tag suggestions on the journal's Write page (docs/plan-journal.md, "Tag
 // suggestions"). Works like the emote autocomplete (emote_input_controller),
 // but on the tag being typed, the text between the commas around the caret,
-// and from the first character. Up/Down move, Enter or Tab choose, Escape
+// and from the first character: every tag starting with it. Up/Down move, Enter or Tab choose, Escape
 // dismisses. Choosing puts the tag in, followed by ", " for the next one.
 //
 // The journal's tags arrive with the page as JSON (the "list" target), so
@@ -12,21 +12,17 @@ import { Controller } from "@hotwired/stimulus"
 
 let nextId = 0
 
-// Every tag containing what's typed, ignoring case and taking every
-// character literally (some tags start with "*"): those starting with it
-// first, then the rest, each in the list's own order. Tags already in the
-// field aren't offered again.
+// Every tag starting with what's typed, ignoring case and taking every
+// character literally (so "*m" finds "*mood"), in the list's own order.
+// Only from the start: with a lot of tags, ones that merely contain a letter
+// would be more surprising than useful. Tags already in the field aren't
+// offered again.
 function matchTags(tags, typed, used) {
   const query = typed.toLowerCase()
-  const starting = []
-  const containing = []
-  for (const tag of tags) {
+  return tags.filter((tag) => {
     const name = tag.toLowerCase()
-    if (used.has(name)) continue
-    if (name.startsWith(query)) starting.push(tag)
-    else if (name.includes(query)) containing.push(tag)
-  }
-  return starting.concat(containing)
+    return name.startsWith(query) && !used.has(name)
+  })
 }
 
 // The tag the caret is in: from just after the comma before it (and any

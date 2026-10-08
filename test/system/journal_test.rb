@@ -100,8 +100,8 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector ".journal-details__spinner", visible: :hidden
   end
 
-  test "typing one character suggests every matching tag, starting ones first" do
-    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "*mood", "art", "days", "Monday", "today" ]
+  test "typing one character suggests every tag starting with it, and only those" do
+    FakeDreamwidthClient.journals["example_journal"][:tags] = [ "*mood", "art", "days", "Diary", "Monday", "today" ]
     sign_in_via_browser
     visit journal_dw_new_entry_path("example_journal")
     assert_selector "h1", text: "Post an Entry"
@@ -109,7 +109,7 @@ class JournalTest < ApplicationSystemTestCase
     find_field("Tags").send_keys("d")
 
     assert_selector "[role='listbox'][aria-label='Matching tags']"
-    assert_equal [ "days", "*mood", "Monday", "today" ], all("[role='option']").map(&:text)
+    assert_equal [ "days", "Diary" ], all("[role='option']").map(&:text)
     assert_selector "[role='option'][aria-selected='true']", text: "days"
     assert_equal "true", find_field("Tags")["aria-expanded"]
   end

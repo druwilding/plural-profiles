@@ -250,7 +250,7 @@ The people using it liked one thing about Dreamwidth's new posting page: typing 
 - **The journal's tags come from `GET /journals/{u}/tags`**, which works today (it's separate from the bug about saving tags on edit). It returns each tag's name, sorted. They're fetched with the page and embedded as JSON, so suggestions appear instantly while typing.
 - **A Stimulus controller, following `emote_input_controller.js`**: a combobox with a listbox of options, Up/Down to move, Enter or Tab to choose, Escape to close, and a polite live announcement of how many tags match. Any listbox code worth sharing with the emote controller can be pulled out as we go, rather than up front.
 - **It works on the tag being typed**: the text after the last comma. It opens after **one character**.
-- **Matching** ignores case, and treats every character literally (some of their tags start with `*`). Tags that **start** with what's typed come first, then tags that **contain** it anywhere. Tags already in the field are left out. Every match is listed, scrolling if there are many.
+- **Matching** ignores case, and treats every character literally (some of their tags start with `*`, so `*m` finds `*mood`). **Only tags that start with what's typed** are listed. Matching anywhere in the tag was tried first, but with a lot of tags it was more surprising than useful. Tags already in the field are left out. Every match is listed, scrolling if there are many.
 - **Choosing a tag** replaces what's being typed with the tag, followed by ", ", ready for the next one.
 - **The list opens below the field**, not at the caret, since it's a single-line field.
 - **Each tag can be at most 40 characters** (Dreamwidth's limit). We check that before posting, and if one is too long, the form comes back with everything kept and says which tag is too long.
@@ -356,7 +356,7 @@ This is the whole reason the feature exists, so it gets more attention than usua
   - an unchanged date sends now in the person's time zone; a changed one sends what was chosen
   - after posting and after saving, the entry page shows who can see it and the subject, read back from Dreamwidth
   - drafts: typing saves a draft, Ctrl+S saves and announces it, coming back offers to restore, and posting clears it
-  - tag suggestions: one character opens matching tags (starts-with first, then contains, including tags starting with `*`), choosing one adds it with ", ", and tags already in the field aren't offered
+  - tag suggestions: one character opens the tags starting with it (only those), choosing one adds it with ", ", and tags already in the field aren't offered
   - a tag over 40 characters posts nothing and keeps the form
   - posting to a community adds it to that connection's remembered communities
   - private-only mode: Entries asks for private entries and pages through them; Write offers only Private; Edit sends only `subject` and `text`
