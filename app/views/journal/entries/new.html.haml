@@ -17,9 +17,11 @@
     = render "journal/entries/problem", problem: @problem, message: @problem_message, form: @form
 
     .journal-details
-      .journal-details__icon
+      .journal-details__icon{data: { "journal-icon-preview-target": "box" }}
         %img.journal-details__icon-image{src: chosen_icon_url, alt: "", width: 100, height: 100,
-          hidden: chosen_icon_url.blank?, data: { "journal-icon-preview-target": "image" }}
+          hidden: chosen_icon_url.blank?, data: { "journal-icon-preview-target": "image",
+          action: "load->journal-icon-preview#loaded error->journal-icon-preview#loaded" }}
+        .journal-details__spinner{hidden: true, data: { "journal-icon-preview-target": "spinner" }}
 
       .journal-details__fields
         .journal-details__row

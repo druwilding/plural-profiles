@@ -87,6 +87,19 @@ class JournalTest < ApplicationSystemTestCase
     assert_equal false, page.evaluate_script("document.querySelector('.journal-details__icon-image').hidden")
   end
 
+  test "the spinner goes once the chosen icon has loaded, or failed to" do
+    FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "New entry in example_journal"
+
+    # Dreamwidth is unreachable in browser tests, so the image fails at once.
+    select "bass", from: "Icon:"
+
+    assert_no_selector ".journal-details__icon--loading"
+    assert_selector ".journal-details__spinner", visible: :hidden
+  end
+
   test "journal.css comes with journal pages and goes when leaving them" do
     sign_in_via_browser
     within(".site-header nav") { click_link "Journal" }
