@@ -130,6 +130,27 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     assert_select "a.btn.btn--secondary[href=?]", journal_dw_entries_path(@connection), text: "Back to example_journal's entries"
   end
 
+  test "the form's draft is kept per account and journal" do
+    get journal_dw_new_entry_path(@connection)
+
+    assert_select "form[data-journal-draft-key-value=?]", "#{users(:one).id}:#{@connection.id}:new"
+  end
+
+  test "after posting, the entry page clears that draft" do
+    post_entry
+    follow_redirect!
+
+    assert_select "[data-controller='journal-draft-clear'][data-journal-draft-clear-key-value=?]",
+      "#{users(:one).id}:#{@connection.id}:new"
+  end
+
+  test "a failed post doesn't clear the draft" do
+    FakeDreamwidthClient.fail_with(Dreamwidth::Client::Unavailable)
+    post_entry
+
+    assert_select "[data-controller='journal-draft-clear']", 0
+  end
+
   test "an entry with no subject says so" do
     post_entry(subject: "")
     follow_redirect!

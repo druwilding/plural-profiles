@@ -397,6 +397,22 @@
   margin-left: 0;
 }
 
+/* "You have an unsent draft from 20:22", with Restore and Discard. */
+.journal-draft-offer p {
+  margin: 0 0 0.75rem;
+}
+
+/* "Autosaved draft at 20:22", under the entry text's hint. Empty until the
+   first save, and takes no room until then. */
+.journal-draft-status {
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.journal-draft-status:empty {
+  display: none;
+}
+
 .journal-next-steps {
   margin: 0;
   padding-left: 1.5rem;

@@ -10,7 +10,8 @@
 -# (docs/plan-journal.md, "The Write page"). It works without JavaScript; with
 -# it, the icon image follows the icon chosen.
 = form_with model: @form, scope: :entry, url: journal_dw_entries_path(@connection), method: :post,
-  class: "journal-write", data: { controller: "journal-icon-preview" } do |form|
+  class: "journal-write", data: { controller: "journal-icon-preview journal-draft",
+  "journal-draft-key-value": journal_draft_key } do |form|
   = form.hidden_field :datetime_original
 
   .card
@@ -18,6 +19,16 @@
       %h1 Post an Entry
     = render "journal/shared/flash"
     = render "journal/entries/problem", problem: @problem, message: @problem_message, form: @form
+
+    -# Shown by journal_draft_controller.js when there's a draft from before.
+    .flash.flash--notice.journal-draft-offer{hidden: true, data: { "journal-draft-target": "offer" }}
+      %p
+        You have an unsent draft from
+        = succeed "." do
+          %span{data: { "journal-draft-target": "offerTime" }}
+      .journal-actions
+        %button.btn{type: "button", data: { action: "journal-draft#restore" }} Restore it
+        %button.btn.btn--secondary{type: "button", data: { action: "journal-draft#discard" }} Discard it
 
     .journal-details
       .journal-details__icon{data: { "journal-icon-preview-target": "box" }}
@@ -57,6 +68,10 @@
         aria: { describedby: ["entry-text-hint", described_by].compact.join(" ") }
       %p.form-hint#entry-text-hint
         HTML tags work here, and a blank line starts a new paragraph, as on Dreamwidth.
+      -# "Autosaved draft at 20:22", only seen; the announcement after Ctrl+S is
+      -# separate, so autosaving doesn't keep interrupting a screen reader.
+      %p.form-hint.journal-draft-status{data: { "journal-draft-target": "status" }}
+      %p.visually-hidden{aria: { live: "polite" }, data: { "journal-draft-target": "announce" }}
 
     .form-group
       = form.label :tags, "Tags"

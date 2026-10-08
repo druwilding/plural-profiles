@@ -38,6 +38,8 @@ module Journal
 
       posted = dreamwidth_client.create_entry(@form.to_api)
       @connection.record_success!
+      # It's on Dreamwidth now, so the next page clears the draft.
+      flash[:clear_journal_draft] = journal_draft_key
 
       if posted.id
         redirect_to journal_dw_entry_path(@connection, posted.id), notice: "Your entry has been posted."

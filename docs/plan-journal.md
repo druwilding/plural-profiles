@@ -213,7 +213,7 @@ The people this is for sent screenshots of Dreamwidth's posting page, and told u
 - **One pane for the whole form.** Its header is the page's `h1` ("Post an Entry"). It was first planned as four panes (details, entry, tags, who can see it), but seen in use it all belongs together.
 - **The order of things**, top to bottom:
   1. The chosen icon's image at top left. Beside it (or below it on narrow screens): **Post as** the journal (see "Linking to a journal"), **Post to** a dropdown of the journal and remembered communities, **Date** the date fields, **Icon** the icon dropdown.
-  2. **Subject**, then the large entry text box, then the draft status ("Draft saved at 20:22").
+  2. **Subject**, then the large entry text box, then the draft status ("Autosaved draft at 20:22").
   3. **Tags**, one comma-separated field, with tag suggestions.
   4. **Show this entry to** dropdown, then the custom filter checkboxes, then the **Post to: *username*** button.
 
@@ -282,11 +282,13 @@ This is the most important behaviour, and the reason for the rule below.
 
 **Drafts, saved in the browser.** Dreamwidth autosaves drafts and shows "Autosaved draft at 8:22:18 PM" under the text box, and the people using it want that. They write on one device, so drafts stay **in the browser on that device** (`localStorage`), never on our server. That keeps their unposted, mostly filter-locked writing off plural-profiles entirely.
 
-- A Stimulus controller saves the whole form (subject, text, tags, icon, date, security, filters) every few seconds while typing, and immediately on **Ctrl+S** (or Cmd+S), which it takes over from the browser's "Save page".
-- **"Draft saved at 20:22"** appears just below the text box. It's only announced to screen readers after Ctrl+S (a polite live region updated then), not every few seconds, so it doesn't keep interrupting.
-- There's one draft per connection for Write, and one per entry for Edit.
-- Coming back to a form with a draft offers: "You have an unsent draft from 20:22. **Restore it** / **Discard it**". It never restores silently over what's on the page.
-- The entry page clears the draft after a successful post or save, via a data attribute the controller reads.
+- A Stimulus controller saves the whole form (subject, text, tags, icon, date, security, filters) two seconds after typing stops, immediately on **Ctrl+S** (or Cmd+S), which it takes over from the browser's "Save page", and on leaving the page. A form with no subject, text or tags removes the draft rather than saving an empty one.
+- **"Autosaved draft at 20:22:18"** (Dreamwidth's wording, with seconds so it's clear it keeps updating, in 24-hour time) appears just below the text box, after Ctrl+S too. It's only announced to screen readers after Ctrl+S (a polite live region updated then), not every few seconds, so it doesn't keep interrupting.
+- There's one draft per connection for Write, and one per entry for Edit. Keys are `journal-draft:<user id>:<connection id>:new` (`journal_drafts.js`, following `chat_drafts.js`), so another account in the same browser never sees them, and **signing out clears the account's journal drafts**, as it does chat drafts.
+- Coming back to a form with a draft offers: "You have an unsent draft from 20:22. **Restore it** / **Discard it**". It never restores silently over what's on the page. Until one is chosen, nothing is saved (the status line says so), so typing can't overwrite the draft by accident. A form that came back from a failed post already has the writing in it, so isn't offered one.
+- **The date is only restored if it had been changed.** Otherwise the restored entry is dated when it's posted, like any other.
+- The entry page clears the draft after a successful post or save: posting puts the draft's key in the flash, and the next page clears it.
+- **The Write page opts out of Turbo's cache.** Otherwise coming back flashes up a snapshot of what was typed, then the fresh form replaces it, which looks like the writing appearing and vanishing.
 - Without JavaScript, the form works as before, just without drafts.
 
 ### Private-only mode, until Dreamwidth's fixes are deployed

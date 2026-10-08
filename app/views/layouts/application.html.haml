@@ -21,7 +21,9 @@
           = link_to "Journal", journal_root_path, aria: { current: ("page" if controller_path.start_with?("journal/")) }, data: { turbo_prefetch: "false" }
           - if Current.user&.admin?
             = link_to "Admin", admin_root_path
-          = link_to "Sign out", session_path, data: { turbo_method: :delete }
+          -# Signing out clears this account's journal drafts (journal_drafts.js).
+          = link_to "Sign out", session_path, data: { turbo_method: :delete, controller: "journal-sign-out",
+            "journal-sign-out-user-value": Current.user.id, action: "journal-sign-out#clearDrafts" }
         - else
           = link_to "Sign in", new_session_path
           = link_to "Sign up", new_registration_path

@@ -100,6 +100,131 @@ class JournalTest < ApplicationSystemTestCase
     assert_equal false, page.evaluate_script("window.sawOldText")
   end
 
+  def start_writing_and_leave(subject: "Half-written", body: "Not finished yet")
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+    fill_in "Subject", with: subject
+    fill_in "Entry text", with: body
+    click_link "Back to example_journal's entries"
+    assert_selector "h1", text: "example_journal's entries"
+  end
+
+  def journal_draft_keys
+    page.evaluate_script("Object.keys(localStorage).filter(key => key.startsWith('journal-draft:'))")
+  end
+
+  test "leaving the Write page keeps a draft, and coming back offers it" do
+    sign_in_via_browser
+    start_writing_and_leave
+    click_link "Post an Entry"
+
+    assert_text "You have an unsent draft from"
+    assert_field "Subject", with: ""
+    click_button "Restore it"
+
+    assert_field "Subject", with: "Half-written"
+    assert_field "Entry text", with: "Not finished yet"
+    assert_no_text "You have an unsent draft"
+  end
+
+  test "discarding a draft removes it" do
+    sign_in_via_browser
+    start_writing_and_leave
+    click_link "Post an Entry"
+
+    click_button "Discard it"
+    assert_no_text "You have an unsent draft"
+    assert_empty journal_draft_keys
+
+    click_link "Back to example_journal's entries"
+    click_link "Post an Entry"
+    assert_selector "h1", text: "Post an Entry"
+    assert_no_text "You have an unsent draft"
+  end
+
+  test "typing while a draft is on offer doesn't overwrite it" do
+    sign_in_via_browser
+    start_writing_and_leave
+    click_link "Post an Entry"
+    assert_text "You have an unsent draft from"
+
+    fill_in "Subject", with: "Something else"
+    assert_text "Restore or discard the draft above"
+    click_link "Back to example_journal's entries"
+    click_link "Post an Entry"
+    click_button "Restore it"
+
+    assert_field "Subject", with: "Half-written"
+  end
+
+  test "Ctrl+S saves a draft and says so" do
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+    fill_in "Entry text", with: "Saving this"
+
+    find_field("Entry text").send_keys([ :control, "s" ])
+
+    assert_selector ".journal-draft-status", text: /\AAutosaved draft at \d\d:\d\d:\d\d\z/
+    assert_selector "[aria-live='polite']", text: /Autosaved draft at/, visible: :all
+    assert_equal 1, journal_draft_keys.size
+  end
+
+  test "it saves on its own after a pause in typing" do
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+
+    fill_in "Entry text", with: "Typing away"
+
+    assert_selector ".journal-draft-status", text: /Autosaved draft at/, wait: 5
+  end
+
+  test "a changed date comes back with the draft; an unchanged one stays at now" do
+    sign_in_via_browser
+    visit journal_dw_new_entry_path("example_journal")
+    assert_selector "h1", text: "Post an Entry"
+    fill_in "Entry text", with: "Backdated"
+    select "March", from: "Month"
+    click_link "Back to example_journal's entries"
+    click_link "Post an Entry"
+    click_button "Restore it"
+    assert_select "Month", selected: "March"
+
+    fill_in "Entry text", with: "Not backdated"
+    select Time.current.strftime("%B"), from: "Month"
+    click_link "Back to example_journal's entries"
+    click_link "Post an Entry"
+    click_button "Restore it"
+    assert_field "Entry text", with: "Not backdated"
+    assert_select "Month", selected: Time.current.strftime("%B")
+  end
+
+  test "posting clears the draft" do
+    sign_in_via_browser
+    start_writing_and_leave(subject: "Posting this")
+    click_link "Post an Entry"
+    click_button "Restore it"
+
+    click_button "Post to: example_journal"
+    assert_text "Your entry has been posted."
+    assert_empty journal_draft_keys
+
+    click_link "Post another entry"
+    assert_selector "h1", text: "Post an Entry"
+    assert_no_text "You have an unsent draft"
+  end
+
+  test "signing out clears the account's journal drafts" do
+    sign_in_via_browser
+    start_writing_and_leave
+    assert_equal 1, journal_draft_keys.size
+
+    within(".site-header nav") { click_link "Sign out" }
+    assert_link "Sign in"
+    assert_empty journal_draft_keys
+  end
+
   test "choosing an icon shows it straight away" do
     FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
     sign_in_via_browser

@@ -3,7 +3,7 @@ module Journal
     # Tests swap in a fake that never touches the network.
     class_attribute :dreamwidth_client_class, default: Dreamwidth::Client
 
-    helper_method :dreamwidth_connections
+    helper_method :dreamwidth_connections, :journal_draft_key
 
     private
 
@@ -16,6 +16,12 @@ module Journal
     # connected.
     def set_connection
       @connection = Current.user.dreamwidth_connections.find_by!(username: params[:dreamwidth_username])
+    end
+
+    # Where the Write page's draft is kept in the browser (journal_drafts.js):
+    # per account and connection, so another account never sees it.
+    def journal_draft_key(connection = @connection)
+      "#{Current.user.id}:#{connection.id}:new"
     end
 
     def dreamwidth_client(connection = @connection)
