@@ -74,6 +74,32 @@ class JournalTest < ApplicationSystemTestCase
     assert_equal [ "days", "thoughts" ], posted.tags
   end
 
+  test "coming back to write again doesn't flash up what was typed before" do
+    sign_in_via_browser
+    visit journal_dw_entries_path("example_journal")
+    click_link "Post an Entry"
+    assert_selector "h1", text: "Post an Entry"
+    fill_in "Subject", with: "Half-written"
+    fill_in "Entry text", with: "Not finished"
+    click_link "Back to example_journal's entries"
+    assert_selector "h1", text: "example_journal's entries"
+
+    # A cached snapshot would be rendered first, as a preview, with the old
+    # text in it; without one, the old text never appears.
+    page.execute_script(<<~JS)
+      window.sawOldText = false
+      document.addEventListener("turbo:render", () => {
+        const subject = document.getElementById("entry_subject")
+        if (subject && subject.value === "Half-written") window.sawOldText = true
+      })
+    JS
+    click_link "Post an Entry"
+
+    assert_selector "h1", text: "Post an Entry"
+    assert_field "Subject", with: ""
+    assert_equal false, page.evaluate_script("window.sawOldText")
+  end
+
   test "choosing an icon shows it straight away" do
     FakeDreamwidthClient.journals["example_journal"][:icons] = [ dreamwidth_icon(id: 8, keywords: "bass") ]
     sign_in_via_browser

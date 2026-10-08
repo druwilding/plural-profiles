@@ -1,4 +1,7 @@
 - journal_page "Post an Entry"
+-# No snapshot for Turbo to show on coming back: it would flash up what was
+-# typed last time, then the fresh empty form would replace it.
+- content_for(:head) { tag.meta name: "turbo-cache-control", content: "no-cache" }
 - has_problem = @problem.present? || @form.errors.any?
 - described_by = ("entry-problem" if has_problem && @problem != :key_rejected)
 - chosen_icon_url = @icons.to_h[@form.icon] || (@default_icon_url if @form.icon.blank?)
