@@ -126,6 +126,17 @@ class JournalTest < ApplicationSystemTestCase
     assert_no_text "You have an unsent draft"
   end
 
+  test "a draft started in one journal is offered in another" do
+    sign_in_via_browser
+    start_writing_and_leave
+    visit journal_dw_new_entry_path("second_journal")
+
+    assert_text "You have an unsent draft from"
+    click_button "Restore it"
+    assert_field "Subject", with: "Half-written"
+    assert_selector "input[type=submit][value='Post to: second_journal']"
+  end
+
   test "discarding a draft removes it" do
     sign_in_via_browser
     start_writing_and_leave

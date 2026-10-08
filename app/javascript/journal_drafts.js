@@ -1,10 +1,10 @@
 // Unposted journal entries, kept in this browser's localStorage and never
 // sent to our server (docs/plan-journal.md, "Drafts, saved in the browser").
 //
-// A key is "journal-draft:<user id>:<connection id>:new" (the form's draft
-// key value holds the part after "journal-draft:"), so one account never
-// sees another's drafts in a shared browser, and signing out can clear just
-// that account's.
+// A key is "journal-draft:<user id>:new" (the form's draft key value holds
+// the part after "journal-draft:"): one draft per account, whichever journal
+// it was started in. One account never sees another's drafts in a shared
+// browser, and signing out can clear just that account's.
 //
 // A draft is { savedAt, dateChanged, fields: { name: value } }. Storage can be
 // switched off or full; every function copes, and save says whether it

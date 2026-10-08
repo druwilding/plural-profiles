@@ -19,9 +19,11 @@ module Journal
     end
 
     # Where the Write page's draft is kept in the browser (journal_drafts.js):
-    # per account and connection, so another account never sees it.
-    def journal_draft_key(connection = @connection)
-      "#{Current.user.id}:#{connection.id}:new"
+    # one per account, whichever journal it was started in, so someone who
+    # starts writing in one journal and switches to another finds it there.
+    # Per account, so another account in the same browser never sees it.
+    def journal_draft_key
+      "#{Current.user.id}:new"
     end
 
     def dreamwidth_client(connection = @connection)
