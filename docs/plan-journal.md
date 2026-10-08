@@ -212,14 +212,14 @@ The people this is for sent screenshots of Dreamwidth's posting page, and told u
 - **Plural-profiles' own style, as much as possible.** They like how plural-profiles looks and works, and especially how it works with Firefox's forced colours. So Write and Edit are built from the same pieces as the rest of the site: **a pane (`.card`) with a pane header (`.card__header`)**, the usual form, label and button styles, and each person's theme. What we take from Dreamwidth is the **order** of things and its **wording**, not its look.
 - **One pane for the whole form.** Its header is the page's `h1` ("New entry in *username*"). It was first planned as four panes (details, entry, tags, who can see it), but seen in use it all belongs together.
 - **The order of things**, top to bottom:
-  1. The chosen icon's image at top left. Beside it (or below it on narrow screens): **Post as:** the journal (see "Linking to a journal"), **Post to:** a dropdown of the journal and remembered communities, **Date:** the date fields, **Icon:** the icon dropdown.
-  2. **Subject:**, then the large entry text box, then the draft status ("Draft saved at 20:22").
-  3. **Tags:**, one comma-separated field, with tag suggestions.
-  4. **Show this entry to:** dropdown, then the custom filter checkboxes, then the **Post to: *username*** button.
+  1. The chosen icon's image at top left. Beside it (or below it on narrow screens): **Post as** the journal (see "Linking to a journal"), **Post to** a dropdown of the journal and remembered communities, **Date** the date fields, **Icon** the icon dropdown.
+  2. **Subject**, then the large entry text box, then the draft status ("Draft saved at 20:22").
+  3. **Tags**, one comma-separated field, with tag suggestions.
+  4. **Show this entry to** dropdown, then the custom filter checkboxes, then the **Post to: *username*** button.
 
 **Details:**
 
-- **Labels use Dreamwidth's wording, colons included:** "Post as:", "Post to:", "Date:", "Icon:", "Subject:", "Tags:", "Show this entry to:". The dropdown options are "Everyone (Public)", "Access List", "Private (Just You)" and "Custom Filter", sent as `public`, `access`, `private` and `custom`.
+- **Labels use Dreamwidth's wording, without its colons** (pp's labels don't have them): "Post as", "Post to", "Date", "Icon", "Subject", "Entry text", "Tags", "Show this entry to". The dropdown options are "Everyone (Public)", "Access List", "Private (Just You)" and "Custom Filter", sent as `public`, `access`, `private` and `custom`.
 - **The entry text is a large `textarea` in the site's usual font**, the same as plural-profiles' description boxes (which moved from monospace to the default font a while ago, without complaint). About 25 lines tall, sized in `rem` so it grows with text size, and resizable vertically. Dreamwidth's is monospace; we can switch if they'd prefer it.
 - **Date fields are always visible**, rather than behind an "Edit Date" link (the people using it suggested this). They reuse the existing `shared/_datetime_picker` partial, which already matches Dreamwidth's: month, day, year, hour : minute, "(24 hour time)", with visually hidden labels, and no JavaScript needed. They're filled in with now, in the person's time zone. **If they're not changed, `datetime` is sent as the moment of posting, in the person's time zone**, so a page left open for an hour still posts at the right time. (Left out, Dreamwidth dates the entry in UTC, not the journal's time.) A hidden field holds the original value to compare against.
 - **Icon:** a dropdown of icon keywords, "(default)" first. The image at top left shows the chosen icon. Without JavaScript it shows the icon last submitted (or the default); with JavaScript it updates as the choice changes. Images load straight from Dreamwidth (`url` from the icons list). Which icon is the default isn't in the API yet (see "Upstream fixes"); until it is, we take it from the newest entry Dreamwidth reports with `icon_keyword` "(default)", and show no image if there isn't one.
@@ -237,7 +237,7 @@ The people this is for sent screenshots of Dreamwidth's posting page, and told u
 
 The same form and layout as Write, filled with the entry's current values, as on Dreamwidth's edit page. The differences, again following Dreamwidth:
 
-- **"Poster:"** (the journal, as a link) instead of "Post as:", and **no "Post to:"**, since an entry can't move to another journal.
+- **"Poster"** (the journal, as a link) instead of "Post as", and **no "Post to"**, since an entry can't move to another journal.
 - **The button says "Save".** The journal is already named in the `h1`.
 - **No Delete Entry button.**
 - **The entry's custom filters come back ticked.** Until #3688, they're listed as text instead (see "Editing mustn't quietly change what isn't shown").

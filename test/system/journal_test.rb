@@ -60,9 +60,9 @@ class JournalTest < ApplicationSystemTestCase
     click_link "Write a new entry"
 
     assert_selector "h1", text: "New entry in example_journal"
-    fill_in "Subject:", with: "Tuesday thoughts"
-    fill_in "Entry text:", with: "First paragraph.\n\nSecond one."
-    fill_in "Tags:", with: "days, thoughts"
+    fill_in "Subject", with: "Tuesday thoughts"
+    fill_in "Entry text", with: "First paragraph.\n\nSecond one."
+    fill_in "Tags", with: "days, thoughts"
     click_button "Post to: example_journal"
 
     assert_selector "h1", text: "Entry in example_journal"
@@ -81,7 +81,7 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector "h1", text: "New entry in example_journal"
     assert_no_selector ".journal-details__icon-image", visible: true
 
-    select "bass", from: "Icon:"
+    select "bass", from: "Icon"
 
     assert_selector ".journal-details__icon-image[src='https://v2.dreamwidth.org/8/1']", visible: :all
     assert_equal false, page.evaluate_script("document.querySelector('.journal-details__icon-image').hidden")
@@ -94,7 +94,7 @@ class JournalTest < ApplicationSystemTestCase
     assert_selector "h1", text: "New entry in example_journal"
 
     # Dreamwidth is unreachable in browser tests, so the image fails at once.
-    select "bass", from: "Icon:"
+    select "bass", from: "Icon"
 
     assert_no_selector ".journal-details__icon--loading"
     assert_selector ".journal-details__spinner", visible: :hidden

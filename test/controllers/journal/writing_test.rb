@@ -34,8 +34,8 @@ class Journal::WritingTest < ActionDispatch::IntegrationTest
     get journal_dw_new_entry_path(@connection)
 
     assert_select ".card", 1
-    assert_equal [ "Icon:", "Subject:", "Entry text:", "Tags:", "Show this entry to:" ],
-      css_select(".card label").map { |label| label.text.strip }.grep(/\A[A-Z].*:\z/)
+    assert_equal [ "Icon", "Subject", "Entry text", "Tags", "Show this entry to" ],
+      css_select(".card label:not(.visually-hidden)").map { |label| label.text.strip }
   end
 
   test "icons are listed by keyword, (default) first, each with its image" do
